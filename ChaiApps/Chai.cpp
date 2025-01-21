@@ -2,11 +2,13 @@
 //
 
 #include "Chai.h"
+#include <IGraphicsApi.h>
 
 using namespace std;
 
 int main()
 {
 	cout << "Hello CMake." << endl;
+	MyFunction();
 	return 0;
 }
