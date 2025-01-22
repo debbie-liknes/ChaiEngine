@@ -7,7 +7,7 @@ function(ChaiLibDefaults target_name optional_path)
     set_target_properties(${target_name} PROPERTIES LINKER_LANGUAGE CXX)
 
     if (CMAKE_VERSION VERSION_GREATER 3.12)
-        #(TARGET ${target_name} PROPERTY CXX_STANDARD 20)
+        set_property(TARGET ${target_name} PROPERTY CXX_STANDARD 20)
     endif()
 
     #want to be able to include the directory via #include <MyLibraryExport.h>
