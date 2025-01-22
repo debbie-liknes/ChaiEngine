@@ -1,6 +1,5 @@
-project(OpenGLRenderer)
 
-add_library (${PROJECT_NAME} "include/OpenGLApi.h")
+add_library (OpenGLRenderer "include/OpenGLApi.h")
 
 
-ChaiLibDefaults(${PROJECT_NAME} "Graphics/Platforms")
+ChaiLibDefaults(OpenGLRenderer "Graphics/Platforms")

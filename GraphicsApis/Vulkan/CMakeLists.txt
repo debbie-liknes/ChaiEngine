@@ -1,5 +1,4 @@
-project(VulkanRenderer)
 
-add_library (${PROJECT_NAME} "include/VulkanApi.h")
+add_library (VulkanRenderer "include/VulkanApi.h")
 
-ChaiLibDefaults(${PROJECT_NAME} "Graphics/Platforms")
+ChaiLibDefaults(VulkanRenderer "Graphics/Platforms")

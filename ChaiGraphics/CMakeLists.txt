@@ -1,8 +1,15 @@
-project(ChaiGraphics)
-
 # Add source to this project's executable.
-add_library (${PROJECT_NAME} SHARED "include/IGraphicsApi.h" "source/IGraphicsApi.cpp")
 
-target_include_directories(${PROJECT_NAME} PUBLIC include)
+set(ChaiGraphics_headers
+	include/ChaiGraphics/IGraphicsApi.h
+)
 
-ChaiLibDefaults(${PROJECT_NAME} "Graphics")
+set(ChaiGraphics_source
+	source/ChaiGraphics/IGraphicsApi.cpp
+)
+
+add_library (ChaiGraphics SHARED ${ChaiGraphics_headers} ${ChaiGraphics_source})
+
+target_include_directories(ChaiGraphics PUBLIC include)
+
+ChaiLibDefaults(ChaiGraphics "Graphics")
