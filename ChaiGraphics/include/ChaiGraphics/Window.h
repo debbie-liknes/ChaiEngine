@@ -1,8 +1,7 @@
 #pragma once
 #include <ChaiGraphicsExport.h>
 #include <ChaiGraphics/Common.h>
-#include <string>
-#include <vector>
+#include <Core/Containers.h>
 
 namespace CGraphics
 {
@@ -12,7 +11,7 @@ namespace CGraphics
 	{
     public:
 
-        Window(std::string title, int width = 1280, int height = 720);
+        Window(Core::CString title, int width = 1280, int height = 720);
         ~Window() = default;
 
         //Display Window
@@ -30,14 +29,14 @@ namespace CGraphics
         // Accessors
         int GetWidth() const;
         int GetHeight() const;
-        std::string GetTitle() const;
+        Core::CString GetTitle() const;
 
     private:
-        std::string m_title;
+        Core::CString m_title;
 
         //a flat list of viewports
         //TODO: should this be a map?
-        std::vector<SharedViewport> m_viewports;
+        Core::CVector<SharedViewport> m_viewports;
 
         //dimensions
         int m_width;

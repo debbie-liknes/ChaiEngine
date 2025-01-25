@@ -1,11 +1,11 @@
 #pragma once
-#include <memory>
+#include <Core/MemoryTypes.h>
 
 namespace CGraphics
 {
 	class Viewer;
 	class Viewport;
 
-	using SharedViewer = std::shared_ptr<Viewer>;
-	using SharedViewport = std::shared_ptr<Viewport>;
+	using SharedViewer = Core::CSharedPtr<Viewer>;
+	using SharedViewport = Core::CSharedPtr<Viewport>;
 }

@@ -3,9 +3,8 @@
 
 namespace CGraphics
 {
-	Window::Window(std::string title, int width, int height) : m_title(title), m_width(width), m_height(height)
+	Window::Window(Core::CString title, int width, int height) : m_title(title), m_width(width), m_height(height)
 	{
-
 	}
 
 	void Window::AddViewport(SharedViewport viewport)
@@ -32,7 +31,7 @@ namespace CGraphics
 		return m_width;
 	}
 
-	std::string Window::GetTitle() const
+	Core::CString Window::GetTitle() const
 	{
 		return m_title;
 	}

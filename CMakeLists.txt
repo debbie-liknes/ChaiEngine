@@ -14,9 +14,16 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
+#idc about abi compatibility rn
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /IGNORE:4197")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /IGNORE:4197")
+add_compile_options(/wd4251)
+
 project ("Chai")
 
 # Include sub-projects.
+add_subdirectory ("Core")
 add_subdirectory ("ChaiApps")
 add_subdirectory ("ChaiGraphics")
 add_subdirectory ("GraphicsApis")
