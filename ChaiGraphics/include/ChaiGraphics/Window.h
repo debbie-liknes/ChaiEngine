@@ -15,9 +15,13 @@ namespace CGraphics
         ~Window() = default;
 
         //Display Window
-        virtual void Show() = 0;
+        virtual void Init(){}
+        virtual bool Show() = 0;
         virtual void Close() = 0;
         virtual void Resize(int width, int height) = 0;
+
+        typedef void* (*WindowProc)(const char* name);
+        virtual WindowProc getProcAddress() = 0;
 
         // Viewport management
         void AddViewport(SharedViewport viewport);
@@ -31,7 +35,7 @@ namespace CGraphics
         int GetHeight() const;
         Core::CString GetTitle() const;
 
-    private:
+    protected:
         Core::CString m_title;
 
         //a flat list of viewports

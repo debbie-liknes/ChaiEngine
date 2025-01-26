@@ -1,13 +1,22 @@
-﻿// Chai.cpp : Defines the entry point for the application.
-//
+﻿//test exe
 
 #include "Chai.h"
-#include <ChaiGraphics/IGraphicsApi.h>
+#include <ChaiGraphics/ChaiWindow.h>
+#include <OpenGLRenderer/OpenGLRenderer.h>
 
 using namespace std;
 
 int main()
 {
-	cout << "Hello CMake." << endl;
+	CGraphics::ChaiWindow window("Chai Engine");
+	CGraphics::IRenderer renderer = CGraphics::OpenGLBackend();
+	
+
+	while (window.Show())
+	{
+		window.PollEvents();
+	}
+
+	window.Close();
 	return 0;
 }

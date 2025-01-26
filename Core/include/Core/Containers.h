@@ -2,19 +2,11 @@
 
 #include <CoreExport.h>
 #include <vector>
+#include <string>
 
 namespace Core
 {
-    class CORE_EXPORT CString {
-    public:
-        CString();
-        CString(const char* str);
-        ~CString();
-
-    private:
-        struct Impl;
-        Impl* impl;
-    };
+    typedef std::string CString;
 
     template <typename T>
     using CVector = std::vector<T>;

@@ -2,5 +2,5 @@
 
 add_executable (${PROJECT_NAME} "Chai.cpp" "Chai.h")
 
-
-target_link_libraries(${PROJECT_NAME} ChaiGraphics)
+#just use the OpenGL Renderer for now
+target_link_libraries(${PROJECT_NAME} PUBLIC OpenGLRenderer)

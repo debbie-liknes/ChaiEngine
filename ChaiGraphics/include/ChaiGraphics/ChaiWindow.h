@@ -1,22 +1,29 @@
 #pragma once
-//#include <ChaiGraphics/Window.h>
+#include <ChaiGraphicsExport.h>
+#include <ChaiGraphics/Window.h>
+#include <Core/Containers.h>
+#include <GLFW/glfw3.h>
 
 namespace CGraphics
 {
 	//glfw window implementation
-	//class CHAIGRAPHICS_EXPORT ChaiWindow : public Window
-	//{
- //   public:
- //       ChaiWindow(FString title, int width = 1280, int height = 720) : Window(title, width, height) {}
- //       ~ChaiWindow() = default;
+	class CHAIGRAPHICS_EXPORT ChaiWindow : public Window
+	{
+    public:
+        ChaiWindow(Core::CString title, int width = 1280, int height = 720);
+        ~ChaiWindow();
 
- //       //Display Window
- //       virtual void Show() = 0;
- //       virtual void Close() = 0;
- //       virtual void Resize(int width, int height) = 0;
+        //Display Window
+        void Init() override;
+        bool Show() override;
+        void Close() override;
+        void Resize(int width, int height) override;
+        WindowProc getProcAddress() override;
 
- //       // Input handling
- //       virtual void PollEvents() = 0;
+        // Input handling
+        void PollEvents() override;
 
-	//};
+    private:
+        GLFWwindow* m_window;
+	};
 }
