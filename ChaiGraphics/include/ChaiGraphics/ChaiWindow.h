@@ -23,7 +23,10 @@ namespace CGraphics
         // Input handling
         void PollEvents() override;
 
+        //this is OpenGL specific, vulkan does it differently
+        void swapBuffers();
     private:
+
         GLFWwindow* m_window;
 	};
 }

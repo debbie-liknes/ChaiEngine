@@ -64,4 +64,9 @@ namespace CGraphics
     {
         glfwPollEvents();
     }
+
+    void ChaiWindow::swapBuffers()
+    {
+        glfwSwapBuffers(m_window);
+    }
 }

@@ -21,6 +21,11 @@ namespace CGraphics
 		}
 	}
 
+	Core::CVector<SharedViewport> Window::GetViewports()
+	{
+		return m_viewports;
+	}
+
 	int Window::GetHeight() const
 	{
 		return m_height;

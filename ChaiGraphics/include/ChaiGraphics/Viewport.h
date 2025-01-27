@@ -16,7 +16,7 @@ namespace CGraphics
         SharedViewer GetViewer() const;
 
         // Rendering
-        virtual void Render() = 0; // Renders the scene using the assigned viewer
+        //virtual void Render() = 0; // Renders the scene using the assigned viewer
 
         // Accessors
         void SetDimensions(int x, int y, int width, int height);

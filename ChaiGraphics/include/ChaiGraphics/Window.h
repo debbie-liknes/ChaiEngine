@@ -27,6 +27,9 @@ namespace CGraphics
         void AddViewport(SharedViewport viewport);
         void RemoveViewport(SharedViewport viewport);
 
+        //i dont love returning a vector
+        Core::CVector<SharedViewport> GetViewports();
+
         // Input handling
         virtual void PollEvents() = 0;
 

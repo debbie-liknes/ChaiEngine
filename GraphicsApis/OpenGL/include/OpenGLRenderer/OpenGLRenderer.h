@@ -7,10 +7,11 @@ namespace CGraphics
 	class OPENGLRENDERER_EXPORT OpenGLBackend : public IRenderer
 	{
 	public:
-		OpenGLBackend() = default;
+		OpenGLBackend();
 		~OpenGLBackend() {}
 
 		void setProcAddress(void* address) override;
+		void renderFrame(Window* window) override;
 	private:
 
 	};
