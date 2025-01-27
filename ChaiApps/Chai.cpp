@@ -4,6 +4,7 @@
 #include <ChaiGraphics/ChaiWindow.h>
 #include <ChaiGraphics/Viewport.h>
 #include <OpenGLRenderer/OpenGLRenderer.h>
+#include <RenderObjects/Triangle.h>
 
 using namespace std;
 
@@ -17,11 +18,14 @@ int main()
 	window.AddViewport(testViewport);
 	renderer->setProcAddress(window.getProcAddress());
 
+	//test ro
+	auto triangle = std::make_shared<CGraphics::TriangleRO>();
+
 	while (window.Show())
 	{
 		window.swapBuffers();
 		window.PollEvents();
-		renderer->renderFrame(&window);
+		renderer->renderFrame(&window, {triangle});
 	}
 
 	window.Close();

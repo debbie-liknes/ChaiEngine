@@ -7,6 +7,8 @@ set(ChaiGraphics_headers
 	include/ChaiGraphics/Window.h
 	include/ChaiGraphics/Viewport.h
 	include/ChaiGraphics/Viewer.h
+	include/RenderObjects/RenderObject.h
+	include/RenderObjects/Triangle.h
 )
 
 set(ChaiGraphics_source
@@ -15,6 +17,8 @@ set(ChaiGraphics_source
 	source/ChaiGraphics/Window.cpp
 	source/ChaiGraphics/Viewer.cpp
 	source/ChaiGraphics/Viewport.cpp
+	source/RenderObjects/RenderObject.cpp
+	source/RenderObjects/Triangle.cpp
 )
 
 find_package(glfw3 REQUIRED)

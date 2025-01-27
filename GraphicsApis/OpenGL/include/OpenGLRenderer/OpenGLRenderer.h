@@ -4,6 +4,8 @@
 
 namespace CGraphics
 {
+	class RenderObject;
+	enum ShaderStage;
 	class OPENGLRENDERER_EXPORT OpenGLBackend : public IRenderer
 	{
 	public:
@@ -11,8 +13,9 @@ namespace CGraphics
 		~OpenGLBackend() {}
 
 		void setProcAddress(void* address) override;
-		void renderFrame(Window* window) override;
+		void renderFrame(Window* window, Core::CVector<Core::CSharedPtr<RenderObject>> ros) override;
 	private:
-
+		int createShaderProgram(Core::CVector<int> shaders);
+		int createShader(const char* source, CGraphics::ShaderStage stage);
 	};
 }
