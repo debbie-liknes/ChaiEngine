@@ -1,8 +1,8 @@
 #include <OpenGLRenderer/OpenGLRenderer.h>
 #include <glad/glad.h>
 #include <iostream>
-#include <ChaiGraphics/Viewport.h>
-#include <ChaiGraphics/Window.h>
+#include <Engine/Viewport.h>
+#include <Engine/Window.h>
 #include <RenderObjects/RenderObject.h>
 
 namespace CGraphics

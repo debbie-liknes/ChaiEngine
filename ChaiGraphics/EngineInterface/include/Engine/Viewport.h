@@ -1,12 +1,11 @@
 #pragma once
-#include <ChaiGraphicsExport.h>
-#include <ChaiGraphics/Common.h>
+#include <ChaiApiExport.h>
+#include <Engine/Common.h>
 
 namespace CGraphics
 {
-	//rectangular sub region of the window
-	class CHAIGRAPHICS_EXPORT Viewport
-	{
+    class CHAIAPI_EXPORT Viewport
+    {
     public:
         Viewport(int posX, int posY, int width, int height);
         ~Viewport() = default;
@@ -25,5 +24,5 @@ namespace CGraphics
     private:
         int m_x, m_y, m_width, m_height;
         SharedViewer m_viewer;
-	};
+    };
 }

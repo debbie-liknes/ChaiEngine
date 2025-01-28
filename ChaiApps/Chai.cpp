@@ -1,8 +1,8 @@
 ﻿//test exe
 
 #include "Chai.h"
-#include <ChaiGraphics/ChaiWindow.h>
-#include <ChaiGraphics/Viewport.h>
+#include <ChaiEngine/ChaiWindow.h>
+#include <Engine/Viewport.h>
 #include <OpenGLRenderer/OpenGLRenderer.h>
 #include <RenderObjects/Triangle.h>
 
@@ -12,7 +12,7 @@ int main()
 {
 	//TODO:make this a generic window
 	CGraphics::ChaiWindow window("Chai Engine");
-	CGraphics::IRenderer* renderer = new CGraphics::OpenGLBackend();
+	CGraphics::Renderer* renderer = new CGraphics::OpenGLBackend();
 	CGraphics::SharedViewport testViewport = std::make_shared<CGraphics::Viewport>(0, 0, window.GetWidth(), window.GetHeight());
 
 	window.AddViewport(testViewport);
@@ -20,12 +20,14 @@ int main()
 
 	//test ro
 	auto triangle = std::make_shared<CGraphics::TriangleRO>();
+	Core::CVector<Core::CSharedPtr<CGraphics::RenderObject>> ros = { triangle };
 
 	while (window.Show())
 	{
 		window.swapBuffers();
 		window.PollEvents();
-		renderer->renderFrame(&window, {triangle});
+
+		renderer->renderFrame(&window, ros);
 	}
 
 	window.Close();

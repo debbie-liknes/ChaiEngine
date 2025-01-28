@@ -1,12 +1,12 @@
 #pragma once
 #include <OpenGLRendererExport.h>
-#include <ChaiGraphics/IRenderer.h>
+#include <Engine/Renderer.h>
 
 namespace CGraphics
 {
 	class RenderObject;
 	enum ShaderStage;
-	class OPENGLRENDERER_EXPORT OpenGLBackend : public IRenderer
+	class OPENGLRENDERER_EXPORT OpenGLBackend : public Renderer
 	{
 	public:
 		OpenGLBackend();

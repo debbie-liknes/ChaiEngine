@@ -1,5 +1,4 @@
-#pragma once
-#include <ChaiGraphicsExport.h>
+#include <ChaiApiExport.h>
 #include <Core/MemoryTypes.h>
 #include <Core/Containers.h>
 
@@ -7,11 +6,11 @@ namespace CGraphics
 {
 	class RenderObject;
 	class Window;
-	class CHAIGRAPHICS_EXPORT IRenderer
+	class CHAIAPI_EXPORT Renderer
 	{
 	public:
-		IRenderer();
-		~IRenderer() = default;
+		Renderer();
+		~Renderer() = default;
 
 		virtual void setProcAddress(void* address) {}
 		virtual void renderFrame(Window* window, Core::CVector<Core::CSharedPtr<RenderObject>> ros) = 0;

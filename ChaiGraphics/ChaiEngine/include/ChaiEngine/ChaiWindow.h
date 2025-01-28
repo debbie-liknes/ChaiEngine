@@ -1,6 +1,6 @@
 #pragma once
 #include <ChaiGraphicsExport.h>
-#include <ChaiGraphics/Window.h>
+#include <Engine/Window.h>
 #include <Core/Containers.h>
 #include <GLFW/glfw3.h>
 

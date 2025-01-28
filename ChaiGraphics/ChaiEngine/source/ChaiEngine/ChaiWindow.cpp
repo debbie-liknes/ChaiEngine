@@ -1,4 +1,4 @@
-#include <ChaiGraphics/ChaiWindow.h>
+#include <ChaiEngine/ChaiWindow.h>
 #include <iostream>
 
 namespace CGraphics
