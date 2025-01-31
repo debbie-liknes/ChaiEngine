@@ -4,11 +4,15 @@
 #include <Engine/Viewport.h>
 #include <Engine/Window.h>
 #include <RenderObjects/RenderObject.h>
+#include <OpenGLRenderer/GlPipelineState.h>
+#include <glm/glm.hpp>
+#include <algorithm>
 
 namespace CGraphics
 {
 	OpenGLBackend::OpenGLBackend()
 	{
+		m_pipelineState = std::make_shared<GlPipelineState>();
 	}
 
 	void OpenGLBackend::setProcAddress(void* address)
@@ -75,6 +79,48 @@ namespace CGraphics
 		return shaderProgram;
 	}
 
+	void mapTypesToGL()
+	{
+		GL_FLOAT;
+		GL_INT;
+		GL_UNSIGNED_INT;
+	}
+
+	void setUpVBOs(Core::CVector<unsigned int>& vbos, Core::CVector<Core::CSharedPtr<VertexBufferBase>> vbs)
+	{
+		//gen buffers is expensive, only do when necessary
+		glGenBuffers(vbos.size(), vbos.data());
+		for (int i = 0; i < vbos.size(); i++)
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, vbos[i]);
+			glBufferData(GL_ARRAY_BUFFER, vbs[i]->getElementCount() * vbs[i]->getElementSize(), vbs[i]->getRawData(), GL_STATIC_DRAW);
+		}
+	}
+
+	void setUpVAOs(std::map<uint16_t, Core::CSharedPtr<CGraphics::VertexBufferBase>>& vbos)
+	{
+		unsigned int vao;
+		glGenVertexArrays(1, &vao);
+		glBindVertexArray(vao);
+
+		//rn i have different vbos for different attributes
+		//should support interleaved data with strides
+		for (auto& vbInfo : vbos)
+		{
+			auto binding = vbInfo.first;
+			auto& vb = vbInfo.second;
+			glVertexAttribPointer(binding, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+			glEnableVertexAttribArray(0);
+		}
+
+		//glBindVertexArray(0); // Unbind VAO
+	}
+
+	void setUpShaders(Core::CVector<unsigned int>& vbos, Core::CSharedPtr<VertexBufferBase> vb)
+	{
+		//only needs to be done
+	}
+
 	void OpenGLBackend::renderFrame(Window* window, Core::CVector<Core::CSharedPtr<RenderObject>> ros)
 	{
 		for (auto& v : window->GetViewports())
@@ -88,10 +134,19 @@ namespace CGraphics
 		//this is not efficient, atm
 		for (auto& ro : ros)
 		{
-			unsigned int VBO;
-			glGenBuffers(1, &VBO);
-			glBindBuffer(GL_ARRAY_BUFFER, VBO);
-			glBufferData(GL_ARRAY_BUFFER, sizeof(ro->m_verts), ro->m_verts.data(), GL_STATIC_DRAW);
+			Core::CVector<unsigned int> numBuffs;
+			numBuffs.resize(ro->m_vertexBuffers.size());
+
+			if (ro->isDirty())
+			{
+				std::vector<Core::CSharedPtr<VertexBufferBase>> values;
+				std::transform(ro->m_vertexBuffers.begin(), ro->m_vertexBuffers.end(), std::back_inserter(values),
+					[](std::pair<uint16_t, Core::CSharedPtr<VertexBufferBase>> kv) { return kv.second; });
+
+				setUpVBOs(numBuffs, values);
+				setUpVAOs(ro->m_vertexBuffers);
+				ro->setDirty(false);
+			}
 
 			Core::CVector<int> shaders;
 			for (auto& s : ro->m_data)
@@ -101,34 +156,8 @@ namespace CGraphics
 
 			int program = createShaderProgram(shaders);
 
-			{
-				//linking stuff
-				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-				glEnableVertexAttribArray(0);
-
-				//VAO
-				unsigned int VAO;
-				glGenVertexArrays(1, &VAO);
-				// ..:: Initialization code (done once (unless your object frequently changes)) :: ..
-				// 1. bind Vertex Array Object
-				glBindVertexArray(VAO);
-				// 2. copy our vertices array in a buffer for OpenGL to use
-				glBindBuffer(GL_ARRAY_BUFFER, VBO);
-				glBufferData(GL_ARRAY_BUFFER, sizeof(ro->m_verts), ro->m_verts.data(), GL_STATIC_DRAW);
-				// 3. then set our vertex attributes pointers
-				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-				glEnableVertexAttribArray(0);
-
-				// ..:: Drawing code (in render loop) :: ..
-				// 4. draw the object
-				glUseProgram(program);
-				glBindVertexArray(VAO);
-				//someOpenGLFunctionThatDrawsOurTriangle();
-				glUseProgram(program);
-				glBindVertexArray(VAO);
-				glDrawArrays(GL_TRIANGLES, 0, 3);
-			}
-
+			glUseProgram(program);
+			glDrawArrays(GL_TRIANGLES, 0, 3);
 
 			for (auto& s : shaders)
 			{

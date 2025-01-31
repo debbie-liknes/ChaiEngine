@@ -6,6 +6,8 @@ namespace CGraphics
 {
 	class RenderObject;
 	enum ShaderStage;
+	class GlPipelineState;
+
 	class OPENGLRENDERER_EXPORT OpenGLBackend : public Renderer
 	{
 	public:
@@ -17,5 +19,7 @@ namespace CGraphics
 	private:
 		int createShaderProgram(Core::CVector<int> shaders);
 		int createShader(const char* source, CGraphics::ShaderStage stage);
+
+		Core::CSharedPtr<GlPipelineState> m_pipelineState;
 	};
 }

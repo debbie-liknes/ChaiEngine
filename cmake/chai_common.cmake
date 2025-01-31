@@ -1,5 +1,6 @@
 function(SetLang)
-    set_target_properties(${target_name} PROPERTIES LINKER_LANGUAGE CXX)
+    #set_target_properties(${target_name} PROPERTIES LINKER_LANGUAGE CXX)
+    #target_compile_features(${target_name} PRIVATE cxx_std_20)
 endfunction()
 
 function(ChaiLibDefaults target_name optional_path)
@@ -10,7 +11,6 @@ function(ChaiLibDefaults target_name optional_path)
     #stuff idk
     SetLang()
     #set_target_properties(${target_name} PROPERTIES LINKER_LANGUAGE CXX)
-    target_compile_features(${target_name} PRIVATE cxx_std_17)
 
     #want to be able to include the directory via #include <MyLibraryExport.h>
     target_include_directories(${target_name} PUBLIC ${CMAKE_BINARY_DIR}/exports/${target_name})

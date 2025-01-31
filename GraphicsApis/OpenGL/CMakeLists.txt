@@ -1,6 +1,7 @@
 
 set(OpenGLRenderer_headers
 	include/OpenGLRenderer/OpenGLRenderer.h
+	include/OpenGLRenderer/GlPipelineState.h
 )
 
 set(OpenGLRenderer_source

@@ -15,7 +15,6 @@ set(ChaiGraphics_source
 )
 
 find_package(glfw3 REQUIRED)
-find_package(glm REQUIRED)
 add_library (ChaiGraphics SHARED ${ChaiGraphics_headers} ${ChaiGraphics_source})
 
 target_include_directories(ChaiGraphics PUBLIC include)

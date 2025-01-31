@@ -1,11 +1,12 @@
+#pragma once
 #include <ChaiGraphicsExport.h>
 #include <Core/Containers.h>
+#include <Core/MemoryTypes.h>
+#include <Engine/VertexBuffer.h>
+#include <map>
 
 namespace CGraphics
 {
-	//template <typename T>
-	//concept DerivedFromParent = std::is_base_of<IRenderer, T>::value;
-
 	enum CHAIGRAPHICS_EXPORT ShaderStage
 	{
 		VERTEX,
@@ -24,9 +25,23 @@ namespace CGraphics
 	public:
 		RenderObject();
 		~RenderObject();
-		void AddShader(std::string dataString, ShaderStage stage);
 
-		Core::CVector<float> m_verts;
 		Core::CVector<ShaderData> m_data;
+		std::map<uint16_t, std::shared_ptr<VertexBufferBase>> m_vertexBuffers;
+
+		bool isDirty();
+		void setDirty(bool dirty = true);
+
+	protected:
+		void AddShader(std::string file, ShaderStage stage);
+		void AddShaderSource(std::string dataString, ShaderStage stage);
+
+		void AddVertexBuffer(Core::CSharedPtr<VertexBufferBase> vbo, uint16_t binding)
+		{
+			m_vertexBuffers[binding] = vbo;
+		}
+
+	private:
+		bool m_dirty = true;
 	};
 }

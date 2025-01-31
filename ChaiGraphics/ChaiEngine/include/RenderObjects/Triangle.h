@@ -1,4 +1,5 @@
 #include <RenderObjects/RenderObject.h>
+#include <glm/glm.hpp>
 
 namespace CGraphics
 {
@@ -7,5 +8,8 @@ namespace CGraphics
 	public:
 		TriangleRO();
 		~TriangleRO();
+
+	private:
+		SharedVBO<glm::vec3> m_vertexData;
 	};
 }
