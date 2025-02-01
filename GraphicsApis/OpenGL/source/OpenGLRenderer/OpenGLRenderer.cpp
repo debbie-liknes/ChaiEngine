@@ -79,11 +79,20 @@ namespace CGraphics
 		return shaderProgram;
 	}
 
-	void mapTypesToGL()
+	int mapTypesToGL(DataType type)
 	{
-		GL_FLOAT;
-		GL_INT;
-		GL_UNSIGNED_INT;
+		switch (type)
+		{
+		case CGraphics::FLOAT:
+			return GL_FLOAT;
+		case CGraphics::INT:
+			return GL_INT;
+		case CGraphics::UNSIGNED_INT:
+			return GL_UNSIGNED_INT;
+		default:
+			break;
+		}
+		return GL_FLOAT;
 	}
 
 	void setUpVBOs(Core::CVector<unsigned int>& vbos, Core::CVector<Core::CSharedPtr<VertexBufferBase>> vbs)
@@ -109,7 +118,7 @@ namespace CGraphics
 		{
 			auto binding = vbInfo.first;
 			auto& vb = vbInfo.second;
-			glVertexAttribPointer(binding, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+			glVertexAttribPointer(binding, vb->getNumElementsInType(), mapTypesToGL(vb->getUnderlyingType()), GL_FALSE, vb->getElementSize(), (void*)0);
 			glEnableVertexAttribArray(0);
 		}
 

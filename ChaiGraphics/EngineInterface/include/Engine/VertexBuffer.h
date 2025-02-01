@@ -3,17 +3,17 @@
 #include <Core/Containers.h>
 #include <Core/MemoryTypes.h>
 #include <glm/glm.hpp>
-#include <concepts>
-
-template <typename T>
-concept AllowedType = std::same_as<T, int> ||
-std::same_as<T, unsigned int> ||
-std::same_as<T, float> ||
-std::same_as<T, glm::vec2> ||
-std::same_as<T, glm::vec3>;
+#include <Core/TypeHelpers.h>
 
 namespace CGraphics
 {
+	enum DataType
+	{
+		FLOAT,
+		INT,
+		UNSIGNED_INT
+	};
+
 	class CHAIAPI_EXPORT VertexBufferBase {
 	public:
 		virtual ~VertexBufferBase() = default;
@@ -26,6 +26,10 @@ namespace CGraphics
 
 		// Returns a raw pointer to the data
 		virtual const void* getRawData() const = 0;
+
+		virtual std::size_t getNumElementsInType() const = 0;
+
+		virtual DataType getUnderlyingType() const = 0;
 	};
 
 	// Templated derived class for storing vertex buffer data
@@ -34,9 +38,13 @@ namespace CGraphics
 	public:
 		Core::CVector<T> data;
 
-		VertexBuffer() {}
+		VertexBuffer(DataType underlyingType, size_t numElements) :
+			m_underlyingType(underlyingType), m_numElements(numElements)
+		{}
 		virtual ~VertexBuffer() = default;
-		VertexBuffer(Core::CVector<T> d) : data(d) {}
+		VertexBuffer(Core::CVector<T> d, DataType underlyingType, size_t numElements) : 
+			data(d), m_underlyingType(underlyingType), m_numElements(numElements)
+		{}
 
 		size_t getElementSize() const override {
 			return sizeof(T); // Size of one element
@@ -49,6 +57,18 @@ namespace CGraphics
 		const void* getRawData() const override {
 			return data.data(); // Pointer to raw data
 		}
+
+		std::size_t getNumElementsInType() const override {
+			return m_numElements;
+		}
+
+		DataType getUnderlyingType() const override {
+			return m_underlyingType;
+		}
+
+	private:
+		size_t m_numElements = 1;
+		DataType m_underlyingType = DataType::FLOAT;
 	};
 
 	template <typename T>
@@ -58,14 +78,16 @@ namespace CGraphics
 	using SharedVBO = Core::CSharedPtr<VBO<T>>;
 
 	template <typename T>
-	SharedVBO<T> createVertexBuffer()
+	SharedVBO<T> createVertexBuffer(DataType underlyingType, size_t numElements)
 	{
-		return std::make_shared<VertexBuffer<T>>();
+		return std::make_shared<VertexBuffer<T>>(underlyingType, numElements);
 	}
 
+	//i can simplify these params with template meta programming
+	//later ;)
 	template <typename T>
-	SharedVBO<T> createVertexBuffer(Core::CVector<T> data)
+	SharedVBO<T> createVertexBuffer(Core::CVector<T> data, DataType underlyingType, size_t numElements)
 	{
-		return std::make_shared<VertexBuffer<T>>(data);
+		return std::make_shared<VertexBuffer<T>>(data, underlyingType, numElements);
 	}
 }

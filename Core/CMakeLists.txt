@@ -3,6 +3,7 @@
 set(Core_headers
 	include/Core/Containers.h
 	include/Core/MemoryTypes.h
+	include/Core/TypeHelpers.h
 )
 
 set(Core_source
