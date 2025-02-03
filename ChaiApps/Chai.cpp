@@ -26,8 +26,8 @@ int main()
 	{
 		window.swapBuffers();
 		window.PollEvents();
-
 		renderer->renderFrame(&window, ros);
+
 	}
 
 	window.Close();

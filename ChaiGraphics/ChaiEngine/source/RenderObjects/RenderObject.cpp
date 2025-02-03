@@ -30,4 +30,25 @@ namespace CGraphics
 	{
 		m_dirty = dirty;
 	}
+
+	bool RenderObject::hasIndexBuffer()
+	{
+		return m_hasIndexBuffer;
+	}
+
+	void RenderObject::AddVertexBuffer(Core::CSharedPtr<VertexBufferBase> vbo, uint16_t binding)
+	{
+		m_vertexBuffers[binding] = vbo;
+	}
+
+	void RenderObject::AddIndexBuffer(Core::CSharedPtr<VertexBufferBase> vbo, uint16_t binding)
+	{
+		m_indexBuffer = { binding, vbo };
+		m_hasIndexBuffer = true;
+	}
+
+	PrimitiveMode RenderObject::getPrimitiveType()
+	{
+		return m_primType;
+	}
 }

@@ -90,4 +90,6 @@ namespace CGraphics
 	{
 		return std::make_shared<VertexBuffer<T>>(data, underlyingType, numElements);
 	}
+
+	SharedVBO<uint32_t> createIndexBuffer();
 }

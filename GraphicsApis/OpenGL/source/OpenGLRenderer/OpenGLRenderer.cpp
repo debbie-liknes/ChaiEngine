@@ -98,6 +98,7 @@ namespace CGraphics
 	void setUpVBOs(Core::CVector<unsigned int>& vbos, Core::CVector<Core::CSharedPtr<VertexBufferBase>> vbs)
 	{
 		//gen buffers is expensive, only do when necessary
+		//should really only do this on init
 		glGenBuffers(vbos.size(), vbos.data());
 		for (int i = 0; i < vbos.size(); i++)
 		{
@@ -106,12 +107,27 @@ namespace CGraphics
 		}
 	}
 
-	void setUpVAOs(std::map<uint16_t, Core::CSharedPtr<CGraphics::VertexBufferBase>>& vbos)
+	void setUpEBOs(Core::CSharedPtr<VertexBufferBase> ib)
+	{
+		unsigned int EBO;
+		glGenBuffers(1, &EBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib->getElementCount() * ib->getElementSize(), ib->getRawData(), GL_STATIC_DRAW);
+	}
+
+	unsigned int setUpVAOs(std::map<uint16_t, Core::CSharedPtr<CGraphics::VertexBufferBase>>& vbos)
 	{
 		unsigned int vao;
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);
 
+		return vao;
+
+		//glBindVertexArray(0); // Unbind VAO
+	}
+
+	void setAttributes(std::map<uint16_t, Core::CSharedPtr<CGraphics::VertexBufferBase>>& vbos)
+	{
 		//rn i have different vbos for different attributes
 		//should support interleaved data with strides
 		for (auto& vbInfo : vbos)
@@ -121,13 +137,27 @@ namespace CGraphics
 			glVertexAttribPointer(binding, vb->getNumElementsInType(), mapTypesToGL(vb->getUnderlyingType()), GL_FALSE, vb->getElementSize(), (void*)0);
 			glEnableVertexAttribArray(0);
 		}
-
-		//glBindVertexArray(0); // Unbind VAO
 	}
 
 	void setUpShaders(Core::CVector<unsigned int>& vbos, Core::CSharedPtr<VertexBufferBase> vb)
 	{
 		//only needs to be done
+	}
+
+	int toGLPrimitive(PrimitiveMode mode)
+	{
+		switch (mode)
+		{
+		case CGraphics::POINTS:
+			return GL_POINTS;
+		case CGraphics::LINES:
+			return GL_LINES;
+		case CGraphics::TRIANGLES:
+			return GL_TRIANGLES;
+		default:
+			break;
+		}
+		return GL_TRIANGLES;
 	}
 
 	void OpenGLBackend::renderFrame(Window* window, Core::CVector<Core::CSharedPtr<RenderObject>> ros)
@@ -154,6 +184,11 @@ namespace CGraphics
 
 				setUpVBOs(numBuffs, values);
 				setUpVAOs(ro->m_vertexBuffers);
+				if (ro->hasIndexBuffer())
+				{
+					setUpEBOs(ro->m_indexBuffer.second);
+				}
+				setAttributes(ro->m_vertexBuffers);
 				ro->setDirty(false);
 			}
 
@@ -166,7 +201,15 @@ namespace CGraphics
 			int program = createShaderProgram(shaders);
 
 			glUseProgram(program);
-			glDrawArrays(GL_TRIANGLES, 0, 3);
+
+			if (ro->hasIndexBuffer())
+			{
+				glDrawElements(toGLPrimitive(ro->getPrimitiveType()), ro->m_indexBuffer.second->getElementCount(), mapTypesToGL(ro->m_indexBuffer.second->getUnderlyingType()), 0);
+			}
+			else
+			{
+				glDrawArrays(toGLPrimitive(ro->getPrimitiveType()), 0, 3);
+			}
 
 			for (auto& s : shaders)
 			{
