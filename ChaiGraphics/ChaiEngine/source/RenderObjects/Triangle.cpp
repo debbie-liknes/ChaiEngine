@@ -12,33 +12,41 @@ namespace CGraphics
 		glm::vec3 p4 = { -0.5f,  0.5f, 0.0f };
 		m_vertexData->data = { p1, p2, p3, p4 };
 
+		m_colorData = createVertexBuffer<glm::vec4>(DataType::FLOAT, 4);
+		AddVertexBuffer(m_colorData, 1);
+		glm::vec4 c1 = { 1.f,  0.f, 0.f, 1.f };
+		glm::vec4 c2 = { 0.f, 1.f, 0.f, 1.f };
+		glm::vec4 c3 = { 0.f, 0.f, 1.f, 1.f };
+		glm::vec4 c4 = { 1.f,  1.f, 0.f, 1.f };
+		m_colorData->data = { c1, c2, c3, c4 };
+
 		m_indexBuffer = createIndexBuffer();
 		AddIndexBuffer(m_indexBuffer, 1);
 		m_indexBuffer->data = { 0, 1, 3, 1, 2, 3 };
-	//	unsigned int indices[] = {  // note that we start from 0!
-	//0, 1, 3,  // first Triangle
-	//1, 2, 3   // second Triangle
-	//	};
 
 
 		//shader shit
 		const char* vertexShaderSource = "#version 330 core\n"
 			"layout (location = 0) in vec3 aPos;\n"
+			"layout (location = 1) in vec3 aCol;\n"
+			"out vec3 outCol;\n"
 			"void main()\n"
 			"{\n"
+			"   outCol = aCol;\n"
 			"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
 			"}\0";
 
 		//frag shader shit
-		const char* fragShaderSource = "#version 330 core\n"
+		const char* fragmentShaderSource = "#version 330 core\n"
+			"in vec3 outCol;\n"  // Matches 'outCol' from vertex shader
 			"out vec4 FragColor;\n"
 			"void main()\n"
 			"{\n"
-			"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+			"   FragColor = vec4(outCol, 1.0);\n"  // Use color from vertex shader
 			"}\0";
 
 		AddShaderSource(vertexShaderSource, ShaderStage::VERTEX);
-		AddShaderSource(fragShaderSource, ShaderStage::FRAGMENT);
+		AddShaderSource(fragmentShaderSource, ShaderStage::FRAGMENT);
 	}
 
 	TriangleRO::~TriangleRO()

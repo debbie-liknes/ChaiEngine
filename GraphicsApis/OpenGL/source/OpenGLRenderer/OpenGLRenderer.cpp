@@ -95,15 +95,25 @@ namespace CGraphics
 		return GL_FLOAT;
 	}
 
-	void setUpVBOs(Core::CVector<unsigned int>& vbos, Core::CVector<Core::CSharedPtr<VertexBufferBase>> vbs)
+	void setUpVBOs(Core::CVector<unsigned int>& glVbs, std::map<uint16_t, Core::CSharedPtr<VertexBufferBase>> vbs)
 	{
+		//an assert here?
+		if (glVbs.size() != vbs.size()) return;
 		//gen buffers is expensive, only do when necessary
 		//should really only do this on init
-		glGenBuffers(vbos.size(), vbos.data());
-		for (int i = 0; i < vbos.size(); i++)
+		glGenBuffers(glVbs.size(), glVbs.data());
+		int i = 0;
+		for (auto vb : vbs)
 		{
-			glBindBuffer(GL_ARRAY_BUFFER, vbos[i]);
+			uint32_t binding = vb.first;
+			auto buffer = vb.second;
+			glBindBuffer(GL_ARRAY_BUFFER, glVbs[i]);
 			glBufferData(GL_ARRAY_BUFFER, vbs[i]->getElementCount() * vbs[i]->getElementSize(), vbs[i]->getRawData(), GL_STATIC_DRAW);
+			
+			glVertexAttribPointer(binding, buffer->getNumElementsInType(), mapTypesToGL(buffer->getUnderlyingType()), GL_FALSE, buffer->getElementSize(), (void*)0);
+			glEnableVertexAttribArray(binding);
+
+			i++;
 		}
 	}
 
@@ -122,21 +132,6 @@ namespace CGraphics
 		glBindVertexArray(vao);
 
 		return vao;
-
-		//glBindVertexArray(0); // Unbind VAO
-	}
-
-	void setAttributes(std::map<uint16_t, Core::CSharedPtr<CGraphics::VertexBufferBase>>& vbos)
-	{
-		//rn i have different vbos for different attributes
-		//should support interleaved data with strides
-		for (auto& vbInfo : vbos)
-		{
-			auto binding = vbInfo.first;
-			auto& vb = vbInfo.second;
-			glVertexAttribPointer(binding, vb->getNumElementsInType(), mapTypesToGL(vb->getUnderlyingType()), GL_FALSE, vb->getElementSize(), (void*)0);
-			glEnableVertexAttribArray(0);
-		}
 	}
 
 	void setUpShaders(Core::CVector<unsigned int>& vbos, Core::CSharedPtr<VertexBufferBase> vb)
@@ -178,17 +173,12 @@ namespace CGraphics
 
 			if (ro->isDirty())
 			{
-				std::vector<Core::CSharedPtr<VertexBufferBase>> values;
-				std::transform(ro->m_vertexBuffers.begin(), ro->m_vertexBuffers.end(), std::back_inserter(values),
-					[](std::pair<uint16_t, Core::CSharedPtr<VertexBufferBase>> kv) { return kv.second; });
-
-				setUpVBOs(numBuffs, values);
 				setUpVAOs(ro->m_vertexBuffers);
+				setUpVBOs(numBuffs, ro->m_vertexBuffers);
 				if (ro->hasIndexBuffer())
 				{
 					setUpEBOs(ro->m_indexBuffer.second);
 				}
-				setAttributes(ro->m_vertexBuffers);
 				ro->setDirty(false);
 			}
 
@@ -204,7 +194,7 @@ namespace CGraphics
 
 			if (ro->hasIndexBuffer())
 			{
-				glDrawElements(toGLPrimitive(ro->getPrimitiveType()), ro->m_indexBuffer.second->getElementCount(), mapTypesToGL(ro->m_indexBuffer.second->getUnderlyingType()), 0);
+				glDrawElements(toGLPrimitive(ro->getPrimitiveType()), ro->m_indexBuffer.second->getElementCount(), mapTypesToGL(ro->m_indexBuffer.second->getUnderlyingType()), (void*)0);
 			}
 			else
 			{
