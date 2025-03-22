@@ -3,6 +3,7 @@
 #include <Core/Containers.h>
 #include <Core/MemoryTypes.h>
 #include <Engine/VertexBuffer.h>
+#include <Engine/UniformBuffer.h>
 #include <map>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -38,6 +39,7 @@ namespace CGraphics
 
 		Core::CVector<ShaderData> m_data;
 		std::map<uint16_t, std::shared_ptr<VertexBufferBase>> m_vertexBuffers;
+		std::map<uint16_t, std::shared_ptr<UniformBufferBase>> m_uniforms;
 		std::pair<uint16_t, std::shared_ptr<VertexBufferBase>> m_indexBuffer;
 
 
@@ -54,6 +56,7 @@ namespace CGraphics
 
 		void AddVertexBuffer(Core::CSharedPtr<VertexBufferBase> vbo, uint16_t binding);
 		void AddIndexBuffer(Core::CSharedPtr<VertexBufferBase> vbo, uint16_t binding);
+		void AddUniform(Core::CSharedPtr<UniformBufferBase> ubo, uint16_t binding);
 
 		PrimitiveMode m_primType = PrimitiveMode::TRIANGLES;
 

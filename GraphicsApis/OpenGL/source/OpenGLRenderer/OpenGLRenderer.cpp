@@ -7,6 +7,9 @@
 #include <OpenGLRenderer/GlPipelineState.h>
 #include <glm/glm.hpp>
 #include <algorithm>
+#include <Core/TypeHelpers.h>
+
+using namespace chai;
 
 namespace CGraphics
 {
@@ -79,15 +82,15 @@ namespace CGraphics
 		return shaderProgram;
 	}
 
-	int mapTypesToGL(DataType type)
+	int mapTypesToGL(PrimDataType type)
 	{
 		switch (type)
 		{
-		case CGraphics::FLOAT:
+		case PrimDataType::FLOAT:
 			return GL_FLOAT;
-		case CGraphics::INT:
+		case PrimDataType::INT:
 			return GL_INT;
-		case CGraphics::UNSIGNED_INT:
+		case PrimDataType::UNSIGNED_INT:
 			return GL_UNSIGNED_INT;
 		default:
 			break;
@@ -134,6 +137,24 @@ namespace CGraphics
 		return vao;
 	}
 
+	void setUpUniforms(int shaderProgram, std::map<uint16_t, Core::CSharedPtr<CGraphics::UniformBufferBase>>& ubos)
+	{
+		GLuint uboMatrices;
+		glGenBuffers(ubos.size(), &uboMatrices);
+		glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+		for (auto& ub : ubos)
+		{
+			// Allocate memory for the UBO (size of 3 matrices)
+			glBufferData(GL_UNIFORM_BUFFER, ub.second->getElementSize(), ub.second->getRawData(), GL_STATIC_DRAW);
+
+			// Bind the UBO to a binding point (e.g., binding point 0)
+			glBindBufferBase(GL_UNIFORM_BUFFER, 0, uboMatrices);
+
+			int ubLocation = glGetUniformLocation(shaderProgram, ub.second->name.c_str());
+			glUniformBlockBinding(shaderProgram, ubLocation, 0);
+		}
+	}
+
 	void setUpShaders(Core::CVector<unsigned int>& vbos, Core::CSharedPtr<VertexBufferBase> vb)
 	{
 		//only needs to be done
@@ -143,11 +164,11 @@ namespace CGraphics
 	{
 		switch (mode)
 		{
-		case CGraphics::POINTS:
+		case PrimitiveMode::POINTS:
 			return GL_POINTS;
-		case CGraphics::LINES:
+		case PrimitiveMode::LINES:
 			return GL_LINES;
-		case CGraphics::TRIANGLES:
+		case PrimitiveMode::TRIANGLES:
 			return GL_TRIANGLES;
 		default:
 			break;
@@ -189,6 +210,8 @@ namespace CGraphics
 			}
 
 			int program = createShaderProgram(shaders);
+
+			setUpUniforms(program, ro->m_uniforms);
 
 			glUseProgram(program);
 

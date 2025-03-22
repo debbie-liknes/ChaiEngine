@@ -5,15 +5,10 @@
 #include <glm/glm.hpp>
 #include <Core/TypeHelpers.h>
 
+using namespace chai;
+
 namespace CGraphics
 {
-	enum DataType
-	{
-		FLOAT,
-		INT,
-		UNSIGNED_INT
-	};
-
 	class CHAIAPI_EXPORT VertexBufferBase {
 	public:
 		virtual ~VertexBufferBase() = default;
@@ -29,7 +24,7 @@ namespace CGraphics
 
 		virtual std::size_t getNumElementsInType() const = 0;
 
-		virtual DataType getUnderlyingType() const = 0;
+		virtual PrimDataType getUnderlyingType() const = 0;
 	};
 
 	// Templated derived class for storing vertex buffer data
@@ -38,11 +33,11 @@ namespace CGraphics
 	public:
 		Core::CVector<T> data;
 
-		VertexBuffer(DataType underlyingType, size_t numElements) :
+		VertexBuffer(PrimDataType underlyingType, size_t numElements) :
 			m_underlyingType(underlyingType), m_numElements(numElements)
 		{}
 		virtual ~VertexBuffer() = default;
-		VertexBuffer(Core::CVector<T> d, DataType underlyingType, size_t numElements) : 
+		VertexBuffer(Core::CVector<T> d, PrimDataType underlyingType, size_t numElements) :
 			data(d), m_underlyingType(underlyingType), m_numElements(numElements)
 		{}
 
@@ -62,13 +57,13 @@ namespace CGraphics
 			return m_numElements;
 		}
 
-		DataType getUnderlyingType() const override {
+		PrimDataType getUnderlyingType() const override {
 			return m_underlyingType;
 		}
 
 	private:
 		size_t m_numElements = 1;
-		DataType m_underlyingType = DataType::FLOAT;
+		PrimDataType m_underlyingType = PrimDataType::FLOAT;
 	};
 
 	template <typename T>
@@ -78,7 +73,7 @@ namespace CGraphics
 	using SharedVBO = Core::CSharedPtr<VBO<T>>;
 
 	template <typename T>
-	SharedVBO<T> createVertexBuffer(DataType underlyingType, size_t numElements)
+	SharedVBO<T> createVertexBuffer(PrimDataType underlyingType, size_t numElements)
 	{
 		return std::make_shared<VertexBuffer<T>>(underlyingType, numElements);
 	}
@@ -86,7 +81,7 @@ namespace CGraphics
 	//i can simplify these params with template meta programming
 	//later ;)
 	template <typename T>
-	SharedVBO<T> createVertexBuffer(Core::CVector<T> data, DataType underlyingType, size_t numElements)
+	SharedVBO<T> createVertexBuffer(Core::CVector<T> data, PrimDataType underlyingType, size_t numElements)
 	{
 		return std::make_shared<VertexBuffer<T>>(data, underlyingType, numElements);
 	}

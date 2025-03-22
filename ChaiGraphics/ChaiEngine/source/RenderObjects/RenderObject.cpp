@@ -47,6 +47,11 @@ namespace CGraphics
 		m_hasIndexBuffer = true;
 	}
 
+	void RenderObject::AddUniform(Core::CSharedPtr<UniformBufferBase> ubo, uint16_t binding)
+	{
+		m_uniforms[binding] = ubo;
+	}
+
 	PrimitiveMode RenderObject::getPrimitiveType()
 	{
 		return m_primType;

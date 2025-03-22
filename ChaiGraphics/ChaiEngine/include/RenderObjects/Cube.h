@@ -11,7 +11,7 @@ namespace CGraphics
 
 	private:
 		SharedVBO<glm::vec3> m_vertexData;
-		SharedVBO<glm::vec4> m_colorData;
+		SharedUBO<glm::vec3> m_colorData;
 		SharedVBO<uint32_t> m_indexBuffer;
 	};
 }

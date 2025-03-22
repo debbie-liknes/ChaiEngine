@@ -7,12 +7,14 @@ set(ChaiApi_headers
 	include/Engine/IPipeline.h
 	include/Engine/PipelineState.h
 	include/Engine/VertexBuffer.h
+	include/Engine/UniformBuffer.h
 	include/Engine/Shader.h
 )
 
 set(ChaiApi_source
 	source/Engine/Renderer.cpp
 	source/Engine/VertexBuffer.cpp
+	source/Engine/UniformBuffer.cpp
 )
 
 find_package(glm CONFIG REQUIRED)
