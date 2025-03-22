@@ -4,7 +4,7 @@
 #include <ChaiEngine/ChaiWindow.h>
 #include <Engine/Viewport.h>
 #include <OpenGLRenderer/OpenGLRenderer.h>
-#include <RenderObjects/Triangle.h>
+#include <RenderObjects/Cube.h>
 
 using namespace std;
 
@@ -19,7 +19,7 @@ int main()
 	renderer->setProcAddress(window.getProcAddress());
 
 	//test ro
-	auto triangle = std::make_shared<CGraphics::TriangleRO>();
+	auto triangle = std::make_shared<CGraphics::CubeRO>();
 	Core::CVector<Core::CSharedPtr<CGraphics::RenderObject>> ros = { triangle };
 
 	while (window.Show())

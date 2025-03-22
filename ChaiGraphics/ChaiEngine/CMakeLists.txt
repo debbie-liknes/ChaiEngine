@@ -5,13 +5,14 @@ set(ChaiGraphics_headers
 	include/ChaiEngine/Viewer.h
 	include/RenderObjects/RenderObject.h
 	include/RenderObjects/Triangle.h
+	include/RenderObjects/Cube.h
 )
 
 set(ChaiGraphics_source
 	source/ChaiEngine/ChaiWindow.cpp
 	source/ChaiEngine/Viewer.cpp
 	source/RenderObjects/RenderObject.cpp
-	source/RenderObjects/Triangle.cpp
+	source/RenderObjects/Cube.cpp
 )
 
 find_package(glfw3 REQUIRED)

@@ -1,5 +1,6 @@
 #pragma once
 #include <ChaiGraphicsExport.h>
+#include <glm/glm.hpp>
 
 namespace CGraphics
 {
@@ -11,6 +12,10 @@ namespace CGraphics
     public:
         Viewer();
         ~Viewer() = default;
+
+
+        glm::mat4 projMat;
+        glm::mat4 view;
 
         // Camera controls
         /*void SetPosition(float x, float y, float z);
