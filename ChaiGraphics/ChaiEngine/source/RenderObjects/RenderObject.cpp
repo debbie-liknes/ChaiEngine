@@ -51,4 +51,9 @@ namespace CGraphics
 	{
 		return m_primType;
 	}
+
+	glm::mat4 RenderObject::getModelMatrix() const
+	{
+		return glm::translate(glm::mat4(1.f), m_position) * glm::mat4_cast(m_rotation) * glm::scale(glm::mat4(1.f), m_scale);
+	}
 }

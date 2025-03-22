@@ -4,6 +4,9 @@
 #include <Core/MemoryTypes.h>
 #include <Engine/VertexBuffer.h>
 #include <map>
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace CGraphics
 {
@@ -43,6 +46,8 @@ namespace CGraphics
 		bool hasIndexBuffer();
 		PrimitiveMode getPrimitiveType();
 
+		glm::mat4 getModelMatrix() const;
+
 	protected:
 		void AddShader(std::string file, ShaderStage stage);
 		void AddShaderSource(std::string dataString, ShaderStage stage);
@@ -55,5 +60,10 @@ namespace CGraphics
 	private:
 		bool m_dirty = true;
 		bool m_hasIndexBuffer = false;
+
+		glm::vec3 m_position;
+		glm::quat m_rotation;
+		glm::mat4 m_modelMat;
+		glm::vec3 m_scale;
 	};
 }

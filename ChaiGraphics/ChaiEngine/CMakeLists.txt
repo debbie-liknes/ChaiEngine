@@ -1,16 +1,24 @@
 # Add source to this project's executable.
 
 set(ChaiGraphics_headers
-	include/ChaiEngine/ChaiWindow.h
-	include/ChaiEngine/Viewer.h
 	include/RenderObjects/RenderObject.h
 	include/RenderObjects/Triangle.h
 	include/RenderObjects/Cube.h
 )
 
 set(ChaiGraphics_source
-	source/ChaiEngine/ChaiWindow.cpp
-	source/ChaiEngine/Viewer.cpp
+	source/RenderObjects/RenderObject.cpp
+	source/RenderObjects/Cube.cpp
+)
+
+#this makes me cry
+source_group("Renderables/headers" FILES
+	include/RenderObjects/RenderObject.h
+	include/RenderObjects/Triangle.h
+	include/RenderObjects/Cube.h
+)
+
+source_group("Renderables/src" FILES
 	source/RenderObjects/RenderObject.cpp
 	source/RenderObjects/Cube.cpp
 )

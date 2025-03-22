@@ -1,18 +1,20 @@
 #pragma once
-#include <ChaiApiExport.h>
-#include <Engine/Common.h>
+#include <WindowModuleExport.h>
+#include <Core/MemoryTypes.h>
 
 namespace CGraphics
 {
-    class CHAIAPI_EXPORT Viewport
+    //class SharedViewer;
+
+    class WINDOWMODULE_EXPORT Viewport
     {
     public:
         Viewport(int posX, int posY, int width, int height);
         ~Viewport() = default;
 
         // Viewer management
-        void SetViewer(SharedViewer viewer);
-        SharedViewer GetViewer() const;
+        //void SetViewer(SharedViewer viewer);
+        //SharedViewer GetViewer() const;
 
         // Rendering
         //virtual void Render() = 0; // Renders the scene using the assigned viewer
@@ -23,6 +25,7 @@ namespace CGraphics
 
     private:
         int m_x, m_y, m_width, m_height;
-        SharedViewer m_viewer;
+        //SharedViewer m_viewer;
     };
+    typedef std::shared_ptr<Viewport> SharedViewport;
 }

@@ -1,5 +1,5 @@
-#include <Engine/Window.h>
-#include <Engine/Viewport.h>
+#include <Window/Window.h>
+#include <Window/Viewport.h>
 
 namespace CGraphics
 {

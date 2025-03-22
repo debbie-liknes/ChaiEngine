@@ -1,4 +1,5 @@
-#include <Engine/Viewport.h>
+#include <Window/Viewport.h>
+//#include <>
 
 
 namespace CGraphics
@@ -9,15 +10,15 @@ namespace CGraphics
 
 	}
 
-	void Viewport::SetViewer(SharedViewer viewer)
-	{
-		m_viewer = viewer;
-	}
+	//void Viewport::SetViewer(SharedViewer viewer)
+	//{
+	//	m_viewer = viewer;
+	//}
 
-	SharedViewer Viewport::GetViewer() const
-	{
-		return m_viewer;
-	}
+	//SharedViewer Viewport::GetViewer() const
+	//{
+	//	return m_viewer;
+	//}
 
 	void Viewport::SetDimensions(int x, int y, int width, int height)
 	{

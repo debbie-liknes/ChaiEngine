@@ -1,8 +1,8 @@
 ﻿//test exe
 
 #include "Chai.h"
-#include <ChaiEngine/ChaiWindow.h>
-#include <Engine/Viewport.h>
+#include <Window/GLFWImpl.h>
+#include <Window/Viewport.h>
 #include <OpenGLRenderer/OpenGLRenderer.h>
 #include <RenderObjects/Cube.h>
 

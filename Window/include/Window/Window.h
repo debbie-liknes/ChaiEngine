@@ -1,12 +1,14 @@
 #pragma once
-#include <ChaiApiExport.h>
-#include <Engine/Common.h>
+#include <WindowModuleExport.h>
+#include <Core/Containers.h>
+#include <Core/MemoryTypes.h>
 
 namespace CGraphics
 {
     //top level container, responsible for interacting with the OS, polling for events
     //can have 0 or more viewports
-    class CHAIAPI_EXPORT Window
+    using SharedViewport = std::shared_ptr<class Viewport>;
+    class WINDOWMODULE_EXPORT Window
     {
     public:
 

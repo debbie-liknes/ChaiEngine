@@ -1,8 +1,8 @@
 #include <OpenGLRenderer/OpenGLRenderer.h>
 #include <glad/glad.h>
 #include <iostream>
-#include <Engine/Viewport.h>
-#include <Engine/Window.h>
+#include <Window/Viewport.h>
+#include <Window/Window.h>
 #include <RenderObjects/RenderObject.h>
 #include <OpenGLRenderer/GlPipelineState.h>
 #include <glm/glm.hpp>
