@@ -18,6 +18,7 @@ set(ChaiGraphics_source
 	source/ChaiEngine/Renderer.cpp
 	source/ChaiEngine/VertexBuffer.cpp
 	source/ChaiEngine/UniformBuffer.cpp
+	source/ChaiEngine/Shader.cpp
 )
 
 #this makes me cry
@@ -45,6 +46,7 @@ source_group("Graphics/src" FILES
 	source/ChaiEngine/Renderer.cpp
 	source/ChaiEngine/VertexBuffer.cpp
 	source/ChaiEngine/UniformBuffer.cpp
+	source/ChaiEngine/Shader.cpp
 )
 find_package(glm CONFIG REQUIRED)
 

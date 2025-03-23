@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <memory>
 
 namespace chai_graphics
 {
@@ -40,7 +41,7 @@ namespace chai_graphics
         virtual void unbind() const = 0;
 
         // Factory method
-        static Shader* create(bool useVulkan);
+        static std::shared_ptr<Shader> create();
 
     protected:
         std::unordered_map<std::string, int> uniformLocations;

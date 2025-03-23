@@ -7,6 +7,7 @@ set(OpenGLRenderer_headers
 
 set(OpenGLRenderer_source
 	source/OpenGLRenderer/OpenGLRenderer.cpp
+	source/OpenGLRenderer/GLShader.cpp
 )
 
 find_package(glad CONFIG REQUIRED)
