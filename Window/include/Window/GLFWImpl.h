@@ -3,6 +3,7 @@
 #include <Window/Window.h>
 #include <Core/Containers.h>
 #include <GLFW/glfw3.h>
+#include <Window/InputState.h>
 
 namespace chai
 {
@@ -25,6 +26,7 @@ namespace chai
 
         //this is OpenGL specific, vulkan does it differently
         void swapBuffers();
+        InputState m_state;
     private:
 
         GLFWwindow* m_window;

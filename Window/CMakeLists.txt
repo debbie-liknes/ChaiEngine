@@ -4,6 +4,7 @@ set(Windowing_headers
 	include/Window/GLFWImpl.h
 	include/Window/Window.h
 	include/Window/Viewport.h
+	include/Window/InputState.h
 )
 
 set(Windowing_source

@@ -78,37 +78,12 @@ namespace chai::brew
     {
         chai::brew::ViewData data;
         auto& window = m_windows.back();
-        //data.view = glm::mat4(1.f);
 
-        //float fov = glm::radians(45.0f);
-        //float aspect = 16.0f / 9.0f;
-        //float near1 = 0.1f;
-        //float far1 = 100.0f;
-        //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 5.0f);
-        //glm::vec3 target = glm::vec3(0.0f, 0.0f, 0.0f);
-        //glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-        //glm::mat4 view = glm::lookAt(cameraPos, target, up);
-        //glm::mat4 projection = glm::perspective(fov, aspect, near1, far1);
-        glm::mat4 view = glm::lookAt(
-                glm::vec3(5.0f, 5.0f, 5.0f),  // Camera position (5 units away, looking down -Z)
-                glm::vec3(0.0f, 0.0f, 0.0f),  // Target position (center of the scene)
-                glm::vec3(0.0f, 1.0f, 0.0f)
-        );
-        data.view = view;
-        float aspectRatio = (float)window->GetWidth() / (float)window->GetHeight();
-        glm::mat4 projection = glm::perspective(
-            glm::radians(45.0f), // Field of view: 45 degrees
-            aspectRatio,         // Aspect ratio: width/height
-            0.1f,                // Near clipping plane
-            100.0f               // Far clipping plane
-        );
-        //glm::mat4 projection = glm::ortho(
-        //    -1.0f, 1.0f,  // Left, Right
-        //    -1.0f, 1.0f,  // Bottom, Top
-        //    -10.0f, 10.0f // Near, Far
-        //);
-        //data.projMat = glm::mat4(1.f);
-        data.projMat = projection;
+        glm::vec3 cameraPos = glm::vec3(5.0f, 5.0f, -5.0f);
+        glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+        glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+        const float cameraSpeed = 5.f; // adjust accordingly
 
 
         //test ro
@@ -117,6 +92,32 @@ namespace chai::brew
 
         while (window->Show())
         {
+            if (window->m_state.keys.find(chai::Key::KEY_W) != window->m_state.keys.end())
+                cameraPos += cameraSpeed * cameraFront;
+            if (window->m_state.keys.find(chai::Key::KEY_S) != window->m_state.keys.end())
+                cameraPos -= cameraSpeed * cameraFront;
+            if (window->m_state.keys.find(chai::Key::KEY_A) != window->m_state.keys.end())
+                cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+            if (window->m_state.keys.find(chai::Key::KEY_D) != window->m_state.keys.end())
+                cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+
+            glm::mat4 view = glm::lookAt(
+                //glm::vec3(5.0f, 5.0f, 5.0f),  // Camera position (5 units away, looking down -Z)
+                cameraPos,
+                glm::vec3(0.0f, 0.0f, 0.0f),  // Target position (center of the scene)
+                glm::vec3(0.0f, 1.0f, 0.0f)
+            );
+            data.view = view;
+
+            float aspectRatio = (float)window->GetWidth() / (float)window->GetHeight();
+            glm::mat4 projection = glm::perspective(
+                glm::radians(45.0f), // Field of view: 45 degrees
+                aspectRatio,         // Aspect ratio: width/height
+                0.1f,                // Near clipping plane
+                100.0f               // Far clipping plane
+            );
+            data.projMat = projection;
+
             window->swapBuffers();
             window->PollEvents();
             m_renderer->renderFrame(window.get(), ros, data);

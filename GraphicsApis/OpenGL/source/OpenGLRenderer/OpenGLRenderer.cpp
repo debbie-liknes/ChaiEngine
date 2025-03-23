@@ -145,7 +145,7 @@ namespace chai::brew
 		{
 			glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices[i]);
 			// Allocate memory for the UBO (size of 3 matrices)
-			glBufferData(GL_UNIFORM_BUFFER, ub.second->getElementSize(), ub.second->getRawData(), GL_STATIC_DRAW);
+			glBufferData(GL_UNIFORM_BUFFER, ub.second->getElementSize(), ub.second->getRawData(), GL_DYNAMIC_DRAW);
 
 			GLuint blockIndex = glGetUniformBlockIndex(shaderProgram, ub.second->name.c_str());
 			glUniformBlockBinding(shaderProgram, blockIndex, ub.first);
@@ -215,15 +215,15 @@ namespace chai::brew
 
 			int program = createShaderProgram(shaders);
 
+			auto unis = ro->m_uniforms;
 			if (ro->m_addViewData)
 			{
-				ro->m_uniforms.insert({ ro->m_uniforms.size(), viewUBO });
-				ro->m_addViewData = false;
+				unis.insert({ unis.size(), viewUBO});
 			}
 
 
 			glUseProgram(program);
-			setUpUniforms(program, ro->m_uniforms);
+			setUpUniforms(program, unis);
 
 			if (ro->hasIndexBuffer())
 			{
