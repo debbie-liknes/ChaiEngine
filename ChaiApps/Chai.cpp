@@ -14,14 +14,14 @@ int main()
 {
 	//TODO:make this a generic window
 	chai::ChaiWindow window("Chai Engine");
-	chai_graphics::Renderer* renderer = new chai_graphics::OpenGLBackend();
+	chai::brew::Renderer* renderer = new chai::brew::OpenGLBackend();
 	chai::SharedViewport testViewport = std::make_shared<chai::Viewport>(0, 0, window.GetWidth(), window.GetHeight());
 	//CScene::Camera camera;
 
 	window.AddViewport(testViewport);
 	renderer->setProcAddress(window.getProcAddress());
 
-	chai_graphics::ViewData data;
+	chai::brew::ViewData data;
 	data.view = glm::mat4(1.f);
 
 	float fov = glm::radians(45.0f);
@@ -37,8 +37,8 @@ int main()
 
 
 	//test ro
-	auto triangle = std::make_shared<chai_graphics::CubeRO>();
-	chai::CVector<chai::CSharedPtr<chai_graphics::RenderObject>> ros = { triangle };
+	auto triangle = std::make_shared<chai::brew::CubeRO>();
+	chai::CVector<chai::CSharedPtr<chai::brew::RenderObject>> ros = { triangle };
 
 	while (window.Show())
 	{

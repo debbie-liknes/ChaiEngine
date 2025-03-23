@@ -5,9 +5,7 @@
 #include <glm/glm.hpp>
 #include <Core/TypeHelpers.h>
 
-using namespace chai;
-
-namespace chai_graphics
+namespace chai::brew
 {
 	class CHAIGRAPHICS_EXPORT VertexBufferBase {
 	public:

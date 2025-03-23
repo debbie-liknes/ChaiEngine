@@ -1,7 +1,7 @@
 #include <RenderObjects/RenderObject.h>
 #include <glm/glm.hpp>
 
-namespace chai_graphics
+namespace chai::brew
 {
 	class CHAIGRAPHICS_EXPORT TriangleRO : public RenderObject
 	{

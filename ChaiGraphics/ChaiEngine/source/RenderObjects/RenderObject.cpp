@@ -1,6 +1,6 @@
 #include <RenderObjects/RenderObject.h>
 
-namespace chai_graphics
+namespace chai::brew
 {
 	RenderObject::RenderObject() : m_position(glm::vec3(0.f)), m_rotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f)), m_scale(glm::vec3(1.f))
 	{

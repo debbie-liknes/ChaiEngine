@@ -2,7 +2,7 @@
 #include <ChaiGraphicsExport.h>
 #include <glm/glm.hpp>
 
-namespace chai_graphics
+namespace chai::brew
 {
 	struct CHAIGRAPHICS_EXPORT ViewData
 	{

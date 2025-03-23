@@ -10,7 +10,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <ChaiEngine/Shader.h>
 
-namespace chai_graphics
+namespace chai::brew
 {
 	class CHAIGRAPHICS_EXPORT RenderObject
 	{

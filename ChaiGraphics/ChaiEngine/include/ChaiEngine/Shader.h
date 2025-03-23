@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <memory>
 
-namespace chai_graphics
+namespace chai::brew
 {
 	enum PrimitiveMode
 	{

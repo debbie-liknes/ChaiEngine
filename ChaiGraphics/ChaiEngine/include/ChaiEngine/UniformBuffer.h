@@ -4,9 +4,7 @@
 #include <Core/TypeHelpers.h>
 #include <Core/MemoryTypes.h>
 
-using namespace chai;
-
-namespace chai_graphics
+namespace chai::brew
 {
 	class CHAIGRAPHICS_EXPORT UniformBufferBase {
 	public:

@@ -2,7 +2,7 @@
 #include <ChaiGraphicsExport.h>
 #include <ChaiEngine/Shader.h>
 
-namespace chai_graphics
+namespace chai::brew
 {
 	//class CHAIGRAPHICS_EXPORT ShaderFactory
 	//{

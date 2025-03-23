@@ -3,7 +3,7 @@
 #include <ChaiEngine/Renderer.h>
 #include <ChaiEngine/ViewData.h>
 
-namespace chai_graphics
+namespace chai::brew
 {
 	class RenderObject;
 	enum ShaderStage;

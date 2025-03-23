@@ -9,9 +9,7 @@
 #include <algorithm>
 #include <Core/TypeHelpers.h>
 
-using namespace chai;
-
-namespace chai_graphics
+namespace chai::brew
 {
 	OpenGLBackend::OpenGLBackend()
 	{
@@ -31,9 +29,9 @@ namespace chai_graphics
 	{
 		switch (stage)
 		{
-		case chai_graphics::VERTEX:
+		case brew::VERTEX:
 			return GL_VERTEX_SHADER;
-		case chai_graphics::FRAGMENT:
+		case brew::FRAGMENT:
 			return GL_FRAGMENT_SHADER;
 		default:
 			break;
@@ -41,7 +39,7 @@ namespace chai_graphics
 		return -1;
 	}
 
-	int OpenGLBackend::createShader(const char* source, chai_graphics::ShaderStage stage)
+	int OpenGLBackend::createShader(const char* source, brew::ShaderStage stage)
 	{
 		unsigned int shader;
 		shader = glCreateShader(convertShaderType(stage));
@@ -128,7 +126,7 @@ namespace chai_graphics
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib->getElementCount() * ib->getElementSize(), ib->getRawData(), GL_STATIC_DRAW);
 	}
 
-	unsigned int setUpVAOs(std::map<uint16_t, chai::CSharedPtr<chai_graphics::VertexBufferBase>>& vbos)
+	unsigned int setUpVAOs(std::map<uint16_t, chai::CSharedPtr<VertexBufferBase>>& vbos)
 	{
 		unsigned int vao;
 		glGenVertexArrays(1, &vao);
@@ -137,7 +135,7 @@ namespace chai_graphics
 		return vao;
 	}
 
-	void setUpUniforms(int shaderProgram, std::map<uint16_t, chai::CSharedPtr<chai_graphics::UniformBufferBase>>& ubos)
+	void setUpUniforms(int shaderProgram, std::map<uint16_t, chai::CSharedPtr<UniformBufferBase>>& ubos)
 	{
 		chai::CVector<unsigned int> uboMatrices;
 		uboMatrices.resize(ubos.size());
@@ -179,7 +177,7 @@ namespace chai_graphics
 		return GL_TRIANGLES;
 	}
 
-	void OpenGLBackend::renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<RenderObject>> ros, chai_graphics::ViewData data)
+	void OpenGLBackend::renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<RenderObject>> ros, ViewData data)
 	{
 		for (auto& v : window->GetViewports())
 		{
@@ -188,7 +186,7 @@ namespace chai_graphics
 			glViewport(x, y, width, height);
 		}
 
-		auto viewUBO = createUniformBuffer<chai_graphics::ViewData>(PrimDataType::FLOAT);
+		auto viewUBO = createUniformBuffer<ViewData>(PrimDataType::FLOAT);
 		viewUBO->data = data;
 		viewUBO->name = "MatrixData";
 

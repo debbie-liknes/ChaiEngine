@@ -1,6 +1,6 @@
 #include <RenderObjects/Triangle.h>
 
-namespace chai_graphics
+namespace chai::brew
 {
 	TriangleRO::TriangleRO()
 	{
