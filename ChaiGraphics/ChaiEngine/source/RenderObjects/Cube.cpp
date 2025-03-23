@@ -10,7 +10,12 @@ namespace chai::brew
 		glm::vec3 p2 = { 0.5f, -0.5f, 0.0f };
 		glm::vec3 p3 = { -0.5f, -0.5f, 0.0f };
 		glm::vec3 p4 = { -0.5f,  0.5f, 0.0f };
-		m_vertexData->data = { p1, p2, p3, p4 };
+
+		glm::vec3 p5 = { 0.5f,  0.5f, 0.5f };
+		glm::vec3 p6 = { 0.5f, -0.5f, 0.5f };
+		glm::vec3 p7 = { -0.5f, -0.5f, 0.5f };
+		glm::vec3 p8 = { -0.5f,  0.5f, 0.5f };
+		m_vertexData->data = { p1, p2, p3, p4, p5, p6, p7, p8 };
 
 		m_colorData = createUniformBuffer<glm::vec3>(PrimDataType::FLOAT);
 		AddUniform(m_colorData, 1);
@@ -19,7 +24,9 @@ namespace chai::brew
 
 		m_indexBuffer = createIndexBuffer();
 		AddIndexBuffer(m_indexBuffer, 1);
-		m_indexBuffer->data = { 0, 1, 3, 1, 2, 3 };
+		m_indexBuffer->data = { 
+			0, 1, 3, 1, 2, 3, //front face
+			5, 6, 8, 6, 7, 8 };
 
 		RequestViewData();
 
