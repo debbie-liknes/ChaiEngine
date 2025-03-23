@@ -1,9 +1,9 @@
 #include <Window/GLFWImpl.h>
 #include <iostream>
 
-namespace CGraphics
+namespace chai
 {
-    ChaiWindow::ChaiWindow(Core::CString title, int width, int height) : Window(title, width, height)
+    ChaiWindow::ChaiWindow(chai::CString title, int width, int height) : Window(title, width, height)
     {
         Init();
     }
@@ -54,7 +54,7 @@ namespace CGraphics
 
     }
 
-    CGraphics::Window::WindowProc ChaiWindow::getProcAddress()
+    chai::Window::WindowProc ChaiWindow::getProcAddress()
     {
         return (WindowProc)glfwGetProcAddress;
     }

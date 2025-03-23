@@ -1,7 +1,7 @@
 #include <SceneExport.h>
 #include <glm/glm.hpp>
 
-namespace CScene
+namespace chai_scene
 {
 	class SCENE_EXPORT Camera
 	{

@@ -2,6 +2,6 @@
 #include<string>
 #include <cstring>
 
-namespace Core
+namespace chai
 {
 }

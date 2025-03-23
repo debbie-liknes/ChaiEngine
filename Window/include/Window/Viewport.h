@@ -2,7 +2,7 @@
 #include <WindowModuleExport.h>
 #include <Core/MemoryTypes.h>
 
-namespace CGraphics
+namespace chai
 {
     //class SharedViewer;
 

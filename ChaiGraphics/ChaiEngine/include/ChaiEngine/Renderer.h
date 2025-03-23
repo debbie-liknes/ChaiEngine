@@ -3,7 +3,7 @@
 #include <Core/Containers.h>
 #include <ChaiEngine/ViewData.h>
 
-namespace CGraphics
+namespace chai
 {
 	class Window;
 }
@@ -18,6 +18,6 @@ namespace chai_graphics
 		~Renderer() = default;
 
 		virtual void setProcAddress(void* address) {}
-		virtual void renderFrame(CGraphics::Window* window, Core::CVector<Core::CSharedPtr<RenderObject>> ros, chai_graphics::ViewData data) = 0;
+		virtual void renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<RenderObject>> ros, chai_graphics::ViewData data) = 0;
 	};
 }

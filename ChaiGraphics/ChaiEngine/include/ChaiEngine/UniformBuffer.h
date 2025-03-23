@@ -51,7 +51,7 @@ namespace chai_graphics
 	using UBO = UniformBuffer<T>;
 
 	template <typename T>
-	using SharedUBO = Core::CSharedPtr<UBO<T>>;
+	using SharedUBO = chai::CSharedPtr<UBO<T>>;
 
 	template <typename T>
 	SharedUBO<T> createUniformBuffer(PrimDataType underlyingType)

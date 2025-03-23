@@ -1,9 +1,9 @@
 #include <Window/Window.h>
 #include <Window/Viewport.h>
 
-namespace CGraphics
+namespace chai
 {
-	Window::Window(Core::CString title, int width, int height) : m_title(title), m_width(width), m_height(height)
+	Window::Window(chai::CString title, int width, int height) : m_title(title), m_width(width), m_height(height)
 	{
 	}
 
@@ -21,7 +21,7 @@ namespace CGraphics
 		}
 	}
 
-	Core::CVector<SharedViewport> Window::GetViewports()
+	chai::CVector<SharedViewport> Window::GetViewports()
 	{
 		return m_viewports;
 	}
@@ -36,7 +36,7 @@ namespace CGraphics
 		return m_width;
 	}
 
-	Core::CString Window::GetTitle() const
+	chai::CString Window::GetTitle() const
 	{
 		return m_title;
 	}

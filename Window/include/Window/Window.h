@@ -3,7 +3,7 @@
 #include <Core/Containers.h>
 #include <Core/MemoryTypes.h>
 
-namespace CGraphics
+namespace chai
 {
     //top level container, responsible for interacting with the OS, polling for events
     //can have 0 or more viewports
@@ -12,7 +12,7 @@ namespace CGraphics
     {
     public:
 
-        Window(Core::CString title, int width = 1280, int height = 720);
+        Window(chai::CString title, int width = 1280, int height = 720);
         ~Window() = default;
 
         //Display Window
@@ -29,7 +29,7 @@ namespace CGraphics
         void RemoveViewport(SharedViewport viewport);
 
         //i dont love returning a vector
-        Core::CVector<SharedViewport> GetViewports();
+        chai::CVector<SharedViewport> GetViewports();
 
         // Input handling
         virtual void PollEvents() = 0;
@@ -37,14 +37,14 @@ namespace CGraphics
         // Accessors
         int GetWidth() const;
         int GetHeight() const;
-        Core::CString GetTitle() const;
+        chai::CString GetTitle() const;
 
     protected:
-        Core::CString m_title;
+        chai::CString m_title;
 
         //a flat list of viewports
         //TODO: should this be a map?
-        Core::CVector<SharedViewport> m_viewports;
+        chai::CVector<SharedViewport> m_viewports;
 
         //dimensions
         int m_width;

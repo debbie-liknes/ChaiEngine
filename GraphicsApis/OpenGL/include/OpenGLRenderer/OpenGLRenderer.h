@@ -16,9 +16,9 @@ namespace chai_graphics
 		~OpenGLBackend() {}
 
 		void setProcAddress(void* address) override;
-		void renderFrame(CGraphics::Window* window, Core::CVector<Core::CSharedPtr<RenderObject>> ros, ViewData data) override;
+		void renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<RenderObject>> ros, ViewData data) override;
 	private:
-		int createShaderProgram(Core::CVector<int> shaders);
+		int createShaderProgram(chai::CVector<int> shaders);
 		int createShader(const char* source, ShaderStage stage);
 
 		//Core::CSharedPtr<GlPipelineState> m_pipelineState;

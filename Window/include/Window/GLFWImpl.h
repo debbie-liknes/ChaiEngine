@@ -4,13 +4,13 @@
 #include <Core/Containers.h>
 #include <GLFW/glfw3.h>
 
-namespace CGraphics
+namespace chai
 {
 	//glfw window implementation
 	class WINDOWMODULE_EXPORT ChaiWindow : public Window
 	{
     public:
-        ChaiWindow(Core::CString title, int width = 1280, int height = 720);
+        ChaiWindow(chai::CString title, int width = 1280, int height = 720);
         virtual ~ChaiWindow();
 
         //Display Window

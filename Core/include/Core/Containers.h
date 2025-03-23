@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-namespace Core
+namespace chai
 {
     typedef std::string CString;
 

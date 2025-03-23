@@ -31,13 +31,13 @@ namespace chai_graphics
 	template <typename T>
 	class VertexBuffer : public VertexBufferBase {
 	public:
-		Core::CVector<T> data;
+		chai::CVector<T> data;
 
 		VertexBuffer(PrimDataType underlyingType, size_t numElements) :
 			m_underlyingType(underlyingType), m_numElements(numElements)
 		{}
 		virtual ~VertexBuffer() = default;
-		VertexBuffer(Core::CVector<T> d, PrimDataType underlyingType, size_t numElements) :
+		VertexBuffer(chai::CVector<T> d, PrimDataType underlyingType, size_t numElements) :
 			data(d), m_underlyingType(underlyingType), m_numElements(numElements)
 		{}
 
@@ -70,7 +70,7 @@ namespace chai_graphics
 	using VBO = VertexBuffer<T>;
 
 	template <typename T>
-	using SharedVBO = Core::CSharedPtr<VBO<T>>;
+	using SharedVBO = chai::CSharedPtr<VBO<T>>;
 
 	template <typename T>
 	SharedVBO<T> createVertexBuffer(PrimDataType underlyingType, size_t numElements)
@@ -81,7 +81,7 @@ namespace chai_graphics
 	//i can simplify these params with template meta programming
 	//later ;)
 	template <typename T>
-	SharedVBO<T> createVertexBuffer(Core::CVector<T> data, PrimDataType underlyingType, size_t numElements)
+	SharedVBO<T> createVertexBuffer(chai::CVector<T> data, PrimDataType underlyingType, size_t numElements)
 	{
 		return std::make_shared<VertexBuffer<T>>(data, underlyingType, numElements);
 	}

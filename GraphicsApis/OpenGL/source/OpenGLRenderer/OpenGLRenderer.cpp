@@ -60,7 +60,7 @@ namespace chai_graphics
 		return shader;
 	}
 
-	int OpenGLBackend::createShaderProgram(Core::CVector<int> shaders)
+	int OpenGLBackend::createShaderProgram(chai::CVector<int> shaders)
 	{
 		unsigned int shaderProgram;
 		shaderProgram = glCreateProgram();
@@ -98,7 +98,7 @@ namespace chai_graphics
 		return GL_FLOAT;
 	}
 
-	void setUpVBOs(Core::CVector<unsigned int>& glVbs, std::map<uint16_t, Core::CSharedPtr<VertexBufferBase>> vbs)
+	void setUpVBOs(chai::CVector<unsigned int>& glVbs, std::map<uint16_t, chai::CSharedPtr<VertexBufferBase>> vbs)
 	{
 		//an assert here?
 		if (glVbs.size() != vbs.size()) return;
@@ -120,7 +120,7 @@ namespace chai_graphics
 		}
 	}
 
-	void setUpEBOs(Core::CSharedPtr<VertexBufferBase> ib)
+	void setUpEBOs(chai::CSharedPtr<VertexBufferBase> ib)
 	{
 		unsigned int EBO;
 		glGenBuffers(1, &EBO);
@@ -128,7 +128,7 @@ namespace chai_graphics
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib->getElementCount() * ib->getElementSize(), ib->getRawData(), GL_STATIC_DRAW);
 	}
 
-	unsigned int setUpVAOs(std::map<uint16_t, Core::CSharedPtr<chai_graphics::VertexBufferBase>>& vbos)
+	unsigned int setUpVAOs(std::map<uint16_t, chai::CSharedPtr<chai_graphics::VertexBufferBase>>& vbos)
 	{
 		unsigned int vao;
 		glGenVertexArrays(1, &vao);
@@ -137,9 +137,9 @@ namespace chai_graphics
 		return vao;
 	}
 
-	void setUpUniforms(int shaderProgram, std::map<uint16_t, Core::CSharedPtr<chai_graphics::UniformBufferBase>>& ubos)
+	void setUpUniforms(int shaderProgram, std::map<uint16_t, chai::CSharedPtr<chai_graphics::UniformBufferBase>>& ubos)
 	{
-		Core::CVector<unsigned int> uboMatrices;
+		chai::CVector<unsigned int> uboMatrices;
 		uboMatrices.resize(ubos.size());
 		glGenBuffers(ubos.size(), uboMatrices.data());
 		int i = 0;
@@ -158,7 +158,7 @@ namespace chai_graphics
 		}
 	}
 
-	void setUpShaders(Core::CVector<unsigned int>& vbos, Core::CSharedPtr<VertexBufferBase> vb)
+	void setUpShaders(chai::CVector<unsigned int>& vbos, chai::CSharedPtr<VertexBufferBase> vb)
 	{
 		//only needs to be done
 	}
@@ -179,7 +179,7 @@ namespace chai_graphics
 		return GL_TRIANGLES;
 	}
 
-	void OpenGLBackend::renderFrame(CGraphics::Window* window, Core::CVector<Core::CSharedPtr<RenderObject>> ros, chai_graphics::ViewData data)
+	void OpenGLBackend::renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<RenderObject>> ros, chai_graphics::ViewData data)
 	{
 		for (auto& v : window->GetViewports())
 		{
@@ -196,7 +196,7 @@ namespace chai_graphics
 		//this is not efficient, atm
 		for (auto& ro : ros)
 		{
-			Core::CVector<unsigned int> numBuffs;
+			chai::CVector<unsigned int> numBuffs;
 			numBuffs.resize(ro->m_vertexBuffers.size());
 
 			if (ro->isDirty())
@@ -210,7 +210,7 @@ namespace chai_graphics
 				ro->setDirty(false);
 			}
 
-			Core::CVector<int> shaders;
+			chai::CVector<int> shaders;
 			for (auto& s : ro->m_data)
 			{
 				shaders.push_back(createShader(s.shaderSource.data(), s.stage));

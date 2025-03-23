@@ -2,7 +2,7 @@
 #include <CoreExport.h>
 #include<memory>
 
-namespace Core
+namespace chai
 {
 	template <typename T>
 	using CSharedPtr = std::shared_ptr<T>;

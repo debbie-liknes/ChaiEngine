@@ -1,6 +1,6 @@
 #include <Scene/Camera.h>
 
-namespace CScene
+namespace chai_scene
 {
 	Camera::Camera()
 	{

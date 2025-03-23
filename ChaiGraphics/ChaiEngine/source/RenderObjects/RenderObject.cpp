@@ -40,18 +40,18 @@ namespace chai_graphics
 		return m_hasIndexBuffer;
 	}
 
-	void RenderObject::AddVertexBuffer(Core::CSharedPtr<VertexBufferBase> vbo, uint16_t binding)
+	void RenderObject::AddVertexBuffer(chai::CSharedPtr<VertexBufferBase> vbo, uint16_t binding)
 	{
 		m_vertexBuffers[binding] = vbo;
 	}
 
-	void RenderObject::AddIndexBuffer(Core::CSharedPtr<VertexBufferBase> vbo, uint16_t binding)
+	void RenderObject::AddIndexBuffer(chai::CSharedPtr<VertexBufferBase> vbo, uint16_t binding)
 	{
 		m_indexBuffer = { binding, vbo };
 		m_hasIndexBuffer = true;
 	}
 
-	void RenderObject::AddUniform(Core::CSharedPtr<UniformBufferBase> ubo, uint16_t binding)
+	void RenderObject::AddUniform(chai::CSharedPtr<UniformBufferBase> ubo, uint16_t binding)
 	{
 		m_uniforms[binding] = ubo;
 	}

@@ -18,7 +18,7 @@ namespace chai_graphics
 		RenderObject();
 		~RenderObject();
 
-		Core::CVector<ShaderData> m_data;
+		chai::CVector<ShaderData> m_data;
 		std::map<uint16_t, std::shared_ptr<VertexBufferBase>> m_vertexBuffers;
 		std::map<uint16_t, std::shared_ptr<UniformBufferBase>> m_uniforms;
 		std::pair<uint16_t, std::shared_ptr<VertexBufferBase>> m_indexBuffer;
@@ -36,9 +36,9 @@ namespace chai_graphics
 		void AddShader(std::string file, ShaderStage stage);
 		void AddShaderSource(std::string dataString, ShaderStage stage);
 
-		void AddVertexBuffer(Core::CSharedPtr<VertexBufferBase> vbo, uint16_t binding);
-		void AddIndexBuffer(Core::CSharedPtr<VertexBufferBase> vbo, uint16_t binding);
-		void AddUniform(Core::CSharedPtr<UniformBufferBase> ubo, uint16_t binding);
+		void AddVertexBuffer(chai::CSharedPtr<VertexBufferBase> vbo, uint16_t binding);
+		void AddIndexBuffer(chai::CSharedPtr<VertexBufferBase> vbo, uint16_t binding);
+		void AddUniform(chai::CSharedPtr<UniformBufferBase> ubo, uint16_t binding);
 		void RequestViewData(bool req = true);
 
 		PrimitiveMode m_primType = PrimitiveMode::TRIANGLES;

@@ -2,7 +2,7 @@
 //#include <>
 
 
-namespace CGraphics
+namespace chai
 {
 	Viewport::Viewport(int posX, int posY, int width, int height)
 		: m_x(posX), m_y(posY), m_width(width), m_height(height)
