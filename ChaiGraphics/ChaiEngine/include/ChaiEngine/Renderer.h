@@ -9,7 +9,7 @@ namespace chai
 	class Window;
 	namespace brew
 	{
-		class RenderObject;
+		class Renderable;
 		class CHAIGRAPHICS_EXPORT Renderer
 		{
 		public:
@@ -17,7 +17,7 @@ namespace chai
 			~Renderer() = default;
 
 			virtual void setProcAddress(void* address) {}
-			virtual void renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<RenderObject>> ros, ViewData data) = 0;
+			virtual void renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<Renderable>> ros, ViewData data) = 0;
 			virtual std::shared_ptr<Shader> LoadOrGetShader(const std::string& path, ShaderStage stage) = 0;
 		};
 	}

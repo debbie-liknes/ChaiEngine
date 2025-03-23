@@ -1,4 +1,4 @@
-#include <RenderObjects/Triangle.h>
+#include <Renderables/Triangle.h>
 
 namespace chai::brew
 {

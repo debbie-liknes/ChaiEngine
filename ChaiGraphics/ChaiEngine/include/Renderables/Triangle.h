@@ -1,9 +1,9 @@
-#include <RenderObjects/RenderObject.h>
+#include <Renderables/Renderable.h>
 #include <glm/glm.hpp>
 
 namespace chai::brew
 {
-	class CHAIGRAPHICS_EXPORT TriangleRO : public RenderObject
+	class CHAIGRAPHICS_EXPORT TriangleRO : public Renderable
 	{
 	public:
 		TriangleRO();

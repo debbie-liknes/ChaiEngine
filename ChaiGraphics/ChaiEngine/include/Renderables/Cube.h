@@ -1,9 +1,9 @@
-#include <RenderObjects/RenderObject.h>
+#include <Renderables/Renderable.h>
 #include <glm/glm.hpp>
 
 namespace chai::brew
 {
-	class CHAIGRAPHICS_EXPORT CubeRO : public RenderObject
+	class CHAIGRAPHICS_EXPORT CubeRO : public Renderable
 	{
 	public:
 		CubeRO();

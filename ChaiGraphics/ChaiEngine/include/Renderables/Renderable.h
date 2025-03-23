@@ -12,11 +12,11 @@
 
 namespace chai::brew
 {
-	class CHAIGRAPHICS_EXPORT RenderObject
+	class CHAIGRAPHICS_EXPORT Renderable
 	{
 	public:
-		RenderObject();
-		~RenderObject();
+		Renderable();
+		~Renderable();
 
 		chai::CVector<ShaderData> m_data;
 		std::map<uint16_t, std::shared_ptr<VertexBufferBase>> m_vertexBuffers;

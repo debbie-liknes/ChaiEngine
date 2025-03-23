@@ -1,7 +1,7 @@
 ﻿//test exe
 
 #include "Chai.h"
-#include <RenderObjects/Cube.h>
+#include <Renderables/Cube.h>
 #include <Scene/Camera.h>
 #include <ChaiEngine/Engine.h>
 

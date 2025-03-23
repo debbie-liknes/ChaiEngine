@@ -19,15 +19,15 @@ set(ChaiGraphics_source
 )
 
 set(ChaiRenderables_headers
-	include/RenderObjects/RenderObject.h
-	include/RenderObjects/Triangle.h
-	include/RenderObjects/Cube.h
+	include/Renderables/Renderable.h
+	include/Renderables/Triangle.h
+	include/Renderables/Cube.h
 )
 
 set(ChaiRenderables_source
-	source/RenderObjects/RenderObject.cpp
-	source/RenderObjects/Cube.cpp
-	source/RenderObjects/Triangle.cpp
+	source/Renderables/Renderable.cpp
+	source/Renderables/Cube.cpp
+	source/Renderables/Triangle.cpp
 )
 
 #IDE friendly groups

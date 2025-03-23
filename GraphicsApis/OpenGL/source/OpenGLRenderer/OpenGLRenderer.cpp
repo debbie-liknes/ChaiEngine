@@ -3,7 +3,7 @@
 #include <iostream>
 #include <Window/Viewport.h>
 #include <Window/Window.h>
-#include <RenderObjects/RenderObject.h>
+#include <Renderables/Renderable.h>
 #include <OpenGLRenderer/GlPipelineState.h>
 #include <glm/glm.hpp>
 #include <algorithm>
@@ -180,7 +180,7 @@ namespace chai::brew
 		return GL_TRIANGLES;
 	}
 
-	void OpenGLBackend::renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<RenderObject>> ros, ViewData data)
+	void OpenGLBackend::renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<Renderable>> ros, ViewData data)
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		for (auto& v : window->GetViewports())

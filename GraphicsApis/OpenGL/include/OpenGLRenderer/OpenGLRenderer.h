@@ -5,7 +5,7 @@
 
 namespace chai::brew
 {
-	class RenderObject;
+	class Renderable;
 	enum ShaderStage;
 	class GlPipelineState;
 
@@ -16,7 +16,7 @@ namespace chai::brew
 		~OpenGLBackend() {}
 
 		void setProcAddress(void* address) override;
-		void renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<RenderObject>> ros, ViewData data) override;
+		void renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<Renderable>> ros, ViewData data) override;
 		std::shared_ptr<Shader> LoadOrGetShader(const std::string& path, ShaderStage stage) override;
 	private:
 		int createShaderProgram(chai::CVector<int> shaders);

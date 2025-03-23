@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <glm/glm.hpp>
 #include <ChaiEngine/ViewData.h>
-#include <RenderObjects/Cube.h>
+#include <Renderables/Cube.h>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -89,7 +89,7 @@ namespace chai::brew
 
         //test ro
         auto cube = std::make_shared<chai::brew::CubeRO>();
-        chai::CVector<chai::CSharedPtr<chai::brew::RenderObject>> ros = { cube };
+        chai::CVector<chai::CSharedPtr<chai::brew::Renderable>> ros = { cube };
 
         while (window->Show())
         {
