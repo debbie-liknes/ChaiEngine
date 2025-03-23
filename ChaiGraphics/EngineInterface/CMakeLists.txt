@@ -1,6 +1,5 @@
 
 set(ChaiApi_headers
-	include/Engine/Renderer.h
 	include/Engine/IRenderObject.h
 	include/Engine/IViewer.h
 	include/Engine/IScene.h
@@ -12,7 +11,6 @@ set(ChaiApi_headers
 )
 
 set(ChaiApi_source
-	source/Engine/Renderer.cpp
 	source/Engine/VertexBuffer.cpp
 	source/Engine/UniformBuffer.cpp
 )

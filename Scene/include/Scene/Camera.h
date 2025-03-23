@@ -9,7 +9,7 @@ namespace CScene
 		Camera();
 		virtual ~Camera();
 
-	private:
+	//private:
 		glm::vec3 m_position;
 		glm::mat4 m_projMat;
 		glm::mat4 m_viewMat;

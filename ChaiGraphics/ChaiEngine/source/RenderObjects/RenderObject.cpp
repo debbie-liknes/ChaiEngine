@@ -2,8 +2,12 @@
 
 namespace CGraphics
 {
-	RenderObject::RenderObject()
+	RenderObject::RenderObject() : m_position(glm::vec3(0.f)), m_rotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f)), m_scale(glm::vec3(1.f))
 	{
+		m_modelMat = createUniformBuffer<glm::mat4>(PrimDataType::FLOAT);
+		AddUniform(m_modelMat, 0);
+		m_modelMat->data = getModelMatrix();
+		m_modelMat->name = "ModelData";
 	}
 
 	RenderObject::~RenderObject()
@@ -60,5 +64,10 @@ namespace CGraphics
 	glm::mat4 RenderObject::getModelMatrix() const
 	{
 		return glm::translate(glm::mat4(1.f), m_position) * glm::mat4_cast(m_rotation) * glm::scale(glm::mat4(1.f), m_scale);
+	}
+
+	void RenderObject::RequestViewData(bool req)
+	{
+		m_addViewData = req;
 	}
 }

@@ -50,6 +50,7 @@ namespace CGraphics
 
 		glm::mat4 getModelMatrix() const;
 
+		bool m_addViewData = false;
 	protected:
 		void AddShader(std::string file, ShaderStage stage);
 		void AddShaderSource(std::string dataString, ShaderStage stage);
@@ -57,6 +58,7 @@ namespace CGraphics
 		void AddVertexBuffer(Core::CSharedPtr<VertexBufferBase> vbo, uint16_t binding);
 		void AddIndexBuffer(Core::CSharedPtr<VertexBufferBase> vbo, uint16_t binding);
 		void AddUniform(Core::CSharedPtr<UniformBufferBase> ubo, uint16_t binding);
+		void RequestViewData(bool req = true);
 
 		PrimitiveMode m_primType = PrimitiveMode::TRIANGLES;
 
@@ -66,7 +68,8 @@ namespace CGraphics
 
 		glm::vec3 m_position;
 		glm::quat m_rotation;
-		glm::mat4 m_modelMat;
 		glm::vec3 m_scale;
+
+		SharedUBO<glm::mat4> m_modelMat;
 	};
 }

@@ -4,7 +4,7 @@ namespace CGraphics
 {
 	TriangleRO::TriangleRO()
 	{
-		m_vertexData = createVertexBuffer<glm::vec3>(DataType::FLOAT, 3);
+		m_vertexData = createVertexBuffer<glm::vec3>(PrimDataType::FLOAT, 3);
 		AddVertexBuffer(m_vertexData, 0);
 		glm::vec3 p1 = { 0.5f,  0.5f, 0.0f };
 		glm::vec3 p2 = { 0.5f, -0.5f, 0.0f };
@@ -12,7 +12,7 @@ namespace CGraphics
 		glm::vec3 p4 = { -0.5f,  0.5f, 0.0f };
 		m_vertexData->data = { p1, p2, p3, p4 };
 
-		m_colorData = createVertexBuffer<glm::vec4>(DataType::FLOAT, 4);
+		m_colorData = createVertexBuffer<glm::vec4>(PrimDataType::FLOAT, 4);
 		AddVertexBuffer(m_colorData, 1);
 		glm::vec4 c1 = { 1.f,  0.f, 0.f, 1.f };
 		glm::vec4 c2 = { 0.f, 1.f, 0.f, 1.f };

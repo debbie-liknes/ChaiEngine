@@ -139,19 +139,22 @@ namespace CGraphics
 
 	void setUpUniforms(int shaderProgram, std::map<uint16_t, Core::CSharedPtr<CGraphics::UniformBufferBase>>& ubos)
 	{
-		GLuint uboMatrices;
-		glGenBuffers(ubos.size(), &uboMatrices);
-		glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+		Core::CVector<unsigned int> uboMatrices;
+		uboMatrices.resize(ubos.size());
+		glGenBuffers(ubos.size(), uboMatrices.data());
+		int i = 0;
 		for (auto& ub : ubos)
 		{
+			glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices[i]);
 			// Allocate memory for the UBO (size of 3 matrices)
 			glBufferData(GL_UNIFORM_BUFFER, ub.second->getElementSize(), ub.second->getRawData(), GL_STATIC_DRAW);
 
 			// Bind the UBO to a binding point (e.g., binding point 0)
-			glBindBufferBase(GL_UNIFORM_BUFFER, 0, uboMatrices);
+			glBindBufferBase(GL_UNIFORM_BUFFER, i, uboMatrices[i]);
 
 			int ubLocation = glGetUniformLocation(shaderProgram, ub.second->name.c_str());
-			glUniformBlockBinding(shaderProgram, ubLocation, 0);
+			glUniformBlockBinding(shaderProgram, ubLocation, i);
+			i++;
 		}
 	}
 
@@ -176,7 +179,7 @@ namespace CGraphics
 		return GL_TRIANGLES;
 	}
 
-	void OpenGLBackend::renderFrame(Window* window, Core::CVector<Core::CSharedPtr<RenderObject>> ros)
+	void OpenGLBackend::renderFrame(Window* window, Core::CVector<Core::CSharedPtr<RenderObject>> ros, chai_graphics::ViewData data)
 	{
 		for (auto& v : window->GetViewports())
 		{
@@ -184,6 +187,10 @@ namespace CGraphics
 			v->GetDimensions(x, y, width, height);
 			glViewport(x, y, width, height);
 		}
+
+		auto viewUBO = createUniformBuffer<chai_graphics::ViewData>(PrimDataType::FLOAT);
+		viewUBO->data = data;
+		viewUBO->name = "MatrixData";
 
 		//renders
 		//this is not efficient, atm
@@ -210,6 +217,12 @@ namespace CGraphics
 			}
 
 			int program = createShaderProgram(shaders);
+
+			if (ro->m_addViewData)
+			{
+				ro->m_uniforms.insert({ ro->m_uniforms.size(), viewUBO });
+				ro->m_addViewData = false;
+			}
 
 			setUpUniforms(program, ro->m_uniforms);
 
