@@ -1,7 +1,7 @@
 #include <RenderObjects/RenderObject.h>
 #include <glm/glm.hpp>
 
-namespace CGraphics
+namespace chai_graphics
 {
 	class CHAIGRAPHICS_EXPORT CubeRO : public RenderObject
 	{

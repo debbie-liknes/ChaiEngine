@@ -11,7 +11,7 @@
 
 using namespace chai;
 
-namespace CGraphics
+namespace chai_graphics
 {
 	OpenGLBackend::OpenGLBackend()
 	{
@@ -27,13 +27,13 @@ namespace CGraphics
 		}
 	}
 
-	int convertShaderType(CGraphics::ShaderStage stage)
+	int convertShaderType(ShaderStage stage)
 	{
 		switch (stage)
 		{
-		case CGraphics::VERTEX:
+		case chai_graphics::VERTEX:
 			return GL_VERTEX_SHADER;
-		case CGraphics::FRAGMENT:
+		case chai_graphics::FRAGMENT:
 			return GL_FRAGMENT_SHADER;
 		default:
 			break;
@@ -41,7 +41,7 @@ namespace CGraphics
 		return -1;
 	}
 
-	int OpenGLBackend::createShader(const char* source, CGraphics::ShaderStage stage)
+	int OpenGLBackend::createShader(const char* source, chai_graphics::ShaderStage stage)
 	{
 		unsigned int shader;
 		shader = glCreateShader(convertShaderType(stage));
@@ -128,7 +128,7 @@ namespace CGraphics
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib->getElementCount() * ib->getElementSize(), ib->getRawData(), GL_STATIC_DRAW);
 	}
 
-	unsigned int setUpVAOs(std::map<uint16_t, Core::CSharedPtr<CGraphics::VertexBufferBase>>& vbos)
+	unsigned int setUpVAOs(std::map<uint16_t, Core::CSharedPtr<chai_graphics::VertexBufferBase>>& vbos)
 	{
 		unsigned int vao;
 		glGenVertexArrays(1, &vao);
@@ -137,7 +137,7 @@ namespace CGraphics
 		return vao;
 	}
 
-	void setUpUniforms(int shaderProgram, std::map<uint16_t, Core::CSharedPtr<CGraphics::UniformBufferBase>>& ubos)
+	void setUpUniforms(int shaderProgram, std::map<uint16_t, Core::CSharedPtr<chai_graphics::UniformBufferBase>>& ubos)
 	{
 		Core::CVector<unsigned int> uboMatrices;
 		uboMatrices.resize(ubos.size());
@@ -179,7 +179,7 @@ namespace CGraphics
 		return GL_TRIANGLES;
 	}
 
-	void OpenGLBackend::renderFrame(Window* window, Core::CVector<Core::CSharedPtr<RenderObject>> ros, chai_graphics::ViewData data)
+	void OpenGLBackend::renderFrame(CGraphics::Window* window, Core::CVector<Core::CSharedPtr<RenderObject>> ros, chai_graphics::ViewData data)
 	{
 		for (auto& v : window->GetViewports())
 		{

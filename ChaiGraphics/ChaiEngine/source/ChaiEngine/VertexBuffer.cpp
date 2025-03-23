@@ -1,6 +1,6 @@
 #include <ChaiEngine/VertexBuffer.h>
 
-namespace CGraphics
+namespace chai_graphics
 {
 	SharedVBO<uint32_t> createIndexBuffer()
 	{

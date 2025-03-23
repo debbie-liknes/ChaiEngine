@@ -8,29 +8,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <ChaiEngine/Shader.h>
 
-namespace CGraphics
+namespace chai_graphics
 {
-	enum CHAIGRAPHICS_EXPORT ShaderStage
-	{
-		VERTEX,
-		FRAGMENT,
-		NONE
-	};
-
-	struct CHAIGRAPHICS_EXPORT ShaderData
-	{
-		Core::CString shaderSource = "";
-		ShaderStage stage = ShaderStage::NONE;
-	};
-
-	enum PrimitiveMode
-	{
-		POINTS,
-		LINES,
-		TRIANGLES
-	};
-
 	class CHAIGRAPHICS_EXPORT RenderObject
 	{
 	public:

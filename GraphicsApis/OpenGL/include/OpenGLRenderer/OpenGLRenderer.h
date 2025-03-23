@@ -3,7 +3,7 @@
 #include <ChaiEngine/Renderer.h>
 #include <ChaiEngine/ViewData.h>
 
-namespace CGraphics
+namespace chai_graphics
 {
 	class RenderObject;
 	enum ShaderStage;
@@ -16,10 +16,10 @@ namespace CGraphics
 		~OpenGLBackend() {}
 
 		void setProcAddress(void* address) override;
-		void renderFrame(Window* window, Core::CVector<Core::CSharedPtr<RenderObject>> ros, chai_graphics::ViewData data) override;
+		void renderFrame(CGraphics::Window* window, Core::CVector<Core::CSharedPtr<RenderObject>> ros, ViewData data) override;
 	private:
 		int createShaderProgram(Core::CVector<int> shaders);
-		int createShader(const char* source, CGraphics::ShaderStage stage);
+		int createShader(const char* source, ShaderStage stage);
 
 		//Core::CSharedPtr<GlPipelineState> m_pipelineState;
 	};

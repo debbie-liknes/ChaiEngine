@@ -6,7 +6,7 @@
 
 using namespace chai;
 
-namespace CGraphics
+namespace chai_graphics
 {
 	class CHAIGRAPHICS_EXPORT UniformBufferBase {
 	public:

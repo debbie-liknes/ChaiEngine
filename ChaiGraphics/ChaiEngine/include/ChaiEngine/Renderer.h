@@ -5,8 +5,12 @@
 
 namespace CGraphics
 {
-	class RenderObject;
 	class Window;
+}
+
+namespace chai_graphics
+{
+	class RenderObject;
 	class CHAIGRAPHICS_EXPORT Renderer
 	{
 	public:
@@ -14,6 +18,6 @@ namespace CGraphics
 		~Renderer() = default;
 
 		virtual void setProcAddress(void* address) {}
-		virtual void renderFrame(Window* window, Core::CVector<Core::CSharedPtr<RenderObject>> ros, chai_graphics::ViewData data) = 0;
+		virtual void renderFrame(CGraphics::Window* window, Core::CVector<Core::CSharedPtr<RenderObject>> ros, chai_graphics::ViewData data) = 0;
 	};
 }

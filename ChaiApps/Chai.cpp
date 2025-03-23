@@ -14,7 +14,7 @@ int main()
 {
 	//TODO:make this a generic window
 	CGraphics::ChaiWindow window("Chai Engine");
-	CGraphics::Renderer* renderer = new CGraphics::OpenGLBackend();
+	chai_graphics::Renderer* renderer = new chai_graphics::OpenGLBackend();
 	CGraphics::SharedViewport testViewport = std::make_shared<CGraphics::Viewport>(0, 0, window.GetWidth(), window.GetHeight());
 	//CScene::Camera camera;
 
@@ -37,8 +37,8 @@ int main()
 
 
 	//test ro
-	auto triangle = std::make_shared<CGraphics::CubeRO>();
-	Core::CVector<Core::CSharedPtr<CGraphics::RenderObject>> ros = { triangle };
+	auto triangle = std::make_shared<chai_graphics::CubeRO>();
+	Core::CVector<Core::CSharedPtr<chai_graphics::RenderObject>> ros = { triangle };
 
 	while (window.Show())
 	{

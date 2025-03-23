@@ -1,6 +1,6 @@
 #include <RenderObjects/Cube.h>
 
-namespace CGraphics
+namespace chai_graphics
 {
 	CubeRO::CubeRO()
 	{

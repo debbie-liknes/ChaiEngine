@@ -6,6 +6,26 @@
 
 namespace chai_graphics
 {
+	enum PrimitiveMode
+	{
+		POINTS,
+		LINES,
+		TRIANGLES
+	};
+
+	enum CHAIGRAPHICS_EXPORT ShaderStage
+	{
+		VERTEX,
+		FRAGMENT,
+		NONE
+	};
+
+	struct CHAIGRAPHICS_EXPORT ShaderData
+	{
+		std::string shaderSource = "";
+		ShaderStage stage = ShaderStage::NONE;
+	};
+
 	class CHAIGRAPHICS_EXPORT Shader
 	{
     public:

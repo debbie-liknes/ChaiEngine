@@ -1,6 +1,6 @@
 #include <ChaiEngine/Renderer.h>
 
-namespace CGraphics
+namespace chai_graphics
 {
 	Renderer::Renderer()
 	{
