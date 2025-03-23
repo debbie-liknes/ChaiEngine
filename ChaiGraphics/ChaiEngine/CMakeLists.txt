@@ -15,6 +15,7 @@ set(ChaiGraphics_source
 	source/ChaiEngine/VertexBuffer.cpp
 	source/ChaiEngine/UniformBuffer.cpp
 	source/ChaiEngine/Shader.cpp
+	source/ChaiEngine/Engine.cpp
 )
 
 set(ChaiRenderables_headers
@@ -48,6 +49,6 @@ add_library (ChaiGraphics SHARED
 )
 
 target_include_directories(ChaiGraphics PUBLIC include)
-target_link_libraries(ChaiGraphics PUBLIC Core glm::glm glfw Scene)
+target_link_libraries(ChaiGraphics PUBLIC Core glm::glm glfw Scene WindowModule)
 
 ChaiLibDefaults(ChaiGraphics "Graphics")

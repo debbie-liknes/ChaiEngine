@@ -20,7 +20,9 @@ namespace chai::brew
 	private:
 		int createShaderProgram(chai::CVector<int> shaders);
 		int createShader(const char* source, ShaderStage stage);
-
-		//Core::CSharedPtr<GlPipelineState> m_pipelineState;
 	};
+}
+
+extern "C" OPENGLRENDERER_EXPORT chai::brew::OpenGLBackend* RegisterBackend() {
+	return new chai::brew::OpenGLBackend();
 }
