@@ -1,2 +1,1 @@
-add_subdirectory(EngineInterface)
 add_subdirectory(ChaiEngine)

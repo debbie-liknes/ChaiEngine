@@ -1,5 +1,5 @@
 #pragma once
-#include <ChaiApiExport.h>
+#include <ChaiGraphicsExport.h>
 #include <string>
 #include <Core/TypeHelpers.h>
 #include <Core/MemoryTypes.h>
@@ -8,7 +8,7 @@ using namespace chai;
 
 namespace CGraphics
 {
-	class CHAIAPI_EXPORT UniformBufferBase {
+	class CHAIGRAPHICS_EXPORT UniformBufferBase {
 	public:
 		std::string name;
 		virtual ~UniformBufferBase();

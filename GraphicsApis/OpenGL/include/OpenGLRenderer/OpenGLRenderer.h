@@ -21,6 +21,6 @@ namespace CGraphics
 		int createShaderProgram(Core::CVector<int> shaders);
 		int createShader(const char* source, CGraphics::ShaderStage stage);
 
-		Core::CSharedPtr<GlPipelineState> m_pipelineState;
+		//Core::CSharedPtr<GlPipelineState> m_pipelineState;
 	};
 }

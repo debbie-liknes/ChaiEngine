@@ -2,8 +2,8 @@
 #include <ChaiGraphicsExport.h>
 #include <Core/Containers.h>
 #include <Core/MemoryTypes.h>
-#include <Engine/VertexBuffer.h>
-#include <Engine/UniformBuffer.h>
+#include <ChaiEngine/VertexBuffer.h>
+#include <ChaiEngine/UniformBuffer.h>
 #include <map>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>

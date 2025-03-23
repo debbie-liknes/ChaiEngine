@@ -1,5 +1,5 @@
 #pragma once
-#include <ChaiApiExport.h>
+#include <ChaiGraphicsExport.h>
 #include <Core/Containers.h>
 #include <Core/MemoryTypes.h>
 #include <glm/glm.hpp>
@@ -9,7 +9,7 @@ using namespace chai;
 
 namespace CGraphics
 {
-	class CHAIAPI_EXPORT VertexBufferBase {
+	class CHAIGRAPHICS_EXPORT VertexBufferBase {
 	public:
 		virtual ~VertexBufferBase() = default;
 

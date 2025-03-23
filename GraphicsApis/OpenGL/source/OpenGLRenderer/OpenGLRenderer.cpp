@@ -15,7 +15,7 @@ namespace CGraphics
 {
 	OpenGLBackend::OpenGLBackend()
 	{
-		m_pipelineState = std::make_shared<GlPipelineState>();
+		//m_pipelineState = std::make_shared<GlPipelineState>();
 	}
 
 	void OpenGLBackend::setProcAddress(void* address)

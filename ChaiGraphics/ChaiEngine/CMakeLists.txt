@@ -6,6 +6,9 @@ set(ChaiGraphics_headers
 	include/RenderObjects/Cube.h
 	include/ChaiEngine/ViewData.h
 	include/ChaiEngine/Renderer.h
+	include/ChaiEngine/Shader.h
+	include/ChaiEngine/VertexBuffer.h
+	include/ChaiEngine/UniformBuffer.h
 )
 
 set(ChaiGraphics_source
@@ -13,6 +16,8 @@ set(ChaiGraphics_source
 	source/RenderObjects/Cube.cpp
 	source/RenderObjects/Triangle.cpp
 	source/ChaiEngine/Renderer.cpp
+	source/ChaiEngine/VertexBuffer.cpp
+	source/ChaiEngine/UniformBuffer.cpp
 )
 
 #this makes me cry
@@ -27,12 +32,26 @@ source_group("Renderables/src" FILES
 	source/RenderObjects/Cube.cpp
 	source/RenderObjects/Triangle.cpp
 )
+
+source_group("Graphics/headers" FILES
+	include/ChaiEngine/ViewData.h
+	include/ChaiEngine/Renderer.h
+	include/ChaiEngine/Shader.h
+	include/ChaiEngine/VertexBuffer.h
+	include/ChaiEngine/UniformBuffer.h
+)
+
+source_group("Graphics/src" FILES
+	source/ChaiEngine/Renderer.cpp
+	source/ChaiEngine/VertexBuffer.cpp
+	source/ChaiEngine/UniformBuffer.cpp
+)
 find_package(glm CONFIG REQUIRED)
 
 find_package(glfw3 REQUIRED)
 add_library (ChaiGraphics SHARED ${ChaiGraphics_headers} ${ChaiGraphics_source})
 
 target_include_directories(ChaiGraphics PUBLIC include)
-target_link_libraries(ChaiGraphics PUBLIC Core glm::glm glfw ChaiApi Scene)
+target_link_libraries(ChaiGraphics PUBLIC Core glm::glm glfw Scene)
 
 ChaiLibDefaults(ChaiGraphics "Graphics")
