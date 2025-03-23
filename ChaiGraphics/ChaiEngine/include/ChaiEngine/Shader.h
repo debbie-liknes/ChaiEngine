@@ -29,19 +29,13 @@ namespace chai_graphics
 
 	class CHAIGRAPHICS_EXPORT Shader
 	{
-    public:
-        virtual ~Shader() = default;
+	public:
+		virtual ~Shader() = default;
+		virtual void Bind() = 0;
 
-        // Generalized interface
-        virtual void compile(const std::string& vertexSource, const std::string& fragmentSource) = 0;
-        virtual void setUniform(const std::string& name, float value) = 0;
-        virtual void setUniform(const std::string& name, const std::vector<float>& values) = 0;
+		//static std::shared_ptr<Shader> CreateFromFile(const std::string& path);
 
-        virtual void bind() const = 0;
-        virtual void unbind() const = 0;
-
-        // Factory method
-        static std::shared_ptr<Shader> create();
+		//create from string but ONLY for opengl?
 
     protected:
         std::unordered_map<std::string, int> uniformLocations;
