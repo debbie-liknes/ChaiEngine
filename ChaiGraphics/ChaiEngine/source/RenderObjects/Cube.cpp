@@ -6,10 +6,10 @@ namespace chai::brew
 	{
 		m_vertexData = createVertexBuffer<glm::vec3>(PrimDataType::FLOAT, 3);
 		AddVertexBuffer(m_vertexData, 0);
-		glm::vec3 p1 = { 0.5f,  0.5f, 0.0f };
-		glm::vec3 p2 = { 0.5f, -0.5f, 0.0f };
-		glm::vec3 p3 = { -0.5f, -0.5f, 0.0f };
-		glm::vec3 p4 = { -0.5f,  0.5f, 0.0f };
+		glm::vec3 p1 = { 0.5f,  0.5f, -0.5f };
+		glm::vec3 p2 = { 0.5f, -0.5f, -0.5f };
+		glm::vec3 p3 = { -0.5f, -0.5f, -0.5f };
+		glm::vec3 p4 = { -0.5f,  0.5f, -0.5f };
 
 		glm::vec3 p5 = { 0.5f,  0.5f, 0.5f };
 		glm::vec3 p6 = { 0.5f, -0.5f, 0.5f };
@@ -40,8 +40,11 @@ namespace chai::brew
 		AddIndexBuffer(m_indexBuffer, 1);
 		m_indexBuffer->data = { 
 			0, 1, 3, 1, 2, 3, //front face
-			8, 5, 6, 7, 6, 8, 
-			0, 3, 4, 3, 4, 7
+			7, 6, 4, 5, 4, 6, 
+			0, 3, 4, 7, 4, 3,
+			3, 2, 6, 7, 3, 6,
+			1, 0, 5, 4, 5, 0,
+			6, 1, 5, 1, 6, 2
 		};
 
 		RequestViewData();

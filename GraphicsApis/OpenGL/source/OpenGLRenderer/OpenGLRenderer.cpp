@@ -26,6 +26,7 @@ namespace chai::brew
 		{
 			std::cerr << "Failed to initialize GLAD" << std::endl;
 		}
+		glEnable(GL_CULL_FACE);
 	}
 
 	int convertShaderType(ShaderStage stage)
@@ -148,7 +149,7 @@ namespace chai::brew
 		{
 			glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices[i]);
 			// Allocate memory for the UBO (size of 3 matrices)
-			glBufferData(GL_UNIFORM_BUFFER, ub.second->getElementSize(), ub.second->getRawData(), GL_DYNAMIC_DRAW);
+			glBufferData(GL_UNIFORM_BUFFER, ub.second->getElementSize(), ub.second->getRawData(), GL_STATIC_DRAW);
 
 			GLuint blockIndex = glGetUniformBlockIndex(shaderProgram, ub.second->name.c_str());
 			glUniformBlockBinding(shaderProgram, blockIndex, ub.first);
@@ -181,6 +182,7 @@ namespace chai::brew
 
 	void OpenGLBackend::renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<RenderObject>> ros, ViewData data)
 	{
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		for (auto& v : window->GetViewports())
 		{
 			int x, y, width, height;
