@@ -1,6 +1,9 @@
 #include <OpenGLRenderer/GLShader.h>
 
-namespace chai_graphics
+namespace chai::brew
 {
+	void GLShader::Bind()
+	{
 
+	}
 }

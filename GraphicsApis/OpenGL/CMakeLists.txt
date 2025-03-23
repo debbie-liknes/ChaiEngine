@@ -17,4 +17,8 @@ add_library (OpenGLRenderer SHARED ${OpenGLRenderer_headers} ${OpenGLRenderer_so
 target_link_libraries(OpenGLRenderer PUBLIC ChaiGraphics glad::glad WindowModule)
 target_include_directories(OpenGLRenderer PUBLIC include)
 
+target_compile_definitions(OpenGLRenderer PRIVATE 
+    CMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+)
+
 ChaiLibDefaults(OpenGLRenderer "Graphics/Platforms")

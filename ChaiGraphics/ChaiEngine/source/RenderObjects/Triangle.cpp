@@ -24,29 +24,8 @@ namespace chai::brew
 		AddIndexBuffer(m_indexBuffer, 1);
 		m_indexBuffer->data = { 0, 1, 3, 1, 2, 3 };
 
-
-		//shader shit
-		const char* vertexShaderSource = "#version 330 core\n"
-			"layout (location = 0) in vec3 aPos;\n"
-			"layout (location = 1) in vec3 aCol;\n"
-			"out vec3 outCol;\n"
-			"void main()\n"
-			"{\n"
-			"   outCol = aCol;\n"
-			"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-			"}\0";
-
-		//frag shader shit
-		const char* fragmentShaderSource = "#version 330 core\n"
-			"in vec3 outCol;\n"  // Matches 'outCol' from vertex shader
-			"out vec4 FragColor;\n"
-			"void main()\n"
-			"{\n"
-			"   FragColor = vec4(outCol, 1.0);\n"  // Use color from vertex shader
-			"}\0";
-
-		AddShaderSource(vertexShaderSource, ShaderStage::VERTEX);
-		AddShaderSource(fragmentShaderSource, ShaderStage::FRAGMENT);
+		AddShader("Data/Shaders/shape.vert", ShaderStage::VERTEX);
+		AddShader("Data/Shaders/shape.frag", ShaderStage::FRAGMENT);
 	}
 
 	TriangleRO::~TriangleRO()

@@ -31,13 +31,10 @@ namespace chai::brew
 	{
 	public:
 		virtual ~Shader() = default;
+
 		virtual void Bind() = 0;
-
-		//static std::shared_ptr<Shader> CreateFromFile(const std::string& path);
-
-		//create from string but ONLY for opengl?
-
-    protected:
-        std::unordered_map<std::string, int> uniformLocations;
+		std::string shaderSource;
+		//static std::shared_ptr<Shader> createFromFile(const std::string& path);
+		//static std::shared_ptr<Shader> createFromSource(const std::string& shaderData);
 	};
 }

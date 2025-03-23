@@ -8,6 +8,9 @@
 #include <glm/glm.hpp>
 #include <algorithm>
 #include <Core/TypeHelpers.h>
+#include <fstream>
+#include <sstream>
+#include <OpenGLRenderer/GLShader.h>
 
 namespace chai::brew
 {
@@ -210,7 +213,8 @@ namespace chai::brew
 			chai::CVector<int> shaders;
 			for (auto& s : ro->m_data)
 			{
-				shaders.push_back(createShader(s.shaderSource.data(), s.stage));
+				auto shader = LoadOrGetShader(s.shaderSource, s.stage);
+				shaders.push_back(createShader(shader->shaderSource.data(), s.stage));
 			}
 
 			int program = createShaderProgram(shaders);
@@ -239,5 +243,26 @@ namespace chai::brew
 				glDeleteShader(s);
 			}
 		}
+	}
+
+	std::shared_ptr<Shader> OpenGLBackend::LoadOrGetShader(const std::string& path, ShaderStage stage)
+	{
+		//this is terrible, i need a resource manager
+		auto it = m_ShaderCache.find(path);
+		if (it != m_ShaderCache.end())
+		{
+			return m_ShaderCache[path];
+		}
+
+		//we dont have it yet
+		auto shader = std::make_shared<GLShader>();
+		std::string fullpath = std::string(CMAKE_SOURCE_DIR) + "/" + path;
+		std::ifstream shaderFile(fullpath);
+		std::stringstream buffer;
+		buffer << shaderFile.rdbuf();
+		shader->shaderSource = buffer.str();
+		m_ShaderCache[path] = shader;
+
+		return shader;
 	}
 }

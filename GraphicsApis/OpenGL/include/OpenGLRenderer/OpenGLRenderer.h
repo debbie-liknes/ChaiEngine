@@ -17,9 +17,11 @@ namespace chai::brew
 
 		void setProcAddress(void* address) override;
 		void renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<RenderObject>> ros, ViewData data) override;
+		std::shared_ptr<Shader> LoadOrGetShader(const std::string& path, ShaderStage stage) override;
 	private:
 		int createShaderProgram(chai::CVector<int> shaders);
 		int createShader(const char* source, ShaderStage stage);
+		std::unordered_map<std::string, std::shared_ptr<Shader>> m_ShaderCache;
 	};
 }
 

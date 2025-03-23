@@ -15,14 +15,9 @@ namespace chai::brew
 
 	}
 
-	void RenderObject::AddShader(std::string dataString, ShaderStage stage)
+	void RenderObject::AddShader(std::string file, ShaderStage stage)
 	{
-
-	}
-
-	void RenderObject::AddShaderSource(std::string dataString, ShaderStage stage)
-	{
-		m_data.push_back({ dataString, stage });
+		m_data.push_back({ file, stage });
 	}
 
 	bool RenderObject::isDirty()

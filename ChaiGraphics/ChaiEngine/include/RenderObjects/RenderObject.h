@@ -34,7 +34,6 @@ namespace chai::brew
 		bool m_addViewData = false;
 	protected:
 		void AddShader(std::string file, ShaderStage stage);
-		void AddShaderSource(std::string dataString, ShaderStage stage);
 
 		void AddVertexBuffer(chai::CSharedPtr<VertexBufferBase> vbo, uint16_t binding);
 		void AddIndexBuffer(chai::CSharedPtr<VertexBufferBase> vbo, uint16_t binding);
