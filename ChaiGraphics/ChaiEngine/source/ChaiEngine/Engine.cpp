@@ -88,12 +88,12 @@ namespace chai::brew
         glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
         glm::mat4 view = glm::lookAt(cameraPos, target, up);
         glm::mat4 projection = glm::perspective(fov, aspect, near1, far1);
-        data.projMat = projection;
+        data.projMat = glm::mat4(1.f);
 
 
         //test ro
-        auto triangle = std::make_shared<chai::brew::CubeRO>();
-        chai::CVector<chai::CSharedPtr<chai::brew::RenderObject>> ros = { triangle };
+        auto cube = std::make_shared<chai::brew::CubeRO>();
+        chai::CVector<chai::CSharedPtr<chai::brew::RenderObject>> ros = { cube };
 
         auto& window = m_windows.back();
         while (window->Show())
