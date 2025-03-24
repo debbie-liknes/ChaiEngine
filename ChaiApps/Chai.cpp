@@ -1,8 +1,4 @@
-﻿//test exe
-
-#include "Chai.h"
-#include <Renderables/Cube.h>
-#include <Scene/Camera.h>
+﻿#include "Chai.h"
 #include <ChaiEngine/Engine.h>
 
 using namespace std;
@@ -14,9 +10,7 @@ int main()
 	engine.init("OpenGLRenderer");
 	engine.createWindow("Chai Window");
 
-	//TODO:make this a generic window
-	//CScene::Camera camera;
-
+	//TODO: engine should only responsible for rendering what we give it, not the main loop
 	engine.run();
 
 	return 0;
