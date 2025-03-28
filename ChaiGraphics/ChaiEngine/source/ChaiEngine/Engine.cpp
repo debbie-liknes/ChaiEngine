@@ -23,13 +23,9 @@ namespace chai::brew
 
 	Engine::~Engine()
 	{
+		ServiceLocator::getInstance().Shutdown();
 		//lib cleanup
 		shutdown();
-
-		if (nullptr != m_renderer)
-		{
-			delete m_renderer;
-		}
 	}
 
 	Renderer& Engine::renderer()
@@ -45,8 +41,8 @@ namespace chai::brew
 		if (loader.LoadPlugin(backend + ".dll"))
 		{
 			auto factory = kettle::PluginRegistry::Instance().Get("Renderer", "OpenGL");
-			m_renderer = static_cast<Renderer*>(factory());
-			ServiceLocator::Register<Renderer>(std::shared_ptr<Renderer>(m_renderer));
+			m_renderer = std::shared_ptr<Renderer>(static_cast<Renderer*>(factory()));
+			ServiceLocator::getInstance().Register<Renderer>(std::shared_ptr<Renderer>(m_renderer));
 		}
 
 		if (loader.LoadPlugin("TextureLoader.dll"))

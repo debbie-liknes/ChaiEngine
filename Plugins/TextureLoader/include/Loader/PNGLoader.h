@@ -29,8 +29,8 @@ namespace chai
 void registerServices()
 {
     chai::kettle::PluginRegistry::Instance().Register("Loader", "TextureLoader", [] {
-        auto renderer = chai::ServiceLocator::Get<chai::brew::Renderer>();
-        return static_cast<void*>(new chai::PngLoader(renderer.get()));
+        auto renderer = chai::ServiceLocator::getInstance().Get<chai::brew::Renderer>();
+        return static_cast<void*>(new chai::PngLoader());
         });
 }
 

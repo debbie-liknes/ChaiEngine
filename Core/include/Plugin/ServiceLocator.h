@@ -6,25 +6,25 @@ namespace chai
 {
     class ServiceLocator {
     public:
+        static ServiceLocator& getInstance();
+
+        void Shutdown();
+
         template<typename T>
-        static void Register(std::shared_ptr<T> service) {
-            services()[typeid(T).hash_code()] = service;
+        void Register(std::shared_ptr<T> service) {
+            m_services[typeid(T).hash_code()] = service;
         }
 
         template<typename T>
-        static std::shared_ptr<T> Get() {
-            auto it = services().find(typeid(T).hash_code());
-            if (it != services().end()) {
+        std::shared_ptr<T> Get() {
+            auto it = m_services.find(typeid(T).hash_code());
+            if (it != m_services.end()) {
                 return std::static_pointer_cast<T>(it->second);
             }
             return nullptr;
         }
 
     private:
-        static std::unordered_map<size_t, std::shared_ptr<void>>& services() {
-            static std::unordered_map<size_t, std::shared_ptr<void>> s;
-            return s;
-        }
+        std::unordered_map<size_t, std::shared_ptr<void>> m_services;
     };
-
 }

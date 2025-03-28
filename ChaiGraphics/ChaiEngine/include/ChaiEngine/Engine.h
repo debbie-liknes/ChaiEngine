@@ -28,7 +28,7 @@ namespace chai::brew
 		//windows and viewport belong in some kind of window manager
 		std::vector<std::shared_ptr<ChaiWindow>> m_windows;
 
-		Renderer* m_renderer;
+		std::shared_ptr<Renderer> m_renderer;
 
 		void shutdown();
 	};

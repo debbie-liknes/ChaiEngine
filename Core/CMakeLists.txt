@@ -26,6 +26,7 @@ set(Plugin_headers
 set(Plugin_source
 	source/Plugin/PluginLoader.cpp
 	source/Plugin/PluginRegistry.cpp
+	source/Plugin/ServiceLocator.cpp
 )
 
 set(Resource_headers
