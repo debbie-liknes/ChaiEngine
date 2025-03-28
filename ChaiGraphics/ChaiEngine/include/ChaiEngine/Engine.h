@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <Window/GLFWImpl.h>
+#include <Core/PluginLoader.h>
 
 namespace chai::brew
 {
@@ -19,7 +20,7 @@ namespace chai::brew
 		void createWindow(std::string windowTitle);
 
 	private:
-		void* m_backendLibHandle = nullptr;
+		PluginLoader loader;
 
 		//windows and viewport belong in some kind of window manager
 		std::vector<std::shared_ptr<ChaiWindow>> m_windows;

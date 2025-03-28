@@ -60,5 +60,3 @@ I built Chai as a way to learn by doing—by reimagining what a game engine coul
 Chai is very much a work in progress. More coming soon!
 
 ---
-
----
