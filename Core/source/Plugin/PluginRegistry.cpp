@@ -1,4 +1,4 @@
-#include <Core/PluginRegistry.h>
+#include <Plugin/PluginRegistry.h>
 #include <stdexcept>
 
 namespace chai::kettle

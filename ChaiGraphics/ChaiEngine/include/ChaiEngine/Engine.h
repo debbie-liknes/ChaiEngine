@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 #include <Window/GLFWImpl.h>
-#include <Core/PluginLoader.h>
+#include <Plugin/PluginLoader.h>
 
 namespace chai::brew
 {

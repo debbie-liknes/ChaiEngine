@@ -2,7 +2,7 @@
 #include <CoreExport.h>
 #include <iostream>
 #include <vector>
-#include <Core/PluginManifest.h>
+#include <Plugin/PluginManifest.h>
 
 #ifdef _WIN32
 #include <Windows.h>

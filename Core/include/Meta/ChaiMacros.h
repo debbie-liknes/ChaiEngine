@@ -2,8 +2,8 @@
 #include <Meta/TypeInfo.h>
 #include <Meta/TypeRegistry.h>
 #include <Meta/MethodInvoker.h>
-#include <Core/PluginManifest.h>
-#include <Core/PluginBase.h>
+#include <Plugin/PluginManifest.h>
+#include <Plugin/PluginBase.h>
 
 inline std::vector<std::string>& __ChaiRegisteredTypes() {
     static std::vector<std::string> types;

@@ -3,7 +3,7 @@
 #include <ChaiEngine/Renderer.h>
 #include <ChaiEngine/ViewData.h>
 #include <Meta/ChaiMacros.h>
-#include <Core/PluginRegistry.h>
+#include <Plugin/PluginRegistry.h>
 
 namespace chai::brew
 {

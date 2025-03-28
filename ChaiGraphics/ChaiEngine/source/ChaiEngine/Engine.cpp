@@ -5,8 +5,8 @@
 #include <glm/glm.hpp>
 #include <ChaiEngine/ViewData.h>
 #include <Renderables/Cube.h>
-#include <Core/PluginLoader.h>
-#include <Core/PluginRegistry.h>
+#include <Plugin/PluginLoader.h>
+#include <Plugin/PluginRegistry.h>
 
 #ifdef _WIN32
 #include <Windows.h>

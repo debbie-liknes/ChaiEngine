@@ -1,5 +1,5 @@
-#include <Core/PluginLoader.h>
-#include <Core/PluginBase.h>
+#include <Plugin/PluginLoader.h>
+#include <Plugin/PluginBase.h>
 
 namespace chai
 {
