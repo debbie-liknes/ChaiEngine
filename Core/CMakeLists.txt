@@ -20,6 +20,7 @@ set(Plugin_headers
 	include/Plugin/PluginLoader.h
 	include/Plugin/PluginManifest.h
 	include/Plugin/PluginRegistry.h
+	include/Plugin/ServiceLocator.h
 )
 
 set(Plugin_source

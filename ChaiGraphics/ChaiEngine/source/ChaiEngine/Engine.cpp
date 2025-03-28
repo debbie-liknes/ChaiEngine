@@ -8,6 +8,7 @@
 #include <Plugin/PluginLoader.h>
 #include <Plugin/PluginRegistry.h>
 #include <Resource/ResourceManager.h>
+#include <Plugin/ServiceLocator.h>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -45,6 +46,7 @@ namespace chai::brew
 		{
 			auto factory = kettle::PluginRegistry::Instance().Get("Renderer", "OpenGL");
 			m_renderer = static_cast<Renderer*>(factory());
+			ServiceLocator::Register<Renderer>(std::shared_ptr<Renderer>(m_renderer));
 		}
 
 		if (loader.LoadPlugin("TextureLoader.dll"))

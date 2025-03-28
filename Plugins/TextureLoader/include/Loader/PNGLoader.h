@@ -4,6 +4,7 @@
 #include <Meta/ChaiMacros.h>
 #include <Plugin/PluginRegistry.h>
 #include <ChaiEngine/Renderer.h>
+#include <Plugin/ServiceLocator.h>
 
 
 namespace chai
@@ -28,7 +29,8 @@ namespace chai
 void registerServices()
 {
     chai::kettle::PluginRegistry::Instance().Register("Loader", "TextureLoader", [] {
-        return static_cast<void*>(new chai::PngLoader());
+        auto renderer = chai::ServiceLocator::Get<chai::brew::Renderer>();
+        return static_cast<void*>(new chai::PngLoader(renderer.get()));
         });
 }
 
