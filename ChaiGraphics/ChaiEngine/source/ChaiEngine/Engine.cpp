@@ -31,6 +31,11 @@ namespace chai::brew
 		}
 	}
 
+	Renderer& Engine::renderer()
+	{
+		return *m_renderer;
+	}
+
 	void Engine::init(std::string backend)
 	{
 		//possible TODO: auto load plugins?

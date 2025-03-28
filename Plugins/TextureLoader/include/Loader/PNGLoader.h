@@ -3,14 +3,21 @@
 #include <Types/Texture2D.h>
 #include <Meta/ChaiMacros.h>
 #include <Plugin/PluginRegistry.h>
+#include <ChaiEngine/Renderer.h>
 
 
 namespace chai
 {
     class PngLoader : public IResourceLoader {
     public:
+        PngLoader();
+        PngLoader(brew::Renderer* renderer) : m_renderer(renderer) {}
+
         bool CanLoad(const std::string& ext) const override;
         std::shared_ptr<IResource> Load(const std::string& path) override;
+
+    private:
+        brew::Renderer* m_renderer;
     };
 
     CHAI_CLASS(chai::PngLoader)

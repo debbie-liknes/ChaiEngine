@@ -269,7 +269,7 @@ namespace chai::brew
 		return shader;
 	}
 
-	std::shared_ptr<ITextureBackend> OpenGLBackend::createTexture2D()
+	std::shared_ptr<ITextureBackend> OpenGLBackend::createTexture2D(const uint8_t* data, uint32_t width, uint32_t height)
 	{
 		return std::make_shared<OpenGLTextureBackend>();
 	}

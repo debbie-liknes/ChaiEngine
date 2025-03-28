@@ -4,6 +4,11 @@
 
 namespace chai
 {
+    PngLoader::PngLoader()
+    {
+
+    }
+
     bool PngLoader::CanLoad(const std::string& ext) const
     {
         return ext == ".png";
@@ -11,12 +16,14 @@ namespace chai
 
     std::shared_ptr<IResource> PngLoader::Load(const std::string& path)
     {
+        if (!m_renderer) return nullptr;
+
         int w, h, channels;
         stbi_uc* pixels = stbi_load(path.c_str(), &w, &h, &channels, 4);
         if (!pixels) return nullptr;
 
-        auto tex = std::make_shared<Texture2D>();
-        tex->create(w, h, pixels);
+        auto backend = m_renderer->createTexture2D(pixels, w, h);
+        auto tex = std::make_shared<Texture2D>(Texture2D{ backend, (uint32_t)w, (uint32_t)h});
         stbi_image_free(pixels);
         return tex;
     }

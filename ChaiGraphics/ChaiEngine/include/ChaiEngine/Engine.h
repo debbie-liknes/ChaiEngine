@@ -20,6 +20,8 @@ namespace chai::brew
 
 		void createWindow(std::string windowTitle);
 
+		Renderer& renderer();
+
 	private:
 		PluginLoader loader;
 
