@@ -19,6 +19,7 @@ namespace chai::brew
 		void setProcAddress(void* address) override;
 		void renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<Renderable>> ros, ViewData data) override;
 		std::shared_ptr<Shader> LoadOrGetShader(const std::string& path, ShaderStage stage) override;
+		std::shared_ptr<ITextureBackend> createTexture2D() override;
 	private:
 		int createShaderProgram(chai::CVector<int> shaders);
 		int createShader(const char* source, ShaderStage stage);

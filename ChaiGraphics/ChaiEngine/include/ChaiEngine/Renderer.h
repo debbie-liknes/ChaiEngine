@@ -3,6 +3,7 @@
 #include <Core/Containers.h>
 #include <ChaiEngine/ViewData.h>
 #include <ChaiEngine/Shader.h>
+#include <Core/TextureBackend.h>
 
 namespace chai
 {
@@ -19,6 +20,7 @@ namespace chai
 			virtual void setProcAddress(void* address) {}
 			virtual void renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<Renderable>> ros, ViewData data) = 0;
 			virtual std::shared_ptr<Shader> LoadOrGetShader(const std::string& path, ShaderStage stage) = 0;
+			virtual std::shared_ptr<ITextureBackend> createTexture2D() = 0;
 		};
 	}
 }

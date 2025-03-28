@@ -11,6 +11,7 @@
 #include <fstream>
 #include <sstream>
 #include <OpenGLRenderer/GLShader.h>
+#include <OpenGLRenderer/OpenGLTexture.h>
 
 namespace chai::brew
 {
@@ -266,5 +267,10 @@ namespace chai::brew
 		m_ShaderCache[path] = shader;
 
 		return shader;
+	}
+
+	std::shared_ptr<ITextureBackend> OpenGLBackend::createTexture2D()
+	{
+		return std::make_shared<OpenGLTextureBackend>();
 	}
 }

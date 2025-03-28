@@ -7,6 +7,7 @@
 #include <Renderables/Cube.h>
 #include <Plugin/PluginLoader.h>
 #include <Plugin/PluginRegistry.h>
+#include <Resource/ResourceManager.h>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -32,10 +33,23 @@ namespace chai::brew
 
 	void Engine::init(std::string backend)
 	{
+		//possible TODO: auto load plugins?
+		//these should at minimum be loaded somewhere else
+		//and these plugins should be more swappable
 		if (loader.LoadPlugin(backend + ".dll"))
 		{
 			auto factory = kettle::PluginRegistry::Instance().Get("Renderer", "OpenGL");
 			m_renderer = static_cast<Renderer*>(factory());
+		}
+
+		if (loader.LoadPlugin("TextureLoader.dll"))
+		{
+			auto factory = kettle::PluginRegistry::Instance().Get("Loader", "TextureLoader");
+			auto loader = static_cast<IResourceLoader*>(factory());
+			if (loader)
+			{
+				chai::ResourceManager::Instance().RegisterLoader(std::shared_ptr<IResourceLoader>(loader));
+			}
 		}
 	}
 

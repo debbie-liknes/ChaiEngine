@@ -1,12 +1,14 @@
 
 set(OpenGLRenderer_headers
 	include/OpenGLRenderer/OpenGLRenderer.h
+	include/OpenGLRenderer/OpenGLTexture.h
 	include/OpenGLRenderer/GlPipelineState.h
 	include/OpenGLRenderer/GLShader.h
 )
 
 set(OpenGLRenderer_source
 	source/OpenGLRenderer/OpenGLRenderer.cpp
+	source/OpenGLRenderer/OpenGLTexture.cpp
 	source/OpenGLRenderer/GLShader.cpp
 )
 

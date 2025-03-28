@@ -4,6 +4,7 @@
 #include <memory>
 #include <Window/GLFWImpl.h>
 #include <Plugin/PluginLoader.h>
+#include <Resource/ResourceLoader.h>
 
 namespace chai::brew
 {
