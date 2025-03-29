@@ -10,12 +10,6 @@ inline std::vector<std::string>& __ChaiRegisteredTypes() {
     return types;
 }
 
-inline void __ChaiAutoRegisterAllTypes() {
-    for (const auto& type : __ChaiRegisteredTypes()) {
-        chai::kettle::TypeRegistry::Instance().RegisterType(*chai::kettle::TypeRegistry::Instance().Get(type));
-    }
-}
-
 #define CHAI_CLASS(type) \
     namespace ChaiInternal_##type { \
         static chai::kettle::TypeInfo BuildTypeInfo() { \
@@ -49,7 +43,6 @@ inline void __ChaiAutoRegisterAllTypes() {
     public: \
         void OnStartup() override { \
             serviceRegFn(); \
-            __ChaiAutoRegisterAllTypes(); \
         } \
         const std::string& GetName() const override { \
             return authorStr; \

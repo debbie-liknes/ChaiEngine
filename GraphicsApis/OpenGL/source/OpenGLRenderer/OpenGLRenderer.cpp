@@ -181,23 +181,18 @@ namespace chai::brew
 		return GL_TRIANGLES;
 	}
 
-	void OpenGLBackend::renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<Renderable>> ros, ViewData data)
+	void OpenGLBackend::renderFrame(const RenderFrame& frame)
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		for (auto& v : window->GetViewports())
-		{
-			int x, y, width, height;
-			v->GetDimensions(x, y, width, height);
-			glViewport(x, y, width, height);
-		}
 
 		auto viewUBO = createUniformBuffer<ViewData>(PrimDataType::FLOAT);
-		viewUBO->data = data;
+		viewUBO->data.projMat = frame.camera.proj;
+		viewUBO->data.view = frame.camera.view;
 		viewUBO->name = "MatrixData";
 
 		//renders
 		//this is not efficient, atm
-		for (auto& ro : ros)
+		for (auto& ro : frame.renderables)
 		{
 			chai::CVector<unsigned int> numBuffs;
 			numBuffs.resize(ro->m_vertexBuffers.size());

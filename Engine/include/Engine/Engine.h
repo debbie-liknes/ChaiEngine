@@ -1,15 +1,15 @@
 #pragma once
-#include <ChaiGraphicsExport.h>
 #include <string>
 #include <memory>
 #include <Window/GLFWImpl.h>
 #include <Plugin/PluginLoader.h>
 #include <Resource/ResourceLoader.h>
+#include <Scene/Scene.h>
 
 namespace chai::brew
 {
 	class Renderer;
-	class CHAIGRAPHICS_EXPORT Engine
+	class Engine
 	{
 	public:
 		Engine() = default;
@@ -29,6 +29,8 @@ namespace chai::brew
 		std::vector<std::shared_ptr<ChaiWindow>> m_windows;
 
 		std::shared_ptr<Renderer> m_renderer;
+		//test scene
+		std::shared_ptr<cup::Scene> m_scene;
 
 		void shutdown();
 	};

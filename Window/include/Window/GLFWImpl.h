@@ -7,6 +7,13 @@
 
 namespace chai
 {
+    //dump of everything I need the GLFWUserPointer to have
+    struct GLFWInfo
+    {
+        InputState* input;
+        Window* window;
+    };
+
 	//glfw window implementation
 	class WINDOWMODULE_EXPORT ChaiWindow : public Window
 	{
@@ -30,5 +37,6 @@ namespace chai
     private:
 
         GLFWwindow* m_window;
+        GLFWInfo m_userPointer;
 	};
 }

@@ -13,6 +13,7 @@ set(Core_headers
 
 set(Core_source
 	source/Core/Containers.cpp
+	source/Meta/TypeRegistry.cpp
 )
 
 set(Plugin_headers

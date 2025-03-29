@@ -10,7 +10,7 @@ Chai is my personal playground for exploring engine architecture and gameplay sy
 
 ---
 
-## 🧱 Features
+## 🧱 Planned Features
 
 - 🔧 **Abstract Rendering Layer**  
   Decouples rendering from logic; supports multiple backends (OpenGL now, Vulkan in progress)
@@ -51,7 +51,7 @@ Chai is my personal playground for exploring engine architecture and gameplay sy
 
 ## 💡 Why Chai?
 
-I built Chai as a way to learn by doing—by reimagining what a game engine could look like if it were designed around experimentation, not constraints. Chai helps me grow as a programmer, deepen my graphics knowledge, and explore gameplay mechanics that don’t fit neatly into existing engines.
+I'm building Chai as a way to learn by doing and reimagining what a game engine could look like if it were designed around experimentation, not constraints. Chai helps me grow as a programmer, deepen my graphics knowledge, and explore gameplay mechanics that don't fit neatly into existing engines.
 
 ---
 
@@ -60,3 +60,8 @@ I built Chai as a way to learn by doing—by reimagining what a game engine coul
 Chai is very much a work in progress. More coming soon!
 
 ---
+## 📚 Libraries
+
+GLFW
+glm
+stb_image

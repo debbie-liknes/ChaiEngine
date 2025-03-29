@@ -1,15 +1,15 @@
-#include <ChaiEngine/Engine.h>
+#include <Engine/Engine.h>
 #include <ChaiEngine/Renderer.h>
 #include <Window/Viewport.h>
 #include <stdexcept>
 #include <glm/glm.hpp>
 #include <ChaiEngine/ViewData.h>
-#include <Renderables/Cube.h>
 #include <Plugin/PluginLoader.h>
 #include <Plugin/PluginRegistry.h>
 #include <Resource/ResourceManager.h>
 #include <Plugin/ServiceLocator.h>
-#include <Scene/Camera.h>
+#include <Meta/TypeRegistry.h>
+#include <Scene/RenderFrameBuilder.h>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -65,8 +65,14 @@ namespace chai::brew
 	{
 		m_windows.push_back(std::make_shared<ChaiWindow>(windowTitle));
 		auto& window = m_windows.back();
-		chai::SharedViewport testViewport = std::make_shared<chai::Viewport>(0, 0, window->GetWidth(), window->GetHeight());
-		window->AddViewport(testViewport);
+
+		//TODO: get this string from elsewhere
+		auto info = chai::kettle::TypeRegistry::Instance().Get("chai::brew::GLViewport");
+		void* raw = info->factory();
+		auto* viewport = static_cast<Viewport*>(raw);
+
+		viewport->setDimensions(0, 0, window->GetWidth(), window->GetHeight());
+		window->AddViewport(std::shared_ptr<Viewport>(viewport));
 		m_renderer->setProcAddress(window->getProcAddress());
 	}
 
@@ -77,34 +83,32 @@ namespace chai::brew
 
 		const float cameraSpeed = 0.01f; // adjust accordingly
 
-		float aspectRatio = (float)window->GetWidth() / (float)window->GetHeight();
-		cup::Camera cam;
-		cam.SetPerspective(30.f, aspectRatio, 0.1f, 100.f);
-		cam.SetPosition(glm::vec3(0.0f, 0.0f, -5.0f));
-		cam.lookAt(glm::vec3(0.f, 0.f, 0.f));
-
-		//test ro
-		auto cube = std::make_shared<chai::brew::CubeRO>();
-		chai::CVector<chai::CSharedPtr<chai::brew::Renderable>> ros = { cube };
+		m_scene = std::make_shared<cup::Scene>();
 
 		while (window->Show())
 		{
+			//TODO: input system
 			if (window->m_state.keys.find(chai::Key::KEY_W) != window->m_state.keys.end())
-				cam.SetPosition(cam.getPosition() + (cameraSpeed * cam.getDirection()));
+				m_scene->m_cam.SetPosition(m_scene->m_cam.getPosition() + (cameraSpeed * m_scene->m_cam.getDirection()));
 			if (window->m_state.keys.find(chai::Key::KEY_S) != window->m_state.keys.end())
-				cam.SetPosition(cam.getPosition() - (cameraSpeed * cam.getDirection()));
+				m_scene->m_cam.SetPosition(m_scene->m_cam.getPosition() - (cameraSpeed * m_scene->m_cam.getDirection()));
 			if (window->m_state.keys.find(chai::Key::KEY_A) != window->m_state.keys.end())
-				cam.SetPosition(cam.getPosition() + (cameraSpeed * cam.getRight()));
+				m_scene->m_cam.SetPosition(m_scene->m_cam.getPosition() + (cameraSpeed * m_scene->m_cam.getRight()));
 			if (window->m_state.keys.find(chai::Key::KEY_D) != window->m_state.keys.end())
-				cam.SetPosition(cam.getPosition() - (cameraSpeed * cam.getRight()));
-
-			data.view = cam.GetViewMatrix();
-
-			data.projMat = cam.GetProjectionMatrix();
+				m_scene->m_cam.SetPosition(m_scene->m_cam.getPosition() - (cameraSpeed * m_scene->m_cam.getRight()));
 
 			window->swapBuffers();
 			window->PollEvents();
-			m_renderer->renderFrame(window.get(), ros, data);
+
+			//this is a bit muddy, atm
+			//who owns the scene? independent of viewports?
+			//probably need a viewport manager
+			for (auto vp : window->GetViewports())
+			{
+				auto renderFrame = cup::RenderFrameBuilder::build(*m_scene, vp.get());
+				vp->bind();
+				m_renderer->renderFrame(renderFrame);
+			}
 		}
 
 		window->Close();

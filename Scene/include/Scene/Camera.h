@@ -1,6 +1,7 @@
 #pragma once
 #include <SceneExport.h>
 #include <glm/glm.hpp>
+#include <Window/Viewport.h>
 
 namespace chai::cup
 {
@@ -16,7 +17,7 @@ namespace chai::cup
 		Camera();
 		virtual ~Camera();
 
-		void SetPerspective(float fov, float aspect, float near, float far);
+		void SetPerspective(float fov, float near, float far);
 		void SetOrthographic(float left, float right, float bottom, float top, float near, float far);
 
 		void SetPosition(const glm::vec3& pos);
@@ -27,8 +28,8 @@ namespace chai::cup
 		void lookAt(const glm::vec3& targetPos);
 
 		glm::mat4 GetViewMatrix() const;
-		glm::mat4 GetProjectionMatrix() const;
-		glm::mat4 GetViewProjectionMatrix() const;
+		glm::mat4 GetProjectionMatrix(float aspect) const;
+		glm::mat4 GetViewProjectionMatrix(float aspect) const;
 
 		glm::vec3 getPosition() const;
 		glm::vec3 getDirection() const;
@@ -42,7 +43,9 @@ namespace chai::cup
 		CameraMode m_mode;
 
 		float m_near, m_far;					//clip planes
-		float m_fov, m_aspect;					//perspective attributes
+		float m_fov;							//perspective attributes
 		float m_left, m_right, m_top, m_bottom;	//ortho attributes
+
+		SharedViewport m_viewport;
 	};
 }

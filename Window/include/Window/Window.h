@@ -45,6 +45,7 @@ namespace chai
         //a flat list of viewports
         //TODO: should this be a map?
         chai::CVector<SharedViewport> m_viewports;
+        SharedViewport m_mainViewport;
 
         //dimensions
         int m_width;

@@ -5,7 +5,7 @@
 namespace chai::cup
 {
 	Camera::Camera() : m_position(glm::vec3{0.f}), m_forward(glm::vec3{0.f}), m_up(glm::vec3{0.f, 1.f, 0.f}),
-		m_mode(CameraMode::PERSPECTIVE), m_fov(0.f), m_aspect(0.f), m_near(0.f), m_far(0.f),
+		m_mode(CameraMode::PERSPECTIVE), m_fov(0.f), m_near(0.f), m_far(0.f),
 		m_left(0.f), m_right(0.f), m_bottom(0.f), m_top(0.f)
 	{
 
@@ -16,11 +16,10 @@ namespace chai::cup
 
 	}
 
-	void Camera::SetPerspective(float fov, float aspect, float near, float far)
+	void Camera::SetPerspective(float fov, float near, float far)
 	{
 		m_mode = CameraMode::PERSPECTIVE;
 		m_fov = fov;
-		m_aspect = aspect;
 		m_near = near;
 		m_far = far;
 	}
@@ -79,19 +78,19 @@ namespace chai::cup
 	}
 
 	//view space to clip space
-	glm::mat4 Camera::GetProjectionMatrix() const
+	glm::mat4 Camera::GetProjectionMatrix(float aspect) const
 	{
 		if (m_mode == CameraMode::ORTHOGRAPHIC)
 		{
 			return glm::ortho(m_left, m_right, m_bottom, m_top);
 		}
-		return glm::perspective(m_fov, m_aspect, m_near, m_far);
+		return glm::perspective(m_fov, aspect, m_near, m_far);
 	}
 
 	//world space to clip space
-	glm::mat4 Camera::GetViewProjectionMatrix() const
+	glm::mat4 Camera::GetViewProjectionMatrix(float aspect) const
 	{
-		return GetProjectionMatrix() * GetViewMatrix();
+		return GetProjectionMatrix(aspect) * GetViewMatrix();
 	}
 
 	glm::vec3 Camera::getPosition() const

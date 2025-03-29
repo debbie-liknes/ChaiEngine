@@ -1,3 +1,4 @@
+#pragma once
 #include <Renderables/Renderable.h>
 #include <glm/glm.hpp>
 

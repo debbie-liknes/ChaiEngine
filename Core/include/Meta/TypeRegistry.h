@@ -5,10 +5,7 @@ namespace chai::kettle
 {
     class TypeRegistry {
     public:
-        static TypeRegistry& Instance() {
-            static TypeRegistry reg;
-            return reg;
-        }
+        static TypeRegistry& Instance();
 
         void RegisterType(const TypeInfo& info) {
             m_Registry[info.name] = info;

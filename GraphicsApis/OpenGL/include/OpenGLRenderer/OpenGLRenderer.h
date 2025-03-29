@@ -17,7 +17,8 @@ namespace chai::brew
 		OpenGLBackend();
 		~OpenGLBackend() {}
 		void setProcAddress(void* address) override;
-		void renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<Renderable>> ros, ViewData data) override;
+		void renderFrame(const RenderFrame& frame) override;
+		//void renderFrame(chai::Window* window, chai::CVector<chai::CSharedPtr<Renderable>> ros, ViewData data) override;
 		std::shared_ptr<Shader> LoadOrGetShader(const std::string& path, ShaderStage stage) override;
 		std::shared_ptr<ITextureBackend> createTexture2D(const uint8_t* data, uint32_t width, uint32_t height) override;
 	private:
@@ -31,7 +32,6 @@ namespace chai::brew
 	END_CHAI()
 }
 
-//this could probably live in a different file
 void registerServices()
 {
 	chai::kettle::PluginRegistry::Instance().Register("Renderer", "OpenGL", [] {
