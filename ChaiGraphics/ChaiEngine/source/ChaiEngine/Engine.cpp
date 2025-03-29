@@ -9,6 +9,7 @@
 #include <Plugin/PluginRegistry.h>
 #include <Resource/ResourceManager.h>
 #include <Plugin/ServiceLocator.h>
+#include <Scene/Camera.h>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -74,13 +75,13 @@ namespace chai::brew
 		chai::brew::ViewData data;
 		auto& window = m_windows.back();
 
-		glm::vec3 cameraPos = glm::vec3(0.0f, -5.0f, -5.0f);
-		glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-		glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-		glm::vec3 cameraRight = glm::normalize(glm::cross(cameraFront, cameraUp));
-
 		const float cameraSpeed = 0.01f; // adjust accordingly
 
+		float aspectRatio = (float)window->GetWidth() / (float)window->GetHeight();
+		cup::Camera cam;
+		cam.SetPerspective(30.f, aspectRatio, 0.1f, 100.f);
+		cam.SetPosition(glm::vec3(0.0f, 0.0f, -5.0f));
+		cam.lookAt(glm::vec3(0.f, 0.f, 0.f));
 
 		//test ro
 		auto cube = std::make_shared<chai::brew::CubeRO>();
@@ -89,30 +90,17 @@ namespace chai::brew
 		while (window->Show())
 		{
 			if (window->m_state.keys.find(chai::Key::KEY_W) != window->m_state.keys.end())
-				cameraPos += cameraSpeed * cameraFront;
+				cam.SetPosition(cam.getPosition() + (cameraSpeed * cam.getDirection()));
 			if (window->m_state.keys.find(chai::Key::KEY_S) != window->m_state.keys.end())
-				cameraPos -= cameraSpeed * cameraFront;
+				cam.SetPosition(cam.getPosition() - (cameraSpeed * cam.getDirection()));
 			if (window->m_state.keys.find(chai::Key::KEY_A) != window->m_state.keys.end())
-				cameraPos -= cameraSpeed * cameraRight;
+				cam.SetPosition(cam.getPosition() + (cameraSpeed * cam.getRight()));
 			if (window->m_state.keys.find(chai::Key::KEY_D) != window->m_state.keys.end())
-				cameraPos += cameraSpeed * cameraRight;
+				cam.SetPosition(cam.getPosition() - (cameraSpeed * cam.getRight()));
 
-			//need a camera class
-			glm::mat4 view = glm::lookAt(
-				cameraPos,
-				glm::vec3(0.0f, 0.0f, 0.0f),  // Target position (center of the scene)
-				glm::vec3(0.0f, 1.0f, 0.0f)
-			);
-			data.view = view;
+			data.view = cam.GetViewMatrix();
 
-			float aspectRatio = (float)window->GetWidth() / (float)window->GetHeight();
-			glm::mat4 projection = glm::perspective(
-				glm::radians(30.0f), // Field of view: 45 degrees
-				aspectRatio,         // Aspect ratio: width/height
-				0.1f,                // Near clipping plane
-				100.0f               // Far clipping plane
-			);
-			data.projMat = projection;
+			data.projMat = cam.GetProjectionMatrix();
 
 			window->swapBuffers();
 			window->PollEvents();
