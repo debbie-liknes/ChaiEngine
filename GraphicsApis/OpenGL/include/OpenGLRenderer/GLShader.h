@@ -6,21 +6,6 @@
 
 namespace chai::brew
 {
-	class GLShaderProgram {
-	public:
-		GLShaderProgram(int program);
-		void AddShader(int handle);
-		std::set<int> getShaders();
-		int getProgramHandle(){ return m_programHandle; }
-
-		void addUniform(std::string name, std::shared_ptr<UniformBufferBase> ubo);
-
-	private:
-		std::set<int> m_shaders;
-		int m_programHandle;
-		std::unordered_map<std::string, std::shared_ptr<UniformBufferBase>> m_uniforms;
-	};
-
 	class OPENGLRENDERER_EXPORT GLShader : public Shader
 	{
 	public:

@@ -5,6 +5,7 @@
 #include <Meta/ChaiMacros.h>
 #include <Plugin/PluginRegistry.h>
 #include <OpenGLRenderer/GLShader.h>
+#include <OpenGLRenderer/GLShaderProgram.h>
 
 namespace chai::brew
 {
@@ -23,11 +24,9 @@ namespace chai::brew
 		std::shared_ptr<Shader> LoadOrGetShader(const std::string& path, ShaderStage stage) override;
 		std::shared_ptr<ITextureBackend> createTexture2D(const uint8_t* data, uint32_t width, uint32_t height) override;
 	private:
-		int createShaderProgram(chai::CVector<int> shaders);
 		std::unordered_map<std::string, std::shared_ptr<GLShader>> m_ShaderCache;
 		std::vector<std::shared_ptr<GLShaderProgram>> m_programCache;
-		std::shared_ptr<GLShaderProgram> loadOrGetShaderProgram(std::vector<int> shaders);
-		std::shared_ptr<GLShader> getShaderByHandle(int shader);
+		std::shared_ptr<GLShaderProgram> loadOrGetShaderProgram(std::vector<int> shaders, std::map<uint16_t, chai::CSharedPtr<UniformBufferBase>> ubos);
 	};
 
 	CHAI_CLASS(chai::brew::OpenGLBackend)

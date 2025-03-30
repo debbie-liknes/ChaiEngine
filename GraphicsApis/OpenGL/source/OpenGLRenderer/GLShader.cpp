@@ -1,6 +1,7 @@
 #include <OpenGLRenderer/GLShader.h>
 #include <glad/glad.h>
 #include <iostream>
+#include <map>
 
 namespace chai::brew
 {
@@ -58,25 +59,5 @@ namespace chai::brew
 	int GLShader::getHandle()
 	{
 		return m_shaderHandle;
-	}
-
-	GLShaderProgram::GLShaderProgram(int program)
-	{
-		m_programHandle = program;
-	}
-
-	void GLShaderProgram::AddShader(int handle)
-	{
-		m_shaders.insert(handle);
-	}
-
-	std::set<int> GLShaderProgram::getShaders()
-	{
-		return m_shaders;
-	}
-
-	void GLShaderProgram::addUniform(std::string name, std::shared_ptr<UniformBufferBase> ubo)
-	{
-		m_uniforms[name] = ubo;
 	}
 }

@@ -4,6 +4,7 @@ set(OpenGLRenderer_headers
 	include/OpenGLRenderer/OpenGLTexture.h
 	include/OpenGLRenderer/GlPipelineState.h
 	include/OpenGLRenderer/GLShader.h
+	include/OpenGLRenderer/GLShaderProgram.h
 	include/OpenGLRenderer/GLViewport.h
 )
 
@@ -11,6 +12,7 @@ set(OpenGLRenderer_source
 	source/OpenGLRenderer/OpenGLRenderer.cpp
 	source/OpenGLRenderer/OpenGLTexture.cpp
 	source/OpenGLRenderer/GLShader.cpp
+	source/OpenGLRenderer/GLShaderProgram.cpp
 	source/OpenGLRenderer/GLViewport.cpp
 )
 

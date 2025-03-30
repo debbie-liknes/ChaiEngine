@@ -30,28 +30,6 @@ namespace chai::brew
 		glEnable(GL_CULL_FACE);
 	}
 
-	int OpenGLBackend::createShaderProgram(chai::CVector<int> shaders)
-	{
-		unsigned int shaderProgram;
-		shaderProgram = glCreateProgram();
-
-		for (auto& shader : shaders)
-		{
-			glAttachShader(shaderProgram, shader);
-		}
-		glLinkProgram(shaderProgram);
-
-		int  success;
-		char infoLog[512];
-		glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-		if (!success) {
-			glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-		}
-
-		glUseProgram(shaderProgram);
-		return shaderProgram;
-	}
-
 	int mapTypesToGL(PrimDataType type)
 	{
 		switch (type)
@@ -107,31 +85,6 @@ namespace chai::brew
 		return vao;
 	}
 
-	void setUpUniforms(int shaderProgram, std::map<uint16_t, chai::CSharedPtr<UniformBufferBase>>& ubos)
-	{
-		chai::CVector<unsigned int> uboMatrices;
-		uboMatrices.resize(ubos.size());
-		glGenBuffers(ubos.size(), uboMatrices.data());
-		int i = 0;
-		for (auto& ub : ubos)
-		{
-			glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices[i]);
-			// Allocate memory for the UBO (size of 3 matrices)
-			glBufferData(GL_UNIFORM_BUFFER, ub.second->getElementSize(), ub.second->getRawData(), GL_STATIC_DRAW);
-
-			GLuint blockIndex = glGetUniformBlockIndex(shaderProgram, ub.second->name.c_str());
-			glUniformBlockBinding(shaderProgram, blockIndex, ub.first);
-			glBindBufferBase(GL_UNIFORM_BUFFER, ub.first, uboMatrices[i]);
-
-			i++;
-		}
-	}
-
-	void setUpShaders(chai::CVector<unsigned int>& vbos, chai::CSharedPtr<VertexBufferBase> vb)
-	{
-		//only needs to be done
-	}
-
 	int toGLPrimitive(PrimitiveMode mode)
 	{
 		switch (mode)
@@ -152,11 +105,7 @@ namespace chai::brew
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		auto viewUBO = createUniformBuffer<ViewData>(PrimDataType::FLOAT);
-		viewUBO->data.projMat = frame.camera.proj;
-		viewUBO->data.view = frame.camera.view;
-		viewUBO->name = "MatrixData";
-
+		static int currentProgram = -1;
 		//renders
 		//this is not efficient, atm
 		for (auto& ro : frame.renderables)
@@ -176,7 +125,6 @@ namespace chai::brew
 			}
 
 			chai::CVector<int> shaders;
-			chai::CVector<GLShader*> shadersObj;
 			int shaderProgram;
 			GLShader* glShader;
 			for (auto& s : ro->m_data)
@@ -185,20 +133,45 @@ namespace chai::brew
 				auto shader = LoadOrGetShader(s.shaderSource, s.stage);
 				glShader = static_cast<GLShader*>(shader.get());
 				shaders.push_back(glShader->getHandle());
-				shadersObj.push_back(glShader);
 			}
 
-			auto program = loadOrGetShaderProgram(shaders);
+			auto program = loadOrGetShaderProgram(shaders, ro->m_uniforms);
 
-			auto unis = ro->m_uniforms;
-			if (ro->m_addViewData)
+			//must call use before setting up uniforms
+			if (program->getProgramHandle() != currentProgram)
 			{
-				unis.insert({ unis.size(), viewUBO});
+				program->link();
+				program->use();
+
+				//add the renderable uniforms to the program
+				for (auto& uni : ro->m_uniforms)
+				{
+					program->addUniform(uni.second->name, uni.second, uni.first);
+				}
+
+				if (ro->m_addViewData)
+				{
+					auto viewUBO = createUniformBuffer<ViewData>(PrimDataType::FLOAT);
+					viewUBO->data.projMat = frame.camera.proj;
+					viewUBO->data.view = frame.camera.view;
+					viewUBO->name = "MatrixData";
+					program->addUniform(viewUBO->name, viewUBO, program->getNumUniforms());
+				}
+
+				currentProgram = program->getProgramHandle();
 			}
-
-
-			glUseProgram(program->getProgramHandle());
-			setUpUniforms(program->getProgramHandle(), unis);
+			//check if we should add view data
+			else if (ro->m_addViewData)
+			{
+				auto viewUBO = program->getUniform("MatrixData");
+				auto view = static_cast<UniformBuffer<ViewData>*>(viewUBO.get());
+				if (view)
+				{
+					view->data.projMat = frame.camera.proj;
+					view->data.view = frame.camera.view;
+				}
+				program->upload("MatrixData");
+			}
 
 			if (ro->hasIndexBuffer())
 			{
@@ -238,7 +211,7 @@ namespace chai::brew
 		return shader;
 	}
 
-	std::shared_ptr<GLShaderProgram> OpenGLBackend::loadOrGetShaderProgram(std::vector<int> shaders)
+	std::shared_ptr<GLShaderProgram> OpenGLBackend::loadOrGetShaderProgram(std::vector<int> shaders, std::map<uint16_t, chai::CSharedPtr<UniformBufferBase>> ubos)
 	{
 		for (auto& program : m_programCache)
 		{
@@ -261,24 +234,16 @@ namespace chai::brew
 			}
 		}
 
-		int program = createShaderProgram(shaders);
-		auto glProg = std::make_shared<GLShaderProgram>(program);
+		auto glProg = std::make_shared<GLShaderProgram>();
+
+		//add shaders to the program
 		for (auto& s : shaders)
 		{
 			glProg->AddShader(s);
 		}
-		m_programCache.push_back(std::make_shared<GLShaderProgram>(program));
-		return glProg;
-	}
 
-	std::shared_ptr<GLShader> OpenGLBackend::getShaderByHandle(int shader)
-	{
-		for (auto& s : m_ShaderCache)
-		{
-			if (s.second->getHandle() == shader)
-				return s.second;
-		}
-		return nullptr;
+		m_programCache.push_back(glProg);
+		return glProg;
 	}
 
 	std::shared_ptr<ITextureBackend> OpenGLBackend::createTexture2D(const uint8_t* data, uint32_t width, uint32_t height)
