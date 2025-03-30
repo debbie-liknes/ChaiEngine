@@ -30,39 +30,6 @@ namespace chai::brew
 		glEnable(GL_CULL_FACE);
 	}
 
-	int convertShaderType(ShaderStage stage)
-	{
-		switch (stage)
-		{
-		case brew::VERTEX:
-			return GL_VERTEX_SHADER;
-		case brew::FRAGMENT:
-			return GL_FRAGMENT_SHADER;
-		default:
-			break;
-		}
-		return -1;
-	}
-
-	int OpenGLBackend::createShader(const char* source, brew::ShaderStage stage)
-	{
-		unsigned int shader;
-		shader = glCreateShader(convertShaderType(stage));
-		glShaderSource(shader, 1, &source, NULL);
-		glCompileShader(shader);
-
-		int  success;
-		char infoLog[512];
-		glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-		if (!success)
-		{
-			glGetShaderInfoLog(shader, 512, NULL, infoLog);
-			std::cout << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
-		}
-
-		return shader;
-	}
-
 	int OpenGLBackend::createShaderProgram(chai::CVector<int> shaders)
 	{
 		unsigned int shaderProgram;
@@ -217,25 +184,11 @@ namespace chai::brew
 				//this is the individual shader
 				auto shader = LoadOrGetShader(s.shaderSource, s.stage);
 				glShader = static_cast<GLShader*>(shader.get());
-				if (!glShader->isBound())
-				{
-					glShader->bind(createShader(shader->shaderSource.data(), s.stage), s.stage);
-				}
 				shaders.push_back(glShader->getHandle());
 				shadersObj.push_back(glShader);
 			}
 
-			int program = getShaderProgram(shaders);
-			if (program == -1)
-			{
-				program = createShaderProgram(shaders);
-				auto glProg = std::make_shared<GLShaderProgram>(program);
-				for (auto& s : shadersObj)
-				{
-					glProg->AddShader(s->getHandle());
-				}
-				m_programCache.push_back(std::make_shared<GLShaderProgram>(program));
-			}
+			auto program = loadOrGetShaderProgram(shaders);
 
 			auto unis = ro->m_uniforms;
 			if (ro->m_addViewData)
@@ -244,8 +197,8 @@ namespace chai::brew
 			}
 
 
-			glUseProgram(program);
-			setUpUniforms(program, unis);
+			glUseProgram(program->getProgramHandle());
+			setUpUniforms(program->getProgramHandle(), unis);
 
 			if (ro->hasIndexBuffer())
 			{
@@ -280,11 +233,12 @@ namespace chai::brew
 		buffer << shaderFile.rdbuf();
 		shader->shaderSource = buffer.str();
 		m_ShaderCache[path] = shader;
+		shader->createShader(shader->shaderSource.data(), stage);
 
 		return shader;
 	}
 
-	int OpenGLBackend::getShaderProgram(std::vector<int> shaders)
+	std::shared_ptr<GLShaderProgram> OpenGLBackend::loadOrGetShaderProgram(std::vector<int> shaders)
 	{
 		for (auto& program : m_programCache)
 		{
@@ -303,10 +257,28 @@ namespace chai::brew
 			}
 			if (found)
 			{
-				return program->getProgramHandle();
+				return program;
 			}
 		}
-		return -1;
+
+		int program = createShaderProgram(shaders);
+		auto glProg = std::make_shared<GLShaderProgram>(program);
+		for (auto& s : shaders)
+		{
+			glProg->AddShader(s);
+		}
+		m_programCache.push_back(std::make_shared<GLShaderProgram>(program));
+		return glProg;
+	}
+
+	std::shared_ptr<GLShader> OpenGLBackend::getShaderByHandle(int shader)
+	{
+		for (auto& s : m_ShaderCache)
+		{
+			if (s.second->getHandle() == shader)
+				return s.second;
+		}
+		return nullptr;
 	}
 
 	std::shared_ptr<ITextureBackend> OpenGLBackend::createTexture2D(const uint8_t* data, uint32_t width, uint32_t height)

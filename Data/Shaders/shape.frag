@@ -1,7 +1,21 @@
 #version 330 core
+#define MAX_LIGHTS 16
+
 in vec3 outNorm;
 in vec3 FragPos;
 out vec4 FragColor;
+
+struct Light {
+    vec3 position;
+    float intensity;
+    vec3 color;
+    float radius;
+};
+
+layout(std140) uniform LightData {
+    int lightCount;
+    Light lights[MAX_LIGHTS];
+} lightUBO;
 
 layout (std140) uniform ColorData {
 	vec3 color;

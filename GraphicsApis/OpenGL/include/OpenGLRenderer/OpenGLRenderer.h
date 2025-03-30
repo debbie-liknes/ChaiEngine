@@ -24,10 +24,10 @@ namespace chai::brew
 		std::shared_ptr<ITextureBackend> createTexture2D(const uint8_t* data, uint32_t width, uint32_t height) override;
 	private:
 		int createShaderProgram(chai::CVector<int> shaders);
-		int createShader(const char* source, ShaderStage stage);
-		std::unordered_map<std::string, std::shared_ptr<Shader>> m_ShaderCache;
+		std::unordered_map<std::string, std::shared_ptr<GLShader>> m_ShaderCache;
 		std::vector<std::shared_ptr<GLShaderProgram>> m_programCache;
-		int getShaderProgram(std::vector<int> shaders);
+		std::shared_ptr<GLShaderProgram> loadOrGetShaderProgram(std::vector<int> shaders);
+		std::shared_ptr<GLShader> getShaderByHandle(int shader);
 	};
 
 	CHAI_CLASS(chai::brew::OpenGLBackend)
