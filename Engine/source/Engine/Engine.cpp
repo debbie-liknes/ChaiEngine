@@ -96,6 +96,23 @@ namespace chai::brew
 				m_scene->m_cam.SetPosition(m_scene->m_cam.getPosition() + (cameraSpeed * m_scene->m_cam.getRight()));
 			if (window->m_state.keys.find(chai::Key::KEY_D) != window->m_state.keys.end())
 				m_scene->m_cam.SetPosition(m_scene->m_cam.getPosition() - (cameraSpeed * m_scene->m_cam.getRight()));
+			if (window->m_state.keys.find(chai::Key::KEY_Q) != window->m_state.keys.end())
+				m_scene->m_cam.SetPosition(m_scene->m_cam.getPosition() - (cameraSpeed * m_scene->m_cam.getUp()));
+			if (window->m_state.keys.find(chai::Key::KEY_E) != window->m_state.keys.end())
+				m_scene->m_cam.SetPosition(m_scene->m_cam.getPosition() + (cameraSpeed * m_scene->m_cam.getUp()));
+
+			if (window->m_state.mouseButtons.find(MouseButton::LEFT) != window->m_state.mouseButtons.end())
+			{
+				float sensitivity = 0.1f;
+				float y, p, r;
+				m_scene->m_cam.getYawPitchRoll(y, p, r);
+				float yaw = y + (window->m_state.mouseDiff.x * sensitivity);
+				float pitch = p - (window->m_state.mouseDiff.y * sensitivity);
+				m_scene->m_cam.setYawPitch(yaw, pitch);
+			}
+
+			//clear state
+			window->m_state.mouseDiff = glm::vec2{ 0.f, 0.f };
 
 			window->swapBuffers();
 			window->PollEvents();

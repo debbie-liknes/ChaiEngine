@@ -40,9 +40,18 @@ namespace chai::cup
 		m_position = pos;
 	}
 
+	void Camera::setYawPitch(const float yaw, const float pitch)
+	{
+		m_yaw = yaw;
+		m_pitch = pitch;
+		UpdateVectors();
+	}
+
 	void Camera::SetDirection(const glm::vec3& dir)
 	{
 		m_forward = glm::normalize(dir);
+		m_pitch = glm::degrees(asin(m_forward.y));
+		m_yaw = glm::degrees(atan2(m_forward.z, m_forward.x));
 	}
 
 	void Camera::lookAt(const glm::vec3& targetPos)
@@ -106,5 +115,30 @@ namespace chai::cup
 	glm::vec3 Camera::getRight() const
 	{
 		return glm::normalize(glm::cross(m_forward, m_up));
+	}
+
+	glm::vec3 Camera::getUp() const
+	{
+		return m_up;
+	}
+
+	void Camera::UpdateVectors() 
+	{
+		glm::vec3 cameraRight = glm::normalize(glm::cross(m_forward, m_up));
+		glm::vec3 fwd;
+		fwd.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+		fwd.y = sin(glm::radians(m_pitch));
+		fwd.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+		m_forward = glm::normalize(fwd);
+
+		//m_right = glm::normalize(glm::cross(m_forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+		m_up = glm::normalize(glm::cross(cameraRight, m_forward));
+	}
+
+	void Camera::getYawPitchRoll(float& yaw, float& pitch, float& roll)
+	{
+		yaw = m_yaw;
+		pitch = m_pitch;
+		roll = m_roll;
 	}
 }

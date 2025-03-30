@@ -17,10 +17,33 @@ namespace chai
     //callbacks
     void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
         void* userPtr = glfwGetWindowUserPointer(window);
-        InputState* state = static_cast<InputState*>(userPtr);
+        GLFWInfo* info = static_cast<GLFWInfo*>(userPtr);
+        if (!info) return;
+
+        InputState* state = static_cast<InputState*>(info->input);
         if (!state) return;
 
+        state->mouseDiff = { xpos - state->mousePos.x, ypos - state->mousePos.y };
         state->mousePos = { xpos, ypos };
+    }
+
+    void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+    {
+        void* userPtr = glfwGetWindowUserPointer(window);
+        GLFWInfo* info = static_cast<GLFWInfo*>(userPtr);
+        if (!info) return;
+
+        InputState* state = static_cast<InputState*>(info->input);
+        if (!state) return;
+
+        if ((action == GLFW_PRESS || action == GLFW_REPEAT))
+        {
+            state->mouseButtons.insert((MouseButton)button);
+        }
+        else
+        {
+            state->mouseButtons.erase((MouseButton)button);
+        }
     }
 
     void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -73,6 +96,7 @@ namespace chai
         glfwSetCursorPosCallback(m_window, mouse_callback);
         glfwSetKeyCallback(m_window, key_callback);
         glfwSetFramebufferSizeCallback(m_window, resize_callback);
+        glfwSetMouseButtonCallback(m_window, mouse_button_callback);
 
         glfwMakeContextCurrent(m_window);
     }

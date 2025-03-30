@@ -34,6 +34,13 @@ namespace chai
 		KEY_Z
 	};
 
+	enum class MouseButton
+	{
+		LEFT,
+		RIGHT,
+		MIDDLE
+	};
+
 	struct WINDOWMODULE_EXPORT KeyEvent
 	{
 		Key pressed;
@@ -43,7 +50,9 @@ namespace chai
 	{
 		virtual ~InputState() = default;
 
-		glm::vec2 mousePos;
+		glm::vec2 mousePos{ 0.f };
+		glm::vec2 mouseDiff{ 0.f };
 		std::set<Key> keys;
+		std::set<MouseButton> mouseButtons;
 	};
 }

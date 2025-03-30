@@ -21,6 +21,7 @@ namespace chai::cup
 		void SetOrthographic(float left, float right, float bottom, float top, float near, float far);
 
 		void SetPosition(const glm::vec3& pos);
+		void setYawPitch(const float yaw, const float pitch);
 
 		//allow setting the direction the camera should point
 		void SetDirection(const glm::vec3& dir);
@@ -34,6 +35,8 @@ namespace chai::cup
 		glm::vec3 getPosition() const;
 		glm::vec3 getDirection() const;
 		glm::vec3 getRight() const;
+		glm::vec3 getUp() const;
+		void getYawPitchRoll(float& yaw, float& pitch, float& roll);
 
 	private:
 		glm::vec3 m_position;
@@ -45,7 +48,10 @@ namespace chai::cup
 		float m_near, m_far;					//clip planes
 		float m_fov;							//perspective attributes
 		float m_left, m_right, m_top, m_bottom;	//ortho attributes
+		float m_yaw, m_pitch, m_roll;
 
 		SharedViewport m_viewport;
+
+		void UpdateVectors();
 	};
 }
