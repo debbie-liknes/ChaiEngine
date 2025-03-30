@@ -93,9 +93,9 @@ namespace chai::brew
 			if (window->m_state.keys.find(chai::Key::KEY_S) != window->m_state.keys.end())
 				m_scene->m_cam.SetPosition(m_scene->m_cam.getPosition() - (cameraSpeed * m_scene->m_cam.getDirection()));
 			if (window->m_state.keys.find(chai::Key::KEY_A) != window->m_state.keys.end())
-				m_scene->m_cam.SetPosition(m_scene->m_cam.getPosition() + (cameraSpeed * m_scene->m_cam.getRight()));
-			if (window->m_state.keys.find(chai::Key::KEY_D) != window->m_state.keys.end())
 				m_scene->m_cam.SetPosition(m_scene->m_cam.getPosition() - (cameraSpeed * m_scene->m_cam.getRight()));
+			if (window->m_state.keys.find(chai::Key::KEY_D) != window->m_state.keys.end())
+				m_scene->m_cam.SetPosition(m_scene->m_cam.getPosition() + (cameraSpeed * m_scene->m_cam.getRight()));
 			if (window->m_state.keys.find(chai::Key::KEY_Q) != window->m_state.keys.end())
 				m_scene->m_cam.SetPosition(m_scene->m_cam.getPosition() - (cameraSpeed * m_scene->m_cam.getUp()));
 			if (window->m_state.keys.find(chai::Key::KEY_E) != window->m_state.keys.end())

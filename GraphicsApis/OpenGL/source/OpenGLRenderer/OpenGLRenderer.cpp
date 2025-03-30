@@ -158,6 +158,18 @@ namespace chai::brew
 					program->addUniform(viewUBO->name, viewUBO, program->getNumUniforms());
 				}
 
+				//there should only be one, right now
+				//TODO: make a lightweight lighting system
+				for (auto& light : frame.lights)
+				{
+					auto lightUBO = createUniformBuffer<GPULight>(PrimDataType::FLOAT);
+					lightUBO->data.color = light.color;
+					lightUBO->data.position = light.position;
+					lightUBO->data.intensity = light.intensity;
+					lightUBO->name = "Light";
+					program->addUniform(lightUBO->name, lightUBO, program->getNumUniforms());
+				}
+
 				currentProgram = program->getProgramHandle();
 			}
 			//check if we should add view data
