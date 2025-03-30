@@ -32,7 +32,8 @@ namespace chai::brew
 	public:
 		virtual ~Shader() = default;
 
-		virtual void Bind() = 0;
+		virtual void bind() = 0;
+		virtual bool isBound() = 0;
 		std::string shaderSource;
 		//static std::shared_ptr<Shader> createFromFile(const std::string& path);
 		//static std::shared_ptr<Shader> createFromSource(const std::string& shaderData);

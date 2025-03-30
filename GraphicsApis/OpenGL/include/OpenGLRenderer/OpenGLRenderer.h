@@ -4,6 +4,7 @@
 #include <ChaiEngine/ViewData.h>
 #include <Meta/ChaiMacros.h>
 #include <Plugin/PluginRegistry.h>
+#include <OpenGLRenderer/GLShader.h>
 
 namespace chai::brew
 {
@@ -25,6 +26,8 @@ namespace chai::brew
 		int createShaderProgram(chai::CVector<int> shaders);
 		int createShader(const char* source, ShaderStage stage);
 		std::unordered_map<std::string, std::shared_ptr<Shader>> m_ShaderCache;
+		std::vector<std::shared_ptr<GLShaderProgram>> m_programCache;
+		int getShaderProgram(std::vector<int> shaders);
 	};
 
 	CHAI_CLASS(chai::brew::OpenGLBackend)

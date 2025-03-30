@@ -209,13 +209,33 @@ namespace chai::brew
 			}
 
 			chai::CVector<int> shaders;
+			chai::CVector<GLShader*> shadersObj;
+			int shaderProgram;
+			GLShader* glShader;
 			for (auto& s : ro->m_data)
 			{
+				//this is the individual shader
 				auto shader = LoadOrGetShader(s.shaderSource, s.stage);
-				shaders.push_back(createShader(shader->shaderSource.data(), s.stage));
+				glShader = static_cast<GLShader*>(shader.get());
+				if (!glShader->isBound())
+				{
+					glShader->bind(createShader(shader->shaderSource.data(), s.stage), s.stage);
+				}
+				shaders.push_back(glShader->getHandle());
+				shadersObj.push_back(glShader);
 			}
 
-			int program = createShaderProgram(shaders);
+			int program = getShaderProgram(shaders);
+			if (program == -1)
+			{
+				program = createShaderProgram(shaders);
+				auto glProg = std::make_shared<GLShaderProgram>(program);
+				for (auto& s : shadersObj)
+				{
+					glProg->AddShader(s->getHandle());
+				}
+				m_programCache.push_back(std::make_shared<GLShaderProgram>(program));
+			}
 
 			auto unis = ro->m_uniforms;
 			if (ro->m_addViewData)
@@ -262,6 +282,31 @@ namespace chai::brew
 		m_ShaderCache[path] = shader;
 
 		return shader;
+	}
+
+	int OpenGLBackend::getShaderProgram(std::vector<int> shaders)
+	{
+		for (auto& program : m_programCache)
+		{
+			auto progShaders = program->getShaders();
+			if (shaders.size() != progShaders.size())
+				continue;
+
+			bool found = true;
+			for (auto& s : shaders)
+			{
+				if (progShaders.find(s) == progShaders.end())
+				{
+					found = false;
+					break;
+				}
+			}
+			if (found)
+			{
+				return program->getProgramHandle();
+			}
+		}
+		return -1;
 	}
 
 	std::shared_ptr<ITextureBackend> OpenGLBackend::createTexture2D(const uint8_t* data, uint32_t width, uint32_t height)

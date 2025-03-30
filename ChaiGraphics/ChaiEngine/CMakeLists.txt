@@ -4,7 +4,7 @@ set(ChaiGraphics_headers
 	include/ChaiEngine/ViewData.h
 	include/ChaiEngine/Renderer.h
 	include/ChaiEngine/Shader.h
-	include/ChaiEngine/ShaderFactory.h
+	include/ChaiEngine/ShaderManager.h
 	include/ChaiEngine/VertexBuffer.h
 	include/ChaiEngine/UniformBuffer.h
 	include/ChaiEngine/RenderFrame.h
