@@ -1,9 +1,11 @@
 #include <Scene/Scene.h>
+#include <ChaiEngine/Spherical.h>
 
 namespace chai::cup
 {
 	void Scene::init()
 	{
+		//m_cam.setCoordinateSpace(std::make_shared<brew::SphericalSpace>());
 		m_cam.SetPerspective(45.f, 0.1f, 100.f);
 		m_cam.SetPosition(glm::vec3(0.0f, 0.0f, -5.0f));
 		m_cam.lookAt(glm::vec3(0.f, 0.f, 0.f));

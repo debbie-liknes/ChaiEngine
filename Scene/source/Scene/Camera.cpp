@@ -1,6 +1,7 @@
 #include <Scene/Camera.h>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
+#include <ChaiEngine/Euclidean.h>
 
 namespace chai::cup
 {
@@ -8,12 +9,22 @@ namespace chai::cup
 		m_mode(CameraMode::PERSPECTIVE), m_fov(0.f), m_near(0.f), m_far(0.f),
 		m_left(0.f), m_right(0.f), m_bottom(0.f), m_top(0.f)
 	{
-
+		m_space = std::make_shared<brew::EuclideanSpace>();
 	}
 
 	Camera::~Camera()
 	{
 
+	}
+
+	brew::ICoordinateSpace& Camera::getCoordinateSpace() const
+	{
+		return *m_space;
+	}
+
+	void Camera::setCoordinateSpace(std::shared_ptr<brew::ICoordinateSpace> space)
+	{
+		m_space = space;
 	}
 
 	void Camera::SetPerspective(float fov, float near, float far)

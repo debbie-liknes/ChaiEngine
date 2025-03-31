@@ -9,13 +9,18 @@ namespace chai::cup
         brew::RenderFrame frame;
 
         brew::GPUCamera gpuCam;
-        gpuCam.view = scene.m_cam.GetViewMatrix();
+        gpuCam.forward = scene.m_cam.getDirection();
+        gpuCam.up = scene.m_cam.getUp();
+        gpuCam.position = scene.m_cam.getPosition();
+
+        //gpuCam.view = scene.m_cam.GetViewMatrix();
+        gpuCam.view = scene.m_cam.getCoordinateSpace().GetViewMatrix(gpuCam);
 
         int x, y, width, height;
         vp->getDimensions(x, y, width, height);
 
         gpuCam.proj = scene.m_cam.GetProjectionMatrix((float)width / (float)height);
-        gpuCam.position = scene.m_cam.getPosition();
+        
 
         frame.camera = gpuCam;
         frame.viewport = vp;
@@ -30,7 +35,14 @@ namespace chai::cup
         }
 
         for (auto& entity : scene.m_entities) {
-            frame.renderables.insert(frame.renderables.end(), entity.m_testRenderables.begin(), entity.m_testRenderables.end());
+            //make a temp copy, since im doing coordinate transforms here
+            for (auto& ro : entity.m_testRenderables)
+            {
+                brew::Renderable temp = *ro;
+                temp.setPosition(scene.m_cam.getCoordinateSpace().ToWorld(ro->getPosition()));
+                frame.renderables.push_back(std::make_shared<brew::Renderable>(temp));
+            }
+            //frame.renderables.insert(frame.renderables.end(), entity.m_testRenderables.begin(), entity.m_testRenderables.end());
         }
 
         return frame;

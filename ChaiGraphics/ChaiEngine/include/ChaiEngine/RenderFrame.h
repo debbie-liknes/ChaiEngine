@@ -14,6 +14,9 @@ namespace chai::brew
         glm::mat4 view;
         glm::mat4 proj;
         glm::vec3 position;
+        //redundant, since you can extract from view mat, if you want
+        glm::vec3 forward;
+        glm::vec3 up;
     };
 
     struct RenderFrame {

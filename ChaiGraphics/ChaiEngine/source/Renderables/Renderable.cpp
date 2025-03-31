@@ -65,4 +65,14 @@ namespace chai::brew
 	{
 		m_addViewData = req;
 	}
+
+	glm::vec3 Renderable::getPosition() const
+	{
+		return m_position;
+	}
+
+	void Renderable::setPosition(glm::vec3 pos)
+	{
+		m_position = pos;
+	}
 }

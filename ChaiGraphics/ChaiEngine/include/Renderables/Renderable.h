@@ -30,6 +30,8 @@ namespace chai::brew
 		PrimitiveMode getPrimitiveType();
 
 		glm::mat4 getModelMatrix() const;
+		glm::vec3 getPosition() const;
+		void setPosition(glm::vec3 pos);
 
 		bool m_addViewData = false;
 	protected:

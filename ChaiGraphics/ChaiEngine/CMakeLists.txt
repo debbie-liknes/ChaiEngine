@@ -10,6 +10,9 @@ set(ChaiGraphics_headers
 	include/ChaiEngine/RenderFrame.h
 	include/ChaiEngine/RenderTarget.h
 	include/ChaiEngine/RenderView.h
+	include/ChaiEngine/CoordinateSpace.h
+	include/ChaiEngine/Euclidean.h
+	include/ChaiEngine/Spherical.h
 )
 
 set(ChaiGraphics_source
@@ -17,6 +20,8 @@ set(ChaiGraphics_source
 	source/ChaiEngine/VertexBuffer.cpp
 	source/ChaiEngine/UniformBuffer.cpp
 	source/ChaiEngine/Shader.cpp
+	source/ChaiEngine/Euclidean.cpp
+	source/ChaiEngine/Spherical.cpp
 )
 
 set(ChaiRenderables_headers

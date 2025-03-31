@@ -2,6 +2,7 @@
 #include <SceneExport.h>
 #include <glm/glm.hpp>
 #include <Window/Viewport.h>
+#include <ChaiEngine/CoordinateSpace.h>
 
 namespace chai::cup
 {
@@ -38,6 +39,9 @@ namespace chai::cup
 		glm::vec3 getUp() const;
 		void getYawPitchRoll(float& yaw, float& pitch, float& roll);
 
+		brew::ICoordinateSpace& getCoordinateSpace() const;
+		void setCoordinateSpace(std::shared_ptr<brew::ICoordinateSpace> space);
+
 	private:
 		glm::vec3 m_position;
 		glm::vec3 m_forward;
@@ -51,6 +55,7 @@ namespace chai::cup
 		float m_yaw, m_pitch, m_roll;
 
 		SharedViewport m_viewport;
+		std::shared_ptr<brew::ICoordinateSpace> m_space;
 
 		void UpdateVectors();
 	};
