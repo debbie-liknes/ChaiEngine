@@ -1,15 +1,11 @@
 #include <OpenGLRenderer/OpenGLRenderer.h>
-#include <glad/glad.h>
 #include <iostream>
 #include <Window/Viewport.h>
 #include <Window/Window.h>
 #include <Renderables/Renderable.h>
 #include <OpenGLRenderer/GlPipelineState.h>
 #include <glm/glm.hpp>
-#include <algorithm>
 #include <Core/TypeHelpers.h>
-#include <fstream>
-#include <sstream>
 #include <OpenGLRenderer/GLShader.h>
 #include <OpenGLRenderer/OpenGLTexture.h>
 #include <Resource/ResourceManager.h>
@@ -18,191 +14,186 @@ namespace chai::brew
 {
 	OpenGLBackend::OpenGLBackend()
 	{
-		//m_pipelineState = std::make_shared<GlPipelineState>();
+	}
+
+	OpenGLBackend::~OpenGLBackend()
+	{
+		for (auto& [ptr, state] : m_renderableStates) {
+			if (state.vao) glDeleteVertexArrays(1, &state.vao);
+			if (!state.vbos.empty()) glDeleteBuffers(static_cast<GLsizei>(state.vbos.size()), state.vbos.data());
+			if (state.ebo) glDeleteBuffers(1, &state.ebo);
+		}
+		m_renderableStates.clear();
+		m_programCache.clear();
+		m_ShaderCache.clear();
+	}
+
+	int mapTypesToGL(PrimDataType type) {
+		switch (type) {
+		case PrimDataType::FLOAT: return GL_FLOAT;
+		case PrimDataType::INT: return GL_INT;
+		case PrimDataType::UNSIGNED_INT: return GL_UNSIGNED_INT;
+		default: return GL_FLOAT;
+		}
+	}
+
+	int toGLPrimitive(PrimitiveMode mode) {
+		switch (mode) {
+		case PrimitiveMode::POINTS: return GL_POINTS;
+		case PrimitiveMode::LINES: return GL_LINES;
+		case PrimitiveMode::TRIANGLES: return GL_TRIANGLES;
+		default: return GL_TRIANGLES;
+		}
+	}
+
+	void checkGLError(const std::string& context) {
+		GLenum err;
+		while ((err = glGetError()) != GL_NO_ERROR) {
+			std::cerr << "OpenGL error in " << context << ": " << err << std::endl;
+		}
 	}
 
 	void OpenGLBackend::setProcAddress(void* address)
 	{
 		//call init on the graphics api instead of doing this here
-		if (!gladLoadGLLoader((GLADloadproc)address))
-		{
+		if (!gladLoadGLLoader((GLADloadproc)address)) {
 			std::cerr << "Failed to initialize GLAD" << std::endl;
 		}
 		glEnable(GL_CULL_FACE);
-	}
-
-	int mapTypesToGL(PrimDataType type)
-	{
-		switch (type)
-		{
-		case PrimDataType::FLOAT:
-			return GL_FLOAT;
-		case PrimDataType::INT:
-			return GL_INT;
-		case PrimDataType::UNSIGNED_INT:
-			return GL_UNSIGNED_INT;
-		default:
-			break;
-		}
-		return GL_FLOAT;
-	}
-
-	void setUpVBOs(chai::CVector<unsigned int>& glVbs, std::map<uint16_t, chai::CSharedPtr<VertexBufferBase>> vbs)
-	{
-		//an assert here?
-		if (glVbs.size() != vbs.size()) return;
-		//gen buffers is expensive, only do when necessary
-		//should really only do this on init
-		glGenBuffers(glVbs.size(), glVbs.data());
-		int i = 0;
-		for (auto& vb : vbs)
-		{
-			uint32_t binding = vb.first;
-			auto& buffer = vb.second;
-			glBindBuffer(GL_ARRAY_BUFFER, glVbs[i]);
-			glBufferData(GL_ARRAY_BUFFER, vbs[i]->getElementCount() * vbs[i]->getElementSize(), vbs[i]->getRawData(), GL_STATIC_DRAW);
-			
-			glVertexAttribPointer(binding, buffer->getNumElementsInType(), mapTypesToGL(buffer->getUnderlyingType()), GL_FALSE, buffer->getElementSize(), (void*)0);
-			glEnableVertexAttribArray(binding);
-
-			i++;
-		}
-	}
-
-	void setUpEBOs(chai::CSharedPtr<VertexBufferBase> ib)
-	{
-		unsigned int EBO;
-		glGenBuffers(1, &EBO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib->getElementCount() * ib->getElementSize(), ib->getRawData(), GL_STATIC_DRAW);
-	}
-
-	unsigned int setUpVAOs(std::map<uint16_t, chai::CSharedPtr<VertexBufferBase>>& vbos)
-	{
-		unsigned int vao;
-		glGenVertexArrays(1, &vao);
-		glBindVertexArray(vao);
-
-		return vao;
-	}
-
-	int toGLPrimitive(PrimitiveMode mode)
-	{
-		switch (mode)
-		{
-		case PrimitiveMode::POINTS:
-			return GL_POINTS;
-		case PrimitiveMode::LINES:
-			return GL_LINES;
-		case PrimitiveMode::TRIANGLES:
-			return GL_TRIANGLES;
-		default:
-			break;
-		}
-		return GL_TRIANGLES;
+		checkGLError("setProcAddress");
 	}
 
 	void OpenGLBackend::renderFrame(const RenderFrame& frame)
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 		static int currentProgram = -1;
+
+		//temporary uniforms
+		auto viewUBO = createUniformBuffer<ViewData>(PrimDataType::FLOAT);
+		viewUBO->data.projMat = frame.camera.proj;
+		viewUBO->data.view = frame.camera.view;
+		viewUBO->name = "MatrixData";
+
+		std::vector<std::shared_ptr<UniformBuffer<GPULight>>> lightUBOs;
+		for (const auto& light : frame.lights) {
+			auto lightUBO = createUniformBuffer<GPULight>(PrimDataType::FLOAT);
+			lightUBO->data = light;
+			lightUBO->name = "Light";
+			lightUBOs.push_back(lightUBO);
+		}
+
+		//track what renderables are still used
+		//could replace this by tracking adds/removes on the render frame
+		std::set<uint64_t> activeRenderableIds;
+		for (const auto& ro : frame.renderables) {
+			activeRenderableIds.insert(ro->getId());
+		}
+
 		//renders
-		//this is not efficient, atm
 		for (auto& ro : frame.renderables)
 		{
-			chai::CVector<unsigned int> numBuffs;
-			numBuffs.resize(ro->m_vertexBuffers.size());
-
-			if (ro->isDirty())
+			//check the renderable cache
+			if(m_renderableStates.find(ro->getId()) == m_renderableStates.end())
 			{
-				setUpVAOs(ro->m_vertexBuffers);
-				setUpVBOs(numBuffs, ro->m_vertexBuffers);
-				if (ro->hasIndexBuffer())
-				{
-					setUpEBOs(ro->m_indexBuffer.second);
+				m_renderableStates[ro->getId()] = {};
+			}
+			GLRenderableState& state = m_renderableStates[ro->getId()];
+
+			if (state.vao == 0 || ro->isDirty()) {
+				if (state.vao) glDeleteVertexArrays(1, &state.vao);
+				if (!state.vbos.empty()) glDeleteBuffers(static_cast<GLsizei>(state.vbos.size()), state.vbos.data());
+				if (state.ebo) glDeleteBuffers(1, &state.ebo);
+
+				glGenVertexArrays(1, &state.vao);
+				glBindVertexArray(state.vao);
+
+				state.vbos.resize(ro->m_vertexBuffers.size());
+				glGenBuffers(static_cast<GLsizei>(state.vbos.size()), state.vbos.data());
+
+				int i = 0;
+				for (const auto& [binding, buffer] : ro->m_vertexBuffers) {
+					glBindBuffer(GL_ARRAY_BUFFER, state.vbos[i]);
+					glBufferData(GL_ARRAY_BUFFER, buffer->getElementCount() * buffer->getElementSize(), buffer->getRawData(), GL_STATIC_DRAW);
+					glVertexAttribPointer(binding, buffer->getNumElementsInType(), mapTypesToGL(buffer->getUnderlyingType()), GL_FALSE, buffer->getElementSize(), nullptr);
+					glEnableVertexAttribArray(binding);
+					++i;
 				}
+
+				if (ro->hasIndexBuffer()) {
+					glGenBuffers(1, &state.ebo);
+					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, state.ebo);
+					glBufferData(GL_ELEMENT_ARRAY_BUFFER, ro->m_indexBuffer.second->getElementCount() * ro->m_indexBuffer.second->getElementSize(), ro->m_indexBuffer.second->getRawData(), GL_STATIC_DRAW);
+				}
+
 				ro->setDirty(false);
+				checkGLError("Setup VAO/VBO/EBO");
 			}
 
-			chai::CVector<int> shaders;
-			int shaderProgram;
-			GLShader* glShader;
-			for (auto& s : ro->m_data)
-			{
-				//this is the individual shader
+			glBindVertexArray(state.vao);
+
+			chai::CVector<int> shaderHandles;
+			for (const auto& s : ro->m_data) {
 				auto shader = LoadOrGetShader(s.shaderSource, s.stage);
-				glShader = static_cast<GLShader*>(shader.get());
-				shaders.push_back(glShader->getHandle());
+				if (!shader) continue;
+				shaderHandles.push_back(shader->getHandle());
 			}
 
-			auto program = loadOrGetShaderProgram(shaders, ro->m_uniforms);
+			auto program = loadOrGetShaderProgram(shaderHandles, ro->m_uniforms);
+			if (!program) continue;
 
-			//must call use before setting up uniforms
-			if (program->getProgramHandle() != currentProgram)
-			{
+			if (program->getProgramHandle() != currentProgram) {
 				program->link();
+				checkGLError("Program Link");
 				program->use();
+				checkGLError("Program Use");
 
-				//add the renderable uniforms to the program
-				for (auto& uni : ro->m_uniforms)
-				{
-					program->addUniform(uni.second->name, uni.second, uni.first);
+				for (const auto& [id, uniform] : ro->m_uniforms) {
+					program->addUniform(uniform->name, uniform, id);
 				}
 
-				if (ro->m_addViewData)
-				{
-					auto viewUBO = createUniformBuffer<ViewData>(PrimDataType::FLOAT);
-					viewUBO->data.projMat = frame.camera.proj;
-					viewUBO->data.view = frame.camera.view;
-					viewUBO->name = "MatrixData";
+				if (ro->m_addViewData) {
 					program->addUniform(viewUBO->name, viewUBO, program->getNumUniforms());
 				}
 
-				//there should only be one, right now
-				//TODO: make a lightweight lighting system
-				for (auto& light : frame.lights)
-				{
-					auto lightUBO = createUniformBuffer<GPULight>(PrimDataType::FLOAT);
-					lightUBO->data.color = light.color;
-					lightUBO->data.position = light.position;
-					lightUBO->data.intensity = light.intensity;
-					lightUBO->name = "Light";
-					program->addUniform(lightUBO->name, lightUBO, program->getNumUniforms());
+				for (auto& ubo : lightUBOs) {
+					program->addUniform(ubo->name, ubo, program->getNumUniforms());
 				}
 
 				currentProgram = program->getProgramHandle();
 			}
-			//check if we should add view data
-			else if (ro->m_addViewData)
-			{
-				auto viewUBO = program->getUniform("MatrixData");
-				auto view = static_cast<UniformBuffer<ViewData>*>(viewUBO.get());
-				if (view)
-				{
+			else if (ro->m_addViewData) {
+				auto ubo = program->getUniform("MatrixData");
+				if (auto view = static_cast<UniformBuffer<ViewData>*>(ubo.get())) {
 					view->data.projMat = frame.camera.proj;
 					view->data.view = frame.camera.view;
+					program->upload("MatrixData");
 				}
-				program->upload("MatrixData");
 			}
 
-			if (ro->hasIndexBuffer())
-			{
-				glDrawElements(toGLPrimitive(ro->getPrimitiveType()), ro->m_indexBuffer.second->getElementCount(), mapTypesToGL(ro->m_indexBuffer.second->getUnderlyingType()), (void*)0);
+			if (ro->hasIndexBuffer()) {
+				glDrawElements(toGLPrimitive(ro->getPrimitiveType()), ro->m_indexBuffer.second->getElementCount(), mapTypesToGL(ro->m_indexBuffer.second->getUnderlyingType()), nullptr);
 			}
-			else
-			{
-				glDrawArrays(toGLPrimitive(ro->getPrimitiveType()), 0, 3);
+			else {
+				glDrawArrays(toGLPrimitive(ro->getPrimitiveType()), 0, ro->getVertexCount());
 			}
+		}
 
-			for (auto& s : shaders)
-			{
-				glDeleteShader(s);
+		for (auto it = m_renderableStates.begin(); it != m_renderableStates.end(); ) {
+			if (activeRenderableIds.find(it->first) == activeRenderableIds.end()) {
+				// Clean up OpenGL resources
+				auto& state = it->second;
+				if (state.vao) glDeleteVertexArrays(1, &state.vao);
+				if (!state.vbos.empty()) glDeleteBuffers(static_cast<GLsizei>(state.vbos.size()), state.vbos.data());
+				if (state.ebo) glDeleteBuffers(1, &state.ebo);
+				it = m_renderableStates.erase(it);
+			}
+			else {
+				++it;
 			}
 		}
 	}
 
-	std::shared_ptr<Shader> OpenGLBackend::LoadOrGetShader(const std::string& path, ShaderStage stage)
+	GLShader* OpenGLBackend::LoadOrGetShader(const std::string& path, ShaderStage stage)
 	{
 		auto it = m_ShaderCache.find(path);
 		if (it != m_ShaderCache.end())
@@ -220,8 +211,8 @@ namespace chai::brew
 			{
 				shader->createShader(shader->shaderSource.data(), stage);
 			}
-			m_ShaderCache[path] = std::shared_ptr<GLShader>(shader);
-			return shaderResource->shader;
+			m_ShaderCache[path] = shader;
+			return shader;
 		}
 		return nullptr;
 	}

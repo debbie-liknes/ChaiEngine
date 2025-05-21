@@ -21,7 +21,6 @@ namespace chai
 
 			virtual void setProcAddress(void* address) {}
 			virtual void renderFrame(const RenderFrame& frame) = 0;
-			virtual std::shared_ptr<Shader> LoadOrGetShader(const std::string& path, ShaderStage stage) = 0;
 			virtual std::shared_ptr<ITextureBackend> createTexture2D(const uint8_t* data, uint32_t width, uint32_t height) = 0;
 		};
 	}

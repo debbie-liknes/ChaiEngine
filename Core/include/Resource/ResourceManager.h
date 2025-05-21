@@ -17,6 +17,9 @@ namespace chai
         template <typename T = IResource>
         std::shared_ptr<T> Load(const std::string& path) {
             // Check cache
+			// This implies that every resource is loaded on the main thread
+			// TODO: Add support for async loading
+			// Most large resource loads (images, models, etc.) should be done on a separate thread
             auto it = m_cache.find(path);
             if (it != m_cache.end()) {
                 return std::dynamic_pointer_cast<T>(it->second);

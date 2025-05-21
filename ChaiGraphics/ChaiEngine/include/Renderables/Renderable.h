@@ -23,11 +23,18 @@ namespace chai::brew
 		std::map<uint16_t, std::shared_ptr<UniformBufferBase>> m_uniforms;
 		std::pair<uint16_t, std::shared_ptr<VertexBufferBase>> m_indexBuffer;
 
+		uint64_t getId() const { return m_id; }
 
 		bool isDirty();
 		void setDirty(bool dirty = true);
 		bool hasIndexBuffer();
 		PrimitiveMode getPrimitiveType();
+		size_t getVertexCount() const
+		{
+			if(m_vertexBuffers.empty())
+				return 0;
+			return m_vertexBuffers.begin()->second->getElementCount();
+		}
 
 		glm::mat4 getModelMatrix() const;
 		glm::vec3 getPosition() const;
@@ -45,6 +52,7 @@ namespace chai::brew
 		PrimitiveMode m_primType = PrimitiveMode::TRIANGLES;
 
 	private:
+		uint64_t m_id = 0;
 		bool m_dirty = true;
 		bool m_hasIndexBuffer = false;
 
