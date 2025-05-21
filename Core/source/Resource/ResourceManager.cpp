@@ -13,7 +13,7 @@ namespace chai
 		m_loaders.push_back(loader);
 	}
 
-	std::string ResourceManager::getExtension(std::string& file)
+	std::string ResourceManager::getExtension(const std::string& file)
 	{
 		size_t dotPosition = file.find_last_of('.');
 

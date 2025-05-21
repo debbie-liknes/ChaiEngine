@@ -12,6 +12,7 @@
 #include <sstream>
 #include <OpenGLRenderer/GLShader.h>
 #include <OpenGLRenderer/OpenGLTexture.h>
+#include <Resource/ResourceManager.h>
 
 namespace chai::brew
 {
@@ -54,10 +55,10 @@ namespace chai::brew
 		//should really only do this on init
 		glGenBuffers(glVbs.size(), glVbs.data());
 		int i = 0;
-		for (auto vb : vbs)
+		for (auto& vb : vbs)
 		{
 			uint32_t binding = vb.first;
-			auto buffer = vb.second;
+			auto& buffer = vb.second;
 			glBindBuffer(GL_ARRAY_BUFFER, glVbs[i]);
 			glBufferData(GL_ARRAY_BUFFER, vbs[i]->getElementCount() * vbs[i]->getElementSize(), vbs[i]->getRawData(), GL_STATIC_DRAW);
 			
@@ -203,7 +204,6 @@ namespace chai::brew
 
 	std::shared_ptr<Shader> OpenGLBackend::LoadOrGetShader(const std::string& path, ShaderStage stage)
 	{
-		//this is terrible, i need a resource manager
 		auto it = m_ShaderCache.find(path);
 		if (it != m_ShaderCache.end())
 		{
@@ -211,16 +211,19 @@ namespace chai::brew
 		}
 
 		//we dont have it yet
-		auto shader = std::make_shared<GLShader>();
-		std::string fullpath = std::string(CMAKE_SOURCE_DIR) + "/" + path;
-		std::ifstream shaderFile(fullpath);
-		std::stringstream buffer;
-		buffer << shaderFile.rdbuf();
-		shader->shaderSource = buffer.str();
-		m_ShaderCache[path] = shader;
-		shader->createShader(shader->shaderSource.data(), stage);
-
-		return shader;
+		std::shared_ptr<IResource> resource = chai::ResourceManager::Instance().Load(path);
+		auto shaderResource = static_cast<ShaderResource*>(resource.get());
+		if (shaderResource && shaderResource->shader)
+		{
+			auto shader = static_cast<GLShader*>(shaderResource->shader.get());
+			if (shader)
+			{
+				shader->createShader(shader->shaderSource.data(), stage);
+			}
+			m_ShaderCache[path] = std::shared_ptr<GLShader>(shader);
+			return shaderResource->shader;
+		}
+		return nullptr;
 	}
 
 	std::shared_ptr<GLShaderProgram> OpenGLBackend::loadOrGetShaderProgram(std::vector<int> shaders, std::map<uint16_t, chai::CSharedPtr<UniformBufferBase>> ubos)

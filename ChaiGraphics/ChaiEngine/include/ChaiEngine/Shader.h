@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#include <Resource/ResourceLoader.h>
 
 namespace chai::brew
 {
@@ -35,7 +36,19 @@ namespace chai::brew
 		virtual void bind() = 0;
 		virtual bool isBound() = 0;
 		std::string shaderSource;
-		//static std::shared_ptr<Shader> createFromFile(const std::string& path);
-		//static std::shared_ptr<Shader> createFromSource(const std::string& shaderData);
+	};
+
+	class CHAIGRAPHICS_EXPORT ShaderResource : public IResource
+	{
+	public:
+		virtual ~ShaderResource() = default;
+		const std::string& GetName() const
+		{
+			return "";
+		}
+
+		ShaderStage shaderStage;
+		std::string filePath;
+		std::shared_ptr<Shader> shader;
 	};
 }

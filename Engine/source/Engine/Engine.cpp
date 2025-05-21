@@ -43,7 +43,11 @@ namespace chai::brew
 		{
 			auto factory = kettle::PluginRegistry::Instance().Get("Renderer", "OpenGL");
 			m_renderer = std::shared_ptr<Renderer>(static_cast<Renderer*>(factory()));
+			auto shaderLoader = kettle::PluginRegistry::Instance().Get("ShaderResourceLoader", "OpenGL");
+			auto loader = static_cast<IResourceLoader*>(shaderLoader());
+
 			ServiceLocator::getInstance().Register<Renderer>(std::shared_ptr<Renderer>(m_renderer));
+			chai::ResourceManager::Instance().RegisterLoader(std::shared_ptr<IResourceLoader>(loader));
 		}
 
 		if (loader.LoadPlugin("TextureLoader.dll"))

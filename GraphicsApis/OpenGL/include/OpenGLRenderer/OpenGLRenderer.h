@@ -20,9 +20,9 @@ namespace chai::brew
 		~OpenGLBackend() {}
 		void setProcAddress(void* address) override;
 		void renderFrame(const RenderFrame& frame) override;
-		std::shared_ptr<Shader> LoadOrGetShader(const std::string& path, ShaderStage stage) override;
 		std::shared_ptr<ITextureBackend> createTexture2D(const uint8_t* data, uint32_t width, uint32_t height) override;
 	private:
+		std::shared_ptr<Shader> LoadOrGetShader(const std::string& path, ShaderStage stage) override;
 		std::unordered_map<std::string, std::shared_ptr<GLShader>> m_ShaderCache;
 		std::vector<std::shared_ptr<GLShaderProgram>> m_programCache;
 		std::shared_ptr<GLShaderProgram> loadOrGetShaderProgram(std::vector<int> shaders, std::map<uint16_t, chai::CSharedPtr<UniformBufferBase>> ubos);
@@ -32,12 +32,3 @@ namespace chai::brew
 		CHAI_METHOD(setProcAddress)
 	END_CHAI()
 }
-
-void registerServices()
-{
-	chai::kettle::PluginRegistry::Instance().Register("Renderer", "OpenGL", [] {
-		return static_cast<void*>(new chai::brew::OpenGLBackend());
-		});
-}
-
-CHAI_PLUGIN(OpenGL, "1.0.0", "chai::brew", "Renderer", registerServices)

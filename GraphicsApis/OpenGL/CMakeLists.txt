@@ -1,5 +1,6 @@
 
 set(OpenGLRenderer_headers
+	include/OpenGLModule.cpp
 	include/OpenGLRenderer/OpenGLRenderer.h
 	include/OpenGLRenderer/OpenGLTexture.h
 	include/OpenGLRenderer/GlPipelineState.h

@@ -39,6 +39,6 @@ namespace chai
         std::unordered_map<std::string, std::shared_ptr<IResource>> m_cache;
         std::vector<std::shared_ptr<IResourceLoader>> m_loaders;
 
-        std::string getExtension(std::string& file);
+        std::string getExtension(const std::string& file);
     };
 }
