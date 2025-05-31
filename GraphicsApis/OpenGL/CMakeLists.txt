@@ -17,11 +17,9 @@ set(OpenGLRenderer_source
 	source/OpenGLRenderer/GLViewport.cpp
 )
 
-find_package(glad CONFIG REQUIRED)
-
 add_library (OpenGLRenderer SHARED ${OpenGLRenderer_headers} ${OpenGLRenderer_source})
 
-target_link_libraries(OpenGLRenderer PUBLIC ChaiGraphics glad::glad WindowModule)
+target_link_libraries(OpenGLRenderer PUBLIC ChaiGraphics glad WindowModule)
 target_include_directories(OpenGLRenderer PUBLIC include)
 
 target_compile_definitions(OpenGLRenderer PRIVATE 

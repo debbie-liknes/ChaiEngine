@@ -13,7 +13,6 @@ set(Windowing_source
 	source/Window/Viewport.cpp
 )
 
-find_package(glfw3 REQUIRED)
 add_library (WindowModule SHARED ${Windowing_headers} ${Windowing_source})
 
 target_include_directories(WindowModule PUBLIC include)

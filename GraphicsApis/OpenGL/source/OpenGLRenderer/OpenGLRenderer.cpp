@@ -56,7 +56,7 @@ namespace chai::brew
 	void OpenGLBackend::setProcAddress(void* address)
 	{
 		//call init on the graphics api instead of doing this here
-		if (!gladLoadGLLoader((GLADloadproc)address)) {
+		if (!gladLoadGL((GLADloadfunc)address)) {
 			std::cerr << "Failed to initialize GLAD" << std::endl;
 		}
 		glEnable(GL_CULL_FACE);

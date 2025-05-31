@@ -1,5 +1,5 @@
 #include <OpenGLRenderer/GLViewport.h>
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 namespace chai::brew
 {

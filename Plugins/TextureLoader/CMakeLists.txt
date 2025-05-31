@@ -2,7 +2,6 @@
 
 set(Loader_headers
 	include/Loader/PNGLoader.h
-	include/external/stb_image.h
 )
 
 set(Loader_source

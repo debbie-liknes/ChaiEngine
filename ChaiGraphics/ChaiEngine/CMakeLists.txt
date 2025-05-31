@@ -43,10 +43,6 @@ source_group("Renderables/src" FILES ${ChaiRenderables_source})
 source_group("Graphics/headers" FILES ${ChaiGraphics_headers})
 source_group("Graphics/src" FILES ${ChaiGraphics_source})
 
-find_package(glm CONFIG REQUIRED)
-
-find_package(glfw3 REQUIRED)
-
 add_library (ChaiGraphics SHARED 
 	${ChaiGraphics_headers} 
 	${ChaiRenderables_headers}

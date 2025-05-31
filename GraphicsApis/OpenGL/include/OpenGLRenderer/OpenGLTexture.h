@@ -1,6 +1,6 @@
 #pragma once
 #include <Core/TextureBackend.h>
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <memory>
 
 namespace chai::brew
