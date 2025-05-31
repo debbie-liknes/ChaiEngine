@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.8)
+﻿cmake_minimum_required(VERSION 3.8)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -15,7 +15,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-#idc about abi compatibility rn
+# When exporting STL types, MSVC will generate a warning saying that STL types
+# are not accessible by clients. This disables that warning.
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /IGNORE:4197")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /IGNORE:4197")
 add_compile_options(/wd4251)
@@ -32,11 +33,11 @@ add_subdirectory(external)
 include_directories(external/include)
 
 # Include sub-projects.
-add_subdirectory ("Core")
-add_subdirectory ("ChaiApps")
-add_subdirectory ("ChaiGraphics")
-add_subdirectory ("GraphicsApis")
-add_subdirectory ("Engine")
-add_subdirectory ("Window")
-add_subdirectory ("Scene")
-add_subdirectory ("Plugins")
+add_subdirectory(Core)
+add_subdirectory(ChaiApps)
+add_subdirectory(ChaiGraphics)
+add_subdirectory(GraphicsApis)
+add_subdirectory(Engine)
+add_subdirectory(Window)
+add_subdirectory(Scene)
+add_subdirectory(Plugins)

@@ -1,4 +1,6 @@
 #pragma once
+#include "CoreExport.h"
+
 #include <string>
 #include <memory>
 #include <unordered_map>
@@ -6,13 +8,13 @@
 
 namespace chai
 {
-    class IResource {
+    class CORE_EXPORT IResource {
     public:
         virtual ~IResource() = default;
         virtual const std::string& GetName() const = 0;
     };
 
-    class IResourceLoader {
+    class CORE_EXPORT IResourceLoader {
     public:
         virtual ~IResourceLoader() = default;
         virtual bool CanLoad(const std::string& extension) const = 0;

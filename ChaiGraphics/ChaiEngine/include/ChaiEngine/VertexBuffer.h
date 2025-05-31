@@ -27,7 +27,7 @@ namespace chai::brew
 
 	// Templated derived class for storing vertex buffer data
 	template <typename T>
-	class VertexBuffer : public VertexBufferBase {
+	class CHAIGRAPHICS_EXPORT VertexBuffer : public VertexBufferBase {
 	public:
 		chai::CVector<T> data;
 
