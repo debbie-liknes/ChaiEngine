@@ -1,6 +1,6 @@
 #pragma once
 #include <OpenGLRendererExport.h>
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <ChaiEngine/Renderer.h>
 #include <ChaiEngine/ViewData.h>
 #include <Meta/ChaiMacros.h>

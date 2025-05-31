@@ -25,6 +25,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 project ("Chai")
 
+# Include external projects
+add_subdirectory(external)
+
+# Add include-only headers
+include_directories(external/include)
+
 # Include sub-projects.
 add_subdirectory ("Core")
 add_subdirectory ("ChaiApps")

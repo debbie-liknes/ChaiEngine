@@ -59,7 +59,7 @@ source_group("Resource/src" FILES ${Resource_source})
 source_group("Types/headers" FILES ${Types_headers})
 source_group("Types/src" FILES ${Types_source})
 
-find_package(glm CONFIG REQUIRED)
+#find_package(glm CONFIG REQUIRED)
 
 add_library(Core SHARED 
 	${Core_headers} 
