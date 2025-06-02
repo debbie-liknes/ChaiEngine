@@ -1,6 +1,7 @@
 #include <Window/GLFWImpl.h>
 #include <iostream>
 #include <Window/Viewport.h>
+#include <GLFW/glfw3.h>
 
 namespace chai
 {

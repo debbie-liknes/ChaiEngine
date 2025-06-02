@@ -2,8 +2,9 @@
 #include <WindowModuleExport.h>
 #include <Window/Window.h>
 #include <Core/Containers.h>
-#include <GLFW/glfw3.h>
 #include <Window/InputState.h>
+
+struct GLFWwindow;
 
 namespace chai
 {

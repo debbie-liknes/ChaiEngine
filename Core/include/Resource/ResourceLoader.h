@@ -11,7 +11,7 @@ namespace chai
     class CORE_EXPORT IResource {
     public:
         virtual ~IResource() = default;
-        virtual const std::string& GetName() const = 0;
+        virtual const std::string GetName() const = 0;
     };
 
     class CORE_EXPORT IResourceLoader {

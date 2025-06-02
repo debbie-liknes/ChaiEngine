@@ -113,8 +113,8 @@ namespace chai::brew
 				int i = 0;
 				for (const auto& [binding, buffer] : ro->m_vertexBuffers) {
 					glBindBuffer(GL_ARRAY_BUFFER, state.vbos[i]);
-					glBufferData(GL_ARRAY_BUFFER, buffer->getElementCount() * buffer->getElementSize(), buffer->getRawData(), GL_STATIC_DRAW);
-					glVertexAttribPointer(binding, buffer->getNumElementsInType(), mapTypesToGL(buffer->getUnderlyingType()), GL_FALSE, buffer->getElementSize(), nullptr);
+					glBufferData(GL_ARRAY_BUFFER, (GLsizei)(buffer->getElementCount() * buffer->getElementSize()), buffer->getRawData(), GL_STATIC_DRAW);
+					glVertexAttribPointer(binding, (GLint)buffer->getNumElementsInType(), mapTypesToGL(buffer->getUnderlyingType()), GL_FALSE, buffer->getElementSize(), nullptr);
 					glEnableVertexAttribArray(binding);
 					++i;
 				}
@@ -171,10 +171,10 @@ namespace chai::brew
 			}
 
 			if (ro->hasIndexBuffer()) {
-				glDrawElements(toGLPrimitive(ro->getPrimitiveType()), ro->m_indexBuffer.second->getElementCount(), mapTypesToGL(ro->m_indexBuffer.second->getUnderlyingType()), nullptr);
+				glDrawElements(toGLPrimitive(ro->getPrimitiveType()), (GLsizei)ro->m_indexBuffer.second->getElementCount(), mapTypesToGL(ro->m_indexBuffer.second->getUnderlyingType()), nullptr);
 			}
 			else {
-				glDrawArrays(toGLPrimitive(ro->getPrimitiveType()), 0, ro->getVertexCount());
+				glDrawArrays(toGLPrimitive(ro->getPrimitiveType()), 0, (GLsizei)ro->getVertexCount());
 			}
 		}
 

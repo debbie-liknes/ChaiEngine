@@ -42,7 +42,7 @@ namespace chai::brew
 	{
 	public:
 		virtual ~ShaderResource() = default;
-		const std::string& GetName() const
+		const std::string GetName() const
 		{
 			return m_name;
 		}

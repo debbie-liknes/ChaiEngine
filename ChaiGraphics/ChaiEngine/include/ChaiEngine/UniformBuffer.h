@@ -26,7 +26,9 @@ namespace chai::brew
 
 		UniformBuffer(PrimDataType underlyingType) :
 			m_underlyingType(underlyingType)
-		{}
+		{
+			data = T(); // Initialize data to default value
+		}
 		virtual ~UniformBuffer() = default;
 
 		UniformBuffer(T d, PrimDataType underlyingType) :

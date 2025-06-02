@@ -82,7 +82,6 @@ namespace chai::brew
 
 	void Engine::run()
 	{
-		chai::brew::ViewData data;
 		auto& window = m_windows.back();
 
 		const float cameraSpeed = 0.01f; // adjust accordingly

@@ -10,7 +10,7 @@ namespace chai::brew
 	struct UniformBindingPair
 	{
 		std::shared_ptr<UniformBufferBase> ubo;
-		unsigned int binding;
+		unsigned int binding = 0;
 	};
 
 	class GLShaderProgram {
@@ -32,7 +32,7 @@ namespace chai::brew
 		void link();
 		bool isLinked() const { return m_linked; }
 		void use();
-		int getNumUniforms() { return m_uniforms.size(); }
+		int getNumUniforms() { return (int)m_uniforms.size(); }
 
 	private:
 		bool m_linked = false;

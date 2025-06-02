@@ -44,7 +44,7 @@ inline std::vector<std::string>& __ChaiRegisteredTypes() {
         void OnStartup() override { \
             serviceRegFn(); \
         } \
-        const std::string& GetName() const override { \
+        const std::string GetName() const override { \
             return authorStr; \
         } \
         void OnShutdown() override {} \
