@@ -44,6 +44,10 @@ namespace chai::kettle
             return (it != loadedPlugins_.end()) ? it->second : nullptr;
         }
 
+        std::unordered_map<std::string, std::shared_ptr<IPlugin>> getLoadedPlugins() const {
+            return loadedPlugins_;
+		}
+
         template<typename T>
         std::shared_ptr<T> getService(const std::string& pluginName, const std::string& serviceName) {
             auto plugin = getLoadedPlugin(pluginName);

@@ -6,6 +6,17 @@
 
 namespace chai 
 {
+    class Window;
+    class WindowManager;
+    using WindowId = uint64_t;
+
+    //use this structure for window platform user pointer
+    struct WindowData
+    {
+        Window* window;
+        WindowManager* manager;
+    };
+
     class Viewport;
 	struct ViewportDesc;
 	class WindowSystem;
@@ -30,15 +41,22 @@ namespace chai
         bool coreProfile = true;
     };
 
+
     // Individual window class
     class WINDOWMODULE_EXPORT Window
     {
+		friend class WindowManager;
     public:
-        enum class State { Created, Initialized, Destroyed };
+        Window();
+        Window(const WindowDesc& desc);
+        virtual ~Window();
+        //enum class State { Created, Initialized, Destroyed };
 
-    public:
-        Window(const WindowDesc& desc, WindowSystem* windowSystem);
-        ~Window();
+		WindowId getId() const { return m_id; }
+
+		void setWindowData(WindowData data) { m_data = data; }
+		WindowData& getWindowData() { return m_data; }
+		void setNativeWindow(void* handle) { nativeWindow = handle; }
 
         //bool initialize();
         //void destroy();
@@ -79,26 +97,32 @@ namespace chai
         //void handleClose();
         //void handleFocus(bool focused);
 
-    private:
-        WindowDesc m_desc;
-        State m_state;
-        WindowSystem* m_windowSystem;
+    //private:
+    //    WindowDesc m_desc;
+    //    State m_state;
+        //WindowSystem* m_windowSystem;
 
         //std::vector<std::unique_ptr<Viewport>> m_viewports;
         //std::vector<WindowEventHandler*> m_eventHandlers;
 
         // OpenGL context info
-        int m_framebufferWidth, m_framebufferHeight;
+        //int m_framebufferWidth, m_framebufferHeight;
+
+    private:
+		WindowId m_id{ 0 };
+        WindowDesc m_desc;
+        WindowData m_data;
+		void* nativeWindow{ nullptr };
     };
 
     // Window event callbacks
-    class WindowEventHandler
-    {
-    public:
-        virtual ~WindowEventHandler() = default;
-        virtual void onWindowResize(Window* window, int width, int height) {}
-        virtual void onWindowClose(Window* window) {}
-        virtual void onWindowFocus(Window* window, bool focused) {}
-        virtual void onFramebufferResize(Window* window, int width, int height) {}
-    };
+    //class WindowEventHandler
+    //{
+    //public:
+    //    virtual ~WindowEventHandler() = default;
+    //    virtual void onWindowResize(Window* window, int width, int height) {}
+    //    virtual void onWindowClose(Window* window) {}
+    //    virtual void onWindowFocus(Window* window, bool focused) {}
+    //    virtual void onFramebufferResize(Window* window, int width, int height) {}
+    //};
 }

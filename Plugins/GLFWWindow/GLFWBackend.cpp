@@ -3,15 +3,6 @@
 //
 //namespace chai
 //{
-//    ChaiWindow::ChaiWindow(chai::CString title, int width, int height) : Window(title, width, height)
-//    {
-//        Init();
-//    }
-//
-//    ChaiWindow::~ChaiWindow()
-//    {
-//        glfwTerminate();
-//    }
 //
 //    //callbacks
 //    void mouse_callback(GLFWwindow* window, double xpos, double ypos) {

@@ -37,6 +37,26 @@ namespace chai
             }
         }
 
+        template<typename InterfaceType, typename ConcreteType>
+        void registerServiceAs(const std::string& serviceName,
+            std::function<std::shared_ptr<ConcreteType>()> factory) {
+            // Register as the interface type
+            auto interfaceFactory = [factory]() -> std::shared_ptr<void> {
+                return std::static_pointer_cast<void>(
+                    std::static_pointer_cast<InterfaceType>(factory())
+                );
+                };
+
+            services_.insert({ serviceName,  {
+                .factory = interfaceFactory,
+                .typeIndex = std::type_index(typeid(InterfaceType)),
+                .typeName = typeid(InterfaceType).name()
+            } });
+
+            // Also store the concrete type mapping for advanced lookups
+            concreteTypeMap_.insert({ serviceName, std::type_index(typeid(ConcreteType)) });
+        }
+
         template<typename T>
         std::shared_ptr<T> getService(const std::string& serviceName) const {
             auto it = services_.find(serviceName);
@@ -72,5 +92,6 @@ namespace chai
             std::string typeName;
         };
         std::unordered_map<std::string, ServiceInfo> services_;
+        std::unordered_map<std::string, std::type_index> concreteTypeMap_;
     };
 }

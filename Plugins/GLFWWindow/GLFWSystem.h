@@ -12,43 +12,21 @@ namespace chai
         GLFWSystem();
         ~GLFWSystem();
 
-        bool initialize();
-        void shutdown();
-        void update();
+        bool initialize() override;
+        void shutdown() override;
+        void pollEvents() override;
 
-        // Window management
-        Window* createWindow(const WindowDesc& desc);
-        Window* createWindow(const std::string& title, int width = 1280, int height = 720);
-        Window* getWindow(const std::string& name);
-        void destroyWindow(const std::string& name);
-        void destroyAllWindows();
-
-        // Properties
-        //const std::vector<std::unique_ptr<Window>>& getWindows() const { return m_windows; }
-        //size_t getWindowCount() const { return m_windows.size(); }
-        //bool hasWindows() const { return !m_windows.empty(); }
-        //bool shouldClose() const;
-
-        // Input system integration
-        //void setInputSystem(InputSystem* inputSystem);
-        //InputSystem* getInputSystem() { return m_inputSystem; }
-
-        // Internal
-        //Window* getWindowByHandle(GLFWwindow* handle);
+        std::unique_ptr<Window> createWindow(const WindowDesc& desc, WindowManager* manager) override;
+        void destroyWindow(void* nativeWindow) override;
+        void destroyAllWindows() override;
 
     private:
-        // GLFW callbacks (static)
-        //static void glfwErrorCallback(int error, const char* description);
-        //static void glfwWindowSizeCallback(GLFWwindow* window, int width, int height);
-        //static void glfwFramebufferSizeCallback(GLFWwindow* window, int width, int height);
-        //static void glfwWindowCloseCallback(GLFWwindow* window);
-        //static void glfwWindowFocusCallback(GLFWwindow* window, int focused);
+		GLFWwindow* convertToGLFWWindow(void* nativeWindow);
 	};
 }
 
 CHAI_PLUGIN_CLASS(GLFWWindowPlugin) {
-    CHAI_SERVICE(chai::GLFWSystem, "GLFWSystem");
-    //TODO: if there are other loaders, does there need to be a manager for them?
+    CHAI_SERVICE_AS(chai::WindowSystem, chai::GLFWSystem, "WindowSystem");
 }
 
 CHAI_REGISTER_PLUGIN(GLFWWindowPlugin, "GLFWWindowPlugin", "1.0.0")

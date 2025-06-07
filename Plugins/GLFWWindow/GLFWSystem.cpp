@@ -1,7 +1,20 @@
 #include "GLFWSystem.h"
+#include <GLFW/glfw3.h>
+#include <iostream>
+#include <Window/Window.h>
+#include <Window/WindowManager.h>
 
 namespace chai
 {
+	void glfwCloseCallback(GLFWwindow* window)
+	{
+		auto userPtr = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+		if (userPtr)
+		{
+			userPtr->manager->requestClose(userPtr->window->getId());
+		}
+	}
+
 	GLFWSystem::GLFWSystem()
 	{
 
@@ -11,27 +24,61 @@ namespace chai
 	{
 	}
 
-    bool GLFWSystem::initialize() { return true; }
-    void GLFWSystem::shutdown(){}
-    void GLFWSystem::update(){}
+	bool GLFWSystem::initialize()
+	{
+		if (!glfwInit())
+		{
+			std::cerr << "Failed to initialize GLFW!" << std::endl;
+			return false;
+		}
 
-    // Window management
-    Window* GLFWSystem::createWindow(const WindowDesc& desc) { return nullptr; }
-    Window* GLFWSystem::createWindow(const std::string& title, int width, int height){ return nullptr; }
-    Window* GLFWSystem::getWindow(const std::string& name){ return nullptr; }
-    void GLFWSystem::destroyWindow(const std::string& name){}
-    void GLFWSystem::destroyAllWindows(){}
+		return true;
+	}
 
-    // Properties
-    //const std::vector<std::unique_ptr<Window>>& GLFWSystem::getWindows() const { return m_windows; }
-    //size_t GLFWSystem::getWindowCount() const { return m_windows.size(); }
-    //bool GLFWSystem::hasWindows() const { return !m_windows.empty(); }
-    //bool GLFWSystem::shouldClose() const;
+	void GLFWSystem::shutdown()
+	{
+		glfwTerminate();
+	}
 
-    // Input system integration
-    //void setInputSystem(InputSystem* inputSystem);
-    //InputSystem* getInputSystem() { return m_inputSystem; }
+	// Window management
+	std::unique_ptr<Window> GLFWSystem::createWindow(const WindowDesc& desc, WindowManager* manager)
+	{
+		auto window = std::make_unique<Window>(desc);
+		auto nativeWindow = glfwCreateWindow(desc.width, desc.height, desc.title.c_str(), NULL, NULL);
+		if (!nativeWindow)
+		{
+			std::cerr << "Failed to create GLFW Window!" << std::endl;
+		}
 
-    // Internal
-    //Window* GLFWSystem::getWindowByHandle(GLFWwindow* handle) {}
+		glfwSetWindowCloseCallback(nativeWindow, glfwCloseCallback);
+
+		window->setWindowData(WindowData{window.get(), manager});
+		window->setNativeWindow(nativeWindow);
+		glfwSetWindowUserPointer(nativeWindow, &window->getWindowData());
+
+		//is this opengl specific?
+		glfwMakeContextCurrent(nativeWindow);
+
+		return std::move(window);
+	}
+
+	void GLFWSystem::pollEvents()
+	{
+		glfwPollEvents();
+	}
+
+	GLFWwindow* GLFWSystem::convertToGLFWWindow(void* nativeWindow)
+	{
+		return static_cast<GLFWwindow*>(nativeWindow);
+	}
+
+	void GLFWSystem::destroyWindow(void* nativeWindow)
+	{
+		if (auto glfwWindow = convertToGLFWWindow(nativeWindow); glfwWindow)
+		{
+			glfwDestroyWindow(glfwWindow);
+		}
+	}
+
+	void GLFWSystem::destroyAllWindows() {}
 }

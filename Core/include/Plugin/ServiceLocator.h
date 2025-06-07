@@ -11,21 +11,31 @@ namespace chai
     public:
         static ServiceLocator& instance();
 
-        template<typename T>
-        std::shared_ptr<T> get(const std::string& serviceName) {
+        template<typename InterfaceType>
+        std::shared_ptr<InterfaceType> get(const std::string& serviceName = "") {
+            std::string name = serviceName.empty() ? getDefaultServiceName<InterfaceType>() : serviceName;
+
             // Try to find service across all loaded plugins
             auto& registry = kettle::PluginRegistry::instance();
-            for (const auto& [pluginName, plugin] : registry.loadedPlugins_) {
-                if (auto service = plugin->getServices().getService<T>(serviceName)) {
+            for (const auto& [pluginName, plugin] : registry.getLoadedPlugins()) {
+                if (auto service = plugin->getServices().getService<InterfaceType>(name)) {
                     return service;
                 }
             }
             return nullptr;
         }
 
+    private:
         template<typename T>
-        std::shared_ptr<T> getFrom(const std::string& pluginName, const std::string& serviceName) {
-            return kettle::PluginRegistry::instance().getService<T>(pluginName, serviceName);
+        std::string getDefaultServiceName() {
+            // Convert interface type to default service name
+            std::string typeName = typeid(T).name();
+            // Simple conversion: remove namespace and "System" suffix if present
+            size_t pos = typeName.find_last_of(':');
+            if (pos != std::string::npos) {
+                typeName = typeName.substr(pos + 1);
+            }
+            return typeName;
         }
     };
 }

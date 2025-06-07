@@ -18,6 +18,11 @@ inline std::vector<std::string>& __ChaiRegisteredTypes() {
         return std::make_shared<ServiceType>(); \
     }, name_)
 
+#define CHAI_SERVICE_AS(InterfaceType, ConcreteType, ServiceName) \
+    services_.registerServiceAs<InterfaceType, ConcreteType>(ServiceName, []() { \
+        return std::make_shared<ConcreteType>(); \
+    })
+
 #define CHAI_CLASS(type) \
     namespace ChaiInternal_##type { \
         static chai::kettle::TypeInfo BuildTypeInfo() { \

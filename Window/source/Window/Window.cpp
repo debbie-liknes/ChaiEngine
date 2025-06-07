@@ -2,9 +2,14 @@
 
 namespace chai
 {
-    Window::Window(const WindowDesc& desc, WindowSystem* windowSystem)
+    Window::Window(const WindowDesc& desc) : m_desc(desc), m_data({this})
     {
 
+    }
+
+    Window::Window() : m_data()
+    {
+        m_data.window = this;
     }
 
     Window::~Window()
