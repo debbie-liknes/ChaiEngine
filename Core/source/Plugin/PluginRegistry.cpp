@@ -1,49 +1,119 @@
 #include <Plugin/PluginRegistry.h>
 #include <stdexcept>
+#include <filesystem>
+#include <iostream>
 
 namespace chai::kettle
 {
-    PluginRegistry& PluginRegistry::Instance() 
+    std::filesystem::path get_executable_directory() {
+#ifdef _WIN32
+        char path[MAX_PATH];
+        GetModuleFileNameA(NULL, path, MAX_PATH);
+        return std::filesystem::path(path).parent_path();
+#elif defined(__linux__)
+        char path[PATH_MAX];
+        ssize_t count = readlink("/proc/self/exe", path, PATH_MAX);
+        return std::filesystem::path(std::string(path, count)).parent_path();
+#endif
+    }
+
+    PluginRegistry& PluginRegistry::instance() 
     {
         static PluginRegistry reg;
         return reg;
     }
 
+    static void printLoadedPlugin(std::shared_ptr<IPlugin> plugin)
+    {
+        std::cout << "Loaded plugin: " << plugin->getName() << " v" << plugin->getVersion() << "\n";
+        std::cout << " - Services:\n";
+        for (auto& name : plugin->getServices().getServiceNames())
+        {
+            std::cout << "   - " << name << "\n";
+        }
+    }
+
     // Register a factory under a category and name
-    void PluginRegistry::Register(const std::string& category, const std::string& name, FactoryFn factory)
+    void PluginRegistry::registerPlugin(const std::string& pluginName, std::function<std::unique_ptr<IPlugin>()> factory)
     {
-        m_factories[category][name] = factory;
+        plugins_[pluginName] = factory;
     }
 
-    // Get a factory by category/name
-    FactoryFn PluginRegistry::Get(const std::string& category, const std::string& name) const
+    bool PluginRegistry::loadLibrary(const std::string& path)
     {
-        auto catIt = m_factories.find(category);
-        if (catIt == m_factories.end()) {
-            throw std::runtime_error("PluginRegistry: Unknown category: " + category);
+#ifdef _WIN32
+        PluginHandle handle = LoadLibraryA(path.c_str());
+#else
+        PluginHandle handle = dlopen(path.c_str(), RTLD_LAZY);
+#endif
+
+        if (!handle) {
+            std::cerr << "Failed to load plugin: " << path << "\n";
+            return false;
         }
 
-        const auto& namedMap = catIt->second;
-        auto it = namedMap.find(name);
-        if (it == namedMap.end()) {
-            throw std::runtime_error("PluginRegistry: Unknown plugin [" + name + "] in category [" + category + "]");
+        // GetPluginManifest signature
+        using RegisterPluginFn = void** (*)();
+
+#ifdef _WIN32
+        auto registerHandle = (RegisterPluginFn)GetProcAddress(handle, "RegisterPlugin");
+#else
+        auto getPlugin = (RegisterPluginFn)dlsym(handle, "GetPluginModule");
+#endif
+
+        if (!registerHandle) {
+            std::cerr << "Plugin " << path << " does not expose RegisterPlugin()\n";
+            return false;
         }
 
-        return it->second;
+        registerHandle();
+
+        m_plugins.push_back({ handle, path });
+        return true;
     }
 
-    // Get all factories of a type
-    std::vector<std::string> PluginRegistry::List(const std::string& category) const
+    std::shared_ptr<IPlugin> PluginRegistry::loadPlugin(const std::string& pluginPath)
     {
-        std::vector<std::string> names;
+		std::string pluginName = std::filesystem::path(pluginPath).filename().stem().string();
+        auto it = plugins_.find(pluginName);
+        if (it != plugins_.end()) {
+            auto plugin = std::shared_ptr<IPlugin>(it->second().release());
+            plugin->initialize();
+            loadedPlugins_[pluginName] = plugin;
+            return plugin;
+        }
 
-        auto it = m_factories.find(category);
-        if (it != m_factories.end()) {
-            for (const auto& [name, _] : it->second) {
-                names.push_back(name);
+        //load it and try again
+        if (loadLibrary(pluginPath))
+        {
+            it = plugins_.find(pluginName);
+            if (it != plugins_.end()) {
+                auto plugin = std::shared_ptr<IPlugin>(it->second().release());
+                plugin->initialize();
+                printLoadedPlugin(plugin);
+                loadedPlugins_[pluginName] = plugin;
+                return plugin;
             }
         }
 
-        return names;
+        return nullptr;
+    }
+
+    bool PluginRegistry::loadPluginsInDirectory(const std::string& directory)
+    {
+        auto exePath = get_executable_directory();
+        std::filesystem::path pluginsPath = exePath.append(directory);
+        if (!std::filesystem::exists(pluginsPath)) {
+            std::cerr << "Plugin directory does not exist: " << pluginsPath << "\n";
+            return false;
+        }
+        for (const auto& entry : std::filesystem::directory_iterator(pluginsPath)) {
+            if (entry.is_regular_file() && entry.path().extension() == ".dll") {
+                if (!loadPlugin(entry.path().string())) {
+                    std::cerr << "Failed to load plugin: " << entry.path() << "\n";
+                }
+            }
+        }
+        return true;
     }
 }

@@ -1,30 +1,31 @@
 #pragma once
+#include <string>
 #include <memory>
 #include <unordered_map>
+#include <Plugin/PluginRegistry.h>
 
 namespace chai
 {
-    class ServiceLocator {
+    class ServiceLocator 
+    {
     public:
-        static ServiceLocator& getInstance();
-
-        void Shutdown();
+        static ServiceLocator& instance();
 
         template<typename T>
-        void Register(std::shared_ptr<T> service) {
-            m_services[typeid(T).hash_code()] = service;
-        }
-
-        template<typename T>
-        std::shared_ptr<T> Get() {
-            auto it = m_services.find(typeid(T).hash_code());
-            if (it != m_services.end()) {
-                return std::static_pointer_cast<T>(it->second);
+        std::shared_ptr<T> get(const std::string& serviceName) {
+            // Try to find service across all loaded plugins
+            auto& registry = kettle::PluginRegistry::instance();
+            for (const auto& [pluginName, plugin] : registry.loadedPlugins_) {
+                if (auto service = plugin->getServices().getService<T>(serviceName)) {
+                    return service;
+                }
             }
             return nullptr;
         }
 
-    private:
-        std::unordered_map<size_t, std::shared_ptr<void>> m_services;
+        template<typename T>
+        std::shared_ptr<T> getFrom(const std::string& pluginName, const std::string& serviceName) {
+            return kettle::PluginRegistry::instance().getService<T>(pluginName, serviceName);
+        }
     };
 }

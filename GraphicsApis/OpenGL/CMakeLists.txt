@@ -1,20 +1,23 @@
 
 set(OpenGLRenderer_headers
-	include/OpenGLModule.cpp
+	include/OpenGLRenderer/OpenGLPlugin.h
 	include/OpenGLRenderer/OpenGLRenderer.h
 	include/OpenGLRenderer/OpenGLTexture.h
+	include/OpenGLRenderer/OpenGLMesh.h
+	include/OpenGLRenderer/OpenGLMaterial.h
 	include/OpenGLRenderer/GlPipelineState.h
 	include/OpenGLRenderer/GLShader.h
 	include/OpenGLRenderer/GLShaderProgram.h
-	include/OpenGLRenderer/GLViewport.h
 )
 
 set(OpenGLRenderer_source
 	source/OpenGLRenderer/OpenGLRenderer.cpp
 	source/OpenGLRenderer/OpenGLTexture.cpp
+	source/OpenGLRenderer/OpenGLMesh.cpp
+	source/OpenGLRenderer/OpenGLMaterial.cpp
 	source/OpenGLRenderer/GLShader.cpp
 	source/OpenGLRenderer/GLShaderProgram.cpp
-	source/OpenGLRenderer/GLViewport.cpp
+	source/OpenGLRenderer/OpenGLPlugin.cpp
 )
 
 add_library(glad STATIC ${CMAKE_SOURCE_DIR}/external/glad/src/gl.c)
@@ -29,4 +32,4 @@ target_compile_definitions(OpenGLRenderer PRIVATE
     CMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
 )
 
-ChaiLibDefaults(OpenGLRenderer "Graphics/Platforms")
+ChaiPluginDefaults(OpenGLRenderer "Graphics/Platforms")

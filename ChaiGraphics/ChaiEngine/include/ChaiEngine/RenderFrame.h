@@ -1,6 +1,7 @@
 #pragma once
 #include <Renderables/Renderable.h>
-#include <Window/Viewport.h>
+#include <ChaiEngine/Viewport.h>
+#include <ChaiEngine/RenderView.h>
 
 namespace chai::brew
 {
@@ -19,11 +20,12 @@ namespace chai::brew
         glm::vec3 up;
     };
 
-    struct RenderFrame {
-        GPUCamera camera;
-        std::vector<GPULight> lights;
-        std::vector<std::shared_ptr<Renderable>> renderables;
-        float time;
-        Viewport* viewport;
+    class Light;
+    struct RenderFrame 
+    {
+        //a flatlist probably is a great idea. Layout manager or something
+        std::vector<RenderView> views;
+        std::vector<Light*> lights;
+		std::vector<Renderable*> renderables;
     };
 }

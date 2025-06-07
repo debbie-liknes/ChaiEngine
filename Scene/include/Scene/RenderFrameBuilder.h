@@ -1,7 +1,7 @@
 #pragma once
 #include <ChaiEngine/RenderFrame.h>
 #include <Scene/Scene.h>
-#include <Window/Window.h>
+#include <ChaiEngine/Window.h>
 #include <ChaiEngine/RenderView.h>
 
 namespace chai::cup

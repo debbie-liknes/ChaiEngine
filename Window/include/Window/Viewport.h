@@ -1,24 +1,39 @@
 #pragma once
 #include <WindowModuleExport.h>
-#include <Core/MemoryTypes.h>
+#include <string>
+#include <memory>
 
 namespace chai
 {
+    class Window;
+
+    // Viewport descriptor
+    struct WINDOWMODULE_EXPORT ViewportDesc
+    {
+        std::string name;
+        int x, y, width, height;
+        float clearColor[4] = { 0.2f, 0.3f, 0.3f, 1.0f };
+        bool clearDepth = true;
+        bool clearStencil = false;
+    };
+
+    // Viewport class
     class WINDOWMODULE_EXPORT Viewport
     {
     public:
-        Viewport();
-        Viewport(int posX, int posY, int width, int height);
-        ~Viewport() = default;
+        Viewport(const ViewportDesc& desc, Window* parent);
 
-        // Accessors
-        void setDimensions(int x, int y, int width, int height);
-        void getDimensions(int& x, int& y, int& width, int& height) const;
+        void setActive();
+        void clear();
+        void setRect(int x, int y, int width, int height);
+        void setClearColor(float r, float g, float b, float a = 1.0f);
 
-        virtual void bind() = 0;
+        const ViewportDesc& getDesc() const { return m_desc; }
+        const std::string& getName() const { return m_desc.name; }
+        Window* getParentWindow() { return m_parentWindow; }
 
-    protected:
-        int m_x, m_y, m_width, m_height;
+    private:
+        ViewportDesc m_desc;
+        Window* m_parentWindow;
     };
-    typedef std::shared_ptr<Viewport> SharedViewport;
 }

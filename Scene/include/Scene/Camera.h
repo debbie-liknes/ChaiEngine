@@ -1,7 +1,6 @@
 #pragma once
 #include <SceneExport.h>
 #include <glm/glm.hpp>
-#include <Window/Viewport.h>
 #include <ChaiEngine/CoordinateSpace.h>
 
 namespace chai::cup

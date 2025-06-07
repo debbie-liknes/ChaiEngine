@@ -3,6 +3,7 @@
 set(Core_headers
 	include/Core/Containers.h
 	include/Core/MemoryTypes.h
+	include/Core/Rect.h
 	include/Core/TypeHelpers.h
 	include/Core/TextureBackend.h
 	include/Meta/TypeInfo.h
@@ -18,14 +19,13 @@ set(Core_source
 
 set(Plugin_headers
 	include/Plugin/PluginBase.h
-	include/Plugin/PluginLoader.h
 	include/Plugin/PluginManifest.h
 	include/Plugin/PluginRegistry.h
 	include/Plugin/ServiceLocator.h
+	include/Plugin/ServiceRegistry.h
 )
 
 set(Plugin_source
-	source/Plugin/PluginLoader.cpp
 	source/Plugin/PluginRegistry.cpp
 	source/Plugin/ServiceLocator.cpp
 )

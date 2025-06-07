@@ -1,10 +1,11 @@
 #include <OpenGLRenderer/OpenGLRenderer.h>
 #include <iostream>
-#include <Window/Viewport.h>
-#include <Window/Window.h>
+#include <ChaiEngine/Viewport.h>
+#include <ChaiEngine/Window.h>
 #include <Renderables/Renderable.h>
 #include <OpenGLRenderer/GlPipelineState.h>
 #include <glm/glm.hpp>
+
 #include <Core/TypeHelpers.h>
 #include <OpenGLRenderer/GLShader.h>
 #include <OpenGLRenderer/OpenGLTexture.h>
@@ -12,22 +13,78 @@
 
 namespace chai::brew
 {
+	void OpenGLCommandList::setViewport(const Viewport& vp)
+	{
+		commands.push_back([vp]() {
+			glViewport(vp.x, vp.y, vp.width, vp.height);
+			glDepthRange(vp.minDepth, vp.maxDepth);
+			});
+	}
+
+	//this should really be by value
+	void OpenGLCommandList::drawMesh(const IMesh& mesh, const IMaterial& material)
+	{
+		commands.push_back([&mesh, &material]() {
+			const_cast<IMesh&>(mesh).upload();
+
+			// Enable depth testing for 3D rendering
+			glEnable(GL_DEPTH_TEST);
+
+			// Bind material (shader + textures)
+			material.Bind();
+
+			// Draw the mesh
+			mesh.draw();
+
+			// Unbind material
+			material.Unbind();
+			});
+	}
+
+	void OpenGLCommandList::execute()
+	{
+		for (auto& cmd : commands) {
+			cmd();
+		}
+		commands.clear();
+	}
+
 	OpenGLBackend::OpenGLBackend()
 	{
 	}
 
 	OpenGLBackend::~OpenGLBackend()
 	{
-		for (auto& [ptr, state] : m_renderableStates) {
-			if (state.vao) glDeleteVertexArrays(1, &state.vao);
-			if (!state.vbos.empty()) glDeleteBuffers(static_cast<GLsizei>(state.vbos.size()), state.vbos.data());
-			if (state.ebo) glDeleteBuffers(1, &state.ebo);
-		}
-		m_renderableStates.clear();
-		m_programCache.clear();
-		m_ShaderCache.clear();
+		//for (auto& [ptr, state] : m_renderableStates) {
+		//	if (state.vao) glDeleteVertexArrays(1, &state.vao);
+		//	if (!state.vbos.empty()) glDeleteBuffers(static_cast<GLsizei>(state.vbos.size()), state.vbos.data());
+		//	if (state.ebo) glDeleteBuffers(1, &state.ebo);
+		//}
+		//m_renderableStates.clear();
+		//m_programCache.clear();
+		//m_ShaderCache.clear();
 	}
 
+	std::unique_ptr<RenderCommandList> OpenGLBackend::createCommandList()
+	{
+		return std::make_unique<OpenGLCommandList>();
+	}
+
+	void OpenGLBackend::executeCommandList(RenderCommandList& cmdList)
+	{
+		static_cast<OpenGLCommandList&>(cmdList).execute();
+	}
+
+	void OpenGLBackend::present(Window& window)
+	{
+		// Ensure all OpenGL commands are completed before swapping
+		glFlush();
+
+		// Delegate buffer swapping to the window backend abstraction
+		//window.swapBuffers();
+	}
+
+#if false
 	int mapTypesToGL(PrimDataType type) {
 		switch (type) {
 		case PrimDataType::FLOAT: return GL_FLOAT;
@@ -62,7 +119,6 @@ namespace chai::brew
 		glEnable(GL_CULL_FACE);
 		checkGLError("setProcAddress");
 	}
-
 	void OpenGLBackend::renderFrame(const RenderFrame& frame)
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -252,8 +308,9 @@ namespace chai::brew
 		return glProg;
 	}
 
-	std::shared_ptr<ITextureBackend> OpenGLBackend::createTexture2D(const uint8_t* data, uint32_t width, uint32_t height)
-	{
-		return std::make_shared<OpenGLTextureBackend>();
-	}
+	//std::shared_ptr<ITextureBackend> OpenGLBackend::createTexture2D(const uint8_t* data, uint32_t width, uint32_t height)
+	//{
+	//	return std::make_shared<OpenGLTextureBackend>();
+	//}
+#endif
 }

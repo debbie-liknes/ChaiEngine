@@ -13,3 +13,11 @@ function(ChaiLibDefaults target_name optional_path)
         set_target_properties(${target_name} PROPERTIES FOLDER ${optional_path})
     endif()
 endfunction()
+
+function(ChaiPluginDefaults target_name optional_path)
+    ChaiLibDefaults(${target_name} ${optional_path})
+
+    set_target_properties(${target_name} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/plugins"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/plugins")
+endfunction()

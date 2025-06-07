@@ -1,18 +1,25 @@
 # Add source to this project's executable.
 
 set(ChaiGraphics_headers
+	include/ChaiEngine/IMesh.h
+	include/ChaiEngine/IMaterial.h
+	include/ChaiEngine/Color.h
 	include/ChaiEngine/ViewData.h
 	include/ChaiEngine/Renderer.h
 	include/ChaiEngine/Shader.h
 	include/ChaiEngine/ShaderManager.h
 	include/ChaiEngine/VertexBuffer.h
 	include/ChaiEngine/UniformBuffer.h
+	include/ChaiEngine/RenderCommandList.h
 	include/ChaiEngine/RenderFrame.h
 	include/ChaiEngine/RenderTarget.h
 	include/ChaiEngine/RenderView.h
 	include/ChaiEngine/CoordinateSpace.h
 	include/ChaiEngine/Euclidean.h
 	include/ChaiEngine/Spherical.h
+	include/ChaiEngine/Vertex.h
+	include/ChaiEngine/Viewport.h
+	include/ChaiEngine/Window.h
 )
 
 set(ChaiGraphics_source
@@ -22,6 +29,8 @@ set(ChaiGraphics_source
 	source/ChaiEngine/Shader.cpp
 	source/ChaiEngine/Euclidean.cpp
 	source/ChaiEngine/Spherical.cpp
+	source/ChaiEngine/Viewport.cpp
+	source/ChaiEngine/Window.cpp
 )
 
 set(ChaiRenderables_headers
@@ -51,6 +60,6 @@ add_library (ChaiGraphics SHARED
 )
 
 target_include_directories(ChaiGraphics PUBLIC include)
-target_link_libraries(ChaiGraphics PUBLIC Core glm::glm glfw WindowModule)
+target_link_libraries(ChaiGraphics PUBLIC Core glm::glm glfw)
 
 ChaiLibDefaults(ChaiGraphics "Graphics")

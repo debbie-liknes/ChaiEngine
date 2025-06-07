@@ -6,6 +6,9 @@
 
 namespace chai::cup
 {
+	//Scene class that holds all the entities in the scene
+	//Does not hold the camera, those are associated with views (probably players?)
+	//The scene should hold data that is persistent across frames
     class Scene {
     public:
         Scene()
@@ -13,11 +16,9 @@ namespace chai::cup
             init();
         }
         void init();
-        //having flatlists is temporary
-        //need a tree of everything in the scene
-        std::vector<Light> m_lights;
-        Camera m_cam;
+
         std::vector<Entity> m_entities;
+		std::vector<Light> m_lights;
 
     private:
     };

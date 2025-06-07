@@ -1,8 +1,7 @@
 #pragma once
 #include <string>
 #include <memory>
-#include <Window/GLFWImpl.h>
-#include <Plugin/PluginLoader.h>
+#include <ChaiEngine/Window.h>
 #include <Resource/ResourceLoader.h>
 #include <Scene/Scene.h>
 
@@ -18,15 +17,15 @@ namespace chai::brew
 		void init(std::string backend);
 		void run();
 
-		void createWindow(std::string windowTitle);
+		//TODO: this should be in a window manager
+		//std::shared_ptr<Window> createWindow(std::string windowTitle);
 
 		Renderer& renderer();
 
 	private:
-		PluginLoader loader;
 
 		//windows and viewport belong in some kind of window manager
-		std::vector<std::shared_ptr<ChaiWindow>> m_windows;
+		//std::vector<std::shared_ptr<ChaiWindow>> m_windows;
 
 		std::shared_ptr<Renderer> m_renderer;
 		//test scene

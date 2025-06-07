@@ -4,11 +4,19 @@
 #include <Meta/MethodInvoker.h>
 #include <Plugin/PluginManifest.h>
 #include <Plugin/PluginBase.h>
+#include <Plugin/ServiceRegistry.h>
+#include <Plugin/PluginRegistry.h>
 
 inline std::vector<std::string>& __ChaiRegisteredTypes() {
     static std::vector<std::string> types;
     return types;
 }
+
+//type reflection macros
+#define CHAI_SERVICE(ServiceType, ServiceName) \
+    services_.registerService<ServiceType>(ServiceName, []() { \
+        return std::make_shared<ServiceType>(); \
+    }, name_)
 
 #define CHAI_CLASS(type) \
     namespace ChaiInternal_##type { \
@@ -38,24 +46,29 @@ inline std::vector<std::string>& __ChaiRegisteredTypes() {
     } _autoRegister; \
     }
 
-#define CHAI_PLUGIN(pluginName, versionStr, authorStr, categoryStr, serviceRegFn) \
-    class pluginName : public chai::IPluginBase { \
+#define CHAI_PLUGIN_CLASS(ClassName) \
+    class ClassName : public chai::IPlugin { \
+    private: \
+        chai::ServiceRegistry services_; \
+        std::string name_; \
+        std::string version_; \
     public: \
-        void OnStartup() override { \
-            serviceRegFn(); \
-        } \
-        const std::string GetName() const override { \
-            return authorStr; \
-        } \
-        void OnShutdown() override {} \
+        ClassName(const std::string& name, const std::string& version) \
+            : name_(name), version_(version) {} \
+        const std::string& getName() const override { return name_; } \
+        const std::string& getVersion() const override { return version_; } \
+        chai::ServiceRegistry& getServices() override { return services_; } \
+        void registerServices(); \
+        void initialize() override { registerServices(); } \
+        void shutdown() override {} \
     }; \
-    static chai::PluginManifest manifest = { \
-        #pluginName, versionStr, authorStr, categoryStr, __ChaiRegisteredTypes() \
-    }; \
-    extern "C" __declspec(dllexport) chai::PluginManifest* GetPluginManifest() { \
-        return &manifest; \
-    } \
-    extern "C" __declspec(dllexport) chai::IPluginBase* GetPluginModule() { \
-        static pluginName instance; \
-        return &instance; \
+    void ClassName::registerServices()
+
+#define CHAI_REGISTER_PLUGIN(ClassName, PluginName, Version) \
+    extern "C" { \
+        void RegisterPlugin() { \
+            chai::kettle::PluginRegistry::instance().registerPlugin(PluginName, []() { \
+                return std::make_unique<ClassName>(PluginName, Version); \
+            }); \
+        } \
     }

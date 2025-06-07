@@ -4,6 +4,7 @@ set(ChaiScene_headers
 	include/Scene/Camera.h
 	include/Scene/Entity.h
 	include/Scene/Light.h
+	include/Scene/LogicalViewport.h
 	include/Scene/Scene.h
 	include/Scene/RenderFrameBuilder.h
 )

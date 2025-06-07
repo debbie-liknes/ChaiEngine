@@ -44,11 +44,10 @@ namespace chai::brew
 		virtual ~ShaderResource() = default;
 		const std::string GetName() const
 		{
-			return m_name;
+			return "";
 		}
 
-		std::string m_name;
-		ShaderStage shaderStage;
+		ShaderStage shaderStage{ ShaderStage::NONE };
 		std::string filePath;
 		std::shared_ptr<Shader> shader;
 	};

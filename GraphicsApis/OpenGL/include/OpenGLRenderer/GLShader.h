@@ -41,6 +41,6 @@ namespace chai::brew
 		Renderer* m_renderer;
 	};
 
-	CHAI_CLASS(chai::brew::GLShaderLoader)
-	END_CHAI()
+	//CHAI_CLASS(chai::brew::GLShaderLoader)
+	//END_CHAI()
 }

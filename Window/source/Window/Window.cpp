@@ -1,43 +1,113 @@
 #include <Window/Window.h>
-#include <Window/Viewport.h>
 
 namespace chai
 {
-	Window::Window(chai::CString title, int width, int height) : m_title(title), m_width(width), m_height(height)
-	{
-	}
+    Window::Window(const WindowDesc& desc, WindowSystem* windowSystem)
+    {
 
-	void Window::AddViewport(SharedViewport viewport)
-	{
-		m_viewports.push_back(viewport);
-	}
+    }
 
-	void Window::RemoveViewport(SharedViewport viewport)
-	{
-		auto port = std::find(m_viewports.begin(), m_viewports.end(), viewport);
-		if (port != m_viewports.end())
-		{
-			m_viewports.erase(port);
-		}
-	}
+    Window::~Window()
+    {
 
-	chai::CVector<SharedViewport> Window::GetViewports()
-	{
-		return m_viewports;
-	}
+    }
 
-	int Window::GetHeight() const
-	{
-		return m_height;
-	}
+    //bool Window::initialize()
+    //{
 
-	int Window::GetWidth() const
-	{
-		return m_width;
-	}
+    //}
 
-	chai::CString Window::GetTitle() const
-	{
-		return m_title;
-	}
+    //void Window::destroy()
+    //{
+
+    //}
+
+    //void Window::update()
+    //{
+
+    //}
+
+    //// Window operations
+    //void Window::makeContextCurrent()
+    //{
+
+    //}
+
+    //void Window::swapBuffers()
+    //{
+
+    //}
+
+    //void Window::setTitle(const std::string& title)
+    //{
+
+    //}
+
+    //void Window::setSize(int width, int height)
+    //{
+
+    //}
+
+    //void Window::setPosition(int x, int y)
+    //{
+
+    //}
+
+    //void Window::setVSync(bool enabled)
+    //{
+
+    //}
+
+    //void Window::setFullscreen(bool fullscreen)
+    //{
+
+    //}
+
+    //// Viewport management
+    //Viewport* Window::createViewport(const ViewportDesc& desc)
+    //{
+
+    //}
+
+    //Viewport* Window::getViewport(const std::string& name)
+    //{
+
+    //}
+
+    //void Window::removeViewport(const std::string& name)
+    //{
+
+    //}
+
+    //// Event handling
+    //void Window::addEventHandler(WindowEventHandler* handler)
+    //{
+
+    //}
+
+    //void Window::removeEventHandler(WindowEventHandler* handler)
+    //{
+
+    //}
+
+    //// Internal callback handlers
+    //void Window::handleResize(int width, int height)
+    //{
+
+    //}
+
+    //void Window::handleFramebufferResize(int width, int height)
+    //{
+
+    //}
+
+    //void Window::handleClose()
+    //{
+
+    //}
+
+    //void Window::handleFocus(bool focused)
+    //{
+
+    //}
 }
