@@ -26,15 +26,20 @@ struct Implementation
     Implementation()
     {
         FMOD::System_Create(&mpSystem);
-        mpSystem->init(512, FMOD_INIT_NORMAL, nullptr);
+
+        auto flags = FMOD_INIT_NORMAL;
+#ifdef _DEBUG
+        flags |= FMOD_INIT_PROFILE_ENABLE;
+#endif
+        mpSystem->init(512, flags, nullptr);
     }
     ~Implementation() {}
 
     void Update();
 
-    FMOD::System* mpSystem;
+    FMOD::System* mpSystem = nullptr;
 
-    int mnNextChannelId;
+    int mnNextChannelId = 0;
 
     typedef std::map<std::string, FMOD::Sound*> SoundMap;
     typedef std::map<int, FMOD::Channel*> ChannelMap;
