@@ -2,7 +2,7 @@
 #include <vector>
 #include <Scene/Light.h>
 #include <Scene/Camera.h>
-#include <Scene/Entity.h>
+#include <Scene/GameObject.h>
 
 namespace chai::cup
 {
@@ -11,14 +11,13 @@ namespace chai::cup
 	//The scene should hold data that is persistent across frames
     class Scene {
     public:
-        Scene()
-        {
-            init();
-        }
-        void init();
+        Scene() = default;
+        ~Scene() = default;
 
-        std::vector<Entity> m_entities;
-		std::vector<Light> m_lights;
+        void addGameObject(std::unique_ptr<GameObject> object);
+    private:
+
+        std::vector<std::unique_ptr<GameObject>> m_objects;
 
     private:
     };

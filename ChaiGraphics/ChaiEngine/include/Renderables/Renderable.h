@@ -1,65 +1,55 @@
 #pragma once
 #include <ChaiGraphicsExport.h>
-#include <Core/Containers.h>
-#include <Core/MemoryTypes.h>
-#include <ChaiEngine/VertexBuffer.h>
-#include <ChaiEngine/UniformBuffer.h>
-#include <map>
+#include <ChaiEngine/IMesh.h>
+#include <ChaiEngine/IMaterial.h>
+#include <memory>
 #include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <ChaiEngine/Shader.h>
+#include <ChaiEngine/UniformBuffer.h>
 
 namespace chai::brew
 {
 	class CHAIGRAPHICS_EXPORT Renderable
 	{
-	public:
-		Renderable();
-		~Renderable();
+    public:
+        Renderable() {
+			transform = glm::mat4(1.0f); // Identity matrix
+        }
 
-		chai::CVector<ShaderData> m_data;
-		std::map<uint16_t, std::shared_ptr<VertexBufferBase>> m_vertexBuffers;
-		std::map<uint16_t, std::shared_ptr<UniformBufferBase>> m_uniforms;
-		std::pair<uint16_t, std::shared_ptr<VertexBufferBase>> m_indexBuffer;
+        virtual ~Renderable() = default;
 
-		uint64_t getId() const { return m_id; }
+        // Getters
+        std::shared_ptr<IMesh> getMesh() const { return mesh; }
+        std::shared_ptr<IMaterial> getMaterial() const { return material; }
+        const glm::mat4& getTransform() const { return transform; }
 
-		bool isDirty();
-		void setDirty(bool dirty = true);
-		bool hasIndexBuffer();
-		PrimitiveMode getPrimitiveType();
-		size_t getVertexCount() const
-		{
-			if(m_vertexBuffers.empty())
-				return 0;
-			return m_vertexBuffers.begin()->second->getElementCount();
-		}
+        // Transform methods
+        void setPosition(float x, float y, float z) {
+			transform[3] = glm::vec4(x, y, z, 1.0f);
+        }
 
-		glm::mat4 getModelMatrix() const;
-		glm::vec3 getPosition() const;
-		void setPosition(glm::vec3 pos);
+        void setScale(float x, float y, float z) {
+			transform[0][0] = x;
+        }
 
-		bool m_addViewData = false;
+        void setUniformScale(float scale) {
+            setScale(scale, scale, scale);
+        }
+
+        // Material property shortcuts
+        void setColor(float r, float g, float b, float a = 1.0f) {
+            if (material) {
+                //material->setUniform("uColor", createUniformBuffer<glm::vec4>(PrimDataType::FLOAT));
+            }
+        }
+
+        void setTexture(const std::string& samplerName, uint32_t textureId) {
+            if (material) {
+                material->setTexture(samplerName, textureId);
+            }
+        }
 	protected:
-		void AddShader(std::string file, ShaderStage stage);
-
-		void AddVertexBuffer(chai::CSharedPtr<VertexBufferBase> vbo, uint16_t binding);
-		void AddIndexBuffer(chai::CSharedPtr<VertexBufferBase> vbo, uint16_t binding);
-		void AddUniform(chai::CSharedPtr<UniformBufferBase> ubo, uint16_t binding);
-		void RequestViewData(bool req = true);
-
-		PrimitiveMode m_primType = PrimitiveMode::TRIANGLES;
-
-	private:
-		uint64_t m_id = 0;
-		bool m_dirty = true;
-		bool m_hasIndexBuffer = false;
-
-		glm::vec3 m_position;
-		glm::quat m_rotation;
-		glm::vec3 m_scale;
-
-		SharedUBO<glm::mat4> m_modelMat;
+		std::shared_ptr<IMesh> mesh;
+		std::shared_ptr<IMaterial> material;
+		glm::mat4 transform;
 	};
 }

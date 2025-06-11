@@ -5,6 +5,10 @@
 #include <Window/Window.h>
 #include <Plugin/PluginRegistry.h>
 #include <Plugin/ServiceLocator.h>
+#include <ChaiEngine/Renderer.h>
+#include <Window/ViewportManager.h>
+#include <Scene/GameObject.h>
+#include <Scene/MeshComponent.h>
 
 using namespace std;
 
@@ -16,11 +20,7 @@ int main()
 	//create window system and manager
 	auto windowSystem = chai::ServiceLocator::instance().get<chai::WindowSystem>();
 	auto windowManager = std::make_unique<chai::WindowManager>(windowSystem);
-
-	//this is the rendering engine
-	//auto renderer = chai::ServiceLocator::instance().get<chai::WindowSystem>();
-	//chai::brew::Engine engine;
-	//engine.init("OpenGLRenderer");
+	chai::ViewportManager viewportManager;
 
 	chai::WindowDesc desc;
 	desc.title = "Chai Window";
@@ -30,23 +30,26 @@ int main()
 	desc.vsync = true;
 	desc.samples = 4; // 4x MSAA
 
+	//create the top level OS container
 	auto mainWindow = windowManager->createWindow(desc);
+
+	//this is the renderer
+	auto renderer = chai::ServiceLocator::instance().get<chai::brew::Renderer>();
+	renderer->initialize(windowSystem->getProcAddress());
+
+	//create viewports to go inside the window
+	viewportManager.createViewport(mainWindow, { "MainView", 0, 0, 1920, 1080 });
+
+	//make a scene
+	auto gameObject = std::make_unique<chai::cup::GameObject>();
+	//gameObject->addComponent<chai::cup::Cube>();
 
 	while (!windowManager->isDone())
 	{
 		windowManager->update();
 	}
 
-    //// Optional: Create additional viewports in the same window
-    //auto viewport1 = mainWindow->createViewport("MainView", { 0, 0, 1920, 540 });
-    //auto viewport2 = mainWindow->createViewport("MiniMap", { 1600, 50, 300, 200 });
-
-    //// Or create separate windows
-    //auto debugWindow = engine.createWindow("Debug Tools", 800, 600);
-    //auto debugViewport = debugWindow->getDefaultViewport();
-
-	//TODO: engine should only responsible for rendering what we give it, not the main loop
-	//engine.run();
+	renderer->shutdown();
 
 	return 0;
 }

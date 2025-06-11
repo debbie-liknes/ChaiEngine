@@ -1,52 +1,26 @@
 #include <OpenGLRenderer/OpenGLRenderer.h>
 #include <iostream>
-#include <ChaiEngine/Viewport.h>
+//#include <ChaiEngine/Viewport.h>
 #include <ChaiEngine/Window.h>
 #include <Renderables/Renderable.h>
-#include <OpenGLRenderer/GlPipelineState.h>
 #include <glm/glm.hpp>
 
 #include <Core/TypeHelpers.h>
 #include <OpenGLRenderer/GLShader.h>
 #include <OpenGLRenderer/OpenGLTexture.h>
 #include <Resource/ResourceManager.h>
+#include <algorithm>
+#include <OpenGLRenderer/OpenGLMesh.h>
+#include <OpenGLRenderer/OpenGLMaterial.h>
 
 namespace chai::brew
 {
-	void OpenGLCommandList::setViewport(const Viewport& vp)
+	static void checkGLError(const std::string& context)
 	{
-		commands.push_back([vp]() {
-			glViewport(vp.x, vp.y, vp.width, vp.height);
-			glDepthRange(vp.minDepth, vp.maxDepth);
-			});
-	}
-
-	//this should really be by value
-	void OpenGLCommandList::drawMesh(const IMesh& mesh, const IMaterial& material)
-	{
-		commands.push_back([&mesh, &material]() {
-			const_cast<IMesh&>(mesh).upload();
-
-			// Enable depth testing for 3D rendering
-			glEnable(GL_DEPTH_TEST);
-
-			// Bind material (shader + textures)
-			material.Bind();
-
-			// Draw the mesh
-			mesh.draw();
-
-			// Unbind material
-			material.Unbind();
-			});
-	}
-
-	void OpenGLCommandList::execute()
-	{
-		for (auto& cmd : commands) {
-			cmd();
+		GLenum err;
+		while ((err = glGetError()) != GL_NO_ERROR) {
+			std::cerr << "OpenGL error in " << context << ": " << err << std::endl;
 		}
-		commands.clear();
 	}
 
 	OpenGLBackend::OpenGLBackend()
@@ -55,262 +29,155 @@ namespace chai::brew
 
 	OpenGLBackend::~OpenGLBackend()
 	{
-		//for (auto& [ptr, state] : m_renderableStates) {
-		//	if (state.vao) glDeleteVertexArrays(1, &state.vao);
-		//	if (!state.vbos.empty()) glDeleteBuffers(static_cast<GLsizei>(state.vbos.size()), state.vbos.data());
-		//	if (state.ebo) glDeleteBuffers(1, &state.ebo);
-		//}
-		//m_renderableStates.clear();
-		//m_programCache.clear();
-		//m_ShaderCache.clear();
 	}
 
-	std::unique_ptr<RenderCommandList> OpenGLBackend::createCommandList()
+	bool OpenGLBackend::initialize(void* winProcAddress)
 	{
-		return std::make_unique<OpenGLCommandList>();
-	}
-
-	void OpenGLBackend::executeCommandList(RenderCommandList& cmdList)
-	{
-		static_cast<OpenGLCommandList&>(cmdList).execute();
-	}
-
-	void OpenGLBackend::present(Window& window)
-	{
-		// Ensure all OpenGL commands are completed before swapping
-		glFlush();
-
-		// Delegate buffer swapping to the window backend abstraction
-		//window.swapBuffers();
-	}
-
-#if false
-	int mapTypesToGL(PrimDataType type) {
-		switch (type) {
-		case PrimDataType::FLOAT: return GL_FLOAT;
-		case PrimDataType::INT: return GL_INT;
-		case PrimDataType::UNSIGNED_INT: return GL_UNSIGNED_INT;
-		default: return GL_FLOAT;
-		}
-	}
-
-	int toGLPrimitive(PrimitiveMode mode) {
-		switch (mode) {
-		case PrimitiveMode::POINTS: return GL_POINTS;
-		case PrimitiveMode::LINES: return GL_LINES;
-		case PrimitiveMode::TRIANGLES: return GL_TRIANGLES;
-		default: return GL_TRIANGLES;
-		}
-	}
-
-	void checkGLError(const std::string& context) {
-		GLenum err;
-		while ((err = glGetError()) != GL_NO_ERROR) {
-			std::cerr << "OpenGL error in " << context << ": " << err << std::endl;
-		}
-	}
-
-	void OpenGLBackend::setProcAddress(void* address)
-	{
-		//call init on the graphics api instead of doing this here
-		if (!gladLoadGL((GLADloadfunc)address)) {
+		if (!gladLoadGL((GLADloadfunc)winProcAddress))
+		{
 			std::cerr << "Failed to initialize GLAD" << std::endl;
+			checkGLError("setProcAddress");
+			return false;
 		}
-		glEnable(GL_CULL_FACE);
+
 		checkGLError("setProcAddress");
+
+		// Check OpenGL version
+		const char* version = (const char*)glGetString(GL_VERSION);
+		std::cout << "OpenGL Version: " << version << std::endl;
+
+		// Set default OpenGL state
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+		glFrontFace(GL_CCW);
+
+		// Enable blending for transparency
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		return true;
 	}
-	void OpenGLBackend::renderFrame(const RenderFrame& frame)
+
+	void OpenGLBackend::shutdown()
 	{
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		static int currentProgram = -1;
-
-		//temporary uniforms
-		auto viewUBO = createUniformBuffer<ViewData>(PrimDataType::FLOAT);
-		viewUBO->data.projMat = frame.camera.proj;
-		viewUBO->data.view = frame.camera.view;
-		viewUBO->name = "MatrixData";
-
-		std::vector<std::shared_ptr<UniformBuffer<GPULight>>> lightUBOs;
-		for (const auto& light : frame.lights) {
-			auto lightUBO = createUniformBuffer<GPULight>(PrimDataType::FLOAT);
-			lightUBO->data = light;
-			lightUBO->name = "Light";
-			lightUBOs.push_back(lightUBO);
-		}
-
-		//track what renderables are still used
-		//could replace this by tracking adds/removes on the render frame
-		std::set<uint64_t> activeRenderableIds;
-		for (const auto& ro : frame.renderables) {
-			activeRenderableIds.insert(ro->getId());
-		}
-
-		//renders
-		for (auto& ro : frame.renderables)
-		{
-			//check the renderable cache
-			if(m_renderableStates.find(ro->getId()) == m_renderableStates.end())
-			{
-				m_renderableStates[ro->getId()] = {};
-			}
-			GLRenderableState& state = m_renderableStates[ro->getId()];
-
-			if (state.vao == 0 || ro->isDirty()) {
-				if (state.vao) glDeleteVertexArrays(1, &state.vao);
-				if (!state.vbos.empty()) glDeleteBuffers(static_cast<GLsizei>(state.vbos.size()), state.vbos.data());
-				if (state.ebo) glDeleteBuffers(1, &state.ebo);
-
-				glGenVertexArrays(1, &state.vao);
-				glBindVertexArray(state.vao);
-
-				state.vbos.resize(ro->m_vertexBuffers.size());
-				glGenBuffers(static_cast<GLsizei>(state.vbos.size()), state.vbos.data());
-
-				int i = 0;
-				for (const auto& [binding, buffer] : ro->m_vertexBuffers) {
-					glBindBuffer(GL_ARRAY_BUFFER, state.vbos[i]);
-					glBufferData(GL_ARRAY_BUFFER, (GLsizei)(buffer->getElementCount() * buffer->getElementSize()), buffer->getRawData(), GL_STATIC_DRAW);
-					glVertexAttribPointer(binding, (GLint)buffer->getNumElementsInType(), mapTypesToGL(buffer->getUnderlyingType()), GL_FALSE, buffer->getElementSize(), nullptr);
-					glEnableVertexAttribArray(binding);
-					++i;
-				}
-
-				if (ro->hasIndexBuffer()) {
-					glGenBuffers(1, &state.ebo);
-					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, state.ebo);
-					glBufferData(GL_ELEMENT_ARRAY_BUFFER, ro->m_indexBuffer.second->getElementCount() * ro->m_indexBuffer.second->getElementSize(), ro->m_indexBuffer.second->getRawData(), GL_STATIC_DRAW);
-				}
-
-				ro->setDirty(false);
-				checkGLError("Setup VAO/VBO/EBO");
-			}
-
-			glBindVertexArray(state.vao);
-
-			chai::CVector<int> shaderHandles;
-			for (const auto& s : ro->m_data) {
-				auto shader = LoadOrGetShader(s.shaderSource, s.stage);
-				if (!shader) continue;
-				shaderHandles.push_back(shader->getHandle());
-			}
-
-			auto program = loadOrGetShaderProgram(shaderHandles, ro->m_uniforms);
-			if (!program) continue;
-
-			if (program->getProgramHandle() != currentProgram) {
-				program->link();
-				checkGLError("Program Link");
-				program->use();
-				checkGLError("Program Use");
-
-				for (const auto& [id, uniform] : ro->m_uniforms) {
-					program->addUniform(uniform->name, uniform, id);
-				}
-
-				if (ro->m_addViewData) {
-					program->addUniform(viewUBO->name, viewUBO, program->getNumUniforms());
-				}
-
-				for (auto& ubo : lightUBOs) {
-					program->addUniform(ubo->name, ubo, program->getNumUniforms());
-				}
-
-				currentProgram = program->getProgramHandle();
-			}
-			else if (ro->m_addViewData) {
-				auto ubo = program->getUniform("MatrixData");
-				if (auto view = static_cast<UniformBuffer<ViewData>*>(ubo.get())) {
-					view->data.projMat = frame.camera.proj;
-					view->data.view = frame.camera.view;
-					program->upload("MatrixData");
-				}
-			}
-
-			if (ro->hasIndexBuffer()) {
-				glDrawElements(toGLPrimitive(ro->getPrimitiveType()), (GLsizei)ro->m_indexBuffer.second->getElementCount(), mapTypesToGL(ro->m_indexBuffer.second->getUnderlyingType()), nullptr);
-			}
-			else {
-				glDrawArrays(toGLPrimitive(ro->getPrimitiveType()), 0, (GLsizei)ro->getVertexCount());
-			}
-		}
-
-		for (auto it = m_renderableStates.begin(); it != m_renderableStates.end(); ) {
-			if (activeRenderableIds.find(it->first) == activeRenderableIds.end()) {
-				// Clean up OpenGL resources
-				auto& state = it->second;
-				if (state.vao) glDeleteVertexArrays(1, &state.vao);
-				if (!state.vbos.empty()) glDeleteBuffers(static_cast<GLsizei>(state.vbos.size()), state.vbos.data());
-				if (state.ebo) glDeleteBuffers(1, &state.ebo);
-				it = m_renderableStates.erase(it);
-			}
-			else {
-				++it;
-			}
-		}
+		// Cleanup OpenGL resources
+		currentMaterial = nullptr;
+		currentVAO = 0;
 	}
 
-	GLShader* OpenGLBackend::LoadOrGetShader(const std::string& path, ShaderStage stage)
+	void OpenGLBackend::executeCommands(const std::vector<RenderCommand>& commands)
 	{
-		auto it = m_ShaderCache.find(path);
-		if (it != m_ShaderCache.end())
-		{
-			return m_ShaderCache[path];
+		// Reset state tracking
+		currentMaterial = nullptr;
+		currentVAO = 0;
+
+		// Sort commands by type and material for batching
+		std::vector<const RenderCommand*> sortedCommands;
+		sortedCommands.reserve(commands.size());
+
+		for (const auto& cmd : commands) {
+			sortedCommands.push_back(&cmd);
 		}
 
-		//we dont have it yet
-		std::shared_ptr<IResource> resource = chai::ResourceManager::Instance().Load(path);
-		auto shaderResource = static_cast<ShaderResource*>(resource.get());
-		if (shaderResource && shaderResource->shader)
-		{
-			auto shader = static_cast<GLShader*>(shaderResource->shader.get());
-			if (shader)
-			{
-				shader->createShader(shader->shaderSource.data(), stage);
-			}
-			m_ShaderCache[path] = shader;
-			return shader;
-		}
-		return nullptr;
-	}
-
-	std::shared_ptr<GLShaderProgram> OpenGLBackend::loadOrGetShaderProgram(std::vector<int> shaders, std::map<uint16_t, chai::CSharedPtr<UniformBufferBase>> ubos)
-	{
-		for (auto& program : m_programCache)
-		{
-			auto progShaders = program->getShaders();
-			if (shaders.size() != progShaders.size())
-				continue;
-
-			bool found = true;
-			for (auto& s : shaders)
-			{
-				if (progShaders.find(s) == progShaders.end())
-				{
-					found = false;
-					break;
+		// Sort: Clear/Setup commands first, then by material for batching
+		std::sort(sortedCommands.begin(), sortedCommands.end(),
+			[](const RenderCommand* a, const RenderCommand* b) {
+				// Non-draw commands first
+				if (a->type != RenderCommand::DRAW_MESH && b->type == RenderCommand::DRAW_MESH) {
+					return true;
 				}
-			}
-			if (found)
-			{
-				return program;
-			}
+				if (a->type == RenderCommand::DRAW_MESH && b->type != RenderCommand::DRAW_MESH) {
+					return false;
+				}
+
+				// Both are draw commands - sort by material, then by render queue
+				if (a->type == RenderCommand::DRAW_MESH && b->type == RenderCommand::DRAW_MESH) {
+					if (a->material.get() != b->material.get()) {
+						return a->material.get() < b->material.get();
+					}
+					return a->material->getRenderQueue() < b->material->getRenderQueue();
+				}
+
+				return false;
+			});
+
+		// Execute sorted commands
+		//for (const RenderCommand* cmd : sortedCommands) {
+		//	switch (cmd->type) {
+		//	case RenderCommand::DRAW_MESH:
+		//		executeDrawMesh(*cmd);
+		//		break;
+		//	case RenderCommand::SET_VIEWPORT:
+		//		executeSetViewport(*cmd);
+		//		break;
+		//	case RenderCommand::CLEAR:
+		//		executeClear(*cmd);
+		//		break;
+		//	default:
+		//		std::cerr << "Unknown render command type\n";
+		//		break;
+		//	}
+		//}
+
+		// Check for OpenGL errors
+		GLenum error = glGetError();
+		if (error != GL_NO_ERROR) {
+			std::cerr << "OpenGL error after command execution: " << error << std::endl;
 		}
-
-		auto glProg = std::make_shared<GLShaderProgram>();
-
-		//add shaders to the program
-		for (auto& s : shaders)
-		{
-			glProg->AddShader(s);
-		}
-
-		m_programCache.push_back(glProg);
-		return glProg;
 	}
 
-	//std::shared_ptr<ITextureBackend> OpenGLBackend::createTexture2D(const uint8_t* data, uint32_t width, uint32_t height)
-	//{
-	//	return std::make_shared<OpenGLTextureBackend>();
-	//}
-#endif
+	// Resource factories
+	std::shared_ptr<IMesh> OpenGLBackend::createMesh(const std::vector<Vertex>& vertices,const std::vector<uint32_t>& indices)
+	{
+		return std::make_shared<OpenGLMesh>(vertices, indices);
+	}
+
+	std::shared_ptr<IMaterial> OpenGLBackend::createMaterial(const std::string& vertexShader, const std::string& fragmentShader)
+	{
+		return std::make_shared<OpenGLMaterial>(vertexShader, fragmentShader);
+	}
+
+	// Texture management
+	uint32_t OpenGLBackend::createTexture(const void* data, int width, int height, int channels)
+	{
+		GLuint textureId;
+		glGenTextures(1, &textureId);
+		glBindTexture(GL_TEXTURE_2D, textureId);
+
+		// Determine format
+		GLenum format, internalFormat;
+		switch (channels) {
+		case 1:
+			format = internalFormat = GL_RED;
+			break;
+		case 3:
+			format = GL_RGB;
+			internalFormat = GL_RGB8;
+			break;
+		case 4:
+			format = GL_RGBA;
+			internalFormat = GL_RGBA8;
+			break;
+		default:
+			std::cerr << "Unsupported texture format with " << channels << " channels\n";
+			glDeleteTextures(1, &textureId);
+			return 0;
+		}
+
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+
+		// Set texture parameters
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		return textureId;
+	}
 }

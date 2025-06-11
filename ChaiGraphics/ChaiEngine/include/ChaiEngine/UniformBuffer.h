@@ -2,7 +2,7 @@
 #include <ChaiGraphicsExport.h>
 #include <string>
 #include <Core/TypeHelpers.h>
-#include <Core/MemoryTypes.h>
+#include <memory>
 
 namespace chai::brew
 {
@@ -51,7 +51,7 @@ namespace chai::brew
 	using UBO = UniformBuffer<T>;
 
 	template <typename T>
-	using SharedUBO = chai::CSharedPtr<UBO<T>>;
+	using SharedUBO = std::shared_ptr<UBO<T>>;
 
 	template <typename T>
 	SharedUBO<T> createUniformBuffer(PrimDataType underlyingType)

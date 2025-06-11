@@ -15,46 +15,50 @@ namespace chai::brew
 	enum ShaderStage;
 	class GlPipelineState;
 
-	struct GLRenderableState 
-	{
-		GLuint vao = 0;
-		std::vector<GLuint> vbos;
-		GLuint ebo = 0;
-	};
-
-	class OPENGLRENDERER_EXPORT OpenGLCommandList : public RenderCommandList 
-	{
-		std::vector<std::function<void()>> commands;
-
-	public:
-		void setViewport(const Viewport& vp) override;
-		//this should really be by value
-		void drawMesh(const IMesh& mesh, const IMaterial& material) override;
-		void execute();
-	};
-
 	class OPENGLRENDERER_EXPORT OpenGLBackend : public Renderer
 	{
-	public:
-		OpenGLBackend();
-		~OpenGLBackend();
-		virtual std::unique_ptr<RenderCommandList> createCommandList() override;
-		virtual void executeCommandList(RenderCommandList& cmdList) override;
-		//this is a weird parameter, rethink this
-		virtual void present(Window& window) override;
+    public:
+        OpenGLBackend();
+        ~OpenGLBackend();
 
-		//void renderFrame(const RenderFrame& frame) override;
-		//std::shared_ptr<ITextureBackend> createTexture2D(const uint8_t* data, uint32_t width, uint32_t height) override;
-	private:
-		//GLShader* LoadOrGetShader(const std::string& path, ShaderStage stage);
-		//std::unordered_map<std::string, GLShader*> m_ShaderCache;
-		//std::vector<std::shared_ptr<GLShaderProgram>> m_programCache;
-		//std::map<uint64_t, GLRenderableState> m_renderableStates;
-		//std::shared_ptr<GLShaderProgram> loadOrGetShaderProgram(std::vector<int> shaders, std::map<uint16_t, chai::CSharedPtr<UniformBufferBase>> ubos);
+        // RendererPlugin interface
+        bool initialize(void* winProcAddress = nullptr) override;
+        void shutdown() override;
+        void executeCommands(const std::vector<RenderCommand>& commands) override;
+
+        // Resource factories
+        std::shared_ptr<IMesh> createMesh(
+            const std::vector<Vertex>& vertices,
+            const std::vector<uint32_t>& indices = {}
+        ) override;
+
+        std::shared_ptr<IMaterial> createMaterial(
+            const std::string& vertexShader,
+            const std::string& fragmentShader
+        ) override;
+
+        // Texture management
+        uint32_t createTexture(const void* data, int width, int height, int channels) override;
+        //void destroyTexture(uint32_t textureId) override;
+
+    private:
+        //void executeDrawMesh(const RenderCommand& cmd);
+        //void executeSetViewport(const RenderCommand& cmd);
+        //void executeClear(const RenderCommand& cmd);
+
+        //// State management
+        //void bindMaterial(const IMaterial* material);
+        //void bindMesh(const IMesh* mesh);
+
+    private:
+        // State tracking for batching
+        const IMaterial* currentMaterial;
+        GLuint currentVAO;
+
 	};
 }
 
 CHAI_PLUGIN_CLASS(OpenGLPlugin) {
-	CHAI_SERVICE(chai::brew::OpenGLBackend, "renderer");
+	CHAI_SERVICE_AS(chai::brew::Renderer, chai::brew::OpenGLBackend, "Renderer");
 }
 CHAI_REGISTER_PLUGIN(OpenGLPlugin, "OpenGLRenderer", "1.0.0")

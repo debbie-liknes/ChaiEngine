@@ -1,9 +1,8 @@
 #pragma once
 #include <ChaiGraphicsExport.h>
-#include <Core/Containers.h>
-#include <Core/MemoryTypes.h>
 #include <glm/glm.hpp>
 #include <Core/TypeHelpers.h>
+#include <memory>
 
 namespace chai::brew
 {
@@ -29,13 +28,13 @@ namespace chai::brew
 	template <typename T>
 	class CHAIGRAPHICS_EXPORT VertexBuffer : public VertexBufferBase {
 	public:
-		chai::CVector<T> data;
+		std::vector<T> data;
 
 		VertexBuffer(PrimDataType underlyingType, size_t numElements) :
 			m_underlyingType(underlyingType), m_numElements(numElements)
 		{}
 		virtual ~VertexBuffer() = default;
-		VertexBuffer(chai::CVector<T> d, PrimDataType underlyingType, size_t numElements) :
+		VertexBuffer(std::vector<T> d, PrimDataType underlyingType, size_t numElements) :
 			data(d), m_underlyingType(underlyingType), m_numElements(numElements)
 		{}
 
@@ -68,7 +67,7 @@ namespace chai::brew
 	using VBO = VertexBuffer<T>;
 
 	template <typename T>
-	using SharedVBO = chai::CSharedPtr<VBO<T>>;
+	using SharedVBO = std::shared_ptr<VBO<T>>;
 
 	template <typename T>
 	SharedVBO<T> createVertexBuffer(PrimDataType underlyingType, size_t numElements)
@@ -79,7 +78,7 @@ namespace chai::brew
 	//i can simplify these params with template meta programming
 	//later ;)
 	template <typename T>
-	SharedVBO<T> createVertexBuffer(chai::CVector<T> data, PrimDataType underlyingType, size_t numElements)
+	SharedVBO<T> createVertexBuffer(std::vector<T> data, PrimDataType underlyingType, size_t numElements)
 	{
 		return std::make_shared<VertexBuffer<T>>(data, underlyingType, numElements);
 	}

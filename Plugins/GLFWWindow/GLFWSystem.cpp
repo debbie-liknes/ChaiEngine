@@ -80,5 +80,10 @@ namespace chai
 		}
 	}
 
+	void* GLFWSystem::getProcAddress()
+	{
+		return glfwGetProcAddress;
+	}
+
 	void GLFWSystem::destroyAllWindows() {}
 }

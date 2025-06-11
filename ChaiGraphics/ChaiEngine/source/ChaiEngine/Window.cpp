@@ -21,7 +21,7 @@
 //		}
 //	}
 //
-//	chai::CVector<SharedViewport> Window::GetViewports()
+//	std::vector<SharedViewport> Window::GetViewports()
 //	{
 //		return m_viewports;
 //	}

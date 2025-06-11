@@ -1,6 +1,5 @@
 #pragma once
 #include <Renderables/Renderable.h>
-#include <ChaiEngine/Viewport.h>
 #include <ChaiEngine/ViewData.h>
 
 namespace chai::brew
@@ -10,7 +9,7 @@ namespace chai::brew
     struct RenderView 
     {
         Camera* camera;
-        Viewport* viewport;
+        //Viewport* viewport;
 		ViewData viewData;
     };
 }

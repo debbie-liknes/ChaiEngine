@@ -2,7 +2,7 @@
 
 namespace chai
 {
-    Viewport::Viewport(const ViewportDesc& desc, Window* parent)
+	Viewport::Viewport(uint64_t viewId, const ViewportDesc& desc, uint64_t window) : m_parentWindow(window), m_desc(desc)
     {
 
     }

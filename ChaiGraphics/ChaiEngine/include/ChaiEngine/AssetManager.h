@@ -1,0 +1,16 @@
+#pragma once
+#include <unordered_map>
+#include <memory>
+#include <string>
+#include <ChaiEngine/IMesh.h>
+
+namespace chai::brew
+{
+    class AssetManager {
+        std::unordered_map<std::string, std::shared_ptr<MeshAsset>> meshes;
+        //std::unordered_map<std::string, std::shared_ptr<MaterialAsset>> materials;
+    public:
+        std::shared_ptr<MeshAsset> loadMesh(const std::string& path);
+        void preloadAssets(const std::vector<std::string>& assetList);
+    };
+}

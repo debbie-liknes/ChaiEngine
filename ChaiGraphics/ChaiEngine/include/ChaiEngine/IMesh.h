@@ -1,6 +1,8 @@
 #pragma once
 #include <ChaiGraphicsExport.h>
 #include <vector>
+#include <memory>
+#include <string>
 
 namespace chai::brew
 {
@@ -11,18 +13,28 @@ namespace chai::brew
     public:
         virtual ~IMesh() = default;
 
-        // Core functionality
-        virtual void setVertices(const std::vector<Vertex>& vertices) = 0;
-        virtual void setIndices(const std::vector<unsigned int>& indices) = 0;
-        virtual void upload() = 0;
-        virtual void draw() const = 0;
+        // Core interface
+        virtual void bind() const = 0;
+        virtual void unbind() const = 0;
+        virtual uint32_t getVertexCount() const = 0;
+        virtual uint32_t getIndexCount() const = 0;
+        virtual bool isIndexed() const = 0;
 
-        // Query methods
-        virtual size_t getVertexCount() const = 0;
-        virtual size_t getTriangleCount() const = 0;
-        virtual bool isUploaded() const = 0;
+        // Data access (for engine systems that need it)
+        virtual const std::vector<Vertex>& getVertices() const = 0;
+        virtual const std::vector<uint32_t>& getIndices() const = 0;
 
         // Resource management
-        virtual void cleanup() = 0;
+        virtual bool isUploaded() const = 0;
+        virtual void markDirty() = 0;
+    };
+
+    class MeshAsset {
+        std::unique_ptr<IMesh> mesh;
+        std::string assetId;
+        int refCount = 0;
+    public:
+        static std::shared_ptr<MeshAsset> load(const std::string& path);
+        IMesh* getMesh() const { return mesh.get(); }
     };
 }

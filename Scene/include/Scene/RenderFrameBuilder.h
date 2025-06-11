@@ -10,6 +10,6 @@ namespace chai::cup
 	class RenderFrameBuilder
 	{
 	public:
-		static brew::RenderFrame build(const Scene& scene, Viewport* vp);
+		//static brew::RenderFrame build(const Scene& scene, Viewport* vp);
 	};
 }

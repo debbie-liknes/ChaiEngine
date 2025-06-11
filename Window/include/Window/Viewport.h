@@ -5,8 +5,6 @@
 
 namespace chai
 {
-    class Window;
-
     // Viewport descriptor
     struct WINDOWMODULE_EXPORT ViewportDesc
     {
@@ -21,7 +19,7 @@ namespace chai
     class WINDOWMODULE_EXPORT Viewport
     {
     public:
-        Viewport(const ViewportDesc& desc, Window* parent);
+        Viewport(uint64_t viewId, const ViewportDesc& desc, uint64_t window);
 
         void setActive();
         void clear();
@@ -30,10 +28,10 @@ namespace chai
 
         const ViewportDesc& getDesc() const { return m_desc; }
         const std::string& getName() const { return m_desc.name; }
-        Window* getParentWindow() { return m_parentWindow; }
+        uint64_t getParentWindow() const { return m_parentWindow; }
 
     private:
         ViewportDesc m_desc;
-        Window* m_parentWindow;
+        uint64_t m_parentWindow;
     };
 }

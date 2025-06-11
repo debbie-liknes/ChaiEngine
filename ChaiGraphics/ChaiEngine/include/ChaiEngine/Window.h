@@ -29,7 +29,7 @@
 //    //    void RemoveViewport(SharedViewport viewport);
 //
 //    //    //i dont love returning a vector
-//    //    chai::CVector<SharedViewport> GetViewports();
+//    //    std::vector<SharedViewport> GetViewports();
 //
 //    //    // Input handling
 //    //    virtual void PollEvents() = 0;
@@ -44,7 +44,7 @@
 //
 //    //    //a flat list of viewports
 //    //    //TODO: should this be a map?
-//    //    chai::CVector<SharedViewport> m_viewports;
+//    //    std::vector<SharedViewport> m_viewports;
 //    //    SharedViewport m_mainViewport;
 //
 //    //    //dimensions

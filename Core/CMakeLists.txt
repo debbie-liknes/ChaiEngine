@@ -1,9 +1,6 @@
 # Add source to this project's executable.
 
 set(Core_headers
-	include/Core/Containers.h
-	include/Core/MemoryTypes.h
-	include/Core/Rect.h
 	include/Core/TypeHelpers.h
 	include/Core/TextureBackend.h
 	include/Meta/TypeInfo.h
@@ -13,13 +10,11 @@ set(Core_headers
 )
 
 set(Core_source
-	source/Core/Containers.cpp
 	source/Meta/TypeRegistry.cpp
 )
 
 set(Plugin_headers
 	include/Plugin/PluginBase.h
-	include/Plugin/PluginManifest.h
 	include/Plugin/PluginRegistry.h
 	include/Plugin/ServiceLocator.h
 	include/Plugin/ServiceRegistry.h

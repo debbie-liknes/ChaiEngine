@@ -20,6 +20,8 @@ namespace chai
         void destroyWindow(void* nativeWindow) override;
         void destroyAllWindows() override;
 
+		void* getProcAddress() override;
+
     private:
 		GLFWwindow* convertToGLFWWindow(void* nativeWindow);
 	};

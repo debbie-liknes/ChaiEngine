@@ -2,90 +2,48 @@
 #include <ChaiEngine/IMaterial.h>
 #include <glad/gl.h>
 #include <vector>
+#include <unordered_map>
 
 namespace chai::brew
 {
     class OpenGLMaterial : public IMaterial 
     {
     public:
-        OpenGLMaterial(GLuint shader = 0) : shaderProgram(shader) {}
+        OpenGLMaterial(const std::string& vertexShader, const std::string& fragmentShader);
+        ~OpenGLMaterial() override;
 
-        void Bind() const override {
-            if (shaderProgram) {
-                glUseProgram(shaderProgram);
-            }
+        // Material interface
+        void bind() const override;
+        void unbind() const override;
 
-            // Bind textures
-            for (size_t i = 0; i < textures.size(); ++i) {
-                glActiveTexture(GL_TEXTURE0 + i);
-                glBindTexture(GL_TEXTURE_2D, textures[i]);
-            }
-        }
+        void setUniform(const std::string& name, const UniformBufferBase& value) override;
+        bool hasUniform(const std::string& name) const override;
 
-        void Unbind() const override {
-            glUseProgram(0);
-            for (size_t i = 0; i < textures.size(); ++i) {
-                glActiveTexture(GL_TEXTURE0 + i);
-                glBindTexture(GL_TEXTURE_2D, 0);
-            }
-        }
+        void setTexture(const std::string& samplerName, uint32_t textureId, int slot = 0) override;
+        void removeTexture(const std::string& samplerName) override;
 
-        void SetMatrix4(const std::string& name, const float* matrix) override {
-            GLint loc = GetUniformLocation(name);
-            if (loc != -1) {
-                glUniformMatrix4fv(loc, 1, GL_FALSE, matrix);
-            }
-        }
+        uint32_t getShaderId() const override { return shaderProgram; }
+        bool isValid() const override { return shaderProgram != 0; }
 
-        void SetVector3(const std::string& name, float x, float y, float z) override {
-            GLint loc = GetUniformLocation(name);
-            if (loc != -1) {
-                glUniform3f(loc, x, y, z);
-            }
-        }
+        bool isTransparent() const override { return transparent; }
+        int getRenderQueue() const override { return renderQueue; }
 
-        void SetVector4(const std::string& name, float x, float y, float z, float w) override {
-            GLint loc = GetUniformLocation(name);
-            if (loc != -1) {
-                glUniform4f(loc, x, y, z, w);
-            }
-        }
-
-        void SetFloat(const std::string& name, float value) override {
-            GLint loc = GetUniformLocation(name);
-            if (loc != -1) {
-                glUniform1f(loc, value);
-            }
-        }
-
-        void SetInt(const std::string& name, int value) override {
-            GLint loc = GetUniformLocation(name);
-            if (loc != -1) {
-                glUniform1i(loc, value);
-            }
-        }
-
-        void SetTexture(const std::string& name, unsigned int textureSlot) override {
-            SetInt(name, textureSlot);
-
-            // Ensure we have enough texture slots
-            if (textureSlot >= textures.size()) {
-                textures.resize(textureSlot + 1, 0);
-            }
-        }
-
-        void AddTexture(GLuint textureID) {
-            textures.push_back(textureID);
-        }
+        // OpenGL specific
+        void setTransparent(bool value) { transparent = value; }
+        void setRenderQueue(int queue) { renderQueue = queue; }
 
     private:
-        GLint GetUniformLocation(const std::string& name) const {
-            if (!shaderProgram) return -1;
-            return glGetUniformLocation(shaderProgram, name.c_str());
-        }
+        GLuint compileShader(const std::string& source, GLenum type);
+        GLuint linkProgram(GLuint vertexShader, GLuint fragmentShader);
+        void cacheUniformLocations();
+        void applyUniform(const std::string& name, const UniformBufferBase& value) const;
+        std::string loadShaderFromFile(const std::string& filepath);
 
-        GLuint shaderProgram = 0;
-        std::vector<GLuint> textures;
-        bool batchMode = false;
+        GLuint shaderProgram;
+        std::unordered_map<std::string, GLint> uniformLocations;
+        std::unordered_map<std::string, const UniformBufferBase&> uniformValues;
+        std::vector<TextureSlot> textures;
+        bool transparent;
+        int renderQueue;
     };
 } // namespace chai::brew

@@ -6,6 +6,7 @@ set(Windowing_headers
 	include/Window/WindowManager.h
 	include/Window/WindowSystem.h
 	include/Window/Viewport.h
+	include/Window/ViewportManager.h
 )
 
 set(Windowing_source
@@ -13,6 +14,7 @@ set(Windowing_source
 	source/Window/WindowSystem.cpp
 	source/Window/Window.cpp
 	source/Window/Viewport.cpp
+	source/Window/ViewportManager.cpp
 )
 
 add_library (WindowModule SHARED ${Windowing_headers} ${Windowing_source})

@@ -2,7 +2,6 @@
 #include <Meta/TypeInfo.h>
 #include <Meta/TypeRegistry.h>
 #include <Meta/MethodInvoker.h>
-#include <Plugin/PluginManifest.h>
 #include <Plugin/PluginBase.h>
 #include <Plugin/ServiceRegistry.h>
 #include <Plugin/PluginRegistry.h>
@@ -23,33 +22,31 @@ inline std::vector<std::string>& __ChaiRegisteredTypes() {
         return std::make_shared<ConcreteType>(); \
     })
 
-#define CHAI_CLASS(type) \
-    namespace ChaiInternal_##type { \
-        static chai::kettle::TypeInfo BuildTypeInfo() { \
-            chai::kettle::TypeInfo info; \
-            using propType = type; \
-            info.name = #type; \
-            info.factory = []() -> void* { return new type(); };
-
-#define CHAI_PROPERTY(prop) \
-    info.properties[#prop] = chai::kettle::PropertyInfo{ \
-        #prop, \
-        [](void* obj) -> std::any { return std::any(static_cast<propType*>(obj)->prop); }, \
-        [](void* obj, std::any value) { static_cast<propType*>(obj)->prop = std::any_cast<decltype(propType().prop)>(value); } \
-    };
-
-#define CHAI_METHOD(methodPtr) \
-    info.methods[#methodPtr] = chai::kettle::MethodInvoker<decltype(&propType::methodPtr)>::Make(#methodPtr, &propType::methodPtr);
-
-#define END_CHAI() \
-    __ChaiRegisteredTypes().push_back(info.name); \
-    chai::kettle::TypeRegistry::Instance().RegisterType(info); \
-    return info; \
+#define CHAI_CLASS(ClassName) \
+    namespace { \
+        struct ClassName##_TypeRegistration { \
+            ClassName##_TypeRegistration() { \
+                auto& typeReg = chai::TypeRegistry::instance(); \
+                typeReg.registerType<ClassName>(#ClassName); \
+                auto typeInfo = typeReg.getType<ClassName>(); \
+                registerTypeInfo_##ClassName(typeInfo); \
+            } \
+        }; \
+        static ClassName##_TypeRegistration ClassName##_reg; \
     } \
-    static struct AutoRegister { \
-        AutoRegister() { BuildTypeInfo(); } \
-    } _autoRegister; \
-    }
+    void registerTypeInfo_##ClassName(std::shared_ptr<chai::TypeInfo> typeInfo)
+
+#define CHAI_IMPLEMENTS(ClassName, InterfaceName) \
+    typeInfo->addInterface<InterfaceName>()
+
+#define CHAI_ATTRIBUTE(Key, Value) \
+    typeInfo->setAttribute(Key, Value)
+
+#define CHAI_METHOD(ClassName, MethodName) \
+    typeInfo->addMethod(#MethodName, &ClassName::MethodName)
+
+#define CHAI_PROPERTY(ClassName, PropName) \
+    typeInfo->addProperty(#PropName, &ClassName::PropName)
 
 #define CHAI_PLUGIN_CLASS(ClassName) \
     class ClassName : public chai::IPlugin { \

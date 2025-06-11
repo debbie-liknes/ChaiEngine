@@ -1,17 +1,33 @@
 #pragma once
 #include <ChaiGraphicsExport.h>
-#include <ChaiEngine/Viewport.h>
 #include <ChaiEngine/IMesh.h>
 #include <ChaiEngine/IMaterial.h>
 
 namespace chai::brew
 {
-    class CHAIGRAPHICS_EXPORT RenderCommandList {
-    public:
-        virtual ~RenderCommandList() = default;
-        virtual void setViewport(const Viewport& viewport) = 0;
-        //virtual void Clear(const Color& color) = 0;
-        virtual void drawMesh(const IMesh& mesh, const IMaterial& material) = 0;
-        //virtual void SetRenderTarget(RenderTarget* target) = 0;
+    struct CHAIGRAPHICS_EXPORT RenderCommand {
+        enum Type {
+            DRAW_MESH,
+            SET_VIEWPORT,
+            CLEAR,
+            SET_SCISSOR
+        };
+
+        Type type;
+
+        // Mesh rendering data
+        std::shared_ptr<IMesh> mesh;
+        std::shared_ptr<IMaterial> material;
+        glm::mat4 modelMatrix;
+
+        // Other command data
+        struct ViewportData {
+            int x, y, width, height;
+        } viewport;
+
+        struct ClearData {
+            float color[4];
+            bool clearColor, clearDepth, clearStencil;
+        } clear;
     };
 }

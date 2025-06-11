@@ -53,7 +53,7 @@ namespace chai::cup
 		float m_left, m_right, m_top, m_bottom;	//ortho attributes
 		float m_yaw, m_pitch, m_roll;
 
-		SharedViewport m_viewport;
+		//SharedViewport m_viewport;
 		std::shared_ptr<brew::ICoordinateSpace> m_space;
 
 		void UpdateVectors();
