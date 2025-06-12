@@ -17,9 +17,9 @@ public:
 
     void Set3dListenerAndOrientation(const glm::vec3& vPosition,
         const glm::vec3& vLook, const glm::vec3& vUp);
-    //void StopChannel(int nChannelId);
-    //void StopAllChannels();
-    //void SetChannel3dPosition(int nChannelId, const glm::vec3& vPosition);
-    //void SetChannelVolume(int nChannelId, float fVolumedB);
-    //bool IsPlaying(int nChannelId) const;
+    void StopChannel(int nChannelId);
+    void StopAllChannels();
+    void SetChannel3dPosition(int nChannelId, const glm::vec3& vPosition);
+    void SetChannelVolume(int nChannelId, float fVolumedB);
+    bool IsPlaying(int nChannelId) const;
 };

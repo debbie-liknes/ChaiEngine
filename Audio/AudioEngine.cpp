@@ -160,3 +160,59 @@ void AudioEngine::Set3dListenerAndOrientation(const glm::vec3& vPosition,
         &look,
         &up);
 }
+
+// Checks that idx is 0 <= n < size and returns 'val' if failed.
+// Asserts if a failure occurs in Debug mode.
+#define CHECK_BOUNDS(idx, iterable, val) \
+    do \
+    { \
+        if (nChannelId < 0 || \
+            nChannelId >= sgpImplementation->mChannels.size()) \
+        { \
+            assert(0); \
+            return val; \
+        } \
+    } while (0)
+
+void AudioEngine::StopChannel(int nChannelId)
+{
+    CHECK_BOUNDS(nChannelId, sgpImplementation->mChannels,);
+    sgpImplementation->mChannels[nChannelId]->stop();
+}
+
+void AudioEngine::StopAllChannels()
+{
+    for (auto&& channel : sgpImplementation->mChannels)
+    {
+        channel.second->stop();
+    }
+}
+
+void AudioEngine::SetChannel3dPosition(int nChannelId,
+    const glm::vec3& vPosition)
+{
+    CHECK_BOUNDS(nChannelId, sgpImplementation->mChannels,);
+
+    const FMOD_VECTOR pos = vec3ToFmod(vPosition);
+    const FMOD_VECTOR vel = FMOD_VECTOR(0, 0, 0);
+    sgpImplementation->mChannels[nChannelId]->set3DAttributes(
+        &pos,
+        &vel
+    );
+}
+
+void AudioEngine::SetChannelVolume(int nChannelId, float fVolumedB)
+{
+    CHECK_BOUNDS(nChannelId, sgpImplementation->mChannels,);
+    sgpImplementation->mChannels[nChannelId]->setVolume(dBToVolume(fVolumedB));
+}
+
+bool AudioEngine::IsPlaying(int nChannelId) const
+{
+    CHECK_BOUNDS(nChannelId, sgpImplementation->mChannels, false);
+
+    bool isPlaying = false;
+
+    sgpImplementation->mChannels[nChannelId]->isPlaying(&isPlaying);
+    return isPlaying;
+}
