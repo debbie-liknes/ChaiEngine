@@ -5,6 +5,7 @@
 #include <Plugin/PluginLoader.h>
 #include <Resource/ResourceLoader.h>
 #include <Scene/Scene.h>
+#include <AudioEngine.h>
 
 namespace chai::brew
 {
@@ -31,6 +32,8 @@ namespace chai::brew
 		std::shared_ptr<Renderer> m_renderer;
 		//test scene
 		std::shared_ptr<cup::Scene> m_scene;
+
+		std::shared_ptr<AudioEngine> m_audioEngine;
 
 		void shutdown();
 	};

@@ -8,6 +8,9 @@ endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+list(APPEND CMAKE_MODULE_PATH
+  "${CMAKE_SOURCE_DIR}/cmake/share"
+)
 include(${CMAKE_SOURCE_DIR}/cmake/chai_common.cmake)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -33,6 +36,7 @@ add_subdirectory(external)
 include_directories(external/include)
 
 # Include sub-projects.
+add_subdirectory(Audio)
 add_subdirectory(Core)
 add_subdirectory(ChaiApps)
 add_subdirectory(ChaiGraphics)
