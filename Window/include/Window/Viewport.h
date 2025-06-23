@@ -2,6 +2,7 @@
 #include <WindowModuleExport.h>
 #include <string>
 #include <memory>
+#include <Graphics/IViewport.h>
 
 namespace chai
 {
@@ -16,15 +17,25 @@ namespace chai
     };
 
     // Viewport class
-    class WINDOWMODULE_EXPORT Viewport
+    class WINDOWMODULE_EXPORT Viewport : public IViewport
     {
     public:
         Viewport(uint64_t viewId, const ViewportDesc& desc, uint64_t window);
+
+		void setCamera(ICamera* camera) override { m_camera = camera; }
+		ICamera* getCamera() const override { return m_camera; }
 
         void setActive();
         void clear();
         void setRect(int x, int y, int width, int height);
         void setClearColor(float r, float g, float b, float a = 1.0f);
+        void getViewport(int& x, int& y, int& width, int& height) const override
+        {
+            x = m_desc.x;
+            y = m_desc.y;
+            width = m_desc.width;
+			height = m_desc.height;
+        }
 
         const ViewportDesc& getDesc() const { return m_desc; }
         const std::string& getName() const { return m_desc.name; }
@@ -33,5 +44,8 @@ namespace chai
     private:
         ViewportDesc m_desc;
         uint64_t m_parentWindow;
+
+        //Viewports dont own cameras, they reference them
+		ICamera* m_camera = nullptr;
     };
 }

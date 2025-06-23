@@ -2,21 +2,25 @@
 
 set(ChaiScene_headers
 	include/Scene/ComponentBase.h
+	include/Scene/RenderableComponent.h
 	include/Scene/Camera.h
+	include/Scene/CameraComponent.h
 	include/Scene/GameObject.h
 	include/Scene/Light.h
-	include/Scene/LogicalViewport.h
 	include/Scene/Scene.h
 	include/Scene/SceneManager.h
-	include/Scene/RenderFrameBuilder.h
 	include/Scene/MeshComponent.h
+	include/Scene/TransformComponent.h
 )
 
 set(ChaiScene_source
 	source/Scene/Camera.cpp
+	source/Scene/CameraComponent.cpp
+	source/Scene/GameObject.cpp
+	source/Scene/MeshComponent.cpp
+	source/Scene/TransformComponent.cpp
 	source/Scene/Scene.cpp
 	source/Scene/SceneManager.cpp
-	source/Scene/RenderFrameBuilder.cpp
 )
 
 add_library (Scene SHARED ${ChaiScene_headers} ${ChaiScene_source})

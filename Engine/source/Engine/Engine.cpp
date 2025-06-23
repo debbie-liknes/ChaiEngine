@@ -1,6 +1,5 @@
 #include <Engine/Engine.h>
 #include <ChaiEngine/Renderer.h>
-//#include <ChaiEngine/Viewport.h>
 #include <stdexcept>
 #include <glm/glm.hpp>
 #include <ChaiEngine/ViewData.h>
@@ -8,7 +7,6 @@
 #include <Resource/ResourceManager.h>
 #include <Plugin/ServiceLocator.h>
 #include <Meta/TypeRegistry.h>
-#include <Scene/RenderFrameBuilder.h>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN

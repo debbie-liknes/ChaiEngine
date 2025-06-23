@@ -2,6 +2,8 @@
 #include <ChaiGraphicsExport.h>
 #include <ChaiEngine/IMesh.h>
 #include <ChaiEngine/IMaterial.h>
+#include <Graphics/IViewport.h>
+#include <glm/glm.hpp>
 
 namespace chai::brew
 {
@@ -16,18 +18,12 @@ namespace chai::brew
         Type type;
 
         // Mesh rendering data
-        std::shared_ptr<IMesh> mesh;
+        IMesh* mesh;
         std::shared_ptr<IMaterial> material;
-        glm::mat4 modelMatrix;
+        glm::mat4 transform;
+        IViewport* viewport;
+		glm::mat4 viewMatrix;
+		glm::mat4 projectionMatrix;
 
-        // Other command data
-        struct ViewportData {
-            int x, y, width, height;
-        } viewport;
-
-        struct ClearData {
-            float color[4];
-            bool clearColor, clearDepth, clearStencil;
-        } clear;
     };
 }

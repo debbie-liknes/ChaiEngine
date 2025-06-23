@@ -76,18 +76,17 @@ namespace chai::kettle
     {
 		std::string pluginName = std::filesystem::path(pluginPath).filename().stem().string();
         auto it = plugins_.find(pluginName);
-        if (it != plugins_.end()) {
-            auto plugin = std::shared_ptr<IPlugin>(it->second().release());
-            plugin->initialize();
-            loadedPlugins_[pluginName] = plugin;
-            return plugin;
+        if (it != plugins_.end()) 
+        {
+            return loadedPlugins_[pluginName];
         }
 
         //load it and try again
         if (loadLibrary(pluginPath))
         {
             it = plugins_.find(pluginName);
-            if (it != plugins_.end()) {
+            if (it != plugins_.end()) 
+            {
                 auto plugin = std::shared_ptr<IPlugin>(it->second().release());
                 plugin->initialize();
                 printLoadedPlugin(plugin);

@@ -85,5 +85,10 @@ namespace chai
 		return glfwGetProcAddress;
 	}
 
+	void GLFWSystem::swapBuffers(void* nativeWindow)
+	{
+		glfwSwapBuffers(convertToGLFWWindow(nativeWindow));
+	}
+
 	void GLFWSystem::destroyAllWindows() {}
 }

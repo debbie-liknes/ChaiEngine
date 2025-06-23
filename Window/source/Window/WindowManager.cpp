@@ -39,6 +39,10 @@ namespace chai
 	void WindowManager::update()
 	{
 		m_windowSystem->pollEvents();
+		for(auto& window : m_windows)
+		{
+			m_windowSystem->swapBuffers(window->nativeWindow);
+		}
 	}
 
 	Window* WindowManager::findWindowById(WindowId id)

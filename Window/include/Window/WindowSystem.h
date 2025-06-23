@@ -22,6 +22,7 @@ namespace chai
 		virtual void pollEvents() = 0;
 
 		virtual void* getProcAddress() = 0;
+        virtual void swapBuffers(void* nativeWindow) {}
 
         // Window management
         virtual std::unique_ptr<Window> createWindow(const WindowDesc& desc, WindowManager* manager) = 0;

@@ -63,31 +63,31 @@ namespace chai::brew
 		return m_shaderHandle;
 	}
 
-	GLShaderLoader::GLShaderLoader()
-	{
+	//GLShaderLoader::GLShaderLoader()
+	//{
 
-	}
+	//}
 
-	GLShaderLoader::GLShaderLoader(Renderer* renderer) : m_renderer(renderer) {}
+	//GLShaderLoader::GLShaderLoader(Renderer* renderer) : m_renderer(renderer) {}
 
-	bool GLShaderLoader::CanLoad(const std::string& ext) const
-	{
-		return ext == "vert" ||
-			   ext == "frag";
-	}
+	//bool GLShaderLoader::CanLoad(const std::string& ext) const
+	//{
+	//	return ext == "vert" ||
+	//		   ext == "frag";
+	//}
 
-	std::shared_ptr<IResource> GLShaderLoader::Load(const std::string& path)
-	{
-		if (!m_renderer) return nullptr;
+	//std::shared_ptr<IResource> GLShaderLoader::Load(const std::string& path)
+	//{
+	//	if (!m_renderer) return nullptr;
 
-		auto shaderResource = std::make_shared<ShaderResource>();
-		std::string fullpath = std::string(CMAKE_SOURCE_DIR) + "/" + path;
-		std::ifstream shaderFile(fullpath);
-		std::stringstream buffer;
-		buffer << shaderFile.rdbuf();
-		auto shader = std::make_shared<GLShader>();
-		shader->shaderSource = buffer.str();
-		shaderResource->shader = shader;
-		return shaderResource;
-	}
+	//	auto shaderResource = std::make_shared<ShaderResource>();
+	//	std::string fullpath = std::string(CMAKE_SOURCE_DIR) + "/" + path;
+	//	std::ifstream shaderFile(fullpath);
+	//	std::stringstream buffer;
+	//	buffer << shaderFile.rdbuf();
+	//	auto shader = std::make_shared<GLShader>();
+	//	shader->shaderSource = buffer.str();
+	//	shaderResource->shader = shader;
+	//	return shaderResource;
+	//}
 }

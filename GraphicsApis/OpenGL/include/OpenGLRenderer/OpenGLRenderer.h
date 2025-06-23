@@ -2,59 +2,55 @@
 #include <OpenGLRendererExport.h>
 #include <glad/gl.h>
 #include <Meta/ChaiMacros.h>
+#include <ChaiEngine/Renderer.h>
+#include <memory>
+#include <unordered_map>
+#include <OpenGLRenderer/OpenGLMesh.h>
+#include <OpenGLRenderer/OpenGLMaterial.h>
 #include <ChaiEngine/IMesh.h>
 #include <ChaiEngine/IMaterial.h>
-#include <ChaiEngine/Renderer.h>
-#include <OpenGLRenderer/GLShader.h>
-#include <OpenGLRenderer/GLShaderProgram.h>
-#include <ChaiEngine/Window.h>
 
 namespace chai::brew
 {
-	class Renderable;
-	enum ShaderStage;
-	class GlPipelineState;
-
 	class OPENGLRENDERER_EXPORT OpenGLBackend : public Renderer
 	{
     public:
         OpenGLBackend();
         ~OpenGLBackend();
 
+        OpenGLBackend(const OpenGLBackend&) = delete;
+        OpenGLBackend& operator=(const OpenGLBackend&) = delete;
+
+        OpenGLBackend(OpenGLBackend&&) = default;
+        OpenGLBackend& operator=(OpenGLBackend&&) = default;
+
         // RendererPlugin interface
         bool initialize(void* winProcAddress = nullptr) override;
         void shutdown() override;
         void executeCommands(const std::vector<RenderCommand>& commands) override;
 
-        // Resource factories
-        std::shared_ptr<IMesh> createMesh(
-            const std::vector<Vertex>& vertices,
-            const std::vector<uint32_t>& indices = {}
-        ) override;
-
-        std::shared_ptr<IMaterial> createMaterial(
-            const std::string& vertexShader,
-            const std::string& fragmentShader
-        ) override;
-
-        // Texture management
-        uint32_t createTexture(const void* data, int width, int height, int channels) override;
-        //void destroyTexture(uint32_t textureId) override;
-
     private:
-        //void executeDrawMesh(const RenderCommand& cmd);
-        //void executeSetViewport(const RenderCommand& cmd);
-        //void executeClear(const RenderCommand& cmd);
+        OpenGLMeshData* getOrCreateMeshData(IMesh* mesh);
+        OpenGLMaterialData* getOrCreateMaterialData(IMaterial* material);
+		void drawMesh(const RenderCommand& cmd);
+        void uploadMeshToGPU(IMesh* mesh, OpenGLMeshData* glMeshData);
+        void setupVertexAttributes();
+        void compileMaterial(IMaterial* material, OpenGLMaterialData* glMaterialData);
+        void bindShaderProgram(GLuint program);
+        void bindVertexArray(GLuint vao);
+        GLuint createDefaultShaderProgram();
+        GLuint compileShader(const char* source, GLenum type);
+        void clear(float r, float g, float b, float a);
 
-        //// State management
-        //void bindMaterial(const IMaterial* material);
-        //void bindMesh(const IMesh* mesh);
+        std::unordered_map<IMesh*, std::unique_ptr<OpenGLMeshData>> m_meshCache;
+        std::unordered_map<IMaterial*, std::unique_ptr<OpenGLMaterialData>> m_materialCache;
 
-    private:
-        // State tracking for batching
-        const IMaterial* currentMaterial;
-        GLuint currentVAO;
+        // Current render state
+        GLuint currentShaderProgram = 0;
+        GLuint currentVAO = 0;
 
+        // Default shader for basic rendering
+        GLuint defaultShaderProgram = 0;
 	};
 }
 

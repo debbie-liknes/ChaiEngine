@@ -19,6 +19,7 @@ namespace chai
         std::unique_ptr<Window> createWindow(const WindowDesc& desc, WindowManager* manager) override;
         void destroyWindow(void* nativeWindow) override;
         void destroyAllWindows() override;
+		void swapBuffers(void* nativeWindow) override;
 
 		void* getProcAddress() override;
 

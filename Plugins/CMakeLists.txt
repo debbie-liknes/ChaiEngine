@@ -1,3 +1,3 @@
 add_subdirectory(TextureLoader)
 add_subdirectory(GLFWWindow)
-add_subdirectory(Parsers)
+add_subdirectory(ModelLoader)

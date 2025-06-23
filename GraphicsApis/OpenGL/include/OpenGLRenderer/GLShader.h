@@ -29,17 +29,17 @@ namespace chai::brew
 	};
 
 	//probably overkill for very simple shaders that are just string data
-	class OPENGLRENDERER_EXPORT GLShaderLoader : public IResourceLoader {
-	public:
-		GLShaderLoader();
-		GLShaderLoader(Renderer* renderer);
+	//class OPENGLRENDERER_EXPORT GLShaderLoader : public IResourceLoader {
+	//public:
+	//	GLShaderLoader();
+	//	GLShaderLoader(Renderer* renderer);
 
-		bool CanLoad(const std::string& ext) const override;
-		std::shared_ptr<IResource> Load(const std::string& path) override;
+	//	bool CanLoad(const std::string& ext) const override;
+	//	std::shared_ptr<IResource> Load(const std::string& path) override;
 
-	private:
-		Renderer* m_renderer;
-	};
+	//private:
+	//	Renderer* m_renderer;
+	//};
 
 	//CHAI_CLASS(chai::brew::GLShaderLoader)
 	//END_CHAI()

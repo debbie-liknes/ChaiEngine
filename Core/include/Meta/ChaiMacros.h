@@ -5,17 +5,17 @@
 #include <Plugin/PluginBase.h>
 #include <Plugin/ServiceRegistry.h>
 #include <Plugin/PluginRegistry.h>
+#include <Resource/ResourceManager.h>
 
-inline std::vector<std::string>& __ChaiRegisteredTypes() {
-    static std::vector<std::string> types;
-    return types;
-}
 
 //type reflection macros
 #define CHAI_SERVICE(ServiceType, ServiceName) \
     services_.registerService<ServiceType>(ServiceName, []() { \
         return std::make_shared<ServiceType>(); \
     }, name_)
+
+#define CHAI_LOADER(LoaderType, LoaderName) \
+    chai::ResourceManager::instance().registerLoader(std::make_shared<LoaderType>()); \
 
 #define CHAI_SERVICE_AS(InterfaceType, ConcreteType, ServiceName) \
     services_.registerServiceAs<InterfaceType, ConcreteType>(ServiceName, []() { \

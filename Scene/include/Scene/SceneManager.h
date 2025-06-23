@@ -7,11 +7,13 @@ namespace chai::cup
 	{
 	public:
 		SceneManager();
-		void loadScene(const std::string& name);
-		Scene* getCurrentScene() { return activeScene; }
+
+		void addScene(const std::string& name, std::unique_ptr<Scene> scene);
+		Scene* setActiveScene(const std::string& name);
+		Scene* getPrimaryScene() { return m_activeScene; }
 
 	private:
-		std::unordered_map<std::string, std::unique_ptr<Scene>> scenes;
-		Scene* activeScene = nullptr;
+		std::unordered_map<std::string, std::unique_ptr<Scene>> m_scenes;
+		Scene* m_activeScene = nullptr;
 	};
 }

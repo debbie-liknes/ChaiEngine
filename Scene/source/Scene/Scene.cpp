@@ -7,4 +7,13 @@ namespace chai::cup
 	{
 		m_objects.push_back(std::move(object));
 	}
+
+	void Scene::collectRenderables(brew::RenderCommandCollector& collector) const
+	{
+		//do this in a scene graph traversal?
+		for(auto& object : m_objects)
+		{
+			object->collectRenderables(collector);
+		}
+	}
 }

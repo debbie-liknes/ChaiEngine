@@ -38,17 +38,17 @@ namespace chai::brew
 		std::string shaderSource;
 	};
 
-	class CHAIGRAPHICS_EXPORT ShaderResource : public IResource
-	{
-	public:
-		virtual ~ShaderResource() = default;
-		const std::string GetName() const
-		{
-			return "";
-		}
+	//class CHAIGRAPHICS_EXPORT ShaderResource : public IResource
+	//{
+	//public:
+	//	virtual ~ShaderResource() = default;
+	//	const std::string GetName() const
+	//	{
+	//		return "";
+	//	}
 
-		ShaderStage shaderStage{ ShaderStage::NONE };
-		std::string filePath;
-		std::shared_ptr<Shader> shader;
-	};
+	//	ShaderStage shaderStage{ ShaderStage::NONE };
+	//	std::string filePath;
+	//	std::shared_ptr<Shader> shader;
+	//};
 }

@@ -11,8 +11,8 @@ namespace chai
     public:
         PngLoader();
 
-        bool CanLoad(const std::string& ext) const override;
-        std::shared_ptr<IResource> Load(const std::string& path) override;
+        bool canLoad(const std::string& ext) const override;
+        std::shared_ptr<IResource> load(const std::string& path) override;
     };
 }
 

@@ -9,12 +9,12 @@ namespace chai
 
     }
 
-    bool PngLoader::CanLoad(const std::string& ext) const
+    bool PngLoader::canLoad(const std::string& ext) const
     {
         return ext == ".png";
     }
 
-    std::shared_ptr<IResource> PngLoader::Load(const std::string& path)
+    std::shared_ptr<IResource> PngLoader::load(const std::string& path)
     {
         //if (!m_renderer) return nullptr;
 

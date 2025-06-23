@@ -6,8 +6,14 @@ namespace chai::cup
 	{
 	}
 
-	void SceneManager::loadScene(const std::string& name)
+	Scene* SceneManager::setActiveScene(const std::string& name)
 	{
+		m_activeScene = m_scenes[name].get();
+		return m_activeScene;
+	}
 
+	void SceneManager::addScene(const std::string& name, std::unique_ptr<Scene> scene)
+	{
+		m_scenes.insert({ name, std::move(scene) });
 	}
 }

@@ -6,11 +6,14 @@
 
 namespace chai::brew
 {
-    class AssetManager {
-        std::unordered_map<std::string, std::shared_ptr<MeshAsset>> meshes;
-        //std::unordered_map<std::string, std::shared_ptr<MaterialAsset>> materials;
+    class AssetManager 
+    {
     public:
+        static AssetManager& instance();
         std::shared_ptr<MeshAsset> loadMesh(const std::string& path);
         void preloadAssets(const std::vector<std::string>& assetList);
+    private:
+        std::unordered_map<std::string, std::shared_ptr<MeshAsset>> meshes;
+        //std::unordered_map<std::string, std::shared_ptr<MaterialAsset>> materials;
     };
 }

@@ -5,6 +5,7 @@
 
 namespace chai
 {
+	class ICamera;
 	class ViewportManager
 	{
 	public:
@@ -16,6 +17,17 @@ namespace chai
 
 		// Get viewport by id
 		Viewport* getViewport(uint32_t viewport_id);
+
+		std::vector<Viewport*> getAllViewports() const {
+			std::vector<Viewport*> result;
+			result.reserve(viewports.size());
+			for (const auto& vp : viewports) {
+				result.push_back(vp.get());
+			}
+			return result;
+		}
+
+		void assignCameraToViewport(uint32_t viewportId, ICamera* camera);
 
 		//// Destroy viewport and all its children
 		//void destroyViewport(uint32_t viewport_id) {

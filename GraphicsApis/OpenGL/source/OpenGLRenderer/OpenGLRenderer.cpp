@@ -1,25 +1,33 @@
 #include <OpenGLRenderer/OpenGLRenderer.h>
 #include <iostream>
-//#include <ChaiEngine/Viewport.h>
-#include <ChaiEngine/Window.h>
-#include <Renderables/Renderable.h>
 #include <glm/glm.hpp>
-
 #include <Core/TypeHelpers.h>
-#include <OpenGLRenderer/GLShader.h>
-#include <OpenGLRenderer/OpenGLTexture.h>
-#include <Resource/ResourceManager.h>
 #include <algorithm>
 #include <OpenGLRenderer/OpenGLMesh.h>
 #include <OpenGLRenderer/OpenGLMaterial.h>
+#include <ChaiEngine/RenderCommandList.h>
 
 namespace chai::brew
 {
+	const char* getGLErrorString(GLenum err) {
+		switch (err) {
+		case GL_NO_ERROR: return "No error";
+		case GL_INVALID_ENUM: return "Invalid enum";
+		case GL_INVALID_VALUE: return "Invalid value";
+		case GL_INVALID_OPERATION: return "Invalid operation";
+		case GL_STACK_OVERFLOW: return "Stack overflow";
+		case GL_STACK_UNDERFLOW: return "Stack underflow";
+		case GL_OUT_OF_MEMORY: return "Out of memory";
+		case GL_INVALID_FRAMEBUFFER_OPERATION: return "Invalid framebuffer operation";
+		default: return "Unknown error";
+		}
+	}
+
 	static void checkGLError(const std::string& context)
 	{
 		GLenum err;
 		while ((err = glGetError()) != GL_NO_ERROR) {
-			std::cerr << "OpenGL error in " << context << ": " << err << std::endl;
+			std::cerr << "OpenGL Error (" << context << "): " << getGLErrorString(err) << std::endl;
 		}
 	}
 
@@ -58,126 +66,292 @@ namespace chai::brew
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+		defaultShaderProgram = createDefaultShaderProgram();
+		if (defaultShaderProgram == 0) {
+			std::cerr << "Failed to create default shader program" << std::endl;
+			return false;
+		}
+
 		return true;
+	}
+
+	GLuint OpenGLBackend::createDefaultShaderProgram()
+	{
+		// Simple vertex shader
+		const char* vertexShaderSource = R"(
+#version 330 core
+layout (location = 0) in vec3 aPos;
+
+uniform mat4 u_transform;
+uniform mat4 u_view;
+uniform mat4 u_projection;
+
+void main()
+{
+    gl_Position = u_projection * u_view * u_transform * vec4(aPos, 1.0);
+}
+)";
+
+		const char* fragmentShaderSource = R"(
+#version 330 core
+out vec4 FragColor;
+
+void main()
+{
+    FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+}
+)";
+
+		GLuint vertexShader = compileShader(vertexShaderSource, GL_VERTEX_SHADER);
+		checkGLError("compile vertex shader");
+		GLuint fragmentShader = compileShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
+		checkGLError("compile frag shader");
+
+		if (vertexShader == 0 || fragmentShader == 0) {
+			return 0;
+		}
+
+		GLuint program = glCreateProgram();
+		checkGLError("create shader program");
+		glAttachShader(program, vertexShader);
+		checkGLError("attach shader");
+		glAttachShader(program, fragmentShader);
+		checkGLError("attach shader");
+		glLinkProgram(program);
+		checkGLError("link shader program");
+
+		// Check linking
+		GLint success;
+		glGetProgramiv(program, GL_LINK_STATUS, &success);
+		if (!success) {
+			char infoLog[512];
+			glGetProgramInfoLog(program, 512, NULL, infoLog);
+			std::cerr << "Shader program linking failed: " << infoLog << std::endl;
+			glDeleteProgram(program);
+			return 0;
+		}
+
+		glDeleteShader(vertexShader);
+		glDeleteShader(fragmentShader);
+
+		return program;
+	}
+
+	GLuint OpenGLBackend::compileShader(const char* source, GLenum type)
+	{
+		GLuint shader = glCreateShader(type);
+		glShaderSource(shader, 1, &source, NULL);
+		glCompileShader(shader);
+
+		// Check compilation
+		GLint success;
+		glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+		if (!success) {
+			char infoLog[512];
+			glGetShaderInfoLog(shader, 512, NULL, infoLog);
+			std::cerr << "Shader compilation failed: " << infoLog << std::endl;
+			glDeleteShader(shader);
+			return 0;
+		}
+
+		return shader;
 	}
 
 	void OpenGLBackend::shutdown()
 	{
-		// Cleanup OpenGL resources
-		currentMaterial = nullptr;
-		currentVAO = 0;
+		m_meshCache.clear();
+		m_materialCache.clear();
+
+		if (defaultShaderProgram) {
+			glDeleteProgram(defaultShaderProgram);
+			defaultShaderProgram = 0;
+		}
 	}
 
 	void OpenGLBackend::executeCommands(const std::vector<RenderCommand>& commands)
 	{
-		// Reset state tracking
-		currentMaterial = nullptr;
-		currentVAO = 0;
-
-		// Sort commands by type and material for batching
-		std::vector<const RenderCommand*> sortedCommands;
-		sortedCommands.reserve(commands.size());
-
 		for (const auto& cmd : commands) {
-			sortedCommands.push_back(&cmd);
-		}
-
-		// Sort: Clear/Setup commands first, then by material for batching
-		std::sort(sortedCommands.begin(), sortedCommands.end(),
-			[](const RenderCommand* a, const RenderCommand* b) {
-				// Non-draw commands first
-				if (a->type != RenderCommand::DRAW_MESH && b->type == RenderCommand::DRAW_MESH) {
-					return true;
-				}
-				if (a->type == RenderCommand::DRAW_MESH && b->type != RenderCommand::DRAW_MESH) {
-					return false;
-				}
-
-				// Both are draw commands - sort by material, then by render queue
-				if (a->type == RenderCommand::DRAW_MESH && b->type == RenderCommand::DRAW_MESH) {
-					if (a->material.get() != b->material.get()) {
-						return a->material.get() < b->material.get();
-					}
-					return a->material->getRenderQueue() < b->material->getRenderQueue();
-				}
-
-				return false;
-			});
-
-		// Execute sorted commands
-		//for (const RenderCommand* cmd : sortedCommands) {
-		//	switch (cmd->type) {
-		//	case RenderCommand::DRAW_MESH:
-		//		executeDrawMesh(*cmd);
-		//		break;
-		//	case RenderCommand::SET_VIEWPORT:
-		//		executeSetViewport(*cmd);
-		//		break;
-		//	case RenderCommand::CLEAR:
-		//		executeClear(*cmd);
-		//		break;
-		//	default:
-		//		std::cerr << "Unknown render command type\n";
-		//		break;
-		//	}
-		//}
-
-		// Check for OpenGL errors
-		GLenum error = glGetError();
-		if (error != GL_NO_ERROR) {
-			std::cerr << "OpenGL error after command execution: " << error << std::endl;
+			switch (cmd.type) {
+			case RenderCommand::DRAW_MESH:
+				drawMesh(cmd);
+				break;
+			case RenderCommand::SET_VIEWPORT:
+				int x, y, width, height;
+				cmd.viewport->getViewport(x, y, width, height);
+				glViewport(x, y, width, height);
+				checkGLError("glViewport");
+				break;
+			case RenderCommand::CLEAR:
+				//this should come from RenderCommand
+				clear(0.0f, 0.0f, 0.0f, 1.0f);
+				break;
+			case RenderCommand::SET_SCISSOR:
+				// SetScissor(cmd.scissor.x, cmd.scissor.y, cmd.scissor.width, cmd.scissor.height);
+				break;
+			}
 		}
 	}
 
-	// Resource factories
-	std::shared_ptr<IMesh> OpenGLBackend::createMesh(const std::vector<Vertex>& vertices,const std::vector<uint32_t>& indices)
+	void OpenGLBackend::clear(float r, float g, float b, float a) 
 	{
-		return std::make_shared<OpenGLMesh>(vertices, indices);
+		glClearColor(r, g, b, a);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
-	std::shared_ptr<IMaterial> OpenGLBackend::createMaterial(const std::string& vertexShader, const std::string& fragmentShader)
+	void OpenGLBackend::drawMesh(const RenderCommand& cmd)
 	{
-		return std::make_shared<OpenGLMaterial>(vertexShader, fragmentShader);
-	}
+		if (!cmd.mesh) return;
 
-	// Texture management
-	uint32_t OpenGLBackend::createTexture(const void* data, int width, int height, int channels)
-	{
-		GLuint textureId;
-		glGenTextures(1, &textureId);
-		glBindTexture(GL_TEXTURE_2D, textureId);
+		// Get or create OpenGL mesh data
+		OpenGLMeshData* glMeshData = getOrCreateMeshData(cmd.mesh);
 
-		// Determine format
-		GLenum format, internalFormat;
-		switch (channels) {
-		case 1:
-			format = internalFormat = GL_RED;
-			break;
-		case 3:
-			format = GL_RGB;
-			internalFormat = GL_RGB8;
-			break;
-		case 4:
-			format = GL_RGBA;
-			internalFormat = GL_RGBA8;
-			break;
-		default:
-			std::cerr << "Unsupported texture format with " << channels << " channels\n";
-			glDeleteTextures(1, &textureId);
-			return 0;
+		// Upload mesh if not already uploaded
+		if (!glMeshData->isUploaded) 
+		{
+			uploadMeshToGPU(cmd.mesh, glMeshData);
 		}
 
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		// Handle material
+		GLuint shaderToUse = defaultShaderProgram;
+		if (cmd.material) 
+		{
+			OpenGLMaterialData* glMaterialData = getOrCreateMaterialData(cmd.material.get());
+			if (!glMaterialData->isCompiled) {
+				compileMaterial(cmd.material.get(), glMaterialData);
+			}
+			if (glMaterialData->shaderProgram) {
+				shaderToUse = glMaterialData->shaderProgram;
+			}
+		}
 
-		// Set texture parameters
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		// Bind shader
+		bindShaderProgram(shaderToUse);
 
-		glGenerateMipmap(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, 0);
+		// Set transform matrix uniform
+		GLint transformLoc = glGetUniformLocation(shaderToUse, "u_transform");
+		if (transformLoc != -1) {
+			glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &cmd.transform[0][0]);
+		}
 
-		return textureId;
+		GLint viewLoc = glGetUniformLocation(shaderToUse, "u_view");
+		if (viewLoc != -1) {
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &cmd.viewMatrix[0][0]);
+		}
+
+		GLint projLoc = glGetUniformLocation(shaderToUse, "u_projection");
+		if (projLoc != -1) {
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, &cmd.projectionMatrix[0][0]);
+		}
+
+		// Bind and draw mesh
+		bindVertexArray(glMeshData->VAO);
+		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(glMeshData->indexCount), GL_UNSIGNED_INT, 0);
+		checkGLError("draw mesh");
+	}
+
+	OpenGLMeshData* OpenGLBackend::getOrCreateMeshData(IMesh* mesh) 
+	{
+		auto it = m_meshCache.find(mesh);
+		if (it == m_meshCache.end()) {
+			auto glMeshData = std::make_unique<OpenGLMeshData>();
+			auto* ptr = glMeshData.get();
+			m_meshCache[mesh] = std::move(glMeshData);
+			return ptr;
+		}
+		return it->second.get();
+	}
+
+	OpenGLMaterialData* OpenGLBackend::getOrCreateMaterialData(IMaterial* material) 
+	{
+		auto it = m_materialCache.find(material);
+		if (it == m_materialCache.end()) {
+			auto glMaterialData = std::make_unique<OpenGLMaterialData>();
+			auto* ptr = glMaterialData.get();
+			m_materialCache[material] = std::move(glMaterialData);
+			return ptr;
+		}
+		return it->second.get();
+	}
+
+	void OpenGLBackend::uploadMeshToGPU(IMesh* mesh, OpenGLMeshData* glMeshData) 
+	{
+		if (glMeshData->isUploaded) return;
+
+		const auto& vertices = mesh->getVertices();
+		const auto& indices = mesh->getIndices();
+
+		// Generate buffers
+		glGenVertexArrays(1, &glMeshData->VAO);
+		glGenBuffers(1, &glMeshData->VBO);
+		glGenBuffers(1, &glMeshData->EBO);
+
+		// Bind VAO
+		glBindVertexArray(glMeshData->VAO);
+
+		// Upload vertices
+		glBindBuffer(GL_ARRAY_BUFFER, glMeshData->VBO);
+		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
+
+		// Upload indices
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glMeshData->EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), indices.data(), GL_STATIC_DRAW);
+
+		// Set up vertex attributes
+		setupVertexAttributes();
+
+		glMeshData->indexCount = indices.size();
+		glMeshData->isUploaded = true;
+
+		// Unbind
+		glBindVertexArray(0);
+	}
+
+	void OpenGLBackend::setupVertexAttributes() 
+	{
+		// Assuming Vertex structure: position(3f), normal(3f), texCoord(2f)
+		// Position attribute
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+		glEnableVertexAttribArray(0);
+
+		// Normal attribute
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+		glEnableVertexAttribArray(1);
+
+		// Texture coordinate attribute
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoord));
+		glEnableVertexAttribArray(2);
+	}
+
+	void OpenGLBackend::compileMaterial(IMaterial* material, OpenGLMaterialData* glMaterialData) 
+	{
+		/*
+		std::string vertexSource = material->GetVertexShader();
+		std::string fragmentSource = material->GetFragmentShader();
+
+		glMaterialData->shaderProgram = CreateShaderProgram(vertexSource, fragmentSource);
+		glMaterialData->isCompiled = true;
+		*/
+
+		// Placeholder - use default shader for now
+		glMaterialData->shaderProgram = defaultShaderProgram;
+		glMaterialData->isCompiled = true;
+	}
+
+	void OpenGLBackend::bindShaderProgram(GLuint program) 
+	{
+		if (currentShaderProgram != program) 
+		{
+			glUseProgram(program);
+			currentShaderProgram = program;
+		}
+	}
+
+	void OpenGLBackend::bindVertexArray(GLuint vao) 
+	{
+		if (currentVAO != vao) 
+		{
+			glBindVertexArray(vao);
+			currentVAO = vao;
+		}
 	}
 }

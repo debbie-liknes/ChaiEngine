@@ -2,13 +2,13 @@
 
 namespace chai
 {
-	ResourceManager& ResourceManager::Instance()
+	ResourceManager& ResourceManager::instance()
 	{
 		static ResourceManager manager;
 		return manager;
 	}
 
-	void ResourceManager::RegisterLoader(std::shared_ptr<IResourceLoader> loader)
+	void ResourceManager::registerLoader(std::shared_ptr<IResourceLoader> loader)
 	{
 		m_loaders.push_back(loader);
 	}

@@ -3,6 +3,7 @@
 #include <Scene/Light.h>
 #include <Scene/Camera.h>
 #include <Scene/GameObject.h>
+#include <ChaiEngine/RenderCommandCollector.h>
 
 namespace chai::cup
 {
@@ -15,6 +16,7 @@ namespace chai::cup
         ~Scene() = default;
 
         void addGameObject(std::unique_ptr<GameObject> object);
+		void collectRenderables(brew::RenderCommandCollector& collector) const;
     private:
 
         std::vector<std::unique_ptr<GameObject>> m_objects;

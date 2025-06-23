@@ -12,8 +12,7 @@ set(ChaiGraphics_headers
 	include/ChaiEngine/VertexBuffer.h
 	include/ChaiEngine/UniformBuffer.h
 	include/ChaiEngine/RenderCommandList.h
-	include/ChaiEngine/RenderFrame.h
-	include/ChaiEngine/RenderView.h
+	include/ChaiEngine/RenderCommandCollector.h
 	include/ChaiEngine/CoordinateSpace.h
 	include/ChaiEngine/Euclidean.h
 	include/ChaiEngine/Spherical.h
@@ -23,7 +22,9 @@ set(ChaiGraphics_headers
 
 set(ChaiGraphics_source
 	source/ChaiEngine/AssetManager.cpp
+	source/ChaiEngine/MeshAsset.cpp
 	source/ChaiEngine/Renderer.cpp
+	source/ChaiEngine/RenderCommandCollector.cpp
 	source/ChaiEngine/VertexBuffer.cpp
 	source/ChaiEngine/UniformBuffer.cpp
 	source/ChaiEngine/Shader.cpp
