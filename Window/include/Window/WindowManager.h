@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <Core/EventHandler.h>
 
 namespace chai
 {
@@ -28,14 +29,6 @@ namespace chai
 		bool isDone() const;
 
         void update();
-        //Window* getWindow(const std::string& name);
-
-        // Global event handling
-        //void addGlobalEventHandler(std::unique_ptr<WindowEventHandler> handler);
-
-        // Properties
-        //WindowSystem* getWindowSystem() { return m_windowSystem.get(); }
-        //bool shouldClose() const;
 
     private:
         std::shared_ptr<WindowSystem> m_windowSystem;

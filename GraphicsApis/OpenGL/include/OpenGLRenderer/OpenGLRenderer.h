@@ -9,6 +9,8 @@
 #include <OpenGLRenderer/OpenGLMaterial.h>
 #include <ChaiEngine/IMesh.h>
 #include <ChaiEngine/IMaterial.h>
+#include <ChaiEngine/Material.h>
+#include <set>
 
 namespace chai::brew
 {
@@ -30,20 +32,33 @@ namespace chai::brew
         void executeCommands(const std::vector<RenderCommand>& commands) override;
 
     private:
-        OpenGLMeshData* getOrCreateMeshData(IMesh* mesh);
+        void applyMaterialState(IMaterial* material, GLuint shaderProgram, OpenGLMaterialData* glMaterialData);
         OpenGLMaterialData* getOrCreateMaterialData(IMaterial* material);
+        void setUniformFromData(GLuint shaderProgram, const std::string& name, const UniformBufferBase& uniform);
+        void compileMaterial(IMaterial* material, OpenGLMaterialData* glMaterialData);
+        void setBuiltinUniforms(GLuint shaderProgram, const RenderCommand& cmd);
+        void unbindTextures(OpenGLMaterialData* glMaterialData);
+        GLuint createDefaultShaderProgram();
+        void bindShaderProgram(GLuint program);
+        GLuint compileShader(const char* source, GLenum type);
+        GLuint compileShaderFromDescription(std::shared_ptr<ShaderDescription> shaderDesc,
+            const std::set<MaterialFeature>& features);
+        std::string loadShaderFile(const std::string& filePath);
+        std::string injectFeatureDefines(const std::string& source,
+            const std::set<MaterialFeature>& features);
+        void cacheUniformLocations(GLuint shaderProgram, OpenGLMaterialData* glMaterialData);
+        void setLightsUniforms();
+
+        OpenGLMeshData* getOrCreateMeshData(IMesh* mesh);
 		void drawMesh(const RenderCommand& cmd);
         void uploadMeshToGPU(IMesh* mesh, OpenGLMeshData* glMeshData);
         void setupVertexAttributes();
-        void compileMaterial(IMaterial* material, OpenGLMaterialData* glMaterialData);
-        void bindShaderProgram(GLuint program);
         void bindVertexArray(GLuint vao);
-        GLuint createDefaultShaderProgram();
-        GLuint compileShader(const char* source, GLenum type);
         void clear(float r, float g, float b, float a);
 
         std::unordered_map<IMesh*, std::unique_ptr<OpenGLMeshData>> m_meshCache;
         std::unordered_map<IMaterial*, std::unique_ptr<OpenGLMaterialData>> m_materialCache;
+        std::unordered_map<std::string, GLuint> m_shaderCache;
 
         // Current render state
         GLuint currentShaderProgram = 0;
@@ -51,6 +66,9 @@ namespace chai::brew
 
         // Default shader for basic rendering
         GLuint defaultShaderProgram = 0;
+
+        std::vector<Light> m_cachedLights;
+		bool m_lightsDirty = true;
 	};
 }
 

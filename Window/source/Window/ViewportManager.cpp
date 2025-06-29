@@ -1,7 +1,34 @@
 #include <Window/ViewportManager.h>
+#include <Core/InputState.h>
 
 namespace chai
 {
+	ViewportManager::ViewportManager()
+	{
+		InputSystem::instance().subscribe(
+			[this](const InputEvent& event) {
+				handleEvent(event);
+			});
+	}
+
+    void ViewportManager::handleEvent(const InputEvent& event)
+    {
+        if (event.type == InputEventType::FramebufferResize)
+        {
+            const auto& resizeEv = static_cast<const FrameBufferResize&>(event);
+            // If we had multiple viewports inside of a window, this would be where we recalculate
+            // For now, get the viewport for the window and update it
+            for (auto&& vp : viewports)
+            {
+                if (vp->getParentWindow() == event.windowId)
+                {
+                    auto desc = vp->getDesc();
+                    vp->setRect(desc.x, desc.y, resizeEv.width, resizeEv.height);
+                }
+            }
+        }
+    }
+
 	uint32_t ViewportManager::createViewport(uint64_t window_id, const ViewportDesc& desc) 
 	{
 		uint64_t id = next_id++;

@@ -5,7 +5,8 @@ namespace chai::cup
 {
 	TransformComponent::TransformComponent(GameObject* owner) : Component(owner)
     {
-
+        if(owner)
+		    m_parent = owner->getComponent<TransformComponent>();
     }
 
     glm::mat4 TransformComponent::getLocalMatrix() const 
@@ -18,7 +19,12 @@ namespace chai::cup
 
     glm::mat4 TransformComponent::getWorldMatrix() const 
     {
-		return getLocalMatrix();
+        if (m_parent) {
+            return m_parent->getWorldMatrix() * getLocalMatrix();
+        }
+        else {
+            return getLocalMatrix();
+        }
     }
 
     void TransformComponent::setPosition(glm::vec3 newPos)
@@ -43,18 +49,16 @@ namespace chai::cup
 
     glm::vec3 TransformComponent::getWorldPosition() const 
     {
-        //if (parent) {
-        //    return glm::vec3(getWorldMatrix()[3]);
-        //}
-        return m_position;
+        return glm::vec3(getWorldMatrix()[3]);
     }
 
-    glm::quat TransformComponent::getWorldRotation() const 
-    {
-        //if (parent) {
-        //    return parent->getWorldRotation() * rotation;
-        //}
-        return m_rotation;
+    glm::quat TransformComponent::getWorldRotation() const {
+        if (m_parent) {
+            return m_parent->getWorldRotation() * m_rotation;
+        }
+        else {
+            return m_rotation;
+        }
     }
 
     void TransformComponent::lookAt(const glm::vec3& target, const glm::vec3& worldUp)
@@ -70,10 +74,13 @@ namespace chai::cup
         rotMatrix[2] = -forward;
 
         m_rotation = glm::quat_cast(rotMatrix);
-        //if (parent) {
-        //    rotation = glm::inverse(parent->getWorldRotation()) * rotation;
-        //}
 
-        //markDirty();
+        if (m_parent) {
+            // Convert world rotation to local
+            m_rotation = glm::inverse(m_parent->getWorldRotation()) * m_rotation;
+        }
+        else {
+            m_rotation = m_rotation;
+        }
     }
 }

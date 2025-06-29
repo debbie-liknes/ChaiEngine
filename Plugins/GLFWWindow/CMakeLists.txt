@@ -1,12 +1,10 @@
 # Add source to this project's executable.
 
 set(WindowGLFW_headers
-	GLFWBackend.h
 	GLFWSystem.h
 )
 
 set(WindowGLFW_source
-	GLFWBackend.cpp
 	GLFWSystem.cpp
 )
 

@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <Core/InputState.h>
 
 namespace chai 
 {

@@ -2,7 +2,7 @@
 #include <unordered_map>
 #include <memory>
 #include <string>
-#include <ChaiEngine/IMesh.h>
+#include <ChaiEngine/MeshAsset.h>
 
 namespace chai::brew
 {

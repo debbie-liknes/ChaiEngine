@@ -5,8 +5,12 @@ set(ChaiScene_headers
 	include/Scene/RenderableComponent.h
 	include/Scene/Camera.h
 	include/Scene/CameraComponent.h
+	include/Scene/CameraController.h
+	include/Scene/Controller.h
+	include/Scene/ControllerComponent.h
 	include/Scene/GameObject.h
-	include/Scene/Light.h
+	include/Scene/LightComponent.h
+	include/Scene/LightSystem.h
 	include/Scene/Scene.h
 	include/Scene/SceneManager.h
 	include/Scene/MeshComponent.h
@@ -16,7 +20,11 @@ set(ChaiScene_headers
 set(ChaiScene_source
 	source/Scene/Camera.cpp
 	source/Scene/CameraComponent.cpp
+	source/Scene/CameraController.cpp
+	source/Scene/ControllerComponent.cpp
 	source/Scene/GameObject.cpp
+	source/Scene/LightSystem.cpp
+	source/Scene/LightComponent.cpp
 	source/Scene/MeshComponent.cpp
 	source/Scene/TransformComponent.cpp
 	source/Scene/Scene.cpp

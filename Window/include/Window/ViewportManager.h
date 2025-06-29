@@ -2,14 +2,15 @@
 #include <Window/Viewport.h>
 #include <vector>
 #include <unordered_map>
+#include <Core/EventHandler.h>
 
 namespace chai
 {
 	class ICamera;
-	class ViewportManager
+	class ViewportManager : public IEventHandler
 	{
 	public:
-		ViewportManager() = default;
+		ViewportManager();
 		~ViewportManager() = default;
 
 		// Create a new viewport
@@ -28,6 +29,8 @@ namespace chai
 		}
 
 		void assignCameraToViewport(uint32_t viewportId, ICamera* camera);
+
+		void handleEvent(const InputEvent& event) override;
 
 		//// Destroy viewport and all its children
 		//void destroyViewport(uint32_t viewport_id) {

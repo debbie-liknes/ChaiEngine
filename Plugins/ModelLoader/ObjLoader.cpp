@@ -2,8 +2,10 @@
 #include "tiny_obj_loader.h"
 #include "ObjLoader.h"
 #include <iostream>
-#include <ChaiEngine/IMesh.h>
 #include <ChaiEngine/Vertex.h>
+#include <ChaiEngine/MeshAsset.h>
+#include <ChaiEngine/Material.h>
+#include <ChaiEngine/UniformBuffer.h>
 
 namespace chai
 {
@@ -19,7 +21,7 @@ namespace chai
     std::shared_ptr<IResource> ObjLoader::load(const std::string& path)
     {
         tinyobj::ObjReaderConfig reader_config;
-        reader_config.mtl_search_path = "./";
+        //reader_config.mtl_search_path = "./";
         tinyobj::ObjReader reader;
 
         if (!reader.ParseFromFile(path, reader_config)) {
@@ -47,7 +49,6 @@ namespace chai
         // Loop over shapes
         for (size_t s = 0; s < shapes.size(); s++) {
             size_t index_offset = 0;
-
             for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
                 size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
 
@@ -100,10 +101,67 @@ namespace chai
             }
         }
 
+        auto mat = brew::MaterialSystem::createPhong(); // Use Phong for OBJ compatibility
+
+        if (!materials.empty()) {
+            const auto& tinyMat = materials[0];
+
+            std::cout << "Applying material: " << tinyMat.name << std::endl;
+
+            // Set specular color
+            if (tinyMat.specular[0] != 0.0f || tinyMat.specular[1] != 0.0f || tinyMat.specular[2] != 0.0f) {
+                mat->setSpecular(glm::vec3(tinyMat.specular[0], tinyMat.specular[1], tinyMat.specular[2]));
+            }
+
+            if (tinyMat.diffuse[0] != 0.0f || tinyMat.diffuse[1] != 0.0f || tinyMat.diffuse[2] != 0.0f) {
+                mat->setDiffuse(glm::vec3(tinyMat.diffuse[0], tinyMat.diffuse[1], tinyMat.diffuse[2]));
+            }
+
+            // Set ambient color
+            if (tinyMat.ambient[0] != 0.0f || tinyMat.ambient[1] != 0.0f || tinyMat.ambient[2] != 0.0f) {
+                mat->setAmbient(glm::vec3(tinyMat.ambient[0], tinyMat.ambient[1], tinyMat.ambient[2]));
+            }
+
+            // Set shininess/specular exponent
+            if (tinyMat.shininess > 0.0f) {
+                mat->setShininess(tinyMat.shininess);
+            }
+
+            // Set transparency/alpha
+            if (tinyMat.dissolve < 1.0f) {
+                mat->setTransparency(tinyMat.dissolve);
+            }
+
+            if (!tinyMat.diffuse_texname.empty()) {
+                // uint32_t textureId = loadTexture(tinyMat.diffuse_texname);
+                // if (textureId != 0) {
+                //     mat->setTexture("u_diffuseTexture", textureId, 0);
+                // }
+            }
+
+            if (!tinyMat.normal_texname.empty()) {
+                // uint32_t normalTexId = loadTexture(tinyMat.normal_texname);
+                // if (normalTexId != 0) {
+                //     mat->setNormalTexture(normalTexId);
+                // }
+            }
+
+            if (!tinyMat.specular_texname.empty()) {
+                // uint32_t specTexId = loadTexture(tinyMat.specular_texname);
+                // if (specTexId != 0) {
+                //     mat->setTexture("u_specularTexture", specTexId, 2);
+                // }
+            }
+        }
+        else {
+            std::cout << "No materials found, using default" << std::endl;
+            // Default values are already set by createPhong()
+        }
+
         // Create your IMesh implementation
         auto mesh = std::make_shared<brew::Mesh>(vertices, indices);
 
         // Create and return MeshAsset
-        return std::make_shared<brew::MeshAsset>(mesh);
+        return std::make_shared<brew::MeshAsset>(mesh, mat);
     }
 } 

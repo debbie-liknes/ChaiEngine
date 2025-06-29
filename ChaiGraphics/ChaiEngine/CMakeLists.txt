@@ -4,7 +4,10 @@ set(ChaiGraphics_headers
 	include/ChaiEngine/AssetManager.h
 	include/ChaiEngine/IMesh.h
 	include/ChaiEngine/IMaterial.h
+	include/ChaiEngine/Material.h
 	include/ChaiEngine/Color.h
+	include/ChaiEngine/Light.h
+	include/ChaiEngine/MeshAsset.h
 	include/ChaiEngine/ViewData.h
 	include/ChaiEngine/Renderer.h
 	include/ChaiEngine/Shader.h
@@ -23,6 +26,7 @@ set(ChaiGraphics_headers
 set(ChaiGraphics_source
 	source/ChaiEngine/AssetManager.cpp
 	source/ChaiEngine/MeshAsset.cpp
+	source/ChaiEngine/Material.cpp
 	source/ChaiEngine/Renderer.cpp
 	source/ChaiEngine/RenderCommandCollector.cpp
 	source/ChaiEngine/VertexBuffer.cpp

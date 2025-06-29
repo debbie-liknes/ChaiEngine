@@ -28,6 +28,7 @@ namespace chai::cup
 		void lookAt(const glm::vec3& target, const glm::vec3& worldUp);
 	private:
 
+		TransformComponent* m_parent{ nullptr };
 		glm::vec3 m_position{ 0.0f, 0.0f, 0.0f };
 		glm::quat m_rotation{ 1.0f, 0.0f, 0.0f, 0.0f }; // w, x, y, z
 		glm::vec3 m_scale{ 1.0f, 1.0f, 1.0f };

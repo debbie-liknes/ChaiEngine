@@ -2,10 +2,12 @@
 #include <memory>
 #include <ChaiEngine/RenderCommandCollector.h>
 #include <Scene/ComponentBase.h>
+#include <Scene/ControllerComponent.h>
+#include <Core/Updatable.h>
 
 namespace chai::cup
 {
-	class GameObject
+	class GameObject : public IUpdatable
 	{
 	public:
 		GameObject();
@@ -30,9 +32,44 @@ namespace chai::cup
 			return nullptr;
 		}
 
+        template<typename T, typename... Args>
+        T* addController(Args&&... args) {
+            if (!controllerComponent) {
+                controllerComponent = std::make_unique<ControllerComponent>(this);
+            }
+            return controllerComponent->addController<T>(std::forward<Args>(args)...);
+        }
+
+        template<typename T>
+        T* getController() {
+            return controllerComponent ? controllerComponent->getController<T>() : nullptr;
+        }
+
+        IController* getController(const std::string& name) {
+            return controllerComponent ? controllerComponent->getController(name) : nullptr;
+        }
+
+        template<typename T>
+        bool removeController() {
+            return controllerComponent ? controllerComponent->removeController<T>() : false;
+        }
+
+        bool hasControllers() const {
+            return controllerComponent && controllerComponent->hasControllers();
+        }
+
+        void setControllersEnabled(bool enabled) {
+            if (controllerComponent) {
+                controllerComponent->setAllEnabled(enabled);
+            }
+        }
+
 		void collectRenderables(brew::RenderCommandCollector& collector);
+
+		void update(double deltaTime) override;
 
 	private:
 		std::vector<std::unique_ptr<Component>> m_components;
+		std::unique_ptr<ControllerComponent> controllerComponent;
 	};
 }

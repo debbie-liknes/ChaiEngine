@@ -13,8 +13,12 @@
 #include <Scene/Scene.h>
 #include <Scene/MeshComponent.h>
 #include <Scene/CameraComponent.h>
+#include <Scene/LightComponent.h>
 #include <ChaiEngine/AssetManager.h>
 #include <Scene/TransformComponent.h>
+#include <Core/InputState.h>
+#include <Scene/CameraController.h>
+#include <chrono>
 
 using namespace std;
 
@@ -55,23 +59,45 @@ int main()
 	//make an object for the scene
 	auto gameObject = std::make_unique<chai::cup::GameObject>();
 	chai::cup::MeshComponent* meshComp = gameObject->addComponent<chai::cup::MeshComponent>(gameObject.get());
-	meshComp->setMesh(chai::brew::AssetManager::instance().loadMesh("assets/cube.obj"));
+	meshComp->setMesh(chai::brew::AssetManager::instance().loadMesh("assets/suzanne.obj"));
+	gameObject->getComponent<chai::cup::TransformComponent>()->setPosition({ 0.0, 0.0, 0.0 });
 
+	//add a camera to look through
 	auto cameraObject = std::make_unique<chai::cup::GameObject>();
 	chai::cup::CameraComponent* camComponent = cameraObject->addComponent<chai::cup::CameraComponent>(cameraObject.get());
 	auto camTransform = cameraObject->getComponent<chai::cup::TransformComponent>();
-	camTransform->setPosition({ -5.0, 0.0, 0.0 });
-	camTransform->lookAt({ 0.0, 0.0, 0.0 }, {0.0, 1.0, 0.0});
+	camTransform->setPosition({ -5.0, 0.0, 10.0 });
+	camTransform->lookAt({ -2.4941, 1.3559, 4.7810 }, {0.0, 1.0, 0.0});
 	camComponent->getViewMatrix();
+	auto camController = cameraObject->addController<chai::cup::CameraController>();
+
+	//add some lighting so we can see
+	auto lightObject = std::make_unique<chai::cup::GameObject>();
+	lightObject->getComponent<chai::cup::TransformComponent>()->setPosition({ -5.0, 5.0, -5.0 });
+	lightObject->getComponent<chai::cup::TransformComponent>()->lookAt({ 0.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 });
+	lightObject->addComponent<chai::cup::LightComponent>(lightObject.get());
 
 	//set up viewport camera association
 	vp->setCamera(camComponent->getCamera());
 
+	//add the objects to the scene
 	testScene->addGameObject(std::move(gameObject));
 	testScene->addGameObject(std::move(cameraObject));
+	testScene->addGameObject(std::move(lightObject));
+
+
+	// Time tracking for delta time
+	auto lastTime = std::chrono::high_resolution_clock::now();
 
 	while (!windowManager->isDone())
 	{
+		auto currentTime = std::chrono::high_resolution_clock::now();
+		float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
+		lastTime = currentTime;
+
+		chai::InputSystem::instance().processEvents();
+		sceneManager.update(deltaTime);
+
 		//render loop
 		for (auto& viewport : viewportManager.getAllViewports()) 
 		{
@@ -93,10 +119,12 @@ int main()
 
 			//multiple scenes? additive scenes?
 			chai::cup::Scene* scene = sceneManager.getPrimaryScene();
+			scene->collectLights(collector);
 			if (scene) 
 			{
 				scene->collectRenderables(collector);
 			}
+
 
 			renderer->executeCommands(collector.getCommands());
 		}

@@ -19,7 +19,10 @@ namespace chai
 
     void Viewport::setRect(int x, int y, int width, int height)
     {
-
+        m_desc.x = x;
+        m_desc.y = y;
+        m_desc.width = width;
+        m_desc.height = height;
     }
 
     void Viewport::setClearColor(float r, float g, float b, float a)

@@ -2,8 +2,11 @@
 
 #this cmake file needs help
 set(Core_headers
+	include/Core/InputState.h
+	include/Core/EventHandler.h
 	include/Core/TypeHelpers.h
 	include/Core/TextureBackend.h
+	include/Core/Updatable.h
 
 	include/Meta/TypeInfo.h
 	include/Meta/TypeRegistry.h
@@ -15,6 +18,8 @@ set(Core_headers
 )
 
 set(Core_source
+	source/Core/InputState.cpp
+	source/Core/Updatable.cpp
 	source/Meta/TypeRegistry.cpp
 
 	source/Scene/ICamera.cpp

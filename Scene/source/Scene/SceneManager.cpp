@@ -16,4 +16,12 @@ namespace chai::cup
 	{
 		m_scenes.insert({ name, std::move(scene) });
 	}
+
+	void SceneManager::update(double deltaTime)
+	{
+		for (auto&& scene : m_scenes)
+		{
+			scene.second->update(deltaTime);
+		}
+	}
 }

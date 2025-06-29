@@ -1,9 +1,10 @@
 #pragma once
 #include <Scene/Scene.h>
+#include <Core/Updatable.h>
 
 namespace chai::cup
 {
-	class SceneManager
+	class SceneManager : public IUpdatable
 	{
 	public:
 		SceneManager();
@@ -11,6 +12,8 @@ namespace chai::cup
 		void addScene(const std::string& name, std::unique_ptr<Scene> scene);
 		Scene* setActiveScene(const std::string& name);
 		Scene* getPrimaryScene() { return m_activeScene; }
+
+		void update(double deltaTime) override;
 
 	private:
 		std::unordered_map<std::string, std::unique_ptr<Scene>> m_scenes;
