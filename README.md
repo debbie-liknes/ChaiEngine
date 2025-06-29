@@ -22,6 +22,10 @@ Make sure you have the following:
 - **C++ Compiler**  
   - MSVC (Windows)
 - **Visual Studio**
+- FMOD (https://www.fmod.com/)
+
+`FMOD_HOME` must also be set in your environment for CMake to locate it. For Windows, it is likely at the following path:
+`C:\Program Files (x86)\FMOD SoundSystem\FMOD Studio API Windows`
 
 ### Clone the Repository
 
@@ -80,3 +84,4 @@ GLFW
 glm
 stb_image
 glad
+FMOD

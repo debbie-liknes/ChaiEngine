@@ -59,10 +59,13 @@ namespace chai::brew
 				chai::ResourceManager::Instance().RegisterLoader(std::shared_ptr<IResourceLoader>(loader));
 			}
 		}
+
+		m_audioEngine->Init();
 	}
 
 	void Engine::shutdown() {
 		// TODO: clean up objects
+		m_audioEngine->Shutdown();
 	}
 
 	void Engine::createWindow(std::string windowTitle)
@@ -84,9 +87,15 @@ namespace chai::brew
 	{
 		auto& window = m_windows.back();
 
-		const float cameraSpeed = 0.01f; // adjust accordingly
+		const float cameraSpeed = 0.003f; // adjust accordingly
 
 		m_scene = std::make_shared<cup::Scene>();
+
+		// Uncomment for sound at location of cube.
+		//m_audioEngine->LoadSound("/path/to/wav",
+		//	true, true, true);
+		//m_audioEngine->PlaySound("/path/to/wav",
+		//	glm::vec3{ 0, 0, 0 }, 3.0F);
 
 		while (window->Show())
 		{
@@ -129,6 +138,13 @@ namespace chai::brew
 				vp->bind();
 				m_renderer->renderFrame(renderFrame);
 			}
+
+			// Update listener position to camera
+			m_audioEngine->Set3dListenerAndOrientation(
+				m_scene->m_cam.getPosition(),
+				m_scene->m_cam.getDirection(),
+				m_scene->m_cam.getUp());
+			m_audioEngine->Update();
 		}
 
 		window->Close();
