@@ -20,7 +20,7 @@ namespace chai::cup
 
             if (lights.size() >= MAX_LIGHTS) break;
 
-            Light light = {};
+            brew::Light light = {};
             light.type = static_cast<int>(lightComp->type);
             light.color = lightComp->color;
             light.intensity = lightComp->intensity;
