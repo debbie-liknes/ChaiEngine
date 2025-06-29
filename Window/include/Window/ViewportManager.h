@@ -2,7 +2,7 @@
 #include <Window/Viewport.h>
 #include <vector>
 #include <unordered_map>
-#include <Core/EventHandler.h>
+#include <Input/EventHandler.h>
 
 namespace chai
 {

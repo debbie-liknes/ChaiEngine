@@ -1,4 +1,4 @@
-#include <Core/InputState.h>
+#include <Input/InputSystem.h>
 
 namespace chai
 {
@@ -8,19 +8,19 @@ namespace chai
         return inst;
     }
 
-    void InputSystem::queueEvent(std::unique_ptr<const InputEvent> event) 
+    void InputSystem::queueEvent(std::unique_ptr<const InputEvent> event)
     {
         eventQueue.push(std::move(event));
     }
 
-    uint32_t InputSystem::subscribe(InputHandler handler) 
+    uint32_t InputSystem::subscribe(InputHandler handler)
     {
         uint32_t id = nextHandlerId++;
         handlers.emplace_back(id, std::move(handler));
         return id;
     }
 
-    void InputSystem::unsubscribe(uint32_t handlerId) 
+    void InputSystem::unsubscribe(uint32_t handlerId)
     {
         handlers.erase(
             std::remove_if(handlers.begin(), handlers.end(),
@@ -29,10 +29,10 @@ namespace chai
         );
     }
 
-    void InputSystem::processEvents() 
+    void InputSystem::processEvents()
     {
         clearFrame();
-        while (!eventQueue.empty()) 
+        while (!eventQueue.empty())
         {
             const auto& event = eventQueue.front();
 
@@ -40,7 +40,7 @@ namespace chai
             updateState(*event.get());
 
             // Notify subscribers
-            for (const auto& [id, handler] : handlers) 
+            for (const auto& [id, handler] : handlers)
             {
                 handler(*event.get());
             }
@@ -49,60 +49,60 @@ namespace chai
         }
     }
 
-    bool InputSystem::isKeyPressed(KeyCode key) const 
+    bool InputSystem::isKeyPressed(KeyCode key) const
     {
         return keyStates[static_cast<uint32_t>(key)];
     }
 
-    bool InputSystem::isMouseButtonPressed(MouseButton button) const 
+    bool InputSystem::isMouseButtonPressed(MouseButton button) const
     {
         return mouseStates[static_cast<uint32_t>(button)];
     }
 
-    void InputSystem::getMousePosition(float& x, float& y) const 
+    void InputSystem::getMousePosition(float& x, float& y) const
     {
         x = mouseX;
         y = mouseY;
     }
 
-    void InputSystem::getMouseDelta(float& deltaX, float& deltaY) const 
+    void InputSystem::getMouseDelta(float& deltaX, float& deltaY) const
     {
         deltaX = mouseDeltaX;
         deltaY = mouseDeltaY;
     }
 
-    void InputSystem::clearFrame() 
+    void InputSystem::clearFrame()
     {
         mouseDeltaX = 0.0f;
         mouseDeltaY = 0.0f;
     }
 
-    void InputSystem::updateState(const InputEvent& event) 
+    void InputSystem::updateState(const InputEvent& event)
     {
         switch (event.type)
         {
         case InputEventType::KeyPress:
         {
             auto keyEvent = static_cast<const KeyPressEvent&>(event);
-            keyStates[static_cast<uint32_t>(keyEvent.key)] = true;
+            keyStates[keyEvent.key] = true;
             break;
         }
         case InputEventType::KeyRelease:
         {
             auto keyReleaseEvent = static_cast<const KeyReleaseEvent&>(event);
-            keyStates[static_cast<uint32_t>(keyReleaseEvent.key)] = false;
+            keyStates[keyReleaseEvent.key] = false;
             break;
         }
         case InputEventType::MouseButtonPress:
         {
             auto mouseEvent = static_cast<const MouseDownEvent&>(event);
-            mouseStates[static_cast<uint32_t>(mouseEvent.button)] = true;
+            mouseStates[mouseEvent.button] = true;
             break;
         }
         case InputEventType::MouseButtonRelease:
         {
             auto mouseReleaseEvent = static_cast<const MouseUpEvent&>(event);
-            mouseStates[static_cast<uint32_t>(mouseReleaseEvent.button)] = false;
+            mouseStates[mouseReleaseEvent.button] = false;
             break;
         }
         case InputEventType::MouseMove:

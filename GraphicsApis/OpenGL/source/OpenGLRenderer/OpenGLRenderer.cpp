@@ -1,7 +1,6 @@
 #include <OpenGLRenderer/OpenGLRenderer.h>
 #include <iostream>
 #include <glm/glm.hpp>
-#include <Core/TypeHelpers.h>
 #include <algorithm>
 #include <ChaiEngine/RenderCommandList.h>
 #include <ChaiEngine/UniformBuffer.h>

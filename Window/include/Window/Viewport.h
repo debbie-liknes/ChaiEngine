@@ -2,7 +2,7 @@
 #include <WindowModuleExport.h>
 #include <string>
 #include <memory>
-#include <Graphics/IViewport.h>
+#include <Graphics/Viewport.h>
 
 namespace chai
 {
@@ -11,7 +11,7 @@ namespace chai
     {
         std::string name;
         int x, y, width, height;
-        float clearColor[4] = { 0.2f, 0.3f, 0.3f, 1.0f };
+        glm::vec4 clearColor{ 0.2f, 0.3f, 0.3f, 1.0f };
         bool clearDepth = true;
         bool clearStencil = false;
     };

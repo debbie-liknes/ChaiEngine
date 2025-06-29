@@ -6,7 +6,7 @@ namespace chai
 	class CORE_EXPORT IUpdatable
 	{
 	public:
-		IUpdatable();
+		IUpdatable() = default;
 		virtual ~IUpdatable() = default;
 		virtual void update(double deltaTime) = 0;
 	};

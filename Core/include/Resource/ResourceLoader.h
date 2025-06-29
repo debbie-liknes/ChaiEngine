@@ -10,14 +10,16 @@
 
 namespace chai
 {
-    class CORE_EXPORT IResource {
+    class CORE_EXPORT IResource 
+    {
     public:
         virtual ~IResource() = default;
         virtual bool isValid() const = 0;
         virtual const std::string& getResourceId() const = 0;
     };
 
-    class CORE_EXPORT IResourceLoader {
+    class CORE_EXPORT IResourceLoader 
+    {
     public:
         virtual ~IResourceLoader() = default;
         virtual bool canLoad(const std::string& extension) const = 0;

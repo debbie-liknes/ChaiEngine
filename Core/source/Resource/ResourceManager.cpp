@@ -15,10 +15,8 @@ namespace chai
 
 	std::string ResourceManager::getExtension(const std::string& file)
 	{
-		size_t dotPosition = file.find_last_of('.');
-
-		// If a dot exists and isn't the first character
-		if (dotPosition != std::string::npos && dotPosition != 0) {
+		if (size_t dotPosition = file.find_last_of('.'); dotPosition != std::string::npos && dotPosition != 0) 
+		{
 			return file.substr(dotPosition + 1); // Extract extension
 		}
 

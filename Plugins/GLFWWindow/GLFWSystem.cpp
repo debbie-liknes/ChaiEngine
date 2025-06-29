@@ -3,6 +3,7 @@
 #include <iostream>
 #include <Window/Window.h>
 #include <Window/WindowManager.h>
+#include <Input/InputSystem.h>
 
 namespace chai
 {

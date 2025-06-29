@@ -1,5 +1,5 @@
 #include <Window/ViewportManager.h>
-#include <Core/InputState.h>
+#include <Input/InputSystem.h>
 
 namespace chai
 {

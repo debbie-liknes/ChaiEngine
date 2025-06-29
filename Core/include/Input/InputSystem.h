@@ -1,20 +1,12 @@
 #pragma once
 #include <functional>
-#include <queue>
 #include <memory>
-#include <Core/EventHandler.h>
+#include <Input/InputState.h>
+#include <queue>
+#include <array>
 
 namespace chai
 {
-    struct InputState
-    {
-        bool keys[256] = { false };
-        float mouseX = 0.0f, mouseY = 0.0f;
-        float lastMouseX = 0.0f, lastMouseY = 0.0f;
-        bool firstMouse = true;
-        bool mouseCaptured = false;
-    };
-
     class InputSystem
     {
     public:
@@ -42,17 +34,19 @@ namespace chai
 
     private:
         InputSystem() = default;
+        void updateState(const InputEvent& event);
+
+    private:
 
         std::queue<std::unique_ptr<const InputEvent>> eventQueue;
         std::vector<std::pair<uint32_t, InputHandler>> handlers;
         uint32_t nextHandlerId = 1;
 
         // Current state for polling
-        bool keyStates[512] = { false };
-        bool mouseStates[8] = { false };
-        float mouseX = 0.0f, mouseY = 0.0f;
-        float mouseDeltaX = 0.0f, mouseDeltaY = 0.0f;
+        std::array<bool, 512> keyStates = { false };
+        std::array<bool, 8> mouseStates = { false };
+        double mouseX = 0.0f, mouseY = 0.0f;
+        double mouseDeltaX = 0.0f, mouseDeltaY = 0.0f;
 
-        void updateState(const InputEvent& event);
     };
 }

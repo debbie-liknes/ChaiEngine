@@ -1,7 +1,7 @@
 #pragma once
 #include <ChaiEngine/RenderCommandList.h>
 #include <Scene/ICamera.h>
-#include <Graphics/IViewport.h>
+#include <Graphics/Viewport.h>
 
 namespace chai::brew
 {

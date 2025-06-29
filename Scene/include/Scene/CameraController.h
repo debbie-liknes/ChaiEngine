@@ -4,7 +4,7 @@
 #include <Scene/GameObject.h>
 #include <Scene/CameraComponent.h>
 #include <Scene/TransformComponent.h>
-#include <Core/InputState.h>
+#include <Input/InputSystem.h>
 #include <typeindex>
 #include <string>
 

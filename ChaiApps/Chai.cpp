@@ -16,7 +16,7 @@
 #include <Scene/LightComponent.h>
 #include <ChaiEngine/AssetManager.h>
 #include <Scene/TransformComponent.h>
-#include <Core/InputState.h>
+#include <Input/InputState.h>
 #include <Scene/CameraController.h>
 #include <chrono>
 

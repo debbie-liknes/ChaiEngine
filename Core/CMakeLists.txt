@@ -2,20 +2,56 @@
 
 set(RESOURCE_DIR ${CMAKE_SOURCE_DIR}/)
 
+set(Core_headers
+	include/Core/Updatable.h
+	include/Graphics/Viewport.h
+	include/Input/EventHandler.h
+	include/Input/InputState.h
+	include/Input/InputSystem.h
+	include/Meta/ChaiMacros.h
+	include/Meta/MethodInvoker.h
+	include/Meta/TypeInfo.h
+	include/Meta/TypeRegistry.h
+	include/Plugin/PluginBase.h
+	include/Plugin/PluginRegistry.h
+	include/Plugin/ServiceLocator.h
+	include/Plugin/ServiceRegistry.h
+	include/Resource/ResourceLoader.h
+	include/Resource/ResourceManager.h
+	include/Scene/ICamera.h
+	include/Types/CMap.h
+)
+
+set(Core_source
+	source/Core/Updatable.cpp
+	source/Graphics/Viewport.cpp
+	source/Input/InputState.cpp
+	source/Input/InputSystem.cpp
+	source/Meta/TypeRegistry.cpp
+	source/Plugin/PluginRegistry.cpp
+	source/Plugin/ServiceLocator.cpp
+	source/Resource/ResourceManager.cpp
+	source/Scene/ICamera.cpp
+)
+
 add_library(Core SHARED 
 	${Core_headers} 
 	${Core_source}
-	${Plugin_headers}
-	${Plugin_source}
-	${Resource_headers}
-	${Resource_source}
-	${Types_headers}
-	${Types_source}
 )
 
 target_include_directories(Core PUBLIC ${CMAKE_BINARY_DIR}/exports/Core include)
 target_link_libraries(Core PUBLIC glm::glm)
 target_compile_definitions(Core PUBLIC RESOURCE_PATH=\"${RESOURCE_DIR}\")
+
+#meh
+source_group("Core" REGULAR_EXPRESSION ".*/Core/.*\\.(h|cpp)$")
+source_group("Input" REGULAR_EXPRESSION ".*/Input/.*")
+source_group("Graphics" REGULAR_EXPRESSION ".*/Graphics/.*")
+source_group("Meta" REGULAR_EXPRESSION ".*/Meta/.*")
+source_group("Scene" REGULAR_EXPRESSION ".*/Scene/.*")
+source_group("Resource" REGULAR_EXPRESSION ".*/Resource/.*")
+source_group("Plugin" REGULAR_EXPRESSION ".*/Plugin/.*")
+source_group("Types" REGULAR_EXPRESSION ".*/Types/.*")
 
 
 ChaiLibDefaults(Core "Core")

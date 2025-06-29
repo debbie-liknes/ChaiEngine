@@ -27,7 +27,7 @@ namespace chai::kettle
     {
         std::cout << "Loaded plugin: " << plugin->getName() << " v" << plugin->getVersion() << "\n";
         std::cout << " - Services:\n";
-        for (auto& name : plugin->getServices().getServiceNames())
+        for (auto const& name : plugin->getServices().getServiceNames())
         {
             std::cout << "   - " << name << "\n";
         }
@@ -61,14 +61,15 @@ namespace chai::kettle
         auto getPlugin = (RegisterPluginFn)dlsym(handle, "GetPluginModule");
 #endif
 
-        if (!registerHandle) {
+        if (!registerHandle) 
+        {
             std::cerr << "Plugin " << path << " does not expose RegisterPlugin()\n";
             return false;
         }
 
         registerHandle();
 
-        m_plugins.push_back({ handle, path });
+        m_plugins.emplace_back(handle, path);
         return true;
     }
 
@@ -87,7 +88,7 @@ namespace chai::kettle
             it = plugins_.find(pluginName);
             if (it != plugins_.end()) 
             {
-                auto plugin = std::shared_ptr<IPlugin>(it->second().release());
+                auto plugin = it->second();
                 plugin->initialize();
                 printLoadedPlugin(plugin);
                 loadedPlugins_[pluginName] = plugin;
@@ -106,9 +107,12 @@ namespace chai::kettle
             std::cerr << "Plugin directory does not exist: " << pluginsPath << "\n";
             return false;
         }
-        for (const auto& entry : std::filesystem::directory_iterator(pluginsPath)) {
-            if (entry.is_regular_file() && entry.path().extension() == ".dll") {
-                if (!loadPlugin(entry.path().string())) {
+        for (const auto& entry : std::filesystem::directory_iterator(pluginsPath)) 
+        {
+            if (entry.is_regular_file() && entry.path().extension() == ".dll") 
+            {
+                if (!loadPlugin(entry.path().string())) 
+                {
                     std::cerr << "Failed to load plugin: " << entry.path() << "\n";
                 }
             }

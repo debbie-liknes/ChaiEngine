@@ -8,7 +8,8 @@
 
 namespace chai
 {
-    class ResourceManager {
+    class ResourceManager 
+    {
     public:
         static ResourceManager& instance();
 
@@ -41,7 +42,7 @@ namespace chai
         }
 
     private:
-        std::unordered_map<std::string, std::shared_ptr<IResource>> m_cache;
+        CMap<std::string, std::shared_ptr<IResource>> m_cache;
         std::vector<std::shared_ptr<IResourceLoader>> m_loaders;
 
         std::string getExtension(const std::string& file);

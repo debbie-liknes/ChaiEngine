@@ -31,7 +31,7 @@ namespace chai
 	class InputEvent
 	{
 	public:
-		InputEvent(uint64_t window) : windowId(window), type(InputEventType::None) {}
+		explicit InputEvent(uint64_t window) : windowId(window) { type = InputEventType::None; }
 
 		uint64_t windowId;
 		InputEventType type;
@@ -40,35 +40,35 @@ namespace chai
 	class KeyPressEvent : public InputEvent
 	{
 	public:
-		KeyPressEvent(uint64_t window, int k) : key(k), InputEvent(window) { type = InputEventType::KeyPress; }
+		KeyPressEvent(uint64_t window, int k) : InputEvent(window), key(k) { type = InputEventType::KeyPress; }
 		int key;
 	};
 
 	class KeyReleaseEvent : public InputEvent
 	{
 	public:
-		KeyReleaseEvent(uint64_t window, int k) : key(k), InputEvent(window) { type = InputEventType::KeyRelease; }
+		KeyReleaseEvent(uint64_t window, int k) : InputEvent(window), key(k) { type = InputEventType::KeyRelease; }
 		int key;
 	};
 
 	class MouseDownEvent : public InputEvent
 	{
 	public:
-		MouseDownEvent(uint64_t window, int b) : button(b), InputEvent(window) { type = InputEventType::MouseButtonPress; }
+		MouseDownEvent(uint64_t window, int b) : InputEvent(window), button(b) { type = InputEventType::MouseButtonPress; }
 		uint32_t button;
 	};
 
 	class MouseUpEvent : public InputEvent
 	{
 	public:
-		MouseUpEvent(uint64_t window, int b) : button(b), InputEvent(window) { type = InputEventType::MouseButtonRelease; }
+		MouseUpEvent(uint64_t window, int b) : InputEvent(window), button(b) { type = InputEventType::MouseButtonRelease; }
 		uint32_t button;
 	};
 
 	class MouseMoveEvent : public InputEvent
 	{
 	public:
-		MouseMoveEvent(uint64_t window, double x, double y) : xPos(x), yPos(y), InputEvent(window) { type = InputEventType::MouseMove; }
+		MouseMoveEvent(uint64_t window, double x, double y) : InputEvent(window), xPos(x), yPos(y) { type = InputEventType::MouseMove; }
 		double xPos;
 		double yPos;
 	};
@@ -76,7 +76,7 @@ namespace chai
 	class FrameBufferResize : public InputEvent
 	{
 	public:
-		FrameBufferResize(uint64_t window, double w, double h) : width(w), height(h), InputEvent(window) { type = InputEventType::FramebufferResize; }
+		FrameBufferResize(uint64_t window, double w, double h) : InputEvent(window), width(w), height(h) { type = InputEventType::FramebufferResize; }
 		double width;
 		double height;
 	};
@@ -85,6 +85,7 @@ namespace chai
 	{
 	public:
 		//only using a generic function for now, can be specialized later
+		virtual ~IEventHandler() = default;
 		virtual void handleEvent(const InputEvent& event) {}
 		virtual void onKeyPress(const KeyPressEvent& event) {}
 	};

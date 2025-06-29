@@ -14,7 +14,7 @@ namespace chai
     {
     public:
 		ICamera() = default;
-        virtual ~ICamera();
+        virtual ~ICamera() = default;
 
         ICamera(const ICamera&) = delete;
         ICamera& operator=(const ICamera&) = delete;

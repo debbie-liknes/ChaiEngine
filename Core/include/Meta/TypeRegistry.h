@@ -2,6 +2,7 @@
 #include <Meta/TypeInfo.h>
 #include <memory>
 #include <typeindex>
+#include <Types/CMap.h>
 
 namespace chai
 {
@@ -40,7 +41,7 @@ namespace chai
         }
 
     private:
-        std::unordered_map<std::string, std::shared_ptr<TypeInfo>> types_;
-        std::unordered_map<std::type_index, std::shared_ptr<TypeInfo>> typesByIndex_;
+        CMap<std::string, std::shared_ptr<TypeInfo>> types_;
+        CMap<std::type_index, std::shared_ptr<TypeInfo>> typesByIndex_;
     };
 }

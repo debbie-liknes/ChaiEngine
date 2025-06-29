@@ -2,7 +2,6 @@
 #include <ChaiGraphicsExport.h>
 #include <ChaiEngine/ViewData.h>
 #include <ChaiEngine/Shader.h>
-#include <Core/TextureBackend.h>
 #include <ChaiEngine/RenderCommandList.h>
 #include <ChaiEngine/IMesh.h>
 #include <ChaiEngine/IMaterial.h>

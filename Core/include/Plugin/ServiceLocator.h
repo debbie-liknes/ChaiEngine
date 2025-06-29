@@ -12,13 +12,16 @@ namespace chai
         static ServiceLocator& instance();
 
         template<typename InterfaceType>
-        std::shared_ptr<InterfaceType> get(const std::string& serviceName = "") {
+        std::shared_ptr<InterfaceType> get(const std::string& serviceName = "") 
+        {
             std::string name = serviceName.empty() ? getDefaultServiceName<InterfaceType>() : serviceName;
 
             // Try to find service across all loaded plugins
-            auto& registry = kettle::PluginRegistry::instance();
-            for (const auto& [pluginName, plugin] : registry.getLoadedPlugins()) {
-                if (auto service = plugin->getServices().getService<InterfaceType>(name)) {
+            auto const& registry = kettle::PluginRegistry::instance();
+            for (const auto& [pluginName, plugin] : registry.getLoadedPlugins()) 
+            {
+                if (auto service = plugin->getServices().getService<InterfaceType>(name)) 
+                {
                     return service;
                 }
             }
@@ -27,12 +30,13 @@ namespace chai
 
     private:
         template<typename T>
-        std::string getDefaultServiceName() {
+        std::string getDefaultServiceName() const 
+        {
             // Convert interface type to default service name
             std::string typeName = typeid(T).name();
             // Simple conversion: remove namespace and "System" suffix if present
-            size_t pos = typeName.find_last_of(':');
-            if (pos != std::string::npos) {
+            if (size_t pos = typeName.find_last_of(':'); pos != std::string::npos) 
+            {
                 typeName = typeName.substr(pos + 1);
             }
             return typeName;

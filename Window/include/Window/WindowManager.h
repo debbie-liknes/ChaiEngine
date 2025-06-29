@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 #include <map>
-#include <Core/EventHandler.h>
+#include <Input/EventHandler.h>
 
 namespace chai
 {

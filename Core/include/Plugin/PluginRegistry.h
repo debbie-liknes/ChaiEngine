@@ -3,6 +3,7 @@
 #include <functional>
 #include <string>
 #include <memory>
+#include <Types/CMap.h>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -44,7 +45,7 @@ namespace chai::kettle
             return (it != loadedPlugins_.end()) ? it->second : nullptr;
         }
 
-        std::unordered_map<std::string, std::shared_ptr<IPlugin>> getLoadedPlugins() const {
+        CMap<std::string, std::shared_ptr<IPlugin>> getLoadedPlugins() const {
             return loadedPlugins_;
 		}
 
@@ -58,8 +59,8 @@ namespace chai::kettle
         }
 
     private:
-        std::unordered_map<std::string, std::function<std::unique_ptr<IPlugin>()>> plugins_;
-        std::unordered_map<std::string, std::shared_ptr<IPlugin>> loadedPlugins_;
+        CMap<std::string, std::function<std::shared_ptr<IPlugin>()>> plugins_;
+        CMap<std::string, std::shared_ptr<IPlugin>> loadedPlugins_;
 
         std::vector<LoadedPlugin> m_plugins;
 
