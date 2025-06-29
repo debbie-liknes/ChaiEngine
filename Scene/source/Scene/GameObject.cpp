@@ -18,10 +18,9 @@ namespace chai::cup
 			{
 				brew::RenderCommand cmd;
 				cmd.type = brew::RenderCommand::DRAW_MESH;
-				cmd.mesh = renderable->getMesh()->getMesh();
-				cmd.material = renderable->getMesh()->getMaterial();
+				cmd.mesh = renderable->getMesh().get();
+				cmd.material = renderable->getMaterials()[0].get();
 				cmd.transform = getComponent<TransformComponent>()->getWorldMatrix();
-				//cmd.boundingBox = renderable->getBoundingBox();
 
 				collector.submit(cmd);
 			}

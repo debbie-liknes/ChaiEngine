@@ -12,7 +12,7 @@
 #define CHAI_SERVICE(ServiceType, ServiceName) \
     services_.registerService<ServiceType>(ServiceName, []() { \
         return std::make_shared<ServiceType>(); \
-    }, name_)
+    }, name_);
 
 #define CHAI_LOADER(LoaderType, LoaderName) \
     chai::ResourceManager::instance().registerLoader(std::make_shared<LoaderType>()); \
@@ -20,7 +20,7 @@
 #define CHAI_SERVICE_AS(InterfaceType, ConcreteType, ServiceName) \
     services_.registerServiceAs<InterfaceType, ConcreteType>(ServiceName, []() { \
         return std::make_shared<ConcreteType>(); \
-    })
+    });
 
 #define CHAI_CLASS(ClassName) \
     namespace { \

@@ -4,6 +4,7 @@ namespace chai::cup
 {
 	MeshComponent::MeshComponent(GameObject* owner) : RenderableComponent(owner)
 	{
+		materials.push_back(brew::MaterialSystem::createPhong());
 	}
 
 	MeshComponent::~MeshComponent()
@@ -11,12 +12,8 @@ namespace chai::cup
 
 	}
 
-	void MeshComponent::setMesh(std::shared_ptr<brew::MeshAsset> meshAsset) {
+	void MeshComponent::setMesh(std::shared_ptr<brew::IMesh> meshAsset)
+	{
 		mesh = meshAsset;
-	}
-
-	void MeshComponent::render() {
-		if (!mesh) return;
-		// Render mesh with material
 	}
 }

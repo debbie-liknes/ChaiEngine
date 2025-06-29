@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <ChaiEngine/MeshAsset.h>
+#include <ChaiEngine/MaterialAsset.h>
 
 namespace chai::brew
 {
@@ -11,9 +12,10 @@ namespace chai::brew
     public:
         static AssetManager& instance();
         std::shared_ptr<MeshAsset> loadMesh(const std::string& path);
+        std::shared_ptr<MaterialAsset> loadMaterial(const std::string& path);
         void preloadAssets(const std::vector<std::string>& assetList);
     private:
-        std::unordered_map<std::string, std::shared_ptr<MeshAsset>> meshes;
-        //std::unordered_map<std::string, std::shared_ptr<MaterialAsset>> materials;
+        std::unordered_map<std::string, std::shared_ptr<MeshAsset>> m_meshes;
+        std::unordered_map<std::string, std::shared_ptr<MaterialAsset>> m_materials;
     };
 }

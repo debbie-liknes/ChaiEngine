@@ -48,11 +48,11 @@ set(Resource_source
 )
 
 set(Types_headers
-	include/Types/Texture2D.h
+	include/Types/CMap.h
 )
 
 set(Types_source
-	source/Types/Texture2D.cpp
+	source/Types/CMap.cpp
 )
 
 source_group("Core/headers" FILES ${Core_headers})

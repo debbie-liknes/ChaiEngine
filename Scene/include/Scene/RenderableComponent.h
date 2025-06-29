@@ -2,6 +2,8 @@
 #include <SceneExport.h>
 #include <Scene/ComponentBase.h>
 #include <ChaiEngine/MeshAsset.h>
+#include <ChaiEngine/MaterialAsset.h>
+#include <ChaiEngine/Material.h>
 
 namespace chai::cup
 {
@@ -9,9 +11,11 @@ namespace chai::cup
 	{
 	public:
 		RenderableComponent(GameObject* owner = nullptr) : Component(owner) {}
-		std::shared_ptr<brew::MeshAsset> getMesh() const { return mesh; }
+		std::shared_ptr<brew::IMesh> getMesh() const { return mesh; }
+		std::vector<std::shared_ptr<brew::Material>> getMaterials() const { return materials; }
 
 	protected:
-		std::shared_ptr<brew::MeshAsset> mesh;
+		std::shared_ptr<brew::IMesh> mesh;
+		std::vector<std::shared_ptr<brew::Material>> materials;
 	};
 }

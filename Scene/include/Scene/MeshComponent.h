@@ -11,9 +11,6 @@ namespace chai::cup
         MeshComponent(GameObject* owner = nullptr);
         ~MeshComponent() override;
 
-        void setMesh(std::shared_ptr<brew::MeshAsset> meshAsset);
-
-        void render();
-    private:
+        void setMesh(std::shared_ptr<brew::IMesh> meshAsset);
 	};
 }

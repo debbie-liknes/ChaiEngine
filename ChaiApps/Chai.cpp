@@ -59,7 +59,7 @@ int main()
 	//make an object for the scene
 	auto gameObject = std::make_unique<chai::cup::GameObject>();
 	chai::cup::MeshComponent* meshComp = gameObject->addComponent<chai::cup::MeshComponent>(gameObject.get());
-	meshComp->setMesh(chai::brew::AssetManager::instance().loadMesh("assets/suzanne.obj"));
+	meshComp->setMesh(chai::brew::AssetManager::instance().loadMesh("assets/suzanne.obj")->getMesh());
 	gameObject->getComponent<chai::cup::TransformComponent>()->setPosition({ 0.0, 0.0, 0.0 });
 
 	//add a camera to look through
