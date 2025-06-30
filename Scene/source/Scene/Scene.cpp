@@ -1,5 +1,5 @@
 #include <Scene/Scene.h>
-#include <ChaiEngine/Spherical.h>
+#include <Coordinate/Spherical.h>
 #include <Components/LightComponent.h>
 #include <Components/TransformComponent.h>
 

@@ -10,7 +10,8 @@ namespace chai::brew
 {
     struct CHAIGRAPHICS_EXPORT RenderCommand 
     {
-        enum Type {
+        enum Type 
+        {
             DRAW_MESH,
             SET_VIEWPORT,
             CLEAR,

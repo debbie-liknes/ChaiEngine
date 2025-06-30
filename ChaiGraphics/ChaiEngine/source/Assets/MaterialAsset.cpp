@@ -1,4 +1,4 @@
-#include <ChaiEngine/MaterialAsset.h>
+#include <Assets/MaterialAsset.h>
 #include <Resource/ResourceManager.h>
 #include <iostream>
 #include <ChaiEngine/Material.h>

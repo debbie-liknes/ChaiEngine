@@ -18,7 +18,7 @@ namespace chai::cup
         ~CameraController() override;
 
         void handleInput(const InputEvent& event);
-        void processMovement(float deltaTime);
+        void processMovement(double deltaTime);
         void processMouseLook(float deltaX, float deltaY);
 
         // IController interface
@@ -38,8 +38,8 @@ namespace chai::cup
         chai::cup::TransformComponent* transformComponent;
         float moveSpeed = 5.0f;
         float mouseSensitivity = 0.1f;
-        float yaw = -90.0f;   // Start looking towards negative Z
-        float pitch = 0.0f;
+        double yaw = -90.0f;   // Start looking towards negative Z
+        double pitch = 0.0f;
 		uint32_t inputHandlerId;
 		bool m_mouseCaptured = false;
     };

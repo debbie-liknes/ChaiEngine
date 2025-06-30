@@ -53,10 +53,10 @@ namespace chai::cup
         }
     }
 
-    void CameraController::processMovement(float deltaTime) 
+    void CameraController::processMovement(double deltaTime)
     {
-        auto& input = InputSystem::instance();
-        float velocity = moveSpeed * deltaTime;
+        auto const& input = InputSystem::instance();
+        float velocity = moveSpeed * (float)deltaTime;
 
         auto pos = transformComponent->getWorldPosition();
         auto forward = transformComponent->forward();
@@ -110,11 +110,11 @@ namespace chai::cup
         if (pitch < -89.0f) pitch = -89.0f;
 
         // Standard OpenGL camera forward calculation
-        float x = -sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-        float y = sin(glm::radians(pitch));
-        float z = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+        double x = -sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+        double y = sin(glm::radians(pitch));
+        double z = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
 
         auto pos = transformComponent->getWorldPosition();
-        transformComponent->lookAt({ pos.x + x, pos.y + y, pos.z + z }, { 0.0f, 1.0f, 0.0f });
+        transformComponent->lookAt({ pos.x + (float)x, pos.y + (float)y, pos.z + (float)z }, { 0.0f, 1.0f, 0.0f });
     }
 }

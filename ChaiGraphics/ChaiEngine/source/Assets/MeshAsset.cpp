@@ -1,4 +1,4 @@
-#include <ChaiEngine/MeshAsset.h>
+#include <Assets/MeshAsset.h>
 #include <Resource/ResourceManager.h>
 #include <iostream>
 

@@ -11,7 +11,7 @@
 namespace chai::cup
 {
 	class GameObject;
-    class ControllerComponent : public Component, public IUpdatable
+    class ControllerComponent : public Component
     {
     public:
         explicit ControllerComponent(chai::cup::GameObject* owner);

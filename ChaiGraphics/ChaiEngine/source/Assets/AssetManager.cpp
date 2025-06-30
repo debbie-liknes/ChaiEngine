@@ -1,5 +1,5 @@
-#include <ChaiEngine/AssetManager.h>
-#include <ChaiEngine/MaterialAsset.h>
+#include <Assets/AssetManager.h>
+#include <Assets/MaterialAsset.h>
 
 namespace chai::brew
 {

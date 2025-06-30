@@ -2,7 +2,7 @@
 #include <SceneExport.h>
 #include <glm/glm.hpp>
 #include <Scene/ICamera.h>
-#include <ChaiEngine/CoordinateSpace.h>
+#include <Coordinate/CoordinateSpace.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace chai::cup

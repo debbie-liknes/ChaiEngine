@@ -1,5 +1,5 @@
 #pragma once
-#include <ChaiEngine/CoordinateSpace.h>
+#include <Coordinate/CoordinateSpace.h>
 
 namespace chai::brew
 {

@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include <memory>
-#include <ChaiEngine/Window.h>
 #include <Resource/ResourceLoader.h>
 #include <Scene/Scene.h>
 #include <AudioEngine.h>

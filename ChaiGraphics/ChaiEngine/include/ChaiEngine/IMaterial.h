@@ -42,7 +42,6 @@ namespace chai::brew
         } renderHints;
     };
 
-    class ShaderDescription;
     class IMaterial 
     {
     public:

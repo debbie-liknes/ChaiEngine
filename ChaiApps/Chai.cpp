@@ -14,7 +14,7 @@
 #include <Components/MeshComponent.h>
 #include <Components/CameraComponent.h>
 #include <Components/LightComponent.h>
-#include <ChaiEngine/AssetManager.h>
+#include <Assets/AssetManager.h>
 #include <Components/TransformComponent.h>
 #include <Input/InputState.h>
 #include <Controllers/CameraController.h>
@@ -85,6 +85,10 @@ int main()
 	testScene->addGameObject(std::move(cameraObject));
 	testScene->addGameObject(std::move(lightObject));
 
+	//audio
+	std::shared_ptr<AudioEngine> m_audioEngine;
+	m_audioEngine->Init();
+
 
 	// Time tracking for delta time
 	auto lastTime = std::chrono::high_resolution_clock::now();
@@ -134,6 +138,7 @@ int main()
 		camComponent->update(deltaTime);
 	}
 
+	m_audioEngine->Shutdown();
 	renderer->shutdown();
 
 	return 0;

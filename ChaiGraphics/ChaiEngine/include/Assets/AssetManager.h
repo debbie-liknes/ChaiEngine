@@ -2,8 +2,8 @@
 #include <unordered_map>
 #include <memory>
 #include <string>
-#include <ChaiEngine/MeshAsset.h>
-#include <ChaiEngine/MaterialAsset.h>
+#include <Assets/MeshAsset.h>
+#include <Assets/MaterialAsset.h>
 
 namespace chai::brew
 {

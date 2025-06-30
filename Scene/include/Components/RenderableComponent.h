@@ -1,8 +1,8 @@
 #pragma once
 #include <SceneExport.h>
 #include <Components/ComponentBase.h>
-#include <ChaiEngine/MeshAsset.h>
-#include <ChaiEngine/MaterialAsset.h>
+#include <Assets/MeshAsset.h>
+#include <Assets/MaterialAsset.h>
 #include <ChaiEngine/Material.h>
 
 namespace chai::cup

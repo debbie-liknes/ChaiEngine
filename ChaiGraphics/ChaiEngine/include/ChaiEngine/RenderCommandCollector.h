@@ -5,7 +5,8 @@
 
 namespace chai::brew
 {
-    class RenderCommandCollector {
+    class RenderCommandCollector 
+    {
     public:
         void submit(RenderCommand& cmd);
         const std::vector<RenderCommand>& getCommands() const;

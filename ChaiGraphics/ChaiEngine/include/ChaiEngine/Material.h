@@ -1,7 +1,7 @@
 #pragma once
 #include <ChaiGraphicsExport.h>
 #include <ChaiEngine/IMaterial.h>
-#include <unordered_map>
+#include <Types/CMap.h>
 #include <set>
 
 namespace chai::brew
@@ -25,34 +25,39 @@ namespace chai::brew
     class Material : public IMaterial
     {
     public:
-        Material(std::shared_ptr<ShaderDescription> shaderDesc)
+        explicit Material(std::shared_ptr<ShaderDescription> shaderDesc)
             : m_shaderDescription(shaderDesc)
         {
         }
 
         // Feature-based material properties
         void setFeature(MaterialFeature feature, bool enabled) {
-            if (enabled) {
+            if (enabled) 
+            {
                 m_enabledFeatures.insert(feature);
             }
-            else {
+            else 
+            {
                 m_enabledFeatures.erase(feature);
             }
             m_dirty = true;
         }
 
-        bool hasFeature(MaterialFeature feature) const {
+        bool hasFeature(MaterialFeature feature) const 
+        {
             return m_enabledFeatures.find(feature) != m_enabledFeatures.end();
         }
 
         // Unified property setters
-        void setProperty(const std::string& name, const glm::vec3& value) {
+        void setProperty(const std::string& name, const glm::vec3& value) 
+        {
             auto uniform = std::make_shared<brew::UniformBuffer<glm::vec3>>(value);
             m_uniforms[name] = uniform;
             m_dirty = true;
         }
 
-        void setProperty(const std::string& name, float value) {
+        void setProperty(const std::string& name, float value) 
+        {
             auto uniform = std::make_shared<brew::UniformBuffer<float>>(value);
             m_uniforms[name] = uniform;
             m_dirty = true;
@@ -150,12 +155,12 @@ namespace chai::brew
             return generateHash();
         }
 
-        const std::unordered_map<std::string, std::shared_ptr<UniformBufferBase>>& getUniforms() const 
+        const CMap<std::string, std::shared_ptr<UniformBufferBase>>& getUniforms() const 
         {
             return m_uniforms;
         }
 
-        const std::unordered_map<std::string, TextureSlot>& getTextures() const 
+        const CMap<std::string, TextureSlot>& getTextures() const
         {
             return m_textures;
         }
@@ -174,8 +179,8 @@ namespace chai::brew
 
     private:
         std::shared_ptr<ShaderDescription> m_shaderDescription;
-        std::unordered_map<std::string, TextureSlot> m_textures;
-        std::unordered_map<std::string, std::shared_ptr<UniformBufferBase>> m_uniforms;
+        CMap<std::string, TextureSlot> m_textures;
+        CMap<std::string, std::shared_ptr<UniformBufferBase>> m_uniforms;
         std::set<MaterialFeature> m_enabledFeatures;
         mutable bool m_dirty = true;
 

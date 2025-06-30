@@ -4,7 +4,7 @@
 #include <iostream>
 #include <format>
 #include <ChaiEngine/Vertex.h>
-#include <ChaiEngine/MeshAsset.h>
+#include <Assets/MeshAsset.h>
 #include <ChaiEngine/Material.h>
 #include <ChaiEngine/UniformBuffer.h>
 #include <Types/CMap.h>
