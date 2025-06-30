@@ -1,5 +1,4 @@
 ﻿#include "Chai.h"
-#include <Engine/Engine.h>
 #include <Window/WindowManager.h>
 #include <Window/WindowSystem.h>
 #include <Window/Window.h>
@@ -19,6 +18,7 @@
 #include <Input/InputState.h>
 #include <Controllers/CameraController.h>
 #include <chrono>
+#include <AudioEngine.h>
 
 using namespace std;
 
@@ -89,6 +89,10 @@ int main()
 	std::shared_ptr<AudioEngine> m_audioEngine;
 	m_audioEngine->Init();
 
+	//uncomment for sound at location of cube
+	//m_audioEngine->LoadSound(/*path to wav*/, true, true, true);
+	//m_audioEngine->PlaySound(/*path to wav*/, glm::vec3{0,0,0}, 3.0F);
+
 
 	// Time tracking for delta time
 	auto lastTime = std::chrono::high_resolution_clock::now();
@@ -136,6 +140,14 @@ int main()
 		//updates and buffer swap
 		windowManager->update();
 		camComponent->update(deltaTime);
+
+		//audio update
+		m_audioEngine->Set3dListenerAndOrientation(
+			camTransform->getWorldPosition(),
+			camTransform->forward(),
+			camTransform->up()
+		);
+		m_audioEngine->Update();
 	}
 
 	m_audioEngine->Shutdown();

@@ -16,7 +16,7 @@ namespace chai::brew
 
     private:
         std::vector<RenderCommand> commands;
-        ICamera* camera;
-        IViewport* viewport;
+        ICamera* camera = nullptr;
+        IViewport* viewport = nullptr;
     };
 }

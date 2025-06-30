@@ -19,15 +19,15 @@ namespace chai::brew
             SET_LIGHTS
         };
 
-        Type type;
+        Type type{ Type::CLEAR };
 
         // Mesh rendering data
-        IMesh* mesh;
-        IMaterial* material;
-        glm::mat4 transform;
-        IViewport* viewport;
-		glm::mat4 viewMatrix;
-		glm::mat4 projectionMatrix;
+        IMesh* mesh = nullptr;
+        IMaterial* material = nullptr;
+        glm::mat4 transform{ 1.f };
+        IViewport* viewport = nullptr;
+        glm::mat4 viewMatrix{ 1.f };
+        glm::mat4 projectionMatrix{ 1.f };
         std::vector<Light> lights;
 
     };

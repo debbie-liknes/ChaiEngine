@@ -64,7 +64,7 @@ namespace chai::cup
             return controllerComponent && controllerComponent->hasControllers();
         }
 
-        void setControllersEnabled(bool enabled)     
+        void setControllersEnabled(bool enabled) const     
 		{
             if (controllerComponent) 
 			 {
