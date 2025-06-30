@@ -1,62 +1,34 @@
 #pragma once
 #include <SceneExport.h>
 #include <glm/glm.hpp>
-#include <Window/Viewport.h>
-#include <ChaiEngine/CoordinateSpace.h>
+#include <Scene/ICamera.h>
+#include <Coordinate/CoordinateSpace.h>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace chai::cup
 {
-	enum CameraMode
-	{
-		PERSPECTIVE,
-		ORTHOGRAPHIC
-	};
-
-	class SCENE_EXPORT Camera
+	class SCENE_EXPORT Camera : public chai::ICamera
 	{
 	public:
-		Camera();
-		virtual ~Camera();
+		Camera() = default;
+		~Camera() override = default;
 
-		void SetPerspective(float fov, float near, float far);
-		void SetOrthographic(float left, float right, float bottom, float top, float near, float far);
+		glm::mat4 getProjectionMatrix() override;
+		glm::mat4 getViewMatrix() override;
+		void setViewMatrix(const glm::mat4& viewMatrix) override;
 
-		void SetPosition(const glm::vec3& pos);
-		void setYawPitch(const float yaw, const float pitch);
-
-		//allow setting the direction the camera should point
-		void SetDirection(const glm::vec3& dir);
-		//or set what the camera should be looking at
-		void lookAt(const glm::vec3& targetPos);
-
-		glm::mat4 GetViewMatrix() const;
-		glm::mat4 GetProjectionMatrix(float aspect) const;
-		glm::mat4 GetViewProjectionMatrix(float aspect) const;
-
-		glm::vec3 getPosition() const;
-		glm::vec3 getDirection() const;
-		glm::vec3 getRight() const;
-		glm::vec3 getUp() const;
-		void getYawPitchRoll(float& yaw, float& pitch, float& roll);
-
-		brew::ICoordinateSpace& getCoordinateSpace() const;
-		void setCoordinateSpace(std::shared_ptr<brew::ICoordinateSpace> space);
+		void setAspectRatio(float aspect) override;
+		void setFarPlane(float far) override;
+		void setNearPlan(float near) override;
+		void setFOV(float fov) override;
 
 	private:
-		glm::vec3 m_position;
-		glm::vec3 m_forward;
-		glm::vec3 m_up;
+		float m_aspect = 0.0;
+		float m_fov = 45.0f; // degrees
+		float m_nearPlane = 0.1f;
+		float m_farPlane = 100.0f;
 
-		CameraMode m_mode;
+		glm::mat4 m_viewMatrix{ 1.f };
 
-		float m_near, m_far;					//clip planes
-		float m_fov;							//perspective attributes
-		float m_left, m_right, m_top, m_bottom;	//ortho attributes
-		float m_yaw, m_pitch, m_roll;
-
-		SharedViewport m_viewport;
-		std::shared_ptr<brew::ICoordinateSpace> m_space;
-
-		void UpdateVectors();
 	};
 }

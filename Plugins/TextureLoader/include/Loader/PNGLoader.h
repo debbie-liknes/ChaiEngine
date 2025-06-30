@@ -1,37 +1,23 @@
 #pragma once
 #include <Resource/ResourceLoader.h>
-#include <Types/Texture2D.h>
 #include <Meta/ChaiMacros.h>
-#include <Plugin/PluginRegistry.h>
 #include <ChaiEngine/Renderer.h>
-#include <Plugin/ServiceLocator.h>
 
 
 namespace chai
 {
-    class PngLoader : public IResourceLoader {
+    class PngLoader : public IResourceLoader 
+    {
     public:
-        PngLoader();
-        PngLoader(brew::Renderer* renderer) : m_renderer(renderer) {}
+        PngLoader() = default;
 
-        bool CanLoad(const std::string& ext) const override;
-        std::shared_ptr<IResource> Load(const std::string& path) override;
-
-    private:
-        brew::Renderer* m_renderer;
+        bool canLoad(const std::string& ext) const override;
+        std::shared_ptr<IResource> load(const std::string& path) override;
     };
-
-    CHAI_CLASS(chai::PngLoader)
-    END_CHAI()
 }
 
-//this could probably live in a different file
-void registerServices()
+CHAI_PLUGIN_CLASS(ImageLoaderPlugin) 
 {
-    chai::kettle::PluginRegistry::Instance().Register("Loader", "TextureLoader", [] {
-        auto renderer = chai::ServiceLocator::getInstance().Get<chai::brew::Renderer>();
-        return static_cast<void*>(new chai::PngLoader());
-        });
+    CHAI_SERVICE(chai::PngLoader, "PNG loader")
 }
-
-CHAI_PLUGIN(TextureLoader, "1.0.0", "chai", "Loader", registerServices)
+CHAI_REGISTER_PLUGIN(ImageLoaderPlugin, "TextureLoader", "1.0.0")

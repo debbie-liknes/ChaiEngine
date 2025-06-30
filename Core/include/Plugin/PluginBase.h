@@ -1,16 +1,18 @@
 #pragma once
 #include <CoreExport.h>
+#include <Plugin/ServiceRegistry.h>
 #include <string>
 
 namespace chai
 {
-    class IPluginBase {
+    class CORE_EXPORT IPlugin 
+    {
     public:
-        virtual ~IPluginBase() = default;
-        virtual const std::string GetName() const = 0;
-        virtual void OnStartup() = 0;
-        virtual void OnShutdown() = 0;
-
-        virtual void* GetService(const std::string& category, const std::string& name) { return nullptr; }
+        virtual ~IPlugin() = default;
+        virtual void initialize() = 0;
+        virtual void shutdown() = 0;
+        virtual const std::string& getName() const = 0;
+        virtual const std::string& getVersion() const = 0;
+        virtual ServiceRegistry& getServices() = 0;
     };
 }

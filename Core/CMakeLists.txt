@@ -1,76 +1,57 @@
 # Add source to this project's executable.
 
+set(RESOURCE_DIR ${CMAKE_SOURCE_DIR}/)
+
 set(Core_headers
-	include/Core/Containers.h
-	include/Core/MemoryTypes.h
-	include/Core/TypeHelpers.h
-	include/Core/TextureBackend.h
-	include/Meta/TypeInfo.h
-	include/Meta/TypeRegistry.h
+	include/Core/Updatable.h
+	include/Graphics/Viewport.h
+	include/Input/EventHandler.h
+	include/Input/InputState.h
+	include/Input/InputSystem.h
 	include/Meta/ChaiMacros.h
 	include/Meta/MethodInvoker.h
+	include/Meta/TypeInfo.h
+	include/Meta/TypeRegistry.h
+	include/Plugin/PluginBase.h
+	include/Plugin/PluginRegistry.h
+	include/Plugin/ServiceLocator.h
+	include/Plugin/ServiceRegistry.h
+	include/Resource/ResourceLoader.h
+	include/Resource/ResourceManager.h
+	include/Scene/ICamera.h
+	include/Types/CMap.h
 )
 
 set(Core_source
-	source/Core/Containers.cpp
+	source/Core/Updatable.cpp
+	source/Graphics/Viewport.cpp
+	source/Input/InputState.cpp
+	source/Input/InputSystem.cpp
 	source/Meta/TypeRegistry.cpp
-)
-
-set(Plugin_headers
-	include/Plugin/PluginBase.h
-	include/Plugin/PluginLoader.h
-	include/Plugin/PluginManifest.h
-	include/Plugin/PluginRegistry.h
-	include/Plugin/ServiceLocator.h
-)
-
-set(Plugin_source
-	source/Plugin/PluginLoader.cpp
 	source/Plugin/PluginRegistry.cpp
 	source/Plugin/ServiceLocator.cpp
-)
-
-set(Resource_headers
-	include/Resource/ResourceLoader.h
-	include/Resource/ResourceManager.h
-)
-
-set(Resource_source
 	source/Resource/ResourceManager.cpp
+	source/Scene/ICamera.cpp
 )
-
-set(Types_headers
-	include/Types/Texture2D.h
-)
-
-set(Types_source
-	source/Types/Texture2D.cpp
-)
-
-source_group("Core/headers" FILES ${Core_headers})
-source_group("Core/src" FILES ${Core_source})
-
-source_group("Plugin/headers" FILES ${Plugin_headers})
-source_group("Plugin/src" FILES ${Plugin_source})
-
-source_group("Resource/headers" FILES ${Resource_headers})
-source_group("Resource/src" FILES ${Resource_source})
-
-source_group("Types/headers" FILES ${Types_headers})
-source_group("Types/src" FILES ${Types_source})
 
 add_library(Core SHARED 
 	${Core_headers} 
 	${Core_source}
-	${Plugin_headers}
-	${Plugin_source}
-	${Resource_headers}
-	${Resource_source}
-	${Types_headers}
-	${Types_source}
 )
 
 target_include_directories(Core PUBLIC ${CMAKE_BINARY_DIR}/exports/Core include)
 target_link_libraries(Core PUBLIC glm::glm)
+target_compile_definitions(Core PUBLIC RESOURCE_PATH=\"${RESOURCE_DIR}\")
+
+#meh
+source_group("Core" REGULAR_EXPRESSION ".*/Core/.*\\.(h|cpp)$")
+source_group("Input" REGULAR_EXPRESSION ".*/Input/.*")
+source_group("Graphics" REGULAR_EXPRESSION ".*/Graphics/.*")
+source_group("Meta" REGULAR_EXPRESSION ".*/Meta/.*")
+source_group("Scene" REGULAR_EXPRESSION ".*/Scene/.*")
+source_group("Resource" REGULAR_EXPRESSION ".*/Resource/.*")
+source_group("Plugin" REGULAR_EXPRESSION ".*/Plugin/.*")
+source_group("Types" REGULAR_EXPRESSION ".*/Types/.*")
+
 
 ChaiLibDefaults(Core "Core")

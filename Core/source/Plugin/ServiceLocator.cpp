@@ -2,14 +2,9 @@
 
 namespace chai
 {
-	ServiceLocator& ServiceLocator::getInstance()
+	ServiceLocator& ServiceLocator::instance()
 	{
 		static ServiceLocator locator;
 		return locator;
-	}
-
-	void ServiceLocator::Shutdown()
-	{
-		m_services.clear();
 	}
 }
