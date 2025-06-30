@@ -1,6 +1,6 @@
 #include <Scene/GameObject.h>
-#include <Scene/TransformComponent.h>
-#include <Scene/RenderableComponent.h>
+#include <Components/TransformComponent.h>
+#include <Components/RenderableComponent.h>
 #include <Core/Updatable.h>
 
 namespace chai::cup

@@ -1,8 +1,8 @@
 #pragma once
 #include <memory>
 #include <ChaiEngine/RenderCommandCollector.h>
-#include <Scene/ComponentBase.h>
-#include <Scene/ControllerComponent.h>
+#include <Components/ComponentBase.h>
+#include <Components/ControllerComponent.h>
 #include <Core/Updatable.h>
 
 namespace chai::cup
@@ -33,33 +33,41 @@ namespace chai::cup
 		}
 
         template<typename T, typename... Args>
-        T* addController(Args&&... args) {
-            if (!controllerComponent) {
+        T* addController(Args&&... args) 
+		{
+            if (!controllerComponent) 
+			{
                 controllerComponent = std::make_unique<ControllerComponent>(this);
             }
             return controllerComponent->addController<T>(std::forward<Args>(args)...);
         }
 
         template<typename T>
-        T* getController() {
+        T* getController() 
+		{
             return controllerComponent ? controllerComponent->getController<T>() : nullptr;
         }
 
-        IController* getController(const std::string& name) {
+        IController* getController(const std::string& name) 
+		{
             return controllerComponent ? controllerComponent->getController(name) : nullptr;
         }
 
         template<typename T>
-        bool removeController() {
+        bool removeController() 
+		{
             return controllerComponent ? controllerComponent->removeController<T>() : false;
         }
 
-        bool hasControllers() const {
+        bool hasControllers() const 
+		{
             return controllerComponent && controllerComponent->hasControllers();
         }
 
-        void setControllersEnabled(bool enabled) {
-            if (controllerComponent) {
+        void setControllersEnabled(bool enabled)     
+		{
+            if (controllerComponent) 
+			 {
                 controllerComponent->setAllEnabled(enabled);
             }
         }

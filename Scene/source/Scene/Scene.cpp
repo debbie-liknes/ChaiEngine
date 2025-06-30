@@ -1,7 +1,7 @@
 #include <Scene/Scene.h>
 #include <ChaiEngine/Spherical.h>
-#include <Scene/LightComponent.h>
-#include <Scene/TransformComponent.h>
+#include <Components/LightComponent.h>
+#include <Components/TransformComponent.h>
 
 namespace chai::cup
 {
@@ -56,7 +56,7 @@ namespace chai::cup
 
 	void Scene::update(double deltaTime)
 	{
-		for(auto& object : m_objects)
+		for(auto const& object : m_objects)
 		{
 			object->update(deltaTime);
 		}

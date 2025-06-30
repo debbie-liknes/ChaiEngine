@@ -9,7 +9,7 @@ namespace chai::cup
         virtual ~IController() = default;
 
         // Core controller interface
-        virtual void update(float deltaTime) = 0;
+        virtual void update(double deltaTime) = 0;
         virtual void setEnabled(bool enabled) = 0;
         virtual bool isEnabled() const = 0;
 
@@ -20,6 +20,6 @@ namespace chai::cup
         chai::cup::GameObject* gameObject = nullptr;
         bool enabled = true;
 
-        IController(chai::cup::GameObject* obj) : gameObject(obj) {}
+        explicit IController(chai::cup::GameObject* obj) : gameObject(obj) {}
     };
 }

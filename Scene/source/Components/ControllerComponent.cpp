@@ -1,4 +1,4 @@
-#include <Scene/ControllerComponent.h>
+#include <Components/ControllerComponent.h>
 #include <Scene/GameObject.h>
 
 namespace chai::cup

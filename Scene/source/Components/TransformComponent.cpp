@@ -1,4 +1,4 @@
-#include <Scene/TransformComponent.h>
+#include <Components/TransformComponent.h>
 #include <Scene/GameObject.h>
 
 namespace chai::cup
@@ -19,10 +19,12 @@ namespace chai::cup
 
     glm::mat4 TransformComponent::getWorldMatrix() const 
     {
-        if (m_parent) {
+        if (m_parent) 
+        {
             return m_parent->getWorldMatrix() * getLocalMatrix();
         }
-        else {
+        else 
+        {
             return getLocalMatrix();
         }
     }
@@ -75,11 +77,13 @@ namespace chai::cup
 
         m_rotation = glm::quat_cast(rotMatrix);
 
-        if (m_parent) {
+        if (m_parent) 
+        {
             // Convert world rotation to local
             m_rotation = glm::inverse(m_parent->getWorldRotation()) * m_rotation;
         }
-        else {
+        else 
+        {
             m_rotation = m_rotation;
         }
     }

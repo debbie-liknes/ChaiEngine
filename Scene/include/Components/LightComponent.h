@@ -1,6 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
-#include <Scene/ComponentBase.h>
+#include <Components/ComponentBase.h>
 
 namespace chai::cup
 {

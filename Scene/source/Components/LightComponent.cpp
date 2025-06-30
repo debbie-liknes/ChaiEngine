@@ -1,4 +1,4 @@
-#include <Scene/LightComponent.h>
+#include <Components/LightComponent.h>
 #include <Scene/GameObject.h>
 
 namespace chai::cup

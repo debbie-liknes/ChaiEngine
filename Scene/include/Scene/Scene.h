@@ -39,7 +39,5 @@ namespace chai::cup
     private:
 
         std::vector<std::unique_ptr<GameObject>> m_objects;
-
-    private:
     };
 }

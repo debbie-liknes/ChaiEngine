@@ -1,6 +1,6 @@
 #pragma once
 #include <SceneExport.h>
-#include <Scene/RenderableComponent.h>
+#include <Components/RenderableComponent.h>
 #include <ChaiEngine/IMesh.h>
 
 namespace chai::cup

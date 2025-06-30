@@ -1,6 +1,6 @@
 #pragma once
 #include <SceneExport.h>
-#include <Scene/ComponentBase.h>
+#include <Components/ComponentBase.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -11,8 +11,8 @@ namespace chai::cup
 	class SCENE_EXPORT TransformComponent : public Component
 	{
 	public:
-		TransformComponent(GameObject* owner = nullptr);
-		~TransformComponent() = default;
+		explicit TransformComponent(GameObject* owner = nullptr);
+		~TransformComponent() override = default;
 		glm::mat4 getLocalMatrix() const;
 		glm::mat4 getWorldMatrix() const;
 

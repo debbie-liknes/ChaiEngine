@@ -1,4 +1,4 @@
-#include <Scene/MeshComponent.h>
+#include <Components/MeshComponent.h>
 
 namespace chai::cup
 {

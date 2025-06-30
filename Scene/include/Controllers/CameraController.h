@@ -1,9 +1,9 @@
 #pragma once
 #include <SceneExport.h>
-#include <Scene/Controller.h>
+#include <Controllers/Controller.h>
 #include <Scene/GameObject.h>
-#include <Scene/CameraComponent.h>
-#include <Scene/TransformComponent.h>
+#include <Components/CameraComponent.h>
+#include <Components/TransformComponent.h>
 #include <Input/InputSystem.h>
 #include <typeindex>
 #include <string>
@@ -14,15 +14,15 @@ namespace chai::cup
     class CameraController : public IController
     {
     public:
-        CameraController(chai::cup::GameObject* obj);
-        ~CameraController();
+        explicit CameraController(chai::cup::GameObject* obj);
+        ~CameraController() override;
 
         void handleInput(const InputEvent& event);
         void processMovement(float deltaTime);
         void processMouseLook(float deltaX, float deltaY);
 
         // IController interface
-        void update(float deltaTime) override;
+        void update(double deltaTime) override;
         void setEnabled(bool enabled) override {}
         bool isEnabled() const override { return enabled; }
         const char* getControllerType() const override { return "CameraController"; }

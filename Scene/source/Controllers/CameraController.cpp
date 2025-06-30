@@ -1,4 +1,4 @@
-#include <Scene/CameraController.h>
+#include <Controllers/CameraController.h>
 #include <stdexcept>
 #include <cmath>
 
@@ -9,7 +9,8 @@ namespace chai::cup
         transformComponent(obj->getComponent<chai::cup::TransformComponent>())
     {
         inputHandlerId = InputSystem::instance().subscribe(
-            [this](const InputEvent& event) {
+            [this](const InputEvent& event) 
+            {
                 handleInput(event);
             }
         );
@@ -36,7 +37,7 @@ namespace chai::cup
         }
     }
 
-    void CameraController::update(float deltaTime) 
+    void CameraController::update(double deltaTime) 
     {
         processMovement(deltaTime);
 
@@ -61,30 +62,36 @@ namespace chai::cup
         auto forward = transformComponent->forward();
         auto right = transformComponent->right();
 
-        if (input.isKeyPressed(KeyCode::W)) {
+        if (input.isKeyPressed(KeyCode::W)) 
+        {
             pos.x += forward.x * velocity;
             pos.y += forward.y * velocity;
             pos.z += forward.z * velocity;
         }
-        if (input.isKeyPressed(KeyCode::S)) {
+        if (input.isKeyPressed(KeyCode::S)) 
+        {
             pos.x -= forward.x * velocity;
             pos.y -= forward.y * velocity;
             pos.z -= forward.z * velocity;
         }
-        if (input.isKeyPressed(KeyCode::A)) {
+        if (input.isKeyPressed(KeyCode::A)) 
+        {
             pos.x -= right.x * velocity;
             pos.y -= right.y * velocity;
             pos.z -= right.z * velocity;
         }
-        if (input.isKeyPressed(KeyCode::D)) {
+        if (input.isKeyPressed(KeyCode::D)) 
+        {
             pos.x += right.x * velocity;
             pos.y += right.y * velocity;
             pos.z += right.z * velocity;
         }
-        if (input.isKeyPressed(KeyCode::Space)) {
+        if (input.isKeyPressed(KeyCode::Space)) 
+        {
             pos.y += velocity;
         }
-        if (input.isKeyPressed(KeyCode::C)) {
+        if (input.isKeyPressed(KeyCode::C)) 
+        {
             pos.y -= velocity;
         }
 
@@ -109,17 +116,5 @@ namespace chai::cup
 
         auto pos = transformComponent->getWorldPosition();
         transformComponent->lookAt({ pos.x + x, pos.y + y, pos.z + z }, { 0.0f, 1.0f, 0.0f });
-
-    // Calculate forward direction
-        //float x = -sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-        //float y = sin(glm::radians(pitch));
-        //float z = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-
-        //glm::vec3 forward(x, y, z);
-        //glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0, 1, 0)));
-        //glm::vec3 up = glm::cross(right, forward);
-
-        //auto pos = transformComponent->getWorldPosition();
-        //transformComponent->lookAt(pos + forward, up);
     }
 }

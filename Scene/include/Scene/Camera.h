@@ -10,8 +10,8 @@ namespace chai::cup
 	class SCENE_EXPORT Camera : public chai::ICamera
 	{
 	public:
-		Camera() {}
-		~Camera() {}
+		Camera() = default;
+		~Camera() override = default;
 
 		glm::mat4 getProjectionMatrix() override;
 		glm::mat4 getViewMatrix() override;

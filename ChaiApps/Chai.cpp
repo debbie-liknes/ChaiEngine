@@ -11,13 +11,13 @@
 #include <Scene/GameObject.h>
 #include <Scene/SceneManager.h>
 #include <Scene/Scene.h>
-#include <Scene/MeshComponent.h>
-#include <Scene/CameraComponent.h>
-#include <Scene/LightComponent.h>
+#include <Components/MeshComponent.h>
+#include <Components/CameraComponent.h>
+#include <Components/LightComponent.h>
 #include <ChaiEngine/AssetManager.h>
-#include <Scene/TransformComponent.h>
+#include <Components/TransformComponent.h>
 #include <Input/InputState.h>
-#include <Scene/CameraController.h>
+#include <Controllers/CameraController.h>
 #include <chrono>
 
 using namespace std;
@@ -69,7 +69,7 @@ int main()
 	camTransform->setPosition({ -5.0, 0.0, 10.0 });
 	camTransform->lookAt({ -2.4941, 1.3559, 4.7810 }, {0.0, 1.0, 0.0});
 	camComponent->getViewMatrix();
-	auto camController = cameraObject->addController<chai::cup::CameraController>();
+	cameraObject->addController<chai::cup::CameraController>();
 
 	//add some lighting so we can see
 	auto lightObject = std::make_unique<chai::cup::GameObject>();
@@ -118,7 +118,7 @@ int main()
 			collector.submit(clearCmd);
 
 			//multiple scenes? additive scenes?
-			chai::cup::Scene* scene = sceneManager.getPrimaryScene();
+			chai::cup::Scene const* scene = sceneManager.getPrimaryScene();
 			scene->collectLights(collector);
 			if (scene) 
 			{
@@ -131,7 +131,7 @@ int main()
 
 		//updates and buffer swap
 		windowManager->update();
-		camComponent->update();
+		camComponent->update(deltaTime);
 	}
 
 	renderer->shutdown();

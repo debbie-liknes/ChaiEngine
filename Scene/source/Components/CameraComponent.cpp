@@ -1,6 +1,6 @@
-#include <Scene/CameraComponent.h>
+#include <Components/CameraComponent.h>
 #include <Scene/GameObject.h>
-#include <Scene/TransformComponent.h>
+#include <Components/TransformComponent.h>
 
 namespace chai::cup
 {
@@ -11,7 +11,7 @@ namespace chai::cup
 
     glm::mat4 CameraComponent::getViewMatrix() const
     {
-        TransformComponent* transform = getGameObject()->getComponent<TransformComponent>();
+        TransformComponent const* transform = getGameObject()->getComponent<TransformComponent>();
         if (!transform) return glm::mat4(1.0f);
 
         // Build view matrix from transform
@@ -32,7 +32,7 @@ namespace chai::cup
         m_camera->setViewMatrix(viewMatrix);
     }
 
-    void CameraComponent::update()
+    void CameraComponent::update(double deltaTime)
     {
         if (auto owner = getGameObject(); owner)
         {
