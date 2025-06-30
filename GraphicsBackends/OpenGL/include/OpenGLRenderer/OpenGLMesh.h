@@ -15,7 +15,8 @@ namespace chai::brew
         size_t indexCount = 0;
         bool isUploaded = false;
 
-        ~OpenGLMeshData() {
+        ~OpenGLMeshData() 
+        {
             if (VAO) glDeleteVertexArrays(1, &VAO);
             if (VBO) glDeleteBuffers(1, &VBO);
             if (EBO) glDeleteBuffers(1, &EBO);

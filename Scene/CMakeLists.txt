@@ -36,4 +36,4 @@ add_library (Scene SHARED ${ChaiScene_headers} ${ChaiScene_source})
 target_include_directories(Scene PUBLIC include)
 target_link_libraries(Scene PUBLIC Core ChaiGraphics)
 
-ChaiLibDefaults(Scene "Graphics")
+ChaiLibDefaults(Scene "Scene")

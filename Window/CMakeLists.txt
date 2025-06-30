@@ -22,4 +22,4 @@ add_library (WindowModule SHARED ${Windowing_headers} ${Windowing_source})
 target_include_directories(WindowModule PUBLIC include)
 target_link_libraries(WindowModule PUBLIC Core)
 
-ChaiLibDefaults(WindowModule "Graphics")
+ChaiLibDefaults(WindowModule "Window")

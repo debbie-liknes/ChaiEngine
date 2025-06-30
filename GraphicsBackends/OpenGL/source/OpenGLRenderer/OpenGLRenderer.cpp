@@ -10,8 +10,10 @@
 
 namespace chai::brew
 {
-	const char* getGLErrorString(GLenum err) {
-		switch (err) {
+	const char* getGLErrorString(GLenum err) 
+	{
+		switch (err) 
+		{
 		case GL_NO_ERROR: return "No error";
 		case GL_INVALID_ENUM: return "Invalid enum";
 		case GL_INVALID_VALUE: return "Invalid value";
@@ -27,17 +29,10 @@ namespace chai::brew
 	static void checkGLError(const std::string& context)
 	{
 		GLenum err;
-		while ((err = glGetError()) != GL_NO_ERROR) {
+		while ((err = glGetError()) != GL_NO_ERROR) 
+		{
 			std::cerr << "OpenGL Error (" << context << "): " << getGLErrorString(err) << std::endl;
 		}
-	}
-
-	OpenGLBackend::OpenGLBackend()
-	{
-	}
-
-	OpenGLBackend::~OpenGLBackend()
-	{
 	}
 
 	bool OpenGLBackend::initialize(void* winProcAddress)
@@ -52,7 +47,7 @@ namespace chai::brew
 		checkGLError("setProcAddress");
 
 		// Check OpenGL version
-		const char* version = (const char*)glGetString(GL_VERSION);
+		const auto* version = (const char*)glGetString(GL_VERSION);
 		std::cout << "OpenGL Version: " << version << std::endl;
 
 		// Set default OpenGL state
@@ -68,7 +63,8 @@ namespace chai::brew
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		defaultShaderProgram = createDefaultShaderProgram();
-		if (defaultShaderProgram == 0) {
+		if (defaultShaderProgram == 0) 
+		{
 			std::cerr << "Failed to create default shader program" << std::endl;
 			return false;
 		}
@@ -108,7 +104,8 @@ void main()
 		GLuint fragmentShader = compileShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
 		checkGLError("compile frag shader");
 
-		if (vertexShader == 0 || fragmentShader == 0) {
+		if (vertexShader == 0 || fragmentShader == 0) 
+		{
 			return 0;
 		}
 
@@ -124,7 +121,8 @@ void main()
 		// Check linking
 		GLint success;
 		glGetProgramiv(program, GL_LINK_STATUS, &success);
-		if (!success) {
+		if (!success) 
+		{
 			char infoLog[512];
 			glGetProgramInfoLog(program, 512, NULL, infoLog);
 			std::cerr << "Shader program linking failed: " << infoLog << std::endl;
@@ -147,7 +145,8 @@ void main()
 		// Check compilation
 		GLint success;
 		glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-		if (!success) {
+		if (!success) 
+		{
 			char infoLog[512];
 			glGetShaderInfoLog(shader, 512, NULL, infoLog);
 			std::cerr << "Shader compilation failed: " << infoLog << std::endl;
@@ -163,7 +162,8 @@ void main()
 		m_meshCache.clear();
 		m_materialCache.clear();
 
-		if (defaultShaderProgram) {
+		if (defaultShaderProgram) 
+		{
 			glDeleteProgram(defaultShaderProgram);
 			defaultShaderProgram = 0;
 		}
@@ -171,8 +171,10 @@ void main()
 
 	void OpenGLBackend::executeCommands(const std::vector<RenderCommand>& commands)
 	{
-		for (const auto& cmd : commands) {
-			switch (cmd.type) {
+		for (const auto& cmd : commands) 
+		{
+			switch (cmd.type) 
+			{
 			case RenderCommand::DRAW_MESH:
 				drawMesh(cmd);
 				break;
@@ -224,11 +226,13 @@ void main()
 			glMaterialData = getOrCreateMaterialData(cmd.material);
 
 			// Compile material shader if needed
-			if (!glMaterialData->isCompiled) {
+			if (!glMaterialData->isCompiled) 
+			{
 				compileMaterial(cmd.material, glMaterialData);
 			}
 
-			if (glMaterialData->shaderProgram && glMaterialData->shaderProgram != 0) {
+			if (glMaterialData->shaderProgram && glMaterialData->shaderProgram != 0) 
+			{
 				shaderToUse = glMaterialData->shaderProgram;
 			}
 		}
@@ -243,7 +247,8 @@ void main()
 		}
 
 		// Apply material state to OpenGL
-		if (cmd.material && glMaterialData) {
+		if (cmd.material && glMaterialData) 
+		{
 			applyMaterialState(cmd.material, shaderToUse, glMaterialData);
 		}
 
@@ -252,7 +257,7 @@ void main()
 
 		// Bind and draw mesh
 		bindVertexArray(glMeshData->VAO);
-		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(glMeshData->indexCount), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(glMeshData->indexCount), GL_UNSIGNED_INT, nullptr);
 		checkGLError("draw mesh");
 
 		// Clean up texture bindings
@@ -263,9 +268,9 @@ void main()
 	{
 		// Assuming you have a current shader program bound
 		GLint lightCountLoc = glGetUniformLocation(currentShaderProgram, "u_lightCount");
-		glUniform1i(lightCountLoc, m_cachedLights.size());
+		glUniform1i(lightCountLoc, (GLint)m_cachedLights.size());
 
-		for (int i = 0; i < m_cachedLights.size() && i < 16; ++i)
+		for (size_t i = 0; i < m_cachedLights.size() && i < 16; ++i)
 		{
 			std::string base = "u_lights[" + std::to_string(i) + "]";
 
@@ -312,14 +317,12 @@ void main()
 	void OpenGLBackend::setBuiltinUniforms(GLuint shaderProgram, const RenderCommand& cmd)
 	{
 		// Set transform matrix uniform
-		GLint transformLoc = glGetUniformLocation(shaderProgram, "u_transform");
-		if (transformLoc != -1) 
+		if (GLint transformLoc = glGetUniformLocation(shaderProgram, "u_transform"); transformLoc != -1) 
 		{
 			glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &cmd.transform[0][0]);
 		}
 
-		GLint viewLoc = glGetUniformLocation(shaderProgram, "u_view");
-		if (viewLoc != -1) 
+		if (GLint viewLoc = glGetUniformLocation(shaderProgram, "u_view"); viewLoc != -1) 
 		{
 			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &cmd.viewMatrix[0][0]);
 		}
@@ -333,7 +336,7 @@ void main()
 
 	void OpenGLBackend::applyMaterialState(IMaterial* material, GLuint shaderProgram, OpenGLMaterialData* glMaterialData)
 	{
-		Material* concreteMaterial = static_cast<Material*>(material);
+		auto const* concreteMaterial = static_cast<Material*>(material);
 		// Apply uniforms from the material
 		const auto& uniforms = concreteMaterial->getUniforms();
 		for (const auto& [name, uniform] : uniforms) 
@@ -348,14 +351,15 @@ void main()
 		// Clear previous texture bindings
 		glMaterialData->boundTextures.clear();
 
-		for (const auto& [samplerName, textureInfo] : textures) {
+		for (const auto& [samplerName, textureInfo] : textures) 
+		{
 			// Bind texture to slot
 			glActiveTexture(GL_TEXTURE0 + textureSlot);
 			glBindTexture(GL_TEXTURE_2D, textureInfo.id);
 
 			// Set sampler uniform
-			GLint samplerLoc = glGetUniformLocation(shaderProgram, samplerName.c_str());
-			if (samplerLoc != -1) {
+			if (GLint samplerLoc = glGetUniformLocation(shaderProgram, samplerName.c_str()); samplerLoc != -1) 
+			{
 				glUniform1i(samplerLoc, textureSlot);
 			}
 
@@ -367,40 +371,44 @@ void main()
 		// Set material feature flags as uniforms (for shaders that need runtime checks)
 		const auto& features = concreteMaterial->getEnabledFeatures();
 
-		GLint hasBaseColorTexLoc = glGetUniformLocation(shaderProgram, "u_hasBaseColorTexture");
-		if (hasBaseColorTexLoc != -1) {
-			glUniform1i(hasBaseColorTexLoc, features.count(MaterialFeature::BaseColorTexture) ? 1 : 0);
+		if (GLint hasBaseColorTexLoc = glGetUniformLocation(shaderProgram, "u_hasBaseColorTexture"); hasBaseColorTexLoc != -1) 
+		{
+			glUniform1i(hasBaseColorTexLoc, features.contains(MaterialFeature::BaseColorTexture) ? 1 : 0);
 		}
 
-		GLint hasNormalTexLoc = glGetUniformLocation(shaderProgram, "u_hasNormalTexture");
-		if (hasNormalTexLoc != -1) {
-			glUniform1i(hasNormalTexLoc, features.count(MaterialFeature::NormalTexture) ? 1 : 0);
+		if (GLint hasNormalTexLoc = glGetUniformLocation(shaderProgram, "u_hasNormalTexture"); hasNormalTexLoc != -1) 
+		{
+			glUniform1i(hasNormalTexLoc, features.contains(MaterialFeature::NormalTexture) ? 1 : 0);
 		}
 
-		GLint hasMetallicTexLoc = glGetUniformLocation(shaderProgram, "u_hasMetallicTexture");
-		if (hasMetallicTexLoc != -1) {
-			glUniform1i(hasMetallicTexLoc, features.count(MaterialFeature::MetallicTexture) ? 1 : 0);
+		if (GLint hasMetallicTexLoc = glGetUniformLocation(shaderProgram, "u_hasMetallicTexture"); hasMetallicTexLoc != -1) 
+		{
+			glUniform1i(hasMetallicTexLoc, features.contains(MaterialFeature::MetallicTexture) ? 1 : 0);
 		}
 
-		GLint hasRoughnessTexLoc = glGetUniformLocation(shaderProgram, "u_hasRoughnessTexture");
-		if (hasRoughnessTexLoc != -1) {
-			glUniform1i(hasRoughnessTexLoc, features.count(MaterialFeature::RoughnessTexture) ? 1 : 0);
+		if (GLint hasRoughnessTexLoc = glGetUniformLocation(shaderProgram, "u_hasRoughnessTexture"); hasRoughnessTexLoc != -1) 
+		{
+			glUniform1i(hasRoughnessTexLoc, features.contains(MaterialFeature::RoughnessTexture) ? 1 : 0);
 		}
 
 		// Handle transparency rendering state
-		if (features.count(MaterialFeature::Transparency)) {
+		if (features.contains(MaterialFeature::Transparency)) 
+		{
 			// Enable blending if not already enabled
-			if (!glIsEnabled(GL_BLEND)) {
+			if (!glIsEnabled(GL_BLEND)) 
+			{
 				glEnable(GL_BLEND);
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			}
 		}
 
 		// Handle double-sided rendering
-		if (features.count(MaterialFeature::DoubleSided)) {
+		if (features.contains(MaterialFeature::DoubleSided)) 
+		{
 			glDisable(GL_CULL_FACE);
 		}
-		else {
+		else 
+		{
 			glEnable(GL_CULL_FACE);
 		}
 	}
@@ -445,31 +453,38 @@ void main()
 		std::stringstream defines;
 
 		// Generate #define statements based on enabled features
-		if (features.count(MaterialFeature::BaseColorTexture)) {
+		if (features.contains(MaterialFeature::BaseColorTexture)) 
+		{
 			defines << "#define HAS_BASE_COLOR_TEXTURE\n";
 		}
-		if (features.count(MaterialFeature::NormalTexture)) {
+		if (features.contains(MaterialFeature::NormalTexture)) 
+		{
 			defines << "#define HAS_NORMAL_TEXTURE\n";
 		}
-		if (features.count(MaterialFeature::MetallicTexture)) {
+		if (features.contains(MaterialFeature::MetallicTexture)) 
+		{
 			defines << "#define HAS_METALLIC_TEXTURE\n";
 		}
-		if (features.count(MaterialFeature::RoughnessTexture)) {
+		if (features.contains(MaterialFeature::RoughnessTexture)) 
+		{
 			defines << "#define HAS_ROUGHNESS_TEXTURE\n";
 		}
-		if (features.count(MaterialFeature::EmissionTexture)) {
+		if (features.contains(MaterialFeature::EmissionTexture)) 
+		{
 			defines << "#define HAS_EMISSION_TEXTURE\n";
 		}
-		if (features.count(MaterialFeature::Transparency)) {
+		if (features.contains(MaterialFeature::Transparency)) 
+		{
 			defines << "#define HAS_TRANSPARENCY\n";
 		}
-		if (features.count(MaterialFeature::DoubleSided)) {
+		if (features.contains(MaterialFeature::DoubleSided)) 
+		{
 			defines << "#define DOUBLE_SIDED\n";
 		}
 
 		// Insert defines after #version directive
-		size_t versionPos = source.find("#version");
-		if (versionPos != std::string::npos) {
+		if (size_t versionPos = source.find("#version"); versionPos != std::string::npos) 
+		{
 			size_t lineEnd = source.find('\n', versionPos);
 			if (lineEnd != std::string::npos) {
 				std::string result = source.substr(0, lineEnd + 1);
@@ -490,7 +505,8 @@ void main()
 
 
 		// Handle different uniform types based on the uniform's type info
-		switch (uniform.getType()) {
+		switch (uniform.getType()) 
+		{
 		case UniformType::FLOAT:
 		{
 			float value;
@@ -551,7 +567,8 @@ void main()
 	OpenGLMeshData* OpenGLBackend::getOrCreateMeshData(IMesh* mesh) 
 	{
 		auto it = m_meshCache.find(mesh);
-		if (it == m_meshCache.end()) {
+		if (it == m_meshCache.end()) 
+		{
 			auto glMeshData = std::make_unique<OpenGLMeshData>();
 			auto* ptr = glMeshData.get();
 			m_meshCache[mesh] = std::move(glMeshData);
@@ -563,7 +580,8 @@ void main()
 	OpenGLMaterialData* OpenGLBackend::getOrCreateMaterialData(IMaterial* material) 
 	{
 		auto it = m_materialCache.find(material);
-		if (it == m_materialCache.end()) {
+		if (it == m_materialCache.end()) 
+		{
 			auto glMaterialData = std::make_unique<OpenGLMaterialData>();
 			auto* ptr = glMaterialData.get();
 			m_materialCache[material] = std::move(glMaterialData);
@@ -572,7 +590,7 @@ void main()
 		return it->second.get();
 	}
 
-	void OpenGLBackend::uploadMeshToGPU(IMesh* mesh, OpenGLMeshData* glMeshData) 
+	void OpenGLBackend::uploadMeshToGPU(const IMesh* mesh, OpenGLMeshData* glMeshData) 
 	{
 		if (glMeshData->isUploaded) return;
 
@@ -624,10 +642,11 @@ void main()
 	void OpenGLBackend::compileMaterial(IMaterial* material, OpenGLMaterialData* glMaterialData) 
 	{
 		// Cast to our concrete Material type to access shader description
-		Material* concreteMaterial = static_cast<Material*>(material);
+		auto const* concreteMaterial = static_cast<Material*>(material);
 		auto shaderDesc = concreteMaterial->getShaderDescription();
 
-		if (!shaderDesc) {
+		if (!shaderDesc) 
+		{
 			std::cerr << "Material has no shader description, using default" << std::endl;
 			glMaterialData->shaderProgram = defaultShaderProgram;
 			glMaterialData->isCompiled = true;
@@ -638,8 +657,8 @@ void main()
 		std::string shaderHash = concreteMaterial->getShaderHash();
 
 		// Check if we already have this shader variant compiled
-		auto it = m_shaderCache.find(shaderHash);
-		if (it != m_shaderCache.end()) {
+		if (auto it = m_shaderCache.find(shaderHash); it != m_shaderCache.end()) 
+		{
 			glMaterialData->shaderProgram = it->second;
 			glMaterialData->isCompiled = true;
 			cacheUniformLocations(glMaterialData->shaderProgram, glMaterialData);
@@ -647,13 +666,14 @@ void main()
 		}
 
 		// Compile new shader variant
-		GLuint shaderProgram = compileShaderFromDescription(shaderDesc, concreteMaterial->getEnabledFeatures());
 
-		if (shaderProgram != 0) {
+		if (GLuint shaderProgram = compileShaderFromDescription(shaderDesc, concreteMaterial->getEnabledFeatures()); shaderProgram != 0) 
+		{
 			m_shaderCache[shaderHash] = shaderProgram;
 			glMaterialData->shaderProgram = shaderProgram;
 		}
-		else {
+		else 
+		{
 			std::cerr << "Failed to compile material shader, using default" << std::endl;
 			glMaterialData->shaderProgram = defaultShaderProgram;
 		}
@@ -671,7 +691,8 @@ void main()
 		// Load shader files
 		for (const auto& stage : shaderDesc->stages) {
 			std::string source = loadShaderFile(stage.path);
-			if (source.empty()) {
+			if (source.empty()) 
+			{
 				std::cerr << "Failed to load shader file: " << stage.path << std::endl;
 				return 0;
 			}
@@ -679,15 +700,18 @@ void main()
 			// Generate feature-based preprocessor defines
 			source = injectFeatureDefines(source, features);
 
-			if (stage.type == ShaderStage::Vertex) {
+			if (stage.type == ShaderStage::Vertex) 
+			{
 				vertexSource = source;
 			}
-			else if (stage.type == ShaderStage::Fragment) {
+			else if (stage.type == ShaderStage::Fragment) 
+			{
 				fragmentSource = source;
 			}
 		}
 
-		if (vertexSource.empty() || fragmentSource.empty()) {
+		if (vertexSource.empty() || fragmentSource.empty()) 
+		{
 			std::cerr << "Missing vertex or fragment shader source" << std::endl;
 			return 0;
 		}
@@ -696,7 +720,8 @@ void main()
 		GLuint vertexShader = compileShader(vertexSource.c_str(), GL_VERTEX_SHADER);
 		GLuint fragmentShader = compileShader(fragmentSource.c_str(), GL_FRAGMENT_SHADER);
 
-		if (vertexShader == 0 || fragmentShader == 0) {
+		if (vertexShader == 0 || fragmentShader == 0) 
+		{
 			if (vertexShader != 0) glDeleteShader(vertexShader);
 			if (fragmentShader != 0) glDeleteShader(fragmentShader);
 			return 0;
@@ -711,7 +736,8 @@ void main()
 		// Check linking
 		GLint success;
 		glGetProgramiv(program, GL_LINK_STATUS, &success);
-		if (!success) {
+		if (!success) 
+		{
 			char infoLog[512];
 			glGetProgramInfoLog(program, 512, NULL, infoLog);
 			std::cerr << "Shader program linking failed (" << shaderDesc->name << "): " << infoLog << std::endl;
@@ -733,7 +759,8 @@ void main()
 		//TEMP
 		auto absolutePath = CMAKE_SOURCE_DIR + filePath;
 		std::ifstream file(absolutePath);
-		if (!file.is_open()) {
+		if (!file.is_open()) 
+		{
 			std::cerr << "Failed to open shader file: " << filePath << std::endl;
 			return "";
 		}

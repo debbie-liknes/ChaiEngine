@@ -15,4 +15,4 @@ add_library (GLFWWindowPlugin SHARED
 
 target_link_libraries(GLFWWindowPlugin PUBLIC WindowModule glfw)
 
-ChaiPluginDefaults(GLFWWindowPlugin "Graphics/Plugins")
+ChaiPluginDefaults(GLFWWindowPlugin "Window/Plugins")

@@ -4,21 +4,21 @@
 #include <Meta/ChaiMacros.h>
 #include <ChaiEngine/Renderer.h>
 #include <memory>
-#include <unordered_map>
 #include <OpenGLRenderer/OpenGLMesh.h>
 #include <OpenGLRenderer/OpenGLMaterial.h>
 #include <ChaiEngine/IMesh.h>
 #include <ChaiEngine/IMaterial.h>
 #include <ChaiEngine/Material.h>
 #include <set>
+#include <Types/CMap.h>
 
 namespace chai::brew
 {
 	class OPENGLRENDERER_EXPORT OpenGLBackend : public Renderer
 	{
     public:
-        OpenGLBackend();
-        ~OpenGLBackend();
+        OpenGLBackend() = default;
+        virtual ~OpenGLBackend() = default;
 
         OpenGLBackend(const OpenGLBackend&) = delete;
         OpenGLBackend& operator=(const OpenGLBackend&) = delete;
@@ -51,14 +51,14 @@ namespace chai::brew
 
         OpenGLMeshData* getOrCreateMeshData(IMesh* mesh);
 		void drawMesh(const RenderCommand& cmd);
-        void uploadMeshToGPU(IMesh* mesh, OpenGLMeshData* glMeshData);
+        void uploadMeshToGPU(const IMesh* mesh, OpenGLMeshData* glMeshData);
         void setupVertexAttributes();
         void bindVertexArray(GLuint vao);
         void clear(float r, float g, float b, float a);
 
-        std::unordered_map<IMesh*, std::unique_ptr<OpenGLMeshData>> m_meshCache;
-        std::unordered_map<IMaterial*, std::unique_ptr<OpenGLMaterialData>> m_materialCache;
-        std::unordered_map<std::string, GLuint> m_shaderCache;
+        CMap<IMesh*, std::unique_ptr<OpenGLMeshData>> m_meshCache;
+        CMap<IMaterial*, std::unique_ptr<OpenGLMaterialData>> m_materialCache;
+        CMap<std::string, GLuint> m_shaderCache;
 
         // Current render state
         GLuint currentShaderProgram = 0;
@@ -72,7 +72,8 @@ namespace chai::brew
 	};
 }
 
-CHAI_PLUGIN_CLASS(OpenGLPlugin) {
-	CHAI_SERVICE_AS(chai::brew::Renderer, chai::brew::OpenGLBackend, "Renderer");
+CHAI_PLUGIN_CLASS(OpenGLPlugin) 
+{
+	CHAI_SERVICE_AS(chai::brew::Renderer, chai::brew::OpenGLBackend, "Renderer")
 }
 CHAI_REGISTER_PLUGIN(OpenGLPlugin, "OpenGLRenderer", "1.0.0")
