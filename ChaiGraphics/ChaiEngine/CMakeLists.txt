@@ -36,7 +36,7 @@ add_library (ChaiGraphics SHARED
 )
 
 target_include_directories(ChaiGraphics PUBLIC include)
-target_link_libraries(ChaiGraphics PUBLIC Core glm::glm glfw)
+target_link_libraries(ChaiGraphics PUBLIC Core ChaiMath glm::glm glfw)
 
 source_group("Assets" REGULAR_EXPRESSION ".*/Assets/.*")
 source_group("Coordinate" REGULAR_EXPRESSION ".*/Coordinate/.*")

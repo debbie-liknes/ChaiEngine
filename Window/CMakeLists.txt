@@ -20,6 +20,6 @@ set(Windowing_source
 add_library (WindowModule SHARED ${Windowing_headers} ${Windowing_source})
 
 target_include_directories(WindowModule PUBLIC include)
-target_link_libraries(WindowModule PUBLIC Core)
+target_link_libraries(WindowModule PUBLIC Core ChaiMath)
 
 ChaiLibDefaults(WindowModule "Window")

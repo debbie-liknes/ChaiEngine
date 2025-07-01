@@ -1,5 +1,6 @@
 #include <WindowModuleExport.h>
 #include <glm/glm.hpp>
+#include <Vec2.h>
 #include <set>
 
 namespace chai
@@ -50,8 +51,8 @@ namespace chai
 	{
 		virtual ~InputState() = default;
 
-		glm::vec2 mousePos{ 0.f };
-		glm::vec2 mouseDiff{ 0.f };
+		Vec2 mousePos{ 0.f };
+		Vec2 mouseDiff{ 0.f };
 		std::set<Key> keys;
 		std::set<MouseButton> mouseButtons;
 	};

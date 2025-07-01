@@ -9,6 +9,7 @@
 #include <ChaiEngine/UniformBuffer.h>
 #include <Types/CMap.h>
 #include <filesystem>
+#include <Vec2.h>
 
 namespace chai
 {
@@ -76,15 +77,15 @@ namespace chai
 					// Texture coordinates
 					if (idx.texcoord_index >= 0)
 					{
-						vertex.texCoord.x = attrib.texcoords[2 * size_t(idx.texcoord_index) + 0];
-						vertex.texCoord.y = 1.0f - attrib.texcoords[2 * size_t(idx.texcoord_index) + 1]; // Flip Y
+						vertex.texCoord.x() = attrib.texcoords[2 * size_t(idx.texcoord_index) + 0];
+						vertex.texCoord.y() = 1.0f - attrib.texcoords[2 * size_t(idx.texcoord_index) + 1]; // Flip Y
 					}
 
 					// Create unique vertex key for deduplication
 					std::string vertexKey = std::format("{},{},{},{},{},{},{},{}",
 						vertex.position.x, vertex.position.y, vertex.position.z,
 						vertex.normal.x, vertex.normal.y, vertex.normal.z,
-						vertex.texCoord.x, vertex.texCoord.y);
+						vertex.texCoord.x(), vertex.texCoord.y());
 
 					// Check if vertex already exists
 					if (!uniqueVertices.contains(vertexKey))

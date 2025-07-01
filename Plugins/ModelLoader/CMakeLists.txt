@@ -9,6 +9,6 @@ add_library (ModelLoader SHARED
 	${ModelLoaderSource} 
 )
 
-target_link_libraries(ModelLoader PUBLIC Core ChaiGraphics)
+target_link_libraries(ModelLoader PUBLIC Core ChaiGraphics ChaiMath)
 
 ChaiPluginDefaults(ModelLoader "Core/Plugins")
