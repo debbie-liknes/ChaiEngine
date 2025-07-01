@@ -3,6 +3,7 @@
 #include <memory>
 #include <cstring>
 #include <glm/glm.hpp>
+#include <Vec2.h>
 
 namespace chai::brew
 {
@@ -51,7 +52,7 @@ namespace chai::brew
     {
         static constexpr UniformType value = UniformType::FLOAT;
     };
-    template<> struct UniformTypeTraits<glm::vec2> 
+    template<> struct UniformTypeTraits<Vec2> 
     {
         static constexpr UniformType value = UniformType::VEC2;
     };
@@ -122,9 +123,9 @@ namespace chai::brew
         return std::make_shared<UniformBuffer<float>>(value);
     }
 
-    inline std::shared_ptr<UniformBufferBase> createUniform(const glm::vec2& value) 
+    inline std::shared_ptr<UniformBufferBase> createUniform(const Vec2& value) 
     {
-        return std::make_shared<UniformBuffer<glm::vec2>>(value);
+        return std::make_shared<UniformBuffer<Vec2>>(value);
     }
 
     inline std::shared_ptr<UniformBufferBase> createUniform(const glm::vec3& value) 

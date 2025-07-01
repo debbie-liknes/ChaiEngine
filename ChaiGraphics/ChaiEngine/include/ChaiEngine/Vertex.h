@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <Vec2.h>
 
 namespace chai::brew
 {
@@ -7,7 +8,7 @@ namespace chai::brew
     {
         glm::vec3 position;
         glm::vec3 normal;
-        glm::vec2 texCoord;
+        Vec2 texCoord;
         glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
     };
 }

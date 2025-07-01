@@ -1,6 +1,7 @@
 #include <OpenGLRenderer/OpenGLRenderer.h>
 #include <iostream>
 #include <glm/glm.hpp>
+#include <Vec2.h>
 #include <algorithm>
 #include <ChaiEngine/RenderCommandList.h>
 #include <ChaiEngine/UniformBuffer.h>
@@ -516,8 +517,8 @@ void main()
 		break;
 		case UniformType::VEC2:
 		{
-			glm::vec2 value;
-			uniform.getData(&value, sizeof(glm::vec2));
+			Vec2 value;
+			uniform.getData(&value, sizeof(Vec2));
 			glUniform2fv(location, 1, &value[0]);
 		}
 		break;
