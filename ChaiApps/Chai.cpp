@@ -142,11 +142,11 @@ int main()
 		camComponent->update(deltaTime);
 
 		//audio update
-		m_audioEngine->Set3dListenerAndOrientation(
-			camTransform->getWorldPosition(),
-			camTransform->forward(),
-			camTransform->up()
-		);
+		//m_audioEngine->Set3dListenerAndOrientation(
+		//	camTransform->getWorldPosition(),
+		//	camTransform->forward(),
+		//	camTransform->up()
+		//);
 		m_audioEngine->Update();
 	}
 

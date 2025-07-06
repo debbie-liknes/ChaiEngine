@@ -3,7 +3,7 @@
 #include <memory>
 #include <cstring>
 #include <glm/glm.hpp>
-#include <Vec2.h>
+#include <ChaiMath.h>
 
 namespace chai::brew
 {

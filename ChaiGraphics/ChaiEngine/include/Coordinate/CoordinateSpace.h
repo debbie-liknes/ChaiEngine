@@ -1,11 +1,13 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <ChaiMath.h>
 
 namespace chai::brew
 {
-    class ICoordinateSpace {
+    class ICoordinateSpace 
+    {
     public:
-        virtual glm::vec3 ToWorld(const glm::vec3& local) const = 0;
-        virtual glm::vec3 ToLocal(const glm::vec3& world) const = 0;
+        virtual chai::Vec3 ToWorld(const chai::Vec3& local) const = 0;
+        virtual chai::Vec3 ToLocal(const chai::Vec3& world) const = 0;
     };
 }

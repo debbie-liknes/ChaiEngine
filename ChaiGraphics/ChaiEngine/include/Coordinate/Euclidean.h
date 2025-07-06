@@ -3,9 +3,10 @@
 
 namespace chai::brew
 {
-    class EuclideanSpace : public ICoordinateSpace {
+    class EuclideanSpace : public ICoordinateSpace 
+    {
     public:
-        glm::vec3 ToWorld(const glm::vec3& local) const override;
-        glm::vec3 ToLocal(const glm::vec3& world) const override;
+        chai::Vec3 ToWorld(const chai::Vec3& local) const override;
+        chai::Vec3 ToLocal(const chai::Vec3& world) const override;
     };
 }

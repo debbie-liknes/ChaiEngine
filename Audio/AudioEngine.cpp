@@ -16,9 +16,9 @@ inline float volumeToDb(float volume)
     return 20.0f * std::log10(std::max(volume, 1e-6f)); // avoid log(0)
 }
 
-inline FMOD_VECTOR vec3ToFmod(const glm::vec3& vec)
+inline FMOD_VECTOR vec3ToFmod(const chai::Vec3& vec)
 {
-    return { vec.x, vec.y, vec.z };
+    return { vec.x, vec.y, vec.z};
 }
 
 struct Implementation
@@ -117,7 +117,7 @@ void AudioEngine::UnLoadSound(const std::string& strSoundName)
 }
 
 int AudioEngine::PlaySound(const std::string& strSoundName,
-    const glm::vec3& vPosition, float fVolumedB)
+    const chai::Vec3& vPosition, float fVolumedB)
 {
     int nChannelId = sgpImplementation->mnNextChannelId++;
     auto tFoundId = sgpImplementation->mSounds.find(strSoundName);
@@ -144,8 +144,8 @@ int AudioEngine::PlaySound(const std::string& strSoundName,
     return nChannelId;
 }
 
-void AudioEngine::Set3dListenerAndOrientation(const glm::vec3& vPosition,
-    const glm::vec3& vLook, const glm::vec3& vUp)
+void AudioEngine::Set3dListenerAndOrientation(const chai::Vec3& vPosition,
+    const chai::Vec3& vLook, const chai::Vec3& vUp)
 {
     auto pos = vec3ToFmod(vPosition);
     pos.x = -pos.x;
@@ -189,7 +189,7 @@ void AudioEngine::StopAllChannels()
 }
 
 void AudioEngine::SetChannel3dPosition(int nChannelId,
-    const glm::vec3& vPosition)
+    const chai::Vec3& vPosition)
 {
     CHECK_BOUNDS(nChannelId, sgpImplementation->mChannels,);
 

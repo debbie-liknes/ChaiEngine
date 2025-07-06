@@ -2,12 +2,12 @@
 
 namespace chai::brew
 {
-    glm::vec3 EuclideanSpace::ToWorld(const glm::vec3& local) const
+    chai::Vec3 EuclideanSpace::ToWorld(const chai::Vec3& local) const
     {
         return local;
     }
 
-    glm::vec3 EuclideanSpace::ToLocal(const glm::vec3& world) const
+    chai::Vec3 EuclideanSpace::ToLocal(const chai::Vec3& world) const
     {
         return world;
     }

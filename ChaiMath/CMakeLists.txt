@@ -1,8 +1,13 @@
 # Add source to this project's executable.
 
 set(Math_headers
-	include/Vec2.h
+	include/ChaiMath.h
+	include/ChaiMathOps.h
+	include/ChaiMatrix.h
+	include/ChaiQuat.h
+	include/ChaiVector.h
 	include/VecBase.h
+	include/VecTraits.h
 )
 
 set(MATH_private
@@ -10,7 +15,10 @@ set(MATH_private
 )
 
 set(Math_source
-	source/Vec2.cpp
+	source/ChaiMathOps.cpp
+	source/VecBase.cpp
+	source/ChaiMatrix.cpp
+	source/ChaiQuat.cpp
 )
 
 add_library(ChaiMath SHARED 

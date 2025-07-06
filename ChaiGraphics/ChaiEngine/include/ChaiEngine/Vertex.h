@@ -1,6 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
-#include <Vec2.h>
+#include <ChaiMath.h>
 
 namespace chai::brew
 {
