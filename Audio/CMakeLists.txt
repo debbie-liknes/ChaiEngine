@@ -25,3 +25,5 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
     "${FMOD_LIBRARY}"
 )
+
+ChaiLibDefaults(${PROJECT_NAME} "Audio")
