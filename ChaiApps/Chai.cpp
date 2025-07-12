@@ -19,6 +19,7 @@
 #include <Controllers/CameraController.h>
 #include <chrono>
 #include <AudioEngine.h>
+#include <ChaiPhysics/ChaiPhysics.h>
 
 using namespace std;
 
@@ -50,6 +51,10 @@ int main()
 	//create viewports to go inside the window
 	uint32_t mainVpId = viewportManager.createViewport(mainWindow, { "MainView", 0, 0, 1080, 720 });
 	chai::Viewport* vp = viewportManager.getViewport(mainVpId);
+
+	// initialize physics engine
+	chai::ChaiPhysics physicsEngine;
+	physicsEngine.init();
 
 	//make a scene
 	chai::cup::SceneManager sceneManager;

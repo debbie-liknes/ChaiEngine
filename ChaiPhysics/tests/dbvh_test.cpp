@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "../core/dbvh.h"
+#include <ChaiPhysics/Core/dbvh.h>
 
 
 // Test 1:
@@ -19,13 +19,13 @@ TEST(dbvh, construct)
 
 TEST(aabb, expand)
 {
-    auto aabb1 = chai::dbvh::aabb{
+    auto aabb1 = chai::aabb{
         .center = glm::vec3(0, 0, 0),
         .width = 1,
         .length = 1,
         .height = 1
     };
-    auto aabb2 = chai::dbvh::aabb{
+    auto aabb2 = chai::aabb{
         .center = glm::vec3(0, 0, 0),
         .width = 1,
         .length = 1,
@@ -34,7 +34,7 @@ TEST(aabb, expand)
 
     EXPECT_THAT(aabb1.expand(aabb2), aabb1);
 
-    auto aabb3 = chai::dbvh::aabb{
+    auto aabb3 = chai::aabb{
         .center = glm::vec3(0, 0, 0),
         .width = 2,
         .length = 2,
@@ -43,13 +43,13 @@ TEST(aabb, expand)
 
     EXPECT_THAT(aabb1.expand(aabb3), aabb3);
 
-    auto aabb4 = chai::dbvh::aabb{
+    auto aabb4 = chai::aabb{
         .center = glm::vec3(1, 1, 1),
         .width = 1,
         .length = 1,
         .height = 1
     };
-    auto aabb5 = chai::dbvh::aabb{
+    auto aabb5 = chai::aabb{
         .center = glm::vec3(0.5, 0.5, 0.5),
         .width = 2,
         .length = 2,
@@ -70,7 +70,7 @@ TEST(dbvh, single_box)
     auto dbvh = chai::dbvh();
 
     // Insert a box at origin
-    chai::dbvh::BoxCollider box{
+    chai::BoxCollider box{
         .box {
             .center {
                 0, 0, 0
@@ -105,7 +105,7 @@ TEST(dbvh, insert_two_nodes_into_dbvh)
     auto dbvh = chai::dbvh();
 
     // Insert a box at origin
-    chai::dbvh::BoxCollider box1{
+    chai::BoxCollider box1{
         .box {
             .center {
                 0, 0, 0
@@ -117,7 +117,7 @@ TEST(dbvh, insert_two_nodes_into_dbvh)
         .center { glm::vec3(0, 0, 0) },
         .rot { glm::quat(1, 0, 0, 0) }
     };
-    chai::dbvh::BoxCollider box2{
+    chai::BoxCollider box2{
         .box {
             .center {
                 1, 1, 1
