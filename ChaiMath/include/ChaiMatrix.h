@@ -5,10 +5,13 @@
 
 namespace chai
 {
-    template<typename T, int N>
+    template<typename T, int C, int R>
     struct MatImpl;
 
-    template<typename T, int N>
+    template<typename T, int C, int R>
+    class MatColumnRef;
+
+    template<typename T, int C, int R>
     class CHAIMATH_EXPORT Mat
     {
     public:
@@ -30,31 +33,27 @@ namespace chai
         Mat(std::initializer_list<T> init);
 
         // Component access
-        Vec<T, N>& operator[](int i);
-        const Vec<T, N>& operator[](int i) const;
+        MatColumnRef<T, C, R> operator[](int i);
+        const Vec<T, R> operator[](int i) const;
 
         // Standard comparison operators
         bool operator==(const Mat& other) const;
 
     private:
-        std::unique_ptr<MatImpl<T, N>> impl_;
+        std::unique_ptr<MatImpl<T, C, R>> impl_;
     };
 
-    template<typename T> using Mat2T = Mat<T, 2>;
-    template<typename T> using Mat3T = Mat<T, 3>;
-    template<typename T> using Mat4T = Mat<T, 4>;
+    template<typename T> using Mat2x2T = Mat<T, 2, 2>;
+    template<typename T> using Mat3x3T = Mat<T, 3, 3>;
 
-    using Mat2f = Mat2T<float>;
-    using Mat3f = Mat3T<float>;
-    using Mat4f = Mat4T<float>;
-    using Mat2d = Mat2T<double>;
-    using Mat3d = Mat3T<double>;
-    using Mat4d = Mat4T<double>;
+    using Mat2x2f = Mat2x2T<float>;
+    using Mat3x3f = Mat3x3T<float>;
+    using Mat2x2d = Mat2x2T<double>;
+    using Mat3x3d = Mat3x3T<double>;
 
-    using Mat2 = Mat2f;
-    using Mat3 = Mat3f;
-    using Mat4 = Mat4f;
+    using Mat2 = Mat2x2f;
+    using Mat3 = Mat3x3f;
 
-    template<typename T, int N>
-    CHAIMATH_EXPORT Mat<T, N> operator*(const Mat<T, N> a, const Mat<T, N>& b);
+    template<typename T, int C, int R>
+    CHAIMATH_EXPORT Mat<T, C, R> operator*(const Mat<T, C, R>& a, const Mat<T, C, R>& b);
 }

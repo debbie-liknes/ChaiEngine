@@ -1,7 +1,6 @@
 #pragma once
 #include <memory>
 #include <initializer_list>
-#include <VecTraits.h>
 #include <ChaiMathExport.h>
 
 namespace chai
@@ -14,11 +13,16 @@ namespace chai
     {
     private:
         std::unique_ptr<VecImpl<T, N>> impl_;
+        friend Vec<T, N> operator+<>(const Vec<T, N>& a, const Vec<T, N>& b);
         friend Vec<T, N> operator-<>(const Vec<T, N>& a, const Vec<T, N>& b);
+        friend Vec<T, N> operator-<>(const Vec<T, N>& v);
+        friend Vec<T, N> normalize<>(const Vec<T, N>& vec);
+
     public:
         Vec();
         ~Vec();
         Vec(const Vec& other);
+        Vec(Vec& other);
         Vec& operator=(const Vec& other);
         Vec(Vec&& other) noexcept;
         Vec& operator=(Vec&& other) noexcept;
@@ -35,10 +39,12 @@ namespace chai
     {
     private:
         std::unique_ptr<VecImpl<T, 2>> impl_;
-        friend Vec<T, 2> operator-<>(const Vec<T, 2>& a, const Vec<T, 2>& b);
+        template<typename U, int M>
+        friend Vec<U, M> operator-(const Vec<U, M>&, const Vec<U, M>&);
 
     public:
         Vec();
+        Vec(const T& x, const T& y);
         ~Vec();
         Vec(const Vec& other);
         Vec& operator=(const Vec& other);
@@ -60,9 +66,12 @@ namespace chai
     {
     private:
         std::unique_ptr<VecImpl<T, 3>> impl_;
-        friend Vec<T, 3> operator-<>(const Vec<T, 3>& a, const Vec<T, 3>& b);
+        template<typename U, int M>
+        friend Vec<U, M> operator-(const Vec<U, M>&, const Vec<U, M>&);
+
     public:
         Vec();
+        Vec(const T& x, const T& y, const T& z);
         ~Vec();
         Vec(const Vec& other);
         Vec& operator=(const Vec& other);
@@ -78,17 +87,25 @@ namespace chai
         T& x;
         T& y;
 		T& z;
+
+		// Not sure how I want to handle truncation. I think id rather be explicit about it.
+        Vec<T, 2> xy() const
+        {
+			return { x, y };
+        }
     };
 
-    // Specialization for Vec4 - x(), y(), z(), and w()
     template<typename T>
     class CHAIMATH_EXPORT Vec<T, 4>
     {
     private:
         std::unique_ptr<VecImpl<T, 4>> impl_;
-        friend Vec<T, 4> operator-<>(const Vec<T, 4>& a, const Vec<T, 4>& b);
+        template<typename U, int M>
+        friend Vec<U, M> operator-(const Vec<U, M>&, const Vec<U, M>&);
+
     public:
         Vec();
+        Vec(const T& x, const T& y, const T& z, const T& w);
         ~Vec();
         Vec(const Vec& other);
         Vec& operator=(const Vec& other);
@@ -105,6 +122,11 @@ namespace chai
 		T& y;
         T& z;
         T& w;
+
+        Vec<T, 3> xyz() const 
+        {
+            return { x, y, z };
+		}
     };
 
     template<typename T> using Vec2T = Vec<T, 2>;
@@ -120,11 +142,12 @@ namespace chai
     using Vec3 = Vec3f;
     using Vec4 = Vec4f;
 
-    // Arithmetic operations
+    template<typename T, int N>
+    Vec<T, N> operator+(const Vec<T, N>&, const Vec<T, N>&);
 
     template<typename T, int N>
-    Vec<T, N> operator-(const Vec<T, N>& a, const Vec<T, N>& b);
+    Vec<T, N> operator-(const Vec<T, N>&, const Vec<T, N>&);
 
     template<typename T, int N>
-    Vec<T, N> operator-(const Vec<T, N>& v);
+    Vec<T, N> operator-(const Vec<T, N>&);
 }

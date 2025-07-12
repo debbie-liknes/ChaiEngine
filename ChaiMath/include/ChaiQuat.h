@@ -14,6 +14,7 @@ namespace chai
     {
     private:
         std::unique_ptr<QuaternionImpl<T>> impl_;
+        friend Quaternion<T> operator*<>(const Quaternion<T>& a, const Quaternion<T>& b);
 
     public:
         Quaternion();
@@ -57,5 +58,5 @@ namespace chai
 	using Quat = Quatf;
 
     template<typename T>
-    CHAIMATH_EXPORT Quaternion<T> operator*(const Quaternion<T>& a, const Quaternion<T>& b);
+    Quaternion<T> operator*(const Quaternion<T>& a, const Quaternion<T>& b);
 }

@@ -5,13 +5,13 @@
 
 namespace chai::cup
 {
-	glm::mat4 Camera::getProjectionMatrix()
+	Mat4 Camera::getProjectionMatrix()
 	{
 		//this is a perspective camera, need to have other types
-		return glm::perspective(m_fov, m_aspect, m_nearPlane, m_farPlane);
+		return perspective(m_fov, m_aspect, m_nearPlane, m_farPlane);
 	}
 
-	glm::mat4 Camera::getViewMatrix()
+	Mat4 Camera::getViewMatrix()
 	{
 		return m_viewMatrix;
 	}
@@ -36,7 +36,7 @@ namespace chai::cup
 		m_fov = fov;
 	}
 
-	void Camera::setViewMatrix(const glm::mat4& viewMatrix)
+	void Camera::setViewMatrix(const Mat4& viewMatrix)
 	{
 		//input comes from Transform component
 		m_viewMatrix = viewMatrix;

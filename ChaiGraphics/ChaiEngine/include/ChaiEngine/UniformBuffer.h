@@ -56,7 +56,7 @@ namespace chai::brew
     {
         static constexpr UniformType value = UniformType::VEC2;
     };
-    template<> struct UniformTypeTraits<glm::vec3> 
+    template<> struct UniformTypeTraits<Vec3> 
     {
         static constexpr UniformType value = UniformType::VEC3;
     };
@@ -68,7 +68,7 @@ namespace chai::brew
     {
         static constexpr UniformType value = UniformType::MAT3;
     };
-    template<> struct UniformTypeTraits<glm::mat4> 
+    template<> struct UniformTypeTraits<Mat4> 
     {
         static constexpr UniformType value = UniformType::MAT4;
     };
@@ -128,9 +128,9 @@ namespace chai::brew
         return std::make_shared<UniformBuffer<Vec2>>(value);
     }
 
-    inline std::shared_ptr<UniformBufferBase> createUniform(const glm::vec3& value) 
+    inline std::shared_ptr<UniformBufferBase> createUniform(const Vec3& value) 
     {
-        return std::make_shared<UniformBuffer<glm::vec3>>(value);
+        return std::make_shared<UniformBuffer<Vec3>>(value);
     }
 
     inline std::shared_ptr<UniformBufferBase> createUniform(const glm::vec4& value) 
@@ -138,9 +138,9 @@ namespace chai::brew
         return std::make_shared<UniformBuffer<glm::vec4>>(value);
     }
 
-    inline std::shared_ptr<UniformBufferBase> createUniform(const glm::mat4& value) 
+    inline std::shared_ptr<UniformBufferBase> createUniform(const Mat4& value) 
     {
-        return std::make_shared<UniformBuffer<glm::mat4>>(value);
+        return std::make_shared<UniformBuffer<Mat4>>(value);
     }
 
     inline std::shared_ptr<UniformBufferBase> createUniform(int value) 

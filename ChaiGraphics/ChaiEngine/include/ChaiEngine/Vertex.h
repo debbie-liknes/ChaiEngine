@@ -6,8 +6,8 @@ namespace chai::brew
 {
     struct Vertex 
     {
-        glm::vec3 position;
-        glm::vec3 normal;
+        Vec3 position;
+        Vec3 normal;
         Vec2 texCoord;
         glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
     };

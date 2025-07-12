@@ -158,18 +158,18 @@ namespace chai
 		// Set specular color
 		if (tinyMat.specular[0] != 0.0f || tinyMat.specular[1] != 0.0f || tinyMat.specular[2] != 0.0f)
 		{
-			mat->setSpecular(glm::vec3(tinyMat.specular[0], tinyMat.specular[1], tinyMat.specular[2]));
+			mat->setSpecular(Vec3(tinyMat.specular[0], tinyMat.specular[1], tinyMat.specular[2]));
 		}
 
 		if (tinyMat.diffuse[0] != 0.0f || tinyMat.diffuse[1] != 0.0f || tinyMat.diffuse[2] != 0.0f)
 		{
-			mat->setDiffuse(glm::vec3(tinyMat.diffuse[0], tinyMat.diffuse[1], tinyMat.diffuse[2]));
+			mat->setDiffuse(Vec3(tinyMat.diffuse[0], tinyMat.diffuse[1], tinyMat.diffuse[2]));
 		}
 
 		// Set ambient color
 		if (tinyMat.ambient[0] != 0.0f || tinyMat.ambient[1] != 0.0f || tinyMat.ambient[2] != 0.0f)
 		{
-			mat->setAmbient(glm::vec3(tinyMat.ambient[0], tinyMat.ambient[1], tinyMat.ambient[2]));
+			mat->setAmbient(Vec3(tinyMat.ambient[0], tinyMat.ambient[1], tinyMat.ambient[2]));
 		}
 
 		// Set shininess/specular exponent

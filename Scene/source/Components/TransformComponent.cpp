@@ -9,15 +9,15 @@ namespace chai::cup
 		    m_parent = owner->getComponent<TransformComponent>();
     }
 
-    glm::mat4 TransformComponent::getLocalMatrix() const 
+    Mat4 TransformComponent::getLocalMatrix() const 
     {
-        glm::mat4 t = glm::translate(glm::mat4(1.0f), m_position);
-        glm::mat4 r = glm::mat4_cast(m_rotation);
-        glm::mat4 s = glm::scale(glm::mat4(1.0f), m_scale);
+        Mat4 t = translate(Mat4{ 1.0f }, m_position);
+        Mat4 r = Mat4_cast(m_rotation);
+        Mat4 s = scale(Mat4{ 1.0f }, m_scale);
         return t * r * s;
     }
 
-    glm::mat4 TransformComponent::getWorldMatrix() const 
+    Mat4 TransformComponent::getWorldMatrix() const 
     {
         if (m_parent) 
         {
@@ -29,62 +29,61 @@ namespace chai::cup
         }
     }
 
-    void TransformComponent::setPosition(glm::vec3 newPos)
+    void TransformComponent::setPosition(chai::Vec3 newPos)
     {
         m_position = newPos;
     }
 
-    glm::vec3 TransformComponent::forward() const 
+    Vec3 TransformComponent::forward() const 
     {
-        return getWorldRotation() * glm::vec3(0, 0, -1);
+        return getWorldRotation() * Vec3{ 0, 0, -1 };
     }
 
-    glm::vec3 TransformComponent::right() const 
+    Vec3 TransformComponent::right() const 
     {
-        return getWorldRotation() * glm::vec3(1, 0, 0);
+        return getWorldRotation() * Vec3{ 1, 0, 0 };
     }
 
-    glm::vec3 TransformComponent::up() const 
+    Vec3 TransformComponent::up() const 
     {
-        return getWorldRotation() * glm::vec3(0, 1, 0);
+        return getWorldRotation() * Vec3{ 0, 1, 0 };
     }
 
-    glm::vec3 TransformComponent::getWorldPosition() const 
+    Vec3 TransformComponent::getWorldPosition() const 
     {
-        return glm::vec3(getWorldMatrix()[3]);
+        return Vec3(getWorldMatrix()[3].xyz());
     }
 
-    glm::quat TransformComponent::getWorldRotation() const {
-        if (m_parent) {
+    Quat TransformComponent::getWorldRotation() const 
+    {
+        if (m_parent) 
+        {
             return m_parent->getWorldRotation() * m_rotation;
         }
-        else {
+        else 
+        {
             return m_rotation;
         }
     }
 
-    void TransformComponent::lookAt(const glm::vec3& target, const glm::vec3& worldUp)
+    void TransformComponent::lookAt(const Vec3& target, const Vec3& worldUp)
     {
-        glm::vec3 worldPos = getWorldPosition();
-        glm::vec3 forward = glm::normalize(target - worldPos);
-        glm::vec3 right = glm::normalize(glm::cross(forward, worldUp));
-        glm::vec3 up = glm::cross(right, forward);
+        Vec3 worldPos = getWorldPosition();
+        Vec3 forward = normalize(target - worldPos);
+        Vec3 right = normalize(cross(forward, worldUp));
+        Vec3 up = cross(right, forward);
 
-        glm::mat3 rotMatrix;
-        rotMatrix[0] = right;
-        rotMatrix[1] = up;
-        rotMatrix[2] = -forward;
+        Mat4 rotMatrix;
+        //rotMatrix[0] = { right, 1.0 };
+        //rotMatrix[1] = { up, 1.0 };
+        //rotMatrix[2] = { -forward, 1.0 };
 
-        m_rotation = glm::quat_cast(rotMatrix);
+        m_rotation = Quat_cast(rotMatrix);
 
         if (m_parent) 
         {
             // Convert world rotation to local
-            m_rotation = glm::inverse(m_parent->getWorldRotation()) * m_rotation;
-        }
-        else 
-        {
-            m_rotation = m_rotation;
+            m_rotation = inverse(m_parent->getWorldRotation()) * m_rotation;
         }
     }
 }

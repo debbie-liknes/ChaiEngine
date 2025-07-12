@@ -15,7 +15,7 @@ namespace chai::cup
             }
         );
 
-		glm::vec3 forward = transformComponent->forward();
+		Vec3 forward = transformComponent->forward();
         yaw = atan2(-forward.x, forward.z) * 180.0f / 3.14;
         pitch = asin(forward.y) * 180.0f / 3.14;
     }

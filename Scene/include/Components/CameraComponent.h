@@ -3,6 +3,7 @@
 #include <Components/ComponentBase.h>
 #include <Scene/Camera.h>
 #include <memory>
+#include <ChaiMath.h>
 
 namespace chai::cup
 {
@@ -14,8 +15,8 @@ namespace chai::cup
 		explicit CameraComponent(GameObject* owner = nullptr);
 		~CameraComponent() override = default;
 
-		glm::mat4 getViewMatrix() const;
-		glm::mat4 getProjectionMatrix() const { return m_camera->getProjectionMatrix(); }
+		Mat4 getViewMatrix() const;
+		Mat4 getProjectionMatrix() const { return m_camera->getProjectionMatrix(); }
 		ICamera* getCamera() { return m_camera.get(); }
 
 		void update(double deltaTime) override;

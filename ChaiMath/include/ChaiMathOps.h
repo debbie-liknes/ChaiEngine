@@ -19,28 +19,28 @@ namespace chai
     Vec<T, 3> cross(const Vec<T, 3>& a, const Vec<T, 3>& b);
 
     template<typename T>
-    CHAIMATH_EXPORT Mat<T, 4> lookAt(const Vec<T, 3>& eye, const Vec<T, 3>& center, const Vec<T, 3>& up);
+    CHAIMATH_EXPORT Mat<T, 4, 4> lookAt(const Vec<T, 3>& eye, const Vec<T, 3>& center, const Vec<T, 3>& up);
 
     template<typename T>
     CHAIMATH_EXPORT T radians(T degrees);
 
     template<typename T>
-    CHAIMATH_EXPORT T inverse(Quaternion<T> quat);
+    CHAIMATH_EXPORT Quaternion<T> inverse(Quaternion<T> quat);
 
-    template<typename T, int N>
-    CHAIMATH_EXPORT Mat<T, N> translate(const Mat<T, N>& mat, const Vec<T, 3>& vec);
+    template<typename T, int C, int R>
+    CHAIMATH_EXPORT Mat<T, C, R> translate(const Mat<T, C, R>& mat, const Vec<T, 3>& vec);
 
-    template<typename T, int N>
-    CHAIMATH_EXPORT Mat<T, N> scale(const Mat<T, N>& mat, const Vec<T, 3>& vec);
-
-    template<typename T>
-    CHAIMATH_EXPORT Mat<T, 4> Mat4_cast(const Quaternion<T>& quat);
+    template<typename T, int C, int R>
+    CHAIMATH_EXPORT Mat<T, C, R> scale(const Mat<T, C, R>& mat, const Vec<T, 3>& vec);
 
     template<typename T>
-    CHAIMATH_EXPORT Quaternion<T> Quat_cast(const Mat<T, 4>& mat);
+    CHAIMATH_EXPORT Mat<T, 4, 4> Mat4_cast(const Quaternion<T>& quat);
 
     template<typename T>
-    CHAIMATH_EXPORT Mat<T, 4> perspective(T fov, T aspect, T near, T far);
+    CHAIMATH_EXPORT Quaternion<T> Quat_cast(const Mat<T, 4, 4>& mat);
+
+    template<typename T>
+    CHAIMATH_EXPORT Mat<T, 4, 4> perspective(T fov, T aspect, T near, T far);
 
     template<typename T>
     CHAIMATH_EXPORT Vec<T, 3> operator*(const Quaternion<T> quat, const Vec<T, 3>& v);

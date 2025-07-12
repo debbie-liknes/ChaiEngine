@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <Components/ComponentBase.h>
+#include <ChaiMath.h>
 
 namespace chai::cup
 {
@@ -17,14 +18,14 @@ namespace chai::cup
     public:
         LightComponent(GameObject* owner = nullptr);
         LightType type = LightType::DIRECTIONAL;
-        glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
+        Vec3 color = Vec3(1.0f, 1.0f, 1.0f);
         float intensity = 0.7f;
 
-		//glm::vec3 direction = glm::vec3(-1.0f, -1.0f, -1.0f);
+		//Vec3 direction = Vec3(-1.0f, -1.0f, -1.0f);
 
         // For point/spot lights
         float range = 10.0f;
-        glm::vec3 attenuation = glm::vec3(1.0f, 0.09f, 0.032f); // constant, linear, quadratic
+        Vec3 attenuation = Vec3(1.0f, 0.09f, 0.032f); // constant, linear, quadratic
 
         // For spot lights
         float innerCone = 12.5f; // degrees

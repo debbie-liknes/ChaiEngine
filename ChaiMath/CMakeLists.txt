@@ -7,7 +7,9 @@ set(Math_headers
 	include/ChaiQuat.h
 	include/ChaiVector.h
 	include/VecBase.h
-	include/VecTraits.h
+	include/Mat_4x4.h
+	include/Mat_3x3.h
+	include/Mat_2x2.h
 )
 
 set(MATH_private
@@ -15,10 +17,7 @@ set(MATH_private
 )
 
 set(Math_source
-	source/ChaiMathOps.cpp
-	source/VecBase.cpp
-	source/ChaiMatrix.cpp
-	source/ChaiQuat.cpp
+	source/GLMWrapper.cpp
 )
 
 add_library(ChaiMath SHARED 
