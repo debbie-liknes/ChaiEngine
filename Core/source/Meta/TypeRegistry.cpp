@@ -1,8 +1,8 @@
 #include <Meta/TypeRegistry.h>
 
-namespace chai::kettle
+namespace chai
 {
-    TypeRegistry& TypeRegistry::Instance() {
+    TypeRegistry& TypeRegistry::instance() {
         static TypeRegistry reg;
         return reg;
     }

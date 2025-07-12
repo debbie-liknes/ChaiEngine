@@ -1,61 +1,154 @@
 #pragma once
 #include <ChaiGraphicsExport.h>
-#include <string>
-#include <Core/TypeHelpers.h>
-#include <Core/MemoryTypes.h>
+#include <memory>
+#include <cstring>
+#include <glm/glm.hpp>
 
 namespace chai::brew
 {
-	class CHAIGRAPHICS_EXPORT UniformBufferBase {
-	public:
-		std::string name;
-		virtual ~UniformBufferBase();
+    enum class UniformType 
+    {
+        FLOAT,
+        VEC2,
+        VEC3,
+        VEC4,
+        MAT3,
+        MAT4,
+        INT,
+        BOOL,
+        SAMPLER2D,
+        UNKNOWN
+    };
 
-		// Returns the size of a single element in bytes (needed for OpenGL)
-		virtual size_t getElementSize() const = 0;
+    class UniformBufferBase
+    {
+    public:
+        UniformBufferBase() = default;
+        virtual ~UniformBufferBase();
 
-		// Returns a raw pointer to the data
-		virtual const void* getRawData() const = 0;
-	};
+        virtual UniformType getType() const = 0;
+        virtual size_t getSize() const = 0;
+        virtual void getData(void* dest, size_t maxSize) const = 0;
+        virtual std::unique_ptr<UniformBufferBase> clone() const = 0;
 
-	// Templated derived class for storing uniform buffer data
-	template <typename T>
-	class UniformBuffer : public UniformBufferBase {
-	public:
-		T data;
+        bool isFloat() const { return getType() == UniformType::FLOAT; }
+        bool isVec2() const { return getType() == UniformType::VEC2; }
+        bool isVec3() const { return getType() == UniformType::VEC3; }
+        bool isVec4() const { return getType() == UniformType::VEC4; }
+        bool isMat4() const { return getType() == UniformType::MAT4; }
+        bool isInt() const { return getType() == UniformType::INT; }
+        bool isBool() const { return getType() == UniformType::BOOL; }
+    };
 
-		UniformBuffer(PrimDataType underlyingType) :
-			m_underlyingType(underlyingType)
-		{
-			data = T(); // Initialize data to default value
-		}
-		virtual ~UniformBuffer() = default;
+    template<typename T>
+    struct UniformTypeTraits 
+    {
+        static constexpr UniformType value = UniformType::UNKNOWN;
+    };
 
-		UniformBuffer(T d, PrimDataType underlyingType) :
-			data(d), m_underlyingType(underlyingType)
-		{}
+    // Specializations for supported types
+    template<> struct UniformTypeTraits<float> 
+    {
+        static constexpr UniformType value = UniformType::FLOAT;
+    };
+    template<> struct UniformTypeTraits<glm::vec2> 
+    {
+        static constexpr UniformType value = UniformType::VEC2;
+    };
+    template<> struct UniformTypeTraits<glm::vec3> 
+    {
+        static constexpr UniformType value = UniformType::VEC3;
+    };
+    template<> struct UniformTypeTraits<glm::vec4> 
+    {
+        static constexpr UniformType value = UniformType::VEC4;
+    };
+    template<> struct UniformTypeTraits<glm::mat3> 
+    {
+        static constexpr UniformType value = UniformType::MAT3;
+    };
+    template<> struct UniformTypeTraits<glm::mat4> 
+    {
+        static constexpr UniformType value = UniformType::MAT4;
+    };
+    template<> struct UniformTypeTraits<int> 
+    {
+        static constexpr UniformType value = UniformType::INT;
+    };
+    template<> struct UniformTypeTraits<bool> 
+    {
+        static constexpr UniformType value = UniformType::BOOL;
+    };
 
-		size_t getElementSize() const override {
-			return sizeof(T); // Size of one element
-		}
+    template<typename T>
+    class UniformBuffer : public UniformBufferBase
+    {
+    public:
+        explicit UniformBuffer(const T& value) : m_value(value) {}
 
-		const void* getRawData() const override {
-			return &data; // Pointer to raw data
-		}
+        UniformType getType() const override
+        {
+            return UniformTypeTraits<T>::value;
+        }
 
-	private:
-		PrimDataType m_underlyingType = DataType::FLOAT;
-	};
+        size_t getSize() const override
+        {
+            return sizeof(T);
+        }
 
-	template <typename T>
-	using UBO = UniformBuffer<T>;
+        void getData(void* dest, size_t maxSize) const override
+        {
+            if (maxSize >= sizeof(T)) 
+            {
+                std::memcpy(dest, &m_value, sizeof(T));
+            }
+        }
 
-	template <typename T>
-	using SharedUBO = chai::CSharedPtr<UBO<T>>;
+        std::unique_ptr<UniformBufferBase> clone() const override
+        {
+            return std::make_unique<UniformBuffer<T>>(m_value);
+        }
 
-	template <typename T>
-	SharedUBO<T> createUniformBuffer(PrimDataType underlyingType)
-	{
-		return std::make_shared<UniformBuffer<T>>(underlyingType);
-	}
+        // Direct access for performance
+        const T& getValue() const { return m_value; }
+        void setValue(const T& value) { m_value = value; }
+
+    private:
+        T m_value;
+    };
+
+    inline std::shared_ptr<UniformBufferBase> createUniform(float value) 
+    {
+        return std::make_shared<UniformBuffer<float>>(value);
+    }
+
+    inline std::shared_ptr<UniformBufferBase> createUniform(const glm::vec2& value) 
+    {
+        return std::make_shared<UniformBuffer<glm::vec2>>(value);
+    }
+
+    inline std::shared_ptr<UniformBufferBase> createUniform(const glm::vec3& value) 
+    {
+        return std::make_shared<UniformBuffer<glm::vec3>>(value);
+    }
+
+    inline std::shared_ptr<UniformBufferBase> createUniform(const glm::vec4& value) 
+    {
+        return std::make_shared<UniformBuffer<glm::vec4>>(value);
+    }
+
+    inline std::shared_ptr<UniformBufferBase> createUniform(const glm::mat4& value) 
+    {
+        return std::make_shared<UniformBuffer<glm::mat4>>(value);
+    }
+
+    inline std::shared_ptr<UniformBufferBase> createUniform(int value) 
+    {
+        return std::make_shared<UniformBuffer<int>>(value);
+    }
+
+    inline std::shared_ptr<UniformBufferBase> createUniform(bool value) 
+    {
+        return std::make_shared<UniformBuffer<bool>>(value);
+    }
 }
