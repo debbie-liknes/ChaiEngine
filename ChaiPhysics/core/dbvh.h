@@ -3,6 +3,7 @@
 #include <glm/vec3.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <span>
+#include <array>
 #include <memory>
 
 //
@@ -29,7 +30,10 @@ namespace chai
         // Axis-aligned Bounding Box
         struct aabb
         {
+            bool operator==(const aabb&) const;
+
             double getSurfaceArea() const;
+            aabb expand(const aabb& box) const;
 
             // The center point in the AABB
             glm::vec3 center;
@@ -59,11 +63,16 @@ namespace chai
         {
             Node* left = nullptr;
             Node* right = nullptr;
+            Node* parent = nullptr;
+
+            // An enlarged bounding box is used to prevent constant
+            // re-insertion due to the small movements of objects.
+            aabb boundsEnlarged;
 
             // This axis-aligned bounding box isn't necessarily
             // the bounding box around a GameObject. This is the
             // world space bounding box.
-            aabb bounds;
+            aabb boundsLeaf;
 
             // TODO: Add this in once Debbie's things are merged.
             // How does the GameObject get picked up by the physics
@@ -71,7 +80,7 @@ namespace chai
             // collider? Is there a thing that says this object is
             // interactable by the physics engine?
             //GameObject* object;
-            BoxCollider* object; // until the above comes in
+            const BoxCollider* object; // until the above comes in
         };
 
         dbvh();
@@ -80,7 +89,8 @@ namespace chai
         Node* getRootNode() const;
 
         void update();
-        void insert(BoxCollider* object);
+        void insert(const BoxCollider* object);
+        void remove(const BoxCollider* object);
 
         std::span<aabb> getOverlappingPairs() const;
 
