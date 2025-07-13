@@ -28,3 +28,6 @@ jobs:
 
     - name: Build
       run: cmake --build build
+
+    - name: Run tests via CTest
+      run: ctest --test-dir build --output-on-failure -C Debug

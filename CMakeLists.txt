@@ -31,6 +31,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 project ("Chai")
 
+# Enable testing via CTest
+enable_testing()
+
 # Include external projects
 add_subdirectory(external)
 
