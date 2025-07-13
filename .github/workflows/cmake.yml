@@ -14,6 +14,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Initialize submodules
+      uses: snickerbockers/submodules-init@v4
+
     - name: Set up CMake
       uses: jwlawson/actions-setup-cmake@v1
 
