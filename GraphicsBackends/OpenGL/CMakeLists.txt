@@ -11,9 +11,6 @@ set(OpenGLRenderer_source
 	source/OpenGLRenderer/OpenGLMaterial.cpp
 )
 
-add_library(glad STATIC ${CMAKE_SOURCE_DIR}/external/glad/src/gl.c)
-target_include_directories(glad PUBLIC ${CMAKE_SOURCE_DIR}/external/glad/include)
-
 add_library (OpenGLRenderer SHARED ${OpenGLRenderer_headers} ${OpenGLRenderer_source})
 
 target_link_libraries(OpenGLRenderer PUBLIC ChaiGraphics WindowModule PRIVATE glad)
