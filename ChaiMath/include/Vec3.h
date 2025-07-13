@@ -1,6 +1,7 @@
 #pragma once
 #include <VecBase.h>
 #include <Vec2.h>
+#include <ChaiMatrix.h>
 
 namespace chai
 {
@@ -10,17 +11,11 @@ namespace chai
     private:
         std::unique_ptr<VecImpl<T, 3>> impl_;
 
-        template<typename U, int M>
-        friend Vec<U, M> operator-(const Vec<U, M>&, const Vec<U, M>&);
-
-        template<typename U, int M>
-        friend Vec<U, M> operator+(const Vec<U, M>&, const Vec<U, M>&);
-
-        template<typename U, int M>
-        friend Vec<U, M> operator-(const Vec<U, M>&);
-
         template<typename U, int C, int R>
         friend class MatColumnRef;
+
+        template<typename, int>
+        friend struct internal::VecAccess;
 
     public:
         Vec();
@@ -31,7 +26,7 @@ namespace chai
         Vec(Vec&& other) noexcept;
         Vec& operator=(Vec&& other) noexcept;
         template<typename... Args>
-        Vec(Args... args);
+        explicit Vec(Args... args);
         Vec(std::initializer_list<T> init);
         T& operator[](int i);
         const T& operator[](int i) const;

@@ -40,7 +40,7 @@ add_library(Core SHARED
 )
 
 target_include_directories(Core PUBLIC ${CMAKE_BINARY_DIR}/exports/Core include)
-target_link_libraries(Core PUBLIC ChaiMath glm::glm)
+target_link_libraries(Core PUBLIC ChaiMath)
 target_compile_definitions(Core PUBLIC RESOURCE_PATH=\"${RESOURCE_DIR}\")
 
 #meh

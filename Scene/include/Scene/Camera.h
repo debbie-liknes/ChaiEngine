@@ -1,9 +1,7 @@
 #pragma once
 #include <SceneExport.h>
-#include <glm/glm.hpp>
 #include <Scene/ICamera.h>
 #include <Coordinate/CoordinateSpace.h>
-#include <glm/gtc/matrix_transform.hpp>
 #include <ChaiMath.h>
 
 namespace chai::cup

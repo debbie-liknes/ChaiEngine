@@ -1,6 +1,5 @@
 #include <string>
 
-#include <glm/glm.hpp>
 #include <ChaiMath.h>
 
 class AudioEngine

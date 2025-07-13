@@ -1,6 +1,5 @@
 #include <OpenGLRenderer/OpenGLRenderer.h>
 #include <iostream>
-#include <glm/glm.hpp>
 #include <algorithm>
 #include <ChaiEngine/RenderCommandList.h>
 #include <ChaiEngine/UniformBuffer.h>
@@ -523,15 +522,15 @@ void main()
 		break;
 		case UniformType::VEC3:
 		{
-			chai::Vec3 value;
-			uniform.getData(&value, sizeof(chai::Vec3));
+			Vec3 value;
+			uniform.getData(&value, sizeof(Vec3));
 			glUniform3fv(location, 1, &value[0]);
 		}
 		break;
 		case UniformType::VEC4:
 		{
-			glm::vec4 value;
-			uniform.getData(&value, sizeof(glm::vec4));
+			Vec4 value;
+			uniform.getData(&value, sizeof(Vec4));
 			glUniform4fv(location, 1, &value[0]);
 		}
 		break;

@@ -10,17 +10,11 @@ namespace chai
     private:
         std::unique_ptr<VecImpl<T, 4>> impl_;
 
-        template<typename U, int M>
-        friend Vec<U, M> operator-(const Vec<U, M>&, const Vec<U, M>&);
-
-        template<typename U, int M>
-        friend Vec<U, M> operator+(const Vec<U, M>&, const Vec<U, M>&);
-
-        template<typename U, int M>
-        friend Vec<U, M> operator-(const Vec<U, M>&);
-
         template<typename U, int C, int R>
         friend class MatColumnRef;
+
+        template<typename, int>
+        friend struct internal::VecAccess;
 
     public:
         Vec();

@@ -1,6 +1,5 @@
 #pragma once
 #include <CoreExport.h>
-#include <glm/glm.hpp>
 #include <ChaiMath.h>
 
 namespace chai

@@ -110,9 +110,9 @@ namespace chai::cup
         if (pitch < -89.0f) pitch = -89.0f;
 
         // Standard OpenGL camera forward calculation
-        double x = -sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-        double y = sin(glm::radians(pitch));
-        double z = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+        double x = -sin(radians(yaw)) * cos(radians(pitch));
+        double y = sin(radians(pitch));
+        double z = cos(radians(yaw)) * cos(radians(pitch));
 
         auto pos = transformComponent->getWorldPosition();
         transformComponent->lookAt({ pos.x + (float)x, pos.y + (float)y, pos.z + (float)z }, { 0.0f, 1.0f, 0.0f });

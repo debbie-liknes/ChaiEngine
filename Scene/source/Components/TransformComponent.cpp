@@ -71,6 +71,7 @@ namespace chai::cup
     {
         Vec3 worldPos = getWorldPosition();
         Vec3 forward = normalize(target - worldPos);
+        cross(forward, worldUp);
         Vec3 right = normalize(cross(forward, worldUp));
         Vec3 up = cross(right, forward);
 

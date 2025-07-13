@@ -1,6 +1,8 @@
 #pragma once
 #include <ChaiMathExport.h>
 #include <ChaiMatrix.h>
+#include <Vec3.h>
+#include <ChaiQuat.h>
 
 namespace chai
 {
@@ -12,6 +14,9 @@ namespace chai
 
         template<typename U, int C, int R>
         friend class MatColumnRef;
+
+        template<typename, int, int>
+        friend struct internal::MatAccess;
 
     public:
         Mat();

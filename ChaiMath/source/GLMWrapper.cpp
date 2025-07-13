@@ -9,9 +9,9 @@
 #include <Vec4.h>
 #include <Mat_4x4.h>
 
-namespace chai
+//access so we dont have friend every function
+namespace chai 
 {
-	/////////////////////////////////////////// Vector Implementation /////////////////////////////////////////
 	template<typename T, int N>
 	struct VecImpl
 	{
@@ -20,7 +20,7 @@ namespace chai
 		VecImpl() = default;
 
 		template<typename... Args>
-		VecImpl(Args... args) : glmVec{ static_cast<T>(args)... } {}
+		explicit VecImpl(Args... args) : glmVec{ static_cast<T>(args)... } {}
 
 		VecImpl(std::initializer_list<T> init)
 		{
@@ -28,24 +28,50 @@ namespace chai
 		}
 	};
 
+	namespace internal 
+	{
+		template<typename T, int N>
+		struct VecAccess 
+		{
+			static glm::vec<N, T>& get(Vec<T, N>& v) 
+			{
+				return v.impl_->glmVec;
+			}
+
+			static const glm::vec<N, T>& get(const Vec<T, N>& v) 
+			{
+				return v.impl_->glmVec;
+			}
+		};
+	}
+
+}
+
+/////////////////////////////////////////// Vector Implementation /////////////////////////////////////////
+namespace chai
+{
+
 	// vec 2 Specialization
 	template<typename T>
 	Vec<T, 2>::Vec() : impl_(std::make_unique<VecImpl<T, 2>>()),
-		x(impl_->glmVec[0]), y(impl_->glmVec[1]) 
-	{}
+		x(impl_->glmVec[0]), y(impl_->glmVec[1])
+	{
+	}
 
 	template<typename T>
 	Vec<T, 2>::Vec(const T& xVal, const T& yVal) : impl_(std::make_unique<VecImpl<T, 2>>(xVal, yVal)),
-		x(impl_->glmVec[0]), y(impl_->glmVec[1]) 
-	{}
+		x(impl_->glmVec[0]), y(impl_->glmVec[1])
+	{
+	}
 
 	template<typename T>
 	Vec<T, 2>::~Vec() = default;
 
 	template<typename T>
 	Vec<T, 2>::Vec(const Vec& other) : impl_(std::make_unique<VecImpl<T, 2>>(*other.impl_)),
-		x(impl_->glmVec[0]), y(impl_->glmVec[1]) 
-	{}
+		x(impl_->glmVec[0]), y(impl_->glmVec[1])
+	{
+	}
 
 	template<typename T>
 	Vec<T, 2>& Vec<T, 2>::operator=(const Vec& other)
@@ -59,8 +85,9 @@ namespace chai
 
 	template<typename T>
 	Vec<T, 2>::Vec(Vec&& other) noexcept : impl_(std::move(other.impl_)),
-		x(impl_->glmVec[0]), y(impl_->glmVec[1]) 
-	{}
+		x(impl_->glmVec[0]), y(impl_->glmVec[1])
+	{
+	}
 
 	template<typename T>
 	Vec<T, 2>& Vec<T, 2>::operator=(Vec&& other) noexcept
@@ -75,13 +102,15 @@ namespace chai
 	template<typename T>
 	template<typename... Args>
 	Vec<T, 2>::Vec(Args... args) : impl_(std::make_unique<VecImpl<T, 2>>(args...)),
-		x(impl_->glmVec[0]), y(impl_->glmVec[1]) 
-	{}
+		x(impl_->glmVec[0]), y(impl_->glmVec[1])
+	{
+	}
 
 	template<typename T>
 	Vec<T, 2>::Vec(std::initializer_list<T> init) : impl_(std::make_unique<VecImpl<T, 2>>(init)),
-		x(impl_->glmVec[0]), y(impl_->glmVec[1]) 
-	{}
+		x(impl_->glmVec[0]), y(impl_->glmVec[1])
+	{
+	}
 
 	template<typename T>
 	T& Vec<T, 2>::operator[](int i)
@@ -104,22 +133,25 @@ namespace chai
 	//Vec3 Specialization
 	template<typename T>
 	Vec<T, 3>::Vec() : impl_(std::make_unique<VecImpl<T, 3>>()),
-		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2]) 
-	{}
+		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2])
+	{
+	}
 
 	template<typename T>
 	Vec<T, 3>::Vec(const T& xVal, const T& yVal, const T& zVal) :
 		impl_(std::make_unique<VecImpl<T, 3>>(xVal, yVal, zVal)),
 		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2])
-	{}
+	{
+	}
 
 	template<typename T>
 	Vec<T, 3>::~Vec() = default;
 
 	template<typename T>
 	Vec<T, 3>::Vec(const Vec& other) : impl_(std::make_unique<VecImpl<T, 3>>(*other.impl_)),
-		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2]) 
-	{}
+		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2])
+	{
+	}
 
 	template<typename T>
 	Vec<T, 3>& Vec<T, 3>::operator=(const Vec& other)
@@ -133,8 +165,9 @@ namespace chai
 
 	template<typename T>
 	Vec<T, 3>::Vec(Vec&& other) noexcept : impl_(std::move(other.impl_)),
-		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2]) 
-	{}
+		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2])
+	{
+	}
 
 	template<typename T>
 	Vec<T, 3>& Vec<T, 3>::operator=(Vec&& other) noexcept
@@ -149,13 +182,15 @@ namespace chai
 	template<typename T>
 	template<typename... Args>
 	Vec<T, 3>::Vec(Args... args) : impl_(std::make_unique<VecImpl<T, 3>>(args...)),
-		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2]) 
-	{}
+		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2])
+	{
+	}
 
 	template<typename T>
 	Vec<T, 3>::Vec(std::initializer_list<T> init) : impl_(std::make_unique<VecImpl<T, 3>>(init)),
-		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2]) 
-	{}
+		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2])
+	{
+	}
 
 	template<typename T>
 	T& Vec<T, 3>::operator[](int i)
@@ -186,22 +221,25 @@ namespace chai
 	// Vec4 specialization
 	template<typename T>
 	Vec<T, 4>::Vec() : impl_(std::make_unique<VecImpl<T, 4>>()),
-		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2]), w(impl_->glmVec[3]) 
-	{}
+		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2]), w(impl_->glmVec[3])
+	{
+	}
 
 	template<typename T>
 	Vec<T, 4>::Vec(const T& xVal, const T& yVal, const T& zVal, const T& wVal) :
 		impl_(std::make_unique<VecImpl<T, 4>>(xVal, yVal, zVal, wVal)),
 		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2]), w(impl_->glmVec[3])
-	{}
+	{
+	}
 
 	template<typename T>
 	Vec<T, 4>::~Vec() = default;
 
 	template<typename T>
 	Vec<T, 4>::Vec(const Vec& other) : impl_(std::make_unique<VecImpl<T, 4>>(*other.impl_)),
-		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2]), w(impl_->glmVec[3]) 
-	{}
+		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2]), w(impl_->glmVec[3])
+	{
+	}
 
 	template<typename T>
 	Vec<T, 4>& Vec<T, 4>::operator=(const Vec& other)
@@ -215,8 +253,9 @@ namespace chai
 
 	template<typename T>
 	Vec<T, 4>::Vec(Vec&& other) noexcept : impl_(std::move(other.impl_)),
-		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2]), w(impl_->glmVec[3]) 
-	{}
+		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2]), w(impl_->glmVec[3])
+	{
+	}
 
 	template<typename T>
 	Vec<T, 4>& Vec<T, 4>::operator=(Vec&& other) noexcept
@@ -231,13 +270,15 @@ namespace chai
 	template<typename T>
 	template<typename... Args>
 	Vec<T, 4>::Vec(Args... args) : impl_(std::make_unique<VecImpl<T, 4>>(args...)),
-		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2]), w(impl_->glmVec[3]) 
-	{}
+		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2]), w(impl_->glmVec[3])
+	{
+	}
 
 	template<typename T>
 	Vec<T, 4>::Vec(std::initializer_list<T> init) : impl_(std::make_unique<VecImpl<T, 4>>(init)),
-		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2]), w(impl_->glmVec[3]) 
-	{}
+		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2]), w(impl_->glmVec[3])
+	{
+	}
 
 	template<typename T>
 	T& Vec<T, 4>::operator[](int i)
@@ -270,92 +311,41 @@ namespace chai
 	Vec<T, 4>::Vec(const Vec3T<T>& v3, T w)
 		: impl_(std::make_unique<VecImpl<T, 4>>(v3[0], v3[1], v3[2], w)),
 		x(impl_->glmVec[0]), y(impl_->glmVec[1]), z(impl_->glmVec[2]), w(impl_->glmVec[3])
-	{}
+	{
+	}
 
 	// Vec operators
-
 	template<typename T, int N>
 	Vec<T, N> operator+(const Vec<T, N>& a, const Vec<T, N>& b)
 	{
+		using Access = internal::VecAccess<T, N>;
 		Vec<T, N> result;
-		result.impl_->glmVec = a.impl_->glmVec + b.impl_->glmVec;
+		Access::get(result) = Access::get(a) + Access::get(b);
 		return result;
 	}
 
 	template<typename T, int N>
 	Vec<T, N> operator-(const Vec<T, N>& a, const Vec<T, N>& b)
 	{
+		using Access = internal::VecAccess<T, N>;
 		Vec<T, N> result;
-		result.impl_->glmVec = a.impl_->glmVec - b.impl_->glmVec;
+		Access::get(result) = Access::get(a) - Access::get(b);
 		return result;
 	}
 
 	template<typename T, int N>
 	Vec<T, N> operator-(const Vec<T, N>& v)
 	{
+		using Access = internal::VecAccess<T, N>;
 		Vec<T, N> result;
-		result.impl_->glmVec = -v.impl_->glmVec;
+		Access::get(result) = -Access::get(v);
 		return result;
 	}
+}
 
-
-	//////////////////////////////////////////// Matrix Implementation /////////////////////////////////////////
-
-	template<typename T, int C, int R>
-	class MatColumnRef<T, C, R>::Impl 
-	{
-	public:
-		Impl(void* ptr)
-			: colRef(*reinterpret_cast<glm::vec<R, T>*>(ptr)) 
-		{}
-
-		glm::vec<R, T>& colRef;
-	};
-
-	template<typename T, int C, int R>
-	MatColumnRef<T, C, R>::MatColumnRef(void* glmVecPtr)
-		: impl_(std::make_unique<Impl>(glmVecPtr)) 
-	{}
-
-	template<typename T, int C, int R>
-	MatColumnRef<T, C, R>::~MatColumnRef() = default;
-
-	template<typename T, int C, int R>
-	MatColumnRef<T, C, R>::MatColumnRef(const MatColumnRef& other)
-		: impl_(std::make_unique<Impl>(*other.impl_)) 
-	{}
-
-	template<typename T, int C, int R>
-	MatColumnRef<T, C, R>::MatColumnRef(MatColumnRef&& other) noexcept = default;
-
-	template<typename T, int C, int R>
-	MatColumnRef<T, C, R>& MatColumnRef<T, C, R>::operator=(const MatColumnRef& other) 
-	{
-		if (this != &other) 
-		{
-			impl_ = std::make_unique<Impl>(*other.impl_);
-		}
-		return *this;
-	}
-
-	template<typename T, int C, int R>
-	MatColumnRef<T, C, R>& MatColumnRef<T, C, R>::operator=(MatColumnRef&& other) noexcept = default;
-
-	template<typename T, int C, int R>
-	MatColumnRef<T, C, R>::operator Vec<T, R>() const 
-	{
-		Vec<T, R> vec;
-		vec.impl_->glmVec = impl_->colRef;
-		return vec;
-	}
-
-	template<typename T, int C, int R>
-	MatColumnRef<T, C, R>& MatColumnRef<T, C, R>::operator=(const Vec<T, R>& v) 
-	{
-		impl_->colRef = v.impl_->glmVec;
-		return *this;
-	}
-
+//////////////////////////////////////////////// Matrix Access ////////////////////////////////////////////
+namespace chai
+{
 	// MatImpl implementation using GLM matrices
 	template<typename T, int C, int R>
 	struct MatImpl
@@ -396,6 +386,86 @@ namespace chai
 		}
 	};
 
+	namespace internal
+	{
+		template<typename T, int C, int R>
+		struct MatAccess
+		{
+			static glm::mat<C, R, T>& get(Mat<T, C, R>& v)
+			{
+				return v.impl_->glmMat;
+			}
+
+			static const glm::mat<C, R, T>& get(const Mat<T, C, R>& v)
+			{
+				return v.impl_->glmMat;
+			}
+		};
+	}
+
+}
+
+//////////////////////////////////////////// Matrix Implementation /////////////////////////////////////////
+namespace chai
+{
+	template<typename T, int C, int R>
+	class MatColumnRef<T, C, R>::Impl
+	{
+	public:
+		explicit Impl(void* ptr)
+			: colRef(*reinterpret_cast<glm::vec<R, T>*>(ptr))
+		{
+		}
+
+		glm::vec<R, T>& colRef;
+	};
+
+	template<typename T, int C, int R>
+	MatColumnRef<T, C, R>::MatColumnRef(void* glmVecPtr)
+		: impl_(std::make_unique<Impl>(glmVecPtr))
+	{
+	}
+
+	template<typename T, int C, int R>
+	MatColumnRef<T, C, R>::~MatColumnRef() = default;
+
+	template<typename T, int C, int R>
+	MatColumnRef<T, C, R>::MatColumnRef(const MatColumnRef& other)
+		: impl_(std::make_unique<Impl>(*other.impl_))
+	{
+	}
+
+	template<typename T, int C, int R>
+	MatColumnRef<T, C, R>::MatColumnRef(MatColumnRef&& other) noexcept = default;
+
+	template<typename T, int C, int R>
+	MatColumnRef<T, C, R>& MatColumnRef<T, C, R>::operator=(const MatColumnRef& other)
+	{
+		if (this != &other)
+		{
+			impl_ = std::make_unique<Impl>(*other.impl_);
+		}
+		return *this;
+	}
+
+	template<typename T, int C, int R>
+	MatColumnRef<T, C, R>& MatColumnRef<T, C, R>::operator=(MatColumnRef&& other) noexcept = default;
+
+	template<typename T, int C, int R>
+	MatColumnRef<T, C, R>::operator Vec<T, R>() const
+	{
+		Vec<T, R> vec;
+		vec.impl_->glmVec = impl_->colRef;
+		return vec;
+	}
+
+	template<typename T, int C, int R>
+	MatColumnRef<T, C, R>& MatColumnRef<T, C, R>::operator=(const Vec<T, R>& v)
+	{
+		impl_->colRef = v.impl_->glmVec;
+		return *this;
+	}
+
 	template<typename T, int C, int R>
 	MatColumnRef<T, C, R> Mat<T, C, R>::operator[](int i)
 	{
@@ -403,13 +473,13 @@ namespace chai
 	}
 
 	template<typename T, int C, int R>
-	T MatColumnRef<T, C, R>::operator[](int i) const 
+	T MatColumnRef<T, C, R>::operator[](int i) const
 	{
 		return impl_->colRef[i];
 	}
 
 	template<typename T, int C, int R>
-	T& MatColumnRef<T, C, R>::operator[](int i) 
+	T& MatColumnRef<T, C, R>::operator[](int i)
 	{
 		return impl_->colRef[i];
 	}
@@ -417,8 +487,9 @@ namespace chai
 	template<typename T, int C, int R>
 	Mat<T, C, R> Mat<T, C, R>::identity()
 	{
+		using Access = internal::MatAccess<T, C, R>;
 		Mat<T, C, R> result;
-		result.impl_->glmMat = glm::identity<glm::mat<C, R, T>>();
+		Access::get(result) = glm::identity<glm::mat<C, R, T>>();
 		return result;
 	}
 
@@ -490,22 +561,25 @@ namespace chai
 	template<typename T, int C, int R>
 	Mat<T, C, R> operator*(const Mat<T, C, R>& a, const Mat<T, C, R>& b)
 	{
-		//return a.impl_->matrix * b.impl_->matrix;
+		using Access = internal::MatAccess<T, C, R>;
 		Mat<T, C, R> result;
+		Access::get(result) = Access::get(a) * Access::get(b);
 		return result;
 	}
 
 	// Mat4 specialization
 	template<typename T>
 	Mat<T, 4, 4>::Mat() : impl_(std::make_unique<MatImpl<T, 4, 4>>())
-	{}
+	{
+	}
 
 	template<typename T>
 	Mat<T, 4, 4>::~Mat() = default;
 
 	template<typename T>
-	Mat<T, 4, 4>::Mat(const Mat& other) : impl_(std::make_unique<MatImpl<T, 4, 4>>(*other.impl_)) 
-	{}
+	Mat<T, 4, 4>::Mat(const Mat& other) : impl_(std::make_unique<MatImpl<T, 4, 4>>(*other.impl_))
+	{
+	}
 
 	template<typename T>
 	Mat<T, 4, 4>& Mat<T, 4, 4>::operator=(const Mat& other)
@@ -518,8 +592,9 @@ namespace chai
 	}
 
 	template<typename T>
-	Mat<T, 4, 4>::Mat(Mat&& other) noexcept : impl_(std::move(other.impl_)) 
-	{}
+	Mat<T, 4, 4>::Mat(Mat&& other) noexcept : impl_(std::move(other.impl_))
+	{
+	}
 
 	template<typename T>
 	Mat<T, 4, 4>& Mat<T, 4, 4>::operator=(Mat&& other) noexcept
@@ -533,12 +608,14 @@ namespace chai
 
 	template<typename T>
 	template<typename... Args>
-	Mat<T, 4, 4>::Mat(Args... args) : impl_(std::make_unique<VecImpl<T, 4, 4>>(args...)) 
-	{}
+	Mat<T, 4, 4>::Mat(Args... args) : impl_(std::make_unique<VecImpl<T, 4, 4>>(args...))
+	{
+	}
 
 	template<typename T>
-	Mat<T, 4, 4>::Mat(std::initializer_list<T> init) : impl_(std::make_unique<MatImpl<T, 4, 4>>(init)) 
-	{}
+	Mat<T, 4, 4>::Mat(std::initializer_list<T> init) : impl_(std::make_unique<MatImpl<T, 4, 4>>(init))
+	{
+	}
 
 	// Component access
 	template<typename T>
@@ -566,15 +643,16 @@ namespace chai
 	template<typename T>
 	Mat<T, 4, 4> Mat<T, 4, 4>::identity()
 	{
+		using Access = internal::MatAccess<T, 4, 4>;
 		Mat<T, 4, 4> result;
-		for (int i = 0; i < 4; ++i)
-			result[i][i] = static_cast<T>(1);
+		Access::get(result) = glm::identity<glm::mat<4, 4, T>>();
 		return result;
 	}
+}
 
-#if 1
-	/////////////////////////////////////////// Quaternion Implementation /////////////////////////////////////////
-
+//////////////////////////////////////////////// Quaternion Access ////////////////////////////////////////////
+namespace chai
+{
 	template<typename T>
 	struct QuaternionImpl
 	{
@@ -642,6 +720,27 @@ namespace chai
 		}
 	};
 
+	namespace internal 
+	{
+		template<typename T>
+		struct QuatAccess
+		{
+			static glm::qua<T>& get(Quaternion<T>& v)
+			{
+				return v.impl_->quat;
+			}
+
+			static const glm::qua<T>& get(const Quaternion<T>& v)
+			{
+				return v.impl_->quat;
+			}
+		};
+	}
+}
+
+/////////////////////////////////////////// Quaternion Implementation /////////////////////////////////////////
+namespace chai
+{
 	// Quaternion class implementation
 	template<typename T>
 	Quaternion<T>::Quaternion() : impl_(std::make_unique<QuaternionImpl<T>>())
@@ -743,75 +842,111 @@ namespace chai
 	template<typename T>
 	Quaternion<T> operator+(const Quaternion<T>& a, const Quaternion<T>& b)
 	{
+		using Access = internal::QuatAccess<T>;
 		Quaternion<T> result;
-		result.impl_->quat = a.impl_->quat + b.impl_->quat;
+		Access::get(result) = Access::get(a) + Access::get(b);
 		return result;
 	}
 
 	template<typename T>
 	Quaternion<T> operator-(const Quaternion<T>& a, const Quaternion<T>& b)
 	{
+		using Access = internal::QuatAccess<T>;
 		Quaternion<T> result;
-		result.impl_->quat = a.impl_->quat - b.impl_->quat;
+		Access::get(result) = Access::get(a) - Access::get(b);
 		return result;
 	}
 
 	template<typename T>
 	Quaternion<T> operator*(const Quaternion<T>& a, const Quaternion<T>& b)
 	{
+		using Access = internal::QuatAccess<T>;
 		Quaternion<T> result;
-		result.impl_->quat = a.impl_->quat * b.impl_->quat;
+		Access::get(result) = Access::get(a) * Access::get(b);
 		return result;
 	}
 
 	template<typename T>
 	Quaternion<T> operator*(const Quaternion<T>& q, T scalar)
 	{
+		using Access = internal::QuatAccess<T>;
 		Quaternion<T> result;
-		result.impl_->quat = q.impl_->quat * scalar;
+		Access::get(result) = Access::get(q) * scalar;
 		return result;
 	}
 
 	template<typename T>
 	Quaternion<T> operator*(T scalar, const Quaternion<T>& q)
 	{
-		return q * scalar;
+		using Access = internal::QuatAccess<T>;
+		Quaternion<T> result;
+		Access::get(result) = Access::get(q) * scalar;
+		return result;
 	}
 
-	//////////////////////////////////////// Math Operations Implementation /////////////////////////////////////////
+	template<typename T>
+	Vec<T, 4> operator*(const Quaternion<T>& a, const Vec<T, 4>& b)
+	{
+		using Access = internal::QuatAccess<T>;
+		using VecAccess = internal::VecAccess<T, 4>;
+		Vec<T, 4> result;
+		VecAccess::get(result) = Access::get(a) * VecAccess::get(b);
+		return result;
+	}
+
+	template<typename T>
+	Vec<T, 4> operator*(const Vec<T, 4>& a, const Quaternion<T>& b)
+	{
+		using Access = internal::QuatAccess<T>;
+		using VecAccess = internal::VecAccess<T, 4>;
+		Vec<T, 4> result;
+		VecAccess::get(result) = VecAccess::get(a) * Access::get(b);
+		return result;
+	}
+}
+
+//////////////////////////////////////// Math Operations Implementation /////////////////////////////////////////
+namespace chai
+{
 	template<typename T, int N>
 	Vec<T, N> normalize(const Vec<T, N>& vec)
 	{
+		using Access = internal::VecAccess<T, N>;
 		Vec<T, N> result;
-		///*result.impl_->glmVec =*/ glm::normalize(vec.impl_->glmVec);
+		Access::get(result) = glm::normalize(Access::get(vec));
 		return result;
 	}
 
 	template<typename T, int N>
 	T length(const Vec<T, N>& vec)
 	{
-		return glm::length(vec.impl_->data);
+		using Access = internal::VecAccess<T, N>;
+		return glm::length(Access::get(vec));
 	}
 
 	template<typename T, int N>
 	T dot(const Vec<T, N>& a, const Vec<T, N>& b)
 	{
-		return glm::dot(a.impl_->data, b.impl_->data);
+		using Access = internal::VecAccess<T, N>;
+		return glm::dot(Access::get(a), Access::get(b));
 	}
 
 	template<typename T>
 	Vec<T, 3> cross(const Vec<T, 3>& a, const Vec<T, 3>& b)
 	{
+		using Access = internal::VecAccess<T, 3>;
 		Vec<T, 3> result;
-		//result.impl_->data = glm::cross(a.impl_->data, b.impl_->data);
+		Access::get(result) = glm::cross(Access::get(a), Access::get(b));
 		return result;
 	}
 
 	template<typename T>
 	Mat<T, 4, 4> lookAt(const Vec<T, 3>& eye, const Vec<T, 3>& center, const Vec<T, 3>& up)
 	{
+		using Access = internal::MatAccess<T, 4, 4>;
+		using VecAccess = internal::VecAccess<T, 3>;
 		Mat<T, 4, 4> result;
-		//result.impl_->data = glm::lookAt(eye.impl_->data, center.impl_->data, up.impl_->data);
+		Access::get(result) = glm::lookAt(VecAccess::get(eye), VecAccess::get(center), VecAccess::get(up));
 		return result;
 	}
 
@@ -824,62 +959,80 @@ namespace chai
 	template<typename T>
 	Quaternion<T> inverse(Quaternion<T> quat)
 	{
+		using Access = internal::QuatAccess<T>;
 		Quaternion<T> result;
-		//result.impl_->data = glm::inverse(quat.impl_->data);
+		Access::get(result) = glm::inverse(Access::get(quat));
 		return result;
 	}
 
-	template<typename T, int C, int R>
-	Mat<T, C, R> translate(const Mat<T, C, R>& mat, const Vec<T, 3>& vec)
+	template<typename T>
+	Mat<T, 4, 4> translate(const Mat<T, 4, 4>& mat, const Vec<T, 3>& vec)
 	{
-		Mat<T, C, R> result;
-		//result.impl_->data = glm::translate(mat.impl_->data, vec.impl_->data);
+		using Access = internal::MatAccess<T, 4, 4>;
+		using VecAccess = internal::VecAccess<T, 3>;
+		Mat<T, 4, 4> result;
+		Access::get(result) = glm::translate(Access::get(mat), VecAccess::get(vec));
 		return result;
 	}
 
-	template<typename T, int C, int R>
-	Mat<T, C, R> scale(const Mat<T, C, R>& mat, const Vec<T, 3>& vec)
+	template<typename T>
+	Mat<T, 4, 4> scale(const Mat<T, 4, 4>& mat, const Vec<T, 3>& vec)
 	{
-		Mat<T, C, R> result;
-		//result.impl_->data = glm::scale(mat.impl_->data, vec.impl_->data);
+		using Access = internal::MatAccess<T, 4, 4>;
+		using VecAccess = internal::VecAccess<T, 3>;
+		Mat<T, 4, 4> result;
+		Access::get(result) = glm::scale(Access::get(mat), VecAccess::get(vec));
 		return result;
 	}
 
 	template<typename T>
 	Mat<T, 4, 4> Mat4_cast(const Quaternion<T>& quat)
 	{
+		using MatAccess = internal::MatAccess<T, 4, 4>;
+		using QuatAccess = internal::QuatAccess<T>;
 		Mat<T, 4, 4> result;
-		//result.impl_->data = glm::mat4_cast(quat.impl_->data);
+		MatAccess::get(result) = glm::mat4_cast(QuatAccess::get(quat));
 		return result;
 	}
 
 	template<typename T>
 	Quaternion<T> Quat_cast(const Mat<T, 4, 4>& mat)
 	{
+		using MatAccess = internal::MatAccess<T, 4, 4>;
+		using QuatAccess = internal::QuatAccess<T>;
 		Quaternion<T> result;
-		//result.impl_->data = glm::quat_cast(mat.impl_->data);
+		QuatAccess::get(result) = glm::quat_cast(MatAccess::get(mat));
 		return result;
 	}
 
 	template<typename T>
 	Vec<T, 3> operator*(const Quaternion<T> quat, const Vec<T, 3>& v)
 	{
+		using VecAccess = internal::VecAccess<T, 3>;
+		using QuatAccess = internal::QuatAccess<T>;
 		Vec<T, 3> result;
-		//result.impl_->data = quat.impl_.data * v.impl_.data;
+		VecAccess::get(result) = QuatAccess::get(quat) * VecAccess::get(v);
 		return result;
 	}
 
 	template<typename T>
 	Mat<T, 4, 4> perspective(T fov, T aspect, T near, T far)
 	{
+		using MatAccess = internal::MatAccess<T, 4, 4>;
 		Mat<T, 4, 4> result;
-		//result.impl_->data = glm::perspective(glm::radians(fov), aspect, near, far);
+		MatAccess::get(result) = glm::perspective(glm::radians(fov), aspect, near, far);
 		return result;
 	}
-#endif
+}
 
-	// =========================================== Exports ============================================================
-	
+//////////////////////////////////////////////// Exports //////////////////////////////////////////////////////
+namespace chai
+{
+	template chai::Vec<float, 3>::Vec(int, int, int);
+	template chai::Vec<double, 3>::Vec(int, int, int);
+	//template chai::Vec<float, 3>::Vec(double, double, double);
+	//template chai::Vec<float, 4>::Vec(const chai::Vec<float, 3>&, double);
+
 	// Class template instantiations for float/double
 	template class CHAIMATH_EXPORT Vec<float, 2>;
 	template class CHAIMATH_EXPORT Vec<float, 3>;
@@ -917,14 +1070,14 @@ namespace chai
 	template CHAIMATH_EXPORT Vec<double, 4> operator-(const Vec<double, 4>&);
 
 	template CHAIMATH_EXPORT Vec<float, 2> normalize(const Vec<float, 2>& vec);
-	template CHAIMATH_EXPORT Vec<double, 2> normalize(const Vec<double, 2>& vec);
 	template CHAIMATH_EXPORT Vec<float, 3> normalize(const Vec<float, 3>& vec);
-	template CHAIMATH_EXPORT Vec<double, 3> normalize(const Vec<double, 3>& vec);
 	template CHAIMATH_EXPORT Vec<float, 4> normalize(const Vec<float, 4>& vec);
+	template CHAIMATH_EXPORT Vec<double, 2> normalize(const Vec<double, 2>& vec);
+	template CHAIMATH_EXPORT Vec<double, 3> normalize(const Vec<double, 3>& vec);
 	template CHAIMATH_EXPORT Vec<double, 4> normalize(const Vec<double, 4>& vec);
 
-	template CHAIMATH_EXPORT Vec<float, 3> cross(const Vec<float, 3>& a, const Vec<float, 3>& b);
-	template CHAIMATH_EXPORT Vec<double, 3> cross(const Vec<double, 3>& a, const Vec<double, 3>& b);
+	template CHAIMATH_EXPORT Vec<float, 3> cross(const Vec<float, 3>&, const Vec<float, 3>&);
+	template CHAIMATH_EXPORT Vec<double, 3> cross(const Vec<double, 3>&, const Vec<double, 3>&);
 
 	template class CHAIMATH_EXPORT MatColumnRef<float, 4, 4>;
 	template CHAIMATH_EXPORT MatColumnRef<float, 4, 4>::operator Vec<float, 4>() const;
@@ -948,8 +1101,14 @@ namespace chai
 	template class CHAIMATH_EXPORT Quaternion<float>;
 	template class CHAIMATH_EXPORT Quaternion<double>;
 
-	template class CHAIMATH_EXPORT Quaternion<float> operator*(const Quaternion<float>& a, const Quaternion<float>& b);
-	template class CHAIMATH_EXPORT Quaternion<double> operator*(const Quaternion<double>& a, const Quaternion<double>& b);
+	template CHAIMATH_EXPORT Quaternion<float> operator*(const Quaternion<float>& a, const Quaternion<float>& b);
+	template CHAIMATH_EXPORT Quaternion<double> operator*(const Quaternion<double>& a, const Quaternion<double>& b);
+
+	template CHAIMATH_EXPORT Vec<float, 4> operator*(const Quaternion<float>& a, const Vec<float, 4>& b);
+	template CHAIMATH_EXPORT Vec<double, 4> operator*(const Quaternion<double>& a, const Vec<double, 4>& b);
+
+	template CHAIMATH_EXPORT Vec<float, 4> operator*(const Vec<float, 4>& a, const Quaternion<float>& b);
+	template CHAIMATH_EXPORT Vec<double, 4> operator*(const Vec<double, 4>& a, const Quaternion<double>& b);
 
 	template CHAIMATH_EXPORT Mat<float, 4, 4> lookAt<float>(const Vec<float, 3>&, const Vec<float, 3>&, const Vec<float, 3>&);
 	template CHAIMATH_EXPORT Mat<double, 4, 4> lookAt<double>(const Vec<double, 3>&, const Vec<double, 3>&, const Vec<double, 3>&);
@@ -963,17 +1122,9 @@ namespace chai
 	template CHAIMATH_EXPORT Mat<float, 4, 4> perspective(float fov, float aspect, float near, float far);
 	template CHAIMATH_EXPORT Mat<double, 4, 4> perspective(double fov, double aspect, double near, double far);
 
-	template CHAIMATH_EXPORT Mat<float, 2, 2> scale(const Mat<float, 2, 2>& mat, const Vec<float, 3>& vec);
-	template CHAIMATH_EXPORT Mat<double, 2, 2> scale(const Mat<double, 2, 2>& mat, const Vec<double, 3>& vec);
-	template CHAIMATH_EXPORT Mat<float, 3, 3> scale(const Mat<float, 3, 3>& mat, const Vec<float, 3>& vec);
-	template CHAIMATH_EXPORT Mat<double, 3, 3> scale(const Mat<double, 3, 3>& mat, const Vec<double, 3>& vec);
 	template CHAIMATH_EXPORT Mat<float, 4, 4> scale(const Mat<float, 4, 4>& mat, const Vec<float, 3>& vec);
 	template CHAIMATH_EXPORT Mat<double, 4, 4> scale(const Mat<double, 4, 4>& mat, const Vec<double, 3>& vec);
 
-	template CHAIMATH_EXPORT Mat<float, 2, 2>  translate(const Mat<float, 2, 2>& mat, const Vec<float, 3>& vec);
-	template CHAIMATH_EXPORT Mat<double, 2, 2> translate(const Mat<double, 2, 2>& mat, const Vec<double, 3>& vec);
-	template CHAIMATH_EXPORT Mat<float, 3, 3>  translate(const Mat<float, 3, 3>& mat, const Vec<float, 3>& vec);
-	template CHAIMATH_EXPORT Mat<double, 3, 3> translate(const Mat<double, 3, 3>& mat, const Vec<double, 3>& vec);
 	template CHAIMATH_EXPORT Mat<float, 4, 4>  translate(const Mat<float, 4, 4>& mat, const Vec<float, 3>& vec);
 	template CHAIMATH_EXPORT Mat<double, 4, 4> translate(const Mat<double, 4, 4>& mat, const Vec<double, 3>& vec);
 
@@ -990,4 +1141,7 @@ namespace chai
 
 	template CHAIMATH_EXPORT Quaternion<float> Quat_cast(const Mat<float, 4, 4>& mat);
 	template CHAIMATH_EXPORT Quaternion<double> Quat_cast(const Mat<double, 4, 4>& mat);
+
+	template CHAIMATH_EXPORT float radians(float degrees);
+	template CHAIMATH_EXPORT double radians(double degrees);
 }

@@ -3,11 +3,22 @@
 #include <initializer_list>
 #include <ChaiMathExport.h>
 
-
 namespace chai
 {
+    namespace internal
+    {
+        template<typename T>
+        struct QuatAccess;
+    }
+
     template<typename T>
     struct QuaternionImpl;
+
+    template<typename T>
+    class Quaternion;
+
+    template<typename T>
+    Quaternion<T> inverse(Quaternion<T> quat);
 
     template<typename T>
     class CHAIMATH_EXPORT Quaternion
@@ -15,6 +26,10 @@ namespace chai
     private:
         std::unique_ptr<QuaternionImpl<T>> impl_;
         friend Quaternion<T> operator*<>(const Quaternion<T>& a, const Quaternion<T>& b);
+        friend Quaternion<T> inverse<T>(Quaternion<T> quat);
+
+        template<typename T>
+        friend struct internal::QuatAccess;
 
     public:
         Quaternion();
@@ -59,4 +74,12 @@ namespace chai
 
     template<typename T>
     Quaternion<T> operator*(const Quaternion<T>& a, const Quaternion<T>& b);
+
+    //this is dubious
+    template<typename T>
+    Vec<T, 4> operator*(const Quaternion<T>& a, const Vec<T, 4>& b);
+
+    //dubious pt 2
+    template<typename T>
+    Vec<T, 4> operator*(const Vec<T, 4>& a, const Quaternion<T>& b);
 }

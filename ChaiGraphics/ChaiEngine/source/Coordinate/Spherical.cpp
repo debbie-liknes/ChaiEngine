@@ -4,9 +4,9 @@ namespace chai::brew
 {
     chai::Vec3 sphericalToCartesian(float r, float theta, float phi) {
         return {
-            r * cos(phi) * cos(theta),
-            r * sin(phi),
-            r * cos(phi) * sin(theta)
+            r * (float)cos(phi) * (float)cos(theta),
+            r * (float)sin(phi),
+            r * (float)cos(phi) * (float)sin(theta)
         };
     }
 

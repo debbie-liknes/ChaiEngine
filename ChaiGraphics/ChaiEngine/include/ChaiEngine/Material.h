@@ -237,9 +237,9 @@ namespace chai::brew
             auto material = std::make_shared<Material>(shaderDesc);
 
             // Set default Phong values
-            //material->setDiffuse(Vec3(0.8f, 0.8f, 0.8f));
-            //material->setSpecular(Vec3(0.2f, 0.2f, 0.2f));
-            //material->setAmbient(Vec3(0.1f, 0.1f, 0.1f));
+            material->setDiffuse(Vec3(0.8f, 0.8f, 0.8f));
+            material->setSpecular(Vec3(0.2f, 0.2f, 0.2f));
+            material->setAmbient(Vec3(0.1f, 0.1f, 0.1f));
             material->setShininess(32.0f);
 
             return material;

@@ -5,8 +5,17 @@
 
 namespace chai
 {
+    namespace internal
+    {
+        template<typename T, int C, int R>
+        struct MatAccess;
+    }
+
     template<typename T, int C, int R>
     struct MatImpl;
+
+    template<typename T, int C, int R>
+    class Mat;
 
     template<typename T, int C, int R>
     class CHAIMATH_EXPORT MatColumnRef 
@@ -36,8 +45,14 @@ namespace chai
         friend class Mat;
 
         // Private constructor only usable from Mat
-        MatColumnRef(void* vecPtr); // forward-erased
+        explicit MatColumnRef(void* vecPtr); // forward-erased
     };
+
+    template<typename T>
+    Mat<T, 4, 4> translate(const Mat<T, 4, 4>& mat, const Vec<T, 3>& vec);
+
+    template<typename T>
+    Mat<T, 4, 4> scale(const Mat<T, 4, 4>& mat, const Vec<T, 3>& vec);
 
     template<typename T, int C, int R>
     class CHAIMATH_EXPORT Mat
@@ -71,6 +86,9 @@ namespace chai
 
     private:
         std::unique_ptr<MatImpl<T, C, R>> impl_;
+
+        template<typename, int, int>
+        friend struct internal::MatAccess;
     };
 
     template<typename T> using Mat2x2T = Mat<T, 2, 2>;
@@ -85,5 +103,5 @@ namespace chai
     using Mat3 = Mat3x3f;
 
     template<typename T, int C, int R>
-    CHAIMATH_EXPORT Mat<T, C, R> operator*(const Mat<T, C, R>& a, const Mat<T, C, R>& b);
+    Mat<T, C, R> operator*(const Mat<T, C, R>& a, const Mat<T, C, R>& b);
 }

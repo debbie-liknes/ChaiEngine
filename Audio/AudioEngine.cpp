@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <cmath>
+#include <assert.h>
 
 #ifdef FMOD_FOUND
     #include <fmod.hpp>

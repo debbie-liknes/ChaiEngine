@@ -1,5 +1,4 @@
 #include <ChaiEngine/RenderCommandCollector.h>
-#include <glm/glm.hpp>
 
 namespace chai::brew
 {

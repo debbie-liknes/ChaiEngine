@@ -1,9 +1,6 @@
 #pragma once
 #include <SceneExport.h>
 #include <Components/ComponentBase.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/quaternion.hpp>
 #include <ChaiMath.h>
 
 namespace chai::cup
