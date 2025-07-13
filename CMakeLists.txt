@@ -20,9 +20,11 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 # When exporting STL types, MSVC will generate a warning saying that STL types
 # are not accessible by clients. This disables that warning.
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /IGNORE:4197")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /IGNORE:4197")
-add_compile_options(/wd4251)
+if(WIN32)
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /IGNORE:4197")
+	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /IGNORE:4197")
+	add_compile_options(/wd4251)
+endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
