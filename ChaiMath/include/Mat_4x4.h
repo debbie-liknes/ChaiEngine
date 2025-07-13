@@ -7,6 +7,12 @@ namespace chai
     template<typename T>
     class CHAIMATH_EXPORT Mat<T, 4, 4>
     {
+    private:
+        std::unique_ptr<MatImpl<T, 4, 4>> impl_;
+
+        template<typename U, int C, int R>
+        friend class MatColumnRef;
+
     public:
         Mat();
         ~Mat();
@@ -21,7 +27,7 @@ namespace chai
 
         // Constructor for different dimensions
         template<typename... Args>
-        explicit Mat(Args... args);
+        Mat(Args... args);
 
         Mat(std::initializer_list<T> init);
 
@@ -32,8 +38,7 @@ namespace chai
         // Standard comparison operators
         bool operator==(const Mat& other) const;
 
-    private:
-        std::unique_ptr<MatImpl<T, 4, 4>> impl_;
+        static Mat<T, 4, 4> identity();
     };
 
     template<typename T> using Mat4x4T = Mat<T, 4, 4>;

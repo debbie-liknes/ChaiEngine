@@ -1,0 +1,14 @@
+add_executable(${PROJECT_NAME}_tests
+    main.cpp
+    mat_tests.cpp
+    vec_test.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}_tests
+    PUBLIC
+    gtest
+    gmock
+    ChaiMath
+)
+
+set_target_properties(${PROJECT_NAME}_tests PROPERTIES FOLDER "Core")

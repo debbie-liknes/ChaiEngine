@@ -9,7 +9,35 @@ namespace chai
     struct MatImpl;
 
     template<typename T, int C, int R>
-    class MatColumnRef;
+    class CHAIMATH_EXPORT MatColumnRef 
+    {
+    public:
+        MatColumnRef(const MatColumnRef&);                // rule of 5
+        MatColumnRef& operator=(const MatColumnRef&);
+        MatColumnRef(MatColumnRef&&) noexcept;
+        MatColumnRef& operator=(MatColumnRef&&) noexcept;
+        ~MatColumnRef();
+
+        // Read access
+        operator Vec<T, R>() const;
+
+        // Write access
+        MatColumnRef& operator=(const Vec<T, R>& v);
+
+        T operator[](int i) const;
+        T& operator[](int i);
+
+    private:
+        class Impl;
+        std::unique_ptr<Impl> impl_;
+
+        // Only Mat can create this
+        template<typename, int, int>
+        friend class Mat;
+
+        // Private constructor only usable from Mat
+        MatColumnRef(void* vecPtr); // forward-erased
+    };
 
     template<typename T, int C, int R>
     class CHAIMATH_EXPORT Mat
@@ -28,7 +56,7 @@ namespace chai
 
         // Constructor for different dimensions
         template<typename... Args>
-        explicit Mat(Args... args);
+        Mat(Args... args);
 
         Mat(std::initializer_list<T> init);
 
@@ -38,6 +66,8 @@ namespace chai
 
         // Standard comparison operators
         bool operator==(const Mat& other) const;
+
+		static Mat<T, C, R> identity();
 
     private:
         std::unique_ptr<MatImpl<T, C, R>> impl_;

@@ -1,5 +1,8 @@
 #pragma once
 #include <VecBase.h>
+#include <Vec2.h>
+#include <Vec3.h>
+#include <Vec4.h>
 #include <ChaiMatrix.h>
 #include <Mat_4x4.h>
 #include <ChaiQuat.h>

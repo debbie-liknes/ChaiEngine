@@ -6,6 +6,9 @@ set(Math_headers
 	include/ChaiMatrix.h
 	include/ChaiQuat.h
 	include/ChaiVector.h
+	include/Vec2.h
+	include/Vec3.h
+	include/Vec4.h
 	include/VecBase.h
 	include/Mat_4x4.h
 	include/Mat_3x3.h
@@ -29,5 +32,6 @@ add_library(ChaiMath SHARED
 target_include_directories(ChaiMath PUBLIC ${CMAKE_BINARY_DIR}/exports/ChaiMath include PRIVATE source/internal)
 target_link_libraries(ChaiMath PRIVATE glm::glm)
 
+add_subdirectory(tests)
 
 ChaiLibDefaults(ChaiMath "Core")

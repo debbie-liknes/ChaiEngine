@@ -51,7 +51,8 @@ namespace chai::cup
 
     Vec3 TransformComponent::getWorldPosition() const 
     {
-        return Vec3(getWorldMatrix()[3].xyz());
+        //yikes
+        return Vec3(getWorldMatrix()[3].operator Vec4().xyz());
     }
 
     Quat TransformComponent::getWorldRotation() const 
@@ -73,10 +74,10 @@ namespace chai::cup
         Vec3 right = normalize(cross(forward, worldUp));
         Vec3 up = cross(right, forward);
 
-        Mat4 rotMatrix;
-        //rotMatrix[0] = { right, 1.0 };
-        //rotMatrix[1] = { up, 1.0 };
-        //rotMatrix[2] = { -forward, 1.0 };
+        Mat4 rotMatrix = Mat4::identity();
+        rotMatrix[0] = Vec4( right, 1.f );
+        rotMatrix[1] = Vec4( up, 1.f );
+        rotMatrix[2] = Vec4( -forward, 1.f );
 
         m_rotation = Quat_cast(rotMatrix);
 
