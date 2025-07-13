@@ -1,8 +1,9 @@
 project(AudioEngine)
 
 add_subdirectory(examples)
-
-find_package(FMOD REQUIRED)
+if(NOT "$ENV{FMOD_HOME}" STREQUAL "")
+    find_package(FMOD REQUIRED)
+endif()
 
 add_library(${PROJECT_NAME}
     AudioEngine.h
@@ -25,5 +26,9 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
     "${FMOD_LIBRARY}"
 )
+
+if(NOT "${FMOD_LIBRARY}" STREQUAL "")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE FMOD_FOUND)
+endif()
 
 ChaiLibDefaults(${PROJECT_NAME} "Audio")
