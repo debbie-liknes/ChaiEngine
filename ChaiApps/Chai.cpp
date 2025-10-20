@@ -71,15 +71,15 @@ int main()
 	auto cameraObject = std::make_unique<chai::cup::GameObject>();
 	chai::cup::CameraComponent* camComponent = cameraObject->addComponent<chai::cup::CameraComponent>(cameraObject.get());
 	auto camTransform = cameraObject->getComponent<chai::cup::TransformComponent>();
-	camTransform->setPosition(chai::Vec3{ -5.0, 0.0, 10.0 });
-	camTransform->lookAt(chai::Vec3{ -2.4941, 1.3559, 4.7810 }, chai::Vec3{0.0, 1.0, 0.0});
+	camTransform->setPosition(chai::Vec3{ -5.0, 0.0, -10.0 });
+	camTransform->lookAt(chai::Vec3{ 0.f, 0.f, 0.f }, chai::Vec3{0.0, -1.0, 0.0});
 	camComponent->getViewMatrix();
 	cameraObject->addController<chai::cup::CameraController>();
 
 	//add some lighting so we can see
 	auto lightObject = std::make_unique<chai::cup::GameObject>();
 	lightObject->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{ -5.0, 5.0, -5.0 });
-	lightObject->getComponent<chai::cup::TransformComponent>()->lookAt(chai::Vec3{ 0.0, 0.0, 0.0 }, chai::Vec3{ 0.0, 1.0, 0.0 });
+	lightObject->getComponent<chai::cup::TransformComponent>()->lookAt(chai::Vec3{ 0.0, 0.0, 0.0 }, chai::Vec3{ 0.0, -1.0, 0.0 });
 	lightObject->addComponent<chai::cup::LightComponent>(lightObject.get());
 
 	//set up viewport camera association

@@ -128,6 +128,6 @@ namespace chai::cup
         double z = cos(radians(yaw)) * cos(radians(pitch));
 
         auto pos = transformComponent->getWorldPosition();
-        transformComponent->lookAt({ pos.x + (float)x, pos.y + (float)y, pos.z + (float)z }, { 0.0f, 1.0f, 0.0f });
+        transformComponent->lookAt({ pos.x + (float)x, pos.y + (float)y, pos.z + (float)z }, { 0.0f, -1.0f, 0.0f });
     }
 }
