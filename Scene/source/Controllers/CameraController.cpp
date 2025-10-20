@@ -62,40 +62,53 @@ namespace chai::cup
         auto forward = transformComponent->forward();
         auto right = transformComponent->right();
 
+        //this is obnoxious af
+        bool updatePosition = false;
         if (input.isKeyPressed(KeyCode::W)) 
         {
             pos.x += forward.x * velocity;
             pos.y += forward.y * velocity;
             pos.z += forward.z * velocity;
+			updatePosition = true;
         }
         if (input.isKeyPressed(KeyCode::S)) 
         {
             pos.x -= forward.x * velocity;
             pos.y -= forward.y * velocity;
             pos.z -= forward.z * velocity;
+            updatePosition = true;
+
         }
         if (input.isKeyPressed(KeyCode::A)) 
         {
             pos.x -= right.x * velocity;
             pos.y -= right.y * velocity;
             pos.z -= right.z * velocity;
+            updatePosition = true;
+
         }
         if (input.isKeyPressed(KeyCode::D)) 
         {
             pos.x += right.x * velocity;
             pos.y += right.y * velocity;
             pos.z += right.z * velocity;
+            updatePosition = true;
+
         }
         if (input.isKeyPressed(KeyCode::Space)) 
         {
             pos.y += velocity;
+            updatePosition = true;
+
         }
         if (input.isKeyPressed(KeyCode::C)) 
         {
             pos.y -= velocity;
-        }
+            updatePosition = true;
 
-        transformComponent->setPosition(pos);
+        }
+        if(updatePosition)
+            transformComponent->setPosition(pos);
     }
 
     void CameraController::processMouseLook(float deltaX, float deltaY) 

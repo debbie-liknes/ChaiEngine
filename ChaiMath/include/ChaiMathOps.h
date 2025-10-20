@@ -1,19 +1,30 @@
 #pragma once
 #include <VecBase.h>
+#include <Vec3.h>
+#include <Mat_4x4.h>
 #include <ChaiMatrix.h>
-#include <ChaiQuat.h>
+#include <QuatBase.h>
 #include <ChaiMathExport.h>
 
 namespace chai
 {
     template<typename T>
-    Vec<T, 3> cross(const Vec<T, 3>&, const Vec<T, 3>&);
+    Vec3T<T> cross(const Vec3T<T>&, const Vec3T<T>&);
 
     template<typename T, int N>
     Vec<T, N> normalize(const Vec<T, N>& vec);
 
+    //template<typename T>
+    //Quaternion<T> normalize(const Quaternion<T>& q);
+
     template<typename T>
-    Mat<T, 4, 4> lookAt(const Vec<T, 3>& eye, const Vec<T, 3>& center, const Vec<T, 3>& up);
+    Mat4T<T> translate(const Mat4T<T>& m, const Vec3T<T>& offset);
+
+    template<typename T>
+    Mat4T<T> scale(const Mat4T<T>& m, const Vec3T<T>& offset);
+
+    template<typename T>
+    Mat4T<T> lookAt(const Vec3T<T>& eye, const Vec3T<T>& center, const Vec3T<T>& up);
 
     template<typename T, int N>
     T length(const Vec<T, N>& vec);
@@ -25,13 +36,7 @@ namespace chai
     T radians(T degrees);
 
     template<typename T>
-    Mat<T, 4, 4> Mat4_cast(const Quaternion<T>& quat);
-
-    template<typename T>
-    Quaternion<T> Quat_cast(const Mat<T, 4, 4>& mat);
-
-    template<typename T>
-    Mat<T, 4, 4> perspective(T fov, T aspect, T near, T far);
+    Mat4T<T> perspective(T fov, T aspect, T near, T far);
 
     template<typename T>
     Vec<T, 3> operator*(const Quaternion<T> quat, const Vec<T, 3>& v);

@@ -11,9 +11,9 @@ namespace chai::cup
 
     Mat4 TransformComponent::getLocalMatrix() const 
     {
-        Mat4 t = translate(Mat4{ 1.0f }, m_position);
-        Mat4 r = Mat4_cast(m_rotation);
-        Mat4 s = scale(Mat4{ 1.0f }, m_scale);
+        Mat4 t = translate(Mat4::identity(), m_position);
+        Mat4 r = m_rotation.toMat4();
+        Mat4 s = scale(Mat4::identity(), m_scale);
         return t * r * s;
     }
 
@@ -51,8 +51,7 @@ namespace chai::cup
 
     Vec3 TransformComponent::getWorldPosition() const 
     {
-        //yikes
-        return Vec3(getWorldMatrix()[3].operator Vec4().xyz());
+        return m_position;
     }
 
     Quat TransformComponent::getWorldRotation() const 
@@ -80,12 +79,12 @@ namespace chai::cup
         rotMatrix[1] = Vec4( up, 1.f );
         rotMatrix[2] = Vec4( -forward, 1.f );
 
-        m_rotation = Quat_cast(rotMatrix);
+        m_rotation = Quat::quatFromMat4(rotMatrix);
 
         if (m_parent) 
         {
             // Convert world rotation to local
-            m_rotation = inverse(m_parent->getWorldRotation()) * m_rotation;
+            m_rotation = m_parent->getWorldRotation().inverse() * m_rotation;
         }
     }
 }

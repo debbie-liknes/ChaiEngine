@@ -10,9 +10,11 @@ set(Math_headers
 	include/Vec3.h
 	include/Vec4.h
 	include/VecBase.h
+	include/MatBase.h
 	include/Mat_4x4.h
 	include/Mat_3x3.h
 	include/Mat_2x2.h
+	include/QuatBase.h
 )
 
 set(MATH_private
@@ -20,6 +22,8 @@ set(MATH_private
 )
 
 set(Math_source
+	source/ChaiMathOps.cpp
+	source/ChaiQuat.cpp
 	source/GLMWrapper.cpp
 )
 

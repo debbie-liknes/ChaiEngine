@@ -516,28 +516,28 @@ void main()
 		case UniformType::VEC2:
 		{
 			Vec2 value;
-			uniform.getData(&value, sizeof(Vec2));
+			uniform.getData(&value, sizeof(float) * 2);
 			glUniform2fv(location, 1, &value[0]);
 		}
 		break;
 		case UniformType::VEC3:
 		{
 			Vec3 value;
-			uniform.getData(&value, sizeof(Vec3));
+			uniform.getData(&value, sizeof(float) * 3);
 			glUniform3fv(location, 1, &value[0]);
 		}
 		break;
 		case UniformType::VEC4:
 		{
 			Vec4 value;
-			uniform.getData(&value, sizeof(Vec4));
+			uniform.getData(&value, sizeof(float) * 3);
 			glUniform4fv(location, 1, &value[0]);
 		}
 		break;
 		case UniformType::MAT4:
 		{
 			Mat4 value;
-			uniform.getData(&value, sizeof(Mat4));
+			uniform.getData(&value, sizeof(float) * 16);
 			glUniformMatrix4fv(location, 1, GL_FALSE, &value[0][0]);
 		}
 		break;
