@@ -14,9 +14,13 @@ namespace chai
     public:
         using value_type = T;
 
-        union 
-        {
-            struct { T x, y, z, w; };
+        union {
+            struct { 
+                T x;
+                T y;
+                T z;
+                T w; 
+            };
             T data[4];
         };
 
@@ -61,7 +65,7 @@ namespace chai
         constexpr T length2() const noexcept { return dot(*this, *this); }
         T length() const noexcept { return std::sqrt(length2()); }
 
-        constexpr Quaternion normalized() const noexcept;
+        Quaternion normalized() const noexcept;
 
         constexpr Quaternion conjugate() const noexcept { return Quaternion(-x, -y, -z, w); }
         constexpr Quaternion inverse() const noexcept;
@@ -99,7 +103,27 @@ namespace chai
 
         static Quaternion fromTo(const Vec3T<T>& a, const Vec3T<T>& b) noexcept;
 
-        static Quaternion slerp(Quaternion a, Quaternion b, T t) noexcept;
+        static Quaternion slerp(Quaternion a, Quaternion b, T t)
+        {
+            a = a.normalized(); b = b.normalized();
+            T d = dot(a, b);
+            // Take shortest path
+            if (d < T(0)) { b = b * T(-1); d = -d; }
+
+            // If very close, nlerp to avoid numerical issues
+            const T DOT_THRESHOLD = T(0.9995);
+            if (d > DOT_THRESHOLD)
+            {
+                Quaternion r = (a * (T(1) - t) + b * t).normalized();
+                return r;
+            }
+
+            T theta = std::acos(d);
+            T s = std::sin(theta);
+            T w1 = std::sin((T(1) - t) * theta) / s;
+            T w2 = std::sin(t * theta) / s;
+            return (a * w1 + b * w2).normalized();
+        }
 
         static Quaternion quatFromMat3(const Mat<T, 3, 3>& R) noexcept;
 
@@ -173,7 +197,4 @@ namespace chai
     using Quatf = Quaternion<float>;
     using Quatd = Quaternion<double>;
     using Quat = Quatf;
-
-    template struct CHAIMATH_EXPORT Quaternion<float>;
-    template struct CHAIMATH_EXPORT Quaternion<double>;
 }

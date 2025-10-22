@@ -29,7 +29,7 @@ namespace chai
         }
     }
 
-	uint32_t ViewportManager::createViewport(uint64_t window_id, const ViewportDesc& desc) 
+	uint64_t ViewportManager::createViewport(uint64_t window_id, const ViewportDesc& desc) 
 	{
 		uint64_t id = next_id++;
 

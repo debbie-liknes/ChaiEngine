@@ -1,5 +1,6 @@
 #include <Controllers/CameraController.h>
 #include <stdexcept>
+#include <numbers>
 
 namespace chai::cup
 {
@@ -15,8 +16,8 @@ namespace chai::cup
         );
 
 		Vec3 forward = transformComponent->forward();
-        yaw = atan2(-forward.x, forward.z) * 180.0f / 3.14;
-        pitch = asin(forward.y) * 180.0f / 3.14;
+        yaw = atan2(-forward.x, forward.z) * 180.0f / M_PI;
+        pitch = asin(forward.y) * 180.0f / M_PI;
     }
 
     CameraController::~CameraController()

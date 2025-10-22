@@ -12,7 +12,7 @@ namespace chai
 	template<typename T>
 	T radians(T degrees)
 	{
-		return degrees * M_PI / static_cast<T>(180);
+		return degrees * static_cast<T>(M_PI) / static_cast<T>(180);
 	}
 
 	template<typename T, int N>
@@ -26,16 +26,16 @@ namespace chai
 		return v / len;
 	}
 
-	template<typename T, int N>
-	T dot(const Vec<T, N>& a, const Vec<T, N>& b)
-	{
-		T result = {};
-		for (size_t i = 0; i < N; ++i)
+    template<typename T, int N>
+    T dot(const Vec<T, N>& a, const Vec<T, N>& b)
+    {
+        T result = T{};
+		for (int i = 0; i < N; ++i)
 		{
 			result += a[i] * b[i];
 		}
-		return result;
-	}
+        return result;
+    }
 
 	template<typename T>
 	Vec3T<T> cross(const Vec3T<T>& a, const Vec3T<T>& b)

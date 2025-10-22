@@ -39,7 +39,7 @@ struct Implementation
         mpSystem->init(512, flags, nullptr);
 #endif
     }
-    ~Implementation() {}
+    ~Implementation() = default;
 
     void Update();
 
@@ -48,8 +48,8 @@ struct Implementation
 
     int mnNextChannelId = 0;
 
-    typedef std::map<std::string, FMOD::Sound*> SoundMap;
-    typedef std::map<int, FMOD::Channel*> ChannelMap;
+    using SoundMap = std::map<std::string, FMOD::Sound *>;
+    using ChannelMap = std::map<int, FMOD::Channel *>;
     SoundMap mSounds;
     ChannelMap mChannels;
 #endif

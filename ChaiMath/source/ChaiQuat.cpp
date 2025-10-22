@@ -16,9 +16,13 @@ namespace chai
     template <typename T>
     constexpr Quaternion<T> Quaternion<T>::fromEulerZYX(T rollZ, T pitchX, T yawY) noexcept 
     {
-        T cz = std::cos(rollZ * 0.5), sz = std::sin(rollZ * 0.5);
-        T cx = std::cos(pitchX * 0.5), sx = std::sin(pitchX * 0.5);
-        T cy = std::cos(yawY * 0.5), sy = std::sin(yawY * 0.5);
+        // static cast makes sure we dont have precision issues
+        T cz = static_cast<T>(std::cos(static_cast<double>(rollZ) * 0.5));
+        T sz = static_cast<T>(std::sin(static_cast<double>(rollZ) * 0.5));
+        T cx = static_cast<T>(std::cos(static_cast<double>(pitchX) * 0.5));
+        T sx = static_cast<T>(std::sin(static_cast<double>(pitchX) * 0.5));
+        T cy = static_cast<T>(std::cos(static_cast<double>(yawY) * 0.5));
+        T sy = static_cast<T>(std::sin(static_cast<double>(yawY) * 0.5));
         
         T w_ = cy * cx * cz + sy * sx * sz;
         T x_ = cy * sx * cz + sy * cx * sz;
@@ -28,7 +32,7 @@ namespace chai
     }
 
     template <typename T>
-    constexpr Quaternion<T> Quaternion<T>::normalized() const noexcept
+    Quaternion<T> Quaternion<T>::normalized() const noexcept
     {
         T lsq = length2();
         if (lsq == T(0)) return identity();
@@ -80,29 +84,6 @@ namespace chai
         T s = std::sqrt((T(1) + d) * T(2));
         T inv = T(1) / s;
         return Quaternion(c[0] * inv, c[1] * inv, c[2] * inv, s * T(0.5)).normalized();
-    }
-
-    template <typename T>
-    Quaternion<T> slerp(Quaternion<T> a, Quaternion<T> b, T t) noexcept
-    {
-        a = a.normalized(); b = b.normalized();
-        T d = dot(a, b);
-        // Take shortest path
-        if (d < T(0)) { b = b * T(-1); d = -d; }
-
-        // If very close, nlerp to avoid numerical issues
-        const T DOT_THRESHOLD = T(0.9995);
-        if (d > DOT_THRESHOLD) 
-        {
-            Quaternion r = (a * (T(1) - t) + b * t).normalized();
-            return r;
-        }
-
-        T theta = std::acos(d);
-        T s = std::sin(theta);
-        T w1 = std::sin((T(1) - t) * theta) / s;
-        T w2 = std::sin(t * theta) / s;
-        return (a * w1 + b * w2).normalized();
     }
 
     template<typename T>
@@ -163,16 +144,6 @@ namespace chai
         return quatFromMat3(R);
     }
 
-    template CHAIMATH_EXPORT Quaternion<float> Quaternion<float>::normalized() const noexcept;
-    template CHAIMATH_EXPORT Quaternion<double> Quaternion<double>::normalized() const noexcept;
-    template CHAIMATH_EXPORT Quaternion<float> Quaternion<float>::inverse() const noexcept;
-    template CHAIMATH_EXPORT Quaternion<double> Quaternion<double>::inverse() const noexcept;
-    template CHAIMATH_EXPORT Quaternion<float> Quaternion<float>::fromTo(const Vec3T<float>&, const Vec3T<float>&) noexcept;
-    template CHAIMATH_EXPORT Quaternion<double> Quaternion<double>::fromTo(const Vec3T<double>&, const Vec3T<double>&) noexcept;
-    template CHAIMATH_EXPORT Quaternion<float> Quaternion<float>::slerp(Quaternion<float>, Quaternion<float>, float) noexcept;
-    template CHAIMATH_EXPORT Quaternion<double> Quaternion<double>::slerp(Quaternion<double>, Quaternion<double>, double) noexcept;
-    template CHAIMATH_EXPORT Quaternion<float> Quaternion<float>::quatFromMat3(const Mat<float, 3, 3>&) noexcept;
-    template CHAIMATH_EXPORT Quaternion<double> Quaternion<double>::quatFromMat3(const Mat<double, 3, 3>&) noexcept;
-    template CHAIMATH_EXPORT Quaternion<float> Quaternion<float>::quatFromMat4(const Mat<float, 4, 4>&) noexcept;
-    template CHAIMATH_EXPORT Quaternion<double> Quaternion<double>::quatFromMat4(const Mat<double, 4, 4>&) noexcept;
+    template class CHAIMATH_EXPORT Quaternion<float>;
+    template class CHAIMATH_EXPORT Quaternion<double>;
 }
