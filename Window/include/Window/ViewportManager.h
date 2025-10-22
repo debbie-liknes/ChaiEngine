@@ -14,7 +14,7 @@ namespace chai
 		~ViewportManager() = default;
 
 		// Create a new viewport
-		uint32_t createViewport(uint64_t window_id, const ViewportDesc& desc);
+		uint64_t createViewport(uint64_t window_id, const ViewportDesc& desc);
 
 		// Get viewport by id
 		Viewport* getViewport(uint32_t viewport_id);

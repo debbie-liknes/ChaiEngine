@@ -37,8 +37,8 @@ namespace chai::cup
 			light.intensity = lightComp->intensity;
 			light.range = lightComp->range;
 			light.attenuation = lightComp->attenuation;
-			light.innerCone = glm::cos(glm::radians(lightComp->innerCone));
-			light.outerCone = glm::cos(glm::radians(lightComp->outerCone));
+			light.innerCone = cos(radians(lightComp->innerCone));
+			light.outerCone = cos(radians(lightComp->outerCone));
 			light.enabled = lightComp->enabled ? 1 : 0;
 			//light.direction = lightComp->direction;
 

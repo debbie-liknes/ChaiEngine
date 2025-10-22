@@ -1,9 +1,8 @@
 #pragma once
 #include <SceneExport.h>
-#include <glm/glm.hpp>
 #include <Scene/ICamera.h>
 #include <Coordinate/CoordinateSpace.h>
-#include <glm/gtc/matrix_transform.hpp>
+#include <ChaiMath.h>
 
 namespace chai::cup
 {
@@ -13,9 +12,9 @@ namespace chai::cup
 		Camera() = default;
 		~Camera() override = default;
 
-		glm::mat4 getProjectionMatrix() override;
-		glm::mat4 getViewMatrix() override;
-		void setViewMatrix(const glm::mat4& viewMatrix) override;
+		Mat4 getProjectionMatrix() override;
+		Mat4 getViewMatrix() override;
+		void setViewMatrix(const Mat4& viewMatrix) override;
 
 		void setAspectRatio(float aspect) override;
 		void setFarPlane(float far) override;
@@ -28,7 +27,7 @@ namespace chai::cup
 		float m_nearPlane = 0.1f;
 		float m_farPlane = 100.0f;
 
-		glm::mat4 m_viewMatrix{ 1.f };
+		Mat4 m_viewMatrix{ 1.f };
 
 	};
 }

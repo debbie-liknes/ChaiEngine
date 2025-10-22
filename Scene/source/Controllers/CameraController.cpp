@@ -1,6 +1,6 @@
 #include <Controllers/CameraController.h>
 #include <stdexcept>
-#include <cmath>
+#include <numbers>
 
 namespace chai::cup
 {
@@ -15,9 +15,9 @@ namespace chai::cup
             }
         );
 
-		glm::vec3 forward = transformComponent->forward();
-        yaw = atan2(-forward.x, forward.z) * 180.0f / 3.14;
-        pitch = asin(forward.y) * 180.0f / 3.14;
+		Vec3 forward = transformComponent->forward();
+        yaw = atan2(-forward.x, forward.z) * 180.0f / M_PI;
+        pitch = asin(forward.y) * 180.0f / M_PI;
     }
 
     CameraController::~CameraController()
@@ -62,40 +62,53 @@ namespace chai::cup
         auto forward = transformComponent->forward();
         auto right = transformComponent->right();
 
+        //this is obnoxious af
+        bool updatePosition = false;
         if (input.isKeyPressed(KeyCode::W)) 
         {
             pos.x += forward.x * velocity;
             pos.y += forward.y * velocity;
             pos.z += forward.z * velocity;
+			updatePosition = true;
         }
         if (input.isKeyPressed(KeyCode::S)) 
         {
             pos.x -= forward.x * velocity;
             pos.y -= forward.y * velocity;
             pos.z -= forward.z * velocity;
+            updatePosition = true;
+
         }
         if (input.isKeyPressed(KeyCode::A)) 
         {
             pos.x -= right.x * velocity;
             pos.y -= right.y * velocity;
             pos.z -= right.z * velocity;
+            updatePosition = true;
+
         }
         if (input.isKeyPressed(KeyCode::D)) 
         {
             pos.x += right.x * velocity;
             pos.y += right.y * velocity;
             pos.z += right.z * velocity;
+            updatePosition = true;
+
         }
         if (input.isKeyPressed(KeyCode::Space)) 
         {
             pos.y += velocity;
+            updatePosition = true;
+
         }
         if (input.isKeyPressed(KeyCode::C)) 
         {
             pos.y -= velocity;
-        }
+            updatePosition = true;
 
-        transformComponent->setPosition(pos);
+        }
+        if(updatePosition)
+            transformComponent->setPosition(pos);
     }
 
     void CameraController::processMouseLook(float deltaX, float deltaY) 
@@ -110,11 +123,11 @@ namespace chai::cup
         if (pitch < -89.0f) pitch = -89.0f;
 
         // Standard OpenGL camera forward calculation
-        double x = -sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-        double y = sin(glm::radians(pitch));
-        double z = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+        double x = -sin(radians(yaw)) * cos(radians(pitch));
+        double y = sin(radians(pitch));
+        double z = cos(radians(yaw)) * cos(radians(pitch));
 
         auto pos = transformComponent->getWorldPosition();
-        transformComponent->lookAt({ pos.x + (float)x, pos.y + (float)y, pos.z + (float)z }, { 0.0f, 1.0f, 0.0f });
+        transformComponent->lookAt({ pos.x + (float)x, pos.y + (float)y, pos.z + (float)z }, { 0.0f, -1.0f, 0.0f });
     }
 }

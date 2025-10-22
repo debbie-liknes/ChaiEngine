@@ -12,28 +12,28 @@ namespace chai
             );
     }
 
-    double aabb::getSurfaceArea() const
+    float aabb::getSurfaceArea() const
     {
-        return 2.0 * (width * width + height * height + length * length);
+        return 2.f * (width * width + height * height + length * length);
     }
 
     aabb aabb::expand(const aabb& box) const
     {
-        double min_x = std::min(this->center.x - this->width / 2.0,
-            box.center.x - box.width / 2.0);
-        double min_y = std::min(this->center.y - this->width / 2.0,
-            box.center.y - box.width / 2.0);
-        double min_z = std::min(this->center.z - this->width / 2.0,
-            box.center.z - box.width / 2.0);
-        double max_x = std::max(this->center.x + this->width / 2.0,
-            box.center.x + box.width / 2.0);
-        double max_y = std::max(this->center.y + this->width / 2.0,
-            box.center.y + box.width / 2.0);
-        double max_z = std::max(this->center.z + this->width / 2.0,
-            box.center.z + box.width / 2.0);
+        float min_x = std::min(this->center.x - this->width / 2.f,
+            box.center.x - box.width / 2.f);
+        float min_y = std::min(this->center.y - this->width / 2.f,
+            box.center.y - box.width / 2.f);
+        float min_z = std::min(this->center.z - this->width / 2.f,
+            box.center.z - box.width / 2.f);
+        float max_x = std::max(this->center.x + this->width / 2.f,
+            box.center.x + box.width / 2.f);
+        float max_y = std::max(this->center.y + this->width / 2.f,
+            box.center.y + box.width / 2.f);
+        float max_z = std::max(this->center.z + this->width / 2.f,
+            box.center.z + box.width / 2.f);
 
         return aabb{
-            glm::vec3((max_x + min_x) / 2.0, (max_y + min_y) / 2.0, (max_z + min_z) / 2.0),
+            Vec3((max_x + min_x) / 2.f, (max_y + min_y) / 2.f, (max_z + min_z) / 2.f),
             max_x - min_x,
             max_y - min_y,
             max_z - min_z
@@ -43,14 +43,14 @@ namespace chai
     aabb BoxCollider::getWorldBounds() const
     {
         // the octet cluster of points
-        auto lll = center + box.center + glm::vec3(-box.width / 2.0, -box.height / 2.0, -box.length / 2.0);
-        auto rll = center + box.center + glm::vec3(box.width / 2.0, -box.height / 2.0, -box.length / 2.0);
-        auto lul = center + box.center + glm::vec3(-box.width / 2.0, box.height / 2.0, -box.length / 2.0);
-        auto rul = center + box.center + glm::vec3(box.width / 2.0, box.height / 2.0, -box.length / 2.0);
-        auto llr = center + box.center + glm::vec3(-box.width / 2.0, -box.height / 2.0, box.length / 2.0);
-        auto rlr = center + box.center + glm::vec3(box.width / 2.0, -box.height / 2.0, box.length / 2.0);
-        auto lur = center + box.center + glm::vec3(-box.width / 2.0, box.height / 2.0, box.length / 2.0);
-        auto rur = center + box.center + glm::vec3(box.width / 2.0, box.height / 2.0, box.length / 2.0);
+        auto lll = center + box.center + Vec3(-box.width / 2.f, -box.height / 2.f, -box.length / 2.f);
+        auto rll = center + box.center + Vec3(box.width / 2.f, -box.height / 2.f, -box.length / 2.f);
+        auto lul = center + box.center + Vec3(-box.width / 2.f, box.height / 2.f, -box.length / 2.f);
+        auto rul = center + box.center + Vec3(box.width / 2.f, box.height / 2.f, -box.length / 2.f);
+        auto llr = center + box.center + Vec3(-box.width / 2.f, -box.height / 2.f, box.length / 2.f);
+        auto rlr = center + box.center + Vec3(box.width / 2.f, -box.height / 2.f, box.length / 2.f);
+        auto lur = center + box.center + Vec3(-box.width / 2.f, box.height / 2.f, box.length / 2.f);
+        auto rur = center + box.center + Vec3(box.width / 2.f, box.height / 2.f, box.length / 2.f);
 
         auto rotatedPoints = {
             rotateAt(lll),
@@ -63,12 +63,12 @@ namespace chai
             rotateAt(rur)
         };
 
-        auto min_x = std::numeric_limits<double>::max();
-        auto min_y = std::numeric_limits<double>::max();
-        auto min_z = std::numeric_limits<double>::max();
-        auto max_x = std::numeric_limits<double>::min();
-        auto max_y = std::numeric_limits<double>::min();
-        auto max_z = std::numeric_limits<double>::min();
+        auto min_x = std::numeric_limits<float>::max();
+        auto min_y = std::numeric_limits<float>::max();
+        auto min_z = std::numeric_limits<float>::max();
+        auto max_x = std::numeric_limits<float>::min();
+        auto max_y = std::numeric_limits<float>::min();
+        auto max_z = std::numeric_limits<float>::min();
         for (auto&& pt : rotatedPoints)
             if (pt.x < min_x)
                 min_x = pt.x;
@@ -86,7 +86,7 @@ namespace chai
                 max_z = pt.z;
 
         return aabb{
-            glm::vec3((max_x + min_x) / 2.0, (max_y + min_y) / 2.0, (max_z + min_z) / 2.0),
+            Vec3((max_x + min_x) / 2.f, (max_y + min_y) / 2.f, (max_z + min_z) / 2.f),
             max_x - min_x,
             max_y - min_y,
             max_z - min_z

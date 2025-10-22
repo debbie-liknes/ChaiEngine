@@ -3,6 +3,7 @@
 #include <ChaiEngine/IMaterial.h>
 #include <Types/CMap.h>
 #include <set>
+#include <ChaiMath.h>
 
 namespace chai::brew
 {
@@ -49,9 +50,9 @@ namespace chai::brew
         }
 
         // Unified property setters
-        void setProperty(const std::string& name, const glm::vec3& value) 
+        void setProperty(const std::string& name, const Vec3& value) 
         {
-            auto uniform = std::make_shared<brew::UniformBuffer<glm::vec3>>(value);
+            auto uniform = std::make_shared<brew::UniformBuffer<Vec3>>(value);
             m_uniforms[name] = uniform;
             m_dirty = true;
         }
@@ -70,7 +71,7 @@ namespace chai::brew
         }
 
         // PBR-specific setters
-        void setBaseColor(const glm::vec3& color) 
+        void setBaseColor(const Vec3& color) 
         {
             setProperty("u_baseColor", color);
             setFeature(MaterialFeature::BaseColor, true);
@@ -94,7 +95,7 @@ namespace chai::brew
             setFeature(MaterialFeature::Roughness, true);
         }
 
-        void setNormal(const glm::vec3& normal) 
+        void setNormal(const Vec3& normal) 
         {
             setProperty("u_normal", normal);
             setFeature(MaterialFeature::Normal, true);
@@ -106,7 +107,7 @@ namespace chai::brew
             setFeature(MaterialFeature::NormalTexture, true);
         }
 
-        void setEmission(const glm::vec3& emission) 
+        void setEmission(const Vec3& emission) 
         {
             setProperty("u_emission", emission);
             setFeature(MaterialFeature::Emission, true);
@@ -124,17 +125,17 @@ namespace chai::brew
         }
 
         // Legacy Phong support (for OBJ compatibility)
-        void setDiffuse(const glm::vec3& diffuse) 
+        void setDiffuse(const Vec3& diffuse) 
         {
             setProperty("u_diffuse", diffuse);
         }
 
-        void setSpecular(const glm::vec3& specular) 
+        void setSpecular(const Vec3& specular) 
         {
             setProperty("u_specular", specular);
         }
 
-        void setAmbient(const glm::vec3& ambient) 
+        void setAmbient(const Vec3& ambient) 
         {
             setProperty("u_ambient", ambient);
         }
@@ -216,7 +217,7 @@ namespace chai::brew
             auto material = std::make_shared<Material>(shaderDesc);
 
             // Set default PBR values
-            material->setBaseColor(glm::vec3(0.8f, 0.8f, 0.8f));
+            material->setBaseColor(Vec3(0.8f, 0.8f, 0.8f));
             material->setMetallic(0.0f);
             material->setRoughness(0.8f);
 
@@ -224,7 +225,8 @@ namespace chai::brew
         }
 
         // Legacy Phong for OBJ compatibility
-        static std::shared_ptr<Material> createPhong() {
+        static std::shared_ptr<Material> createPhong() 
+        {
             auto shaderDesc = std::make_shared<ShaderDescription>();
             shaderDesc->name = "phong_standard";
             shaderDesc->stages = {
@@ -235,16 +237,17 @@ namespace chai::brew
             auto material = std::make_shared<Material>(shaderDesc);
 
             // Set default Phong values
-            material->setDiffuse(glm::vec3(0.8f, 0.8f, 0.8f));
-            material->setSpecular(glm::vec3(0.2f, 0.2f, 0.2f));
-            material->setAmbient(glm::vec3(0.1f, 0.1f, 0.1f));
+            material->setDiffuse(Vec3(0.8f, 0.8f, 0.8f));
+            material->setSpecular(Vec3(0.2f, 0.2f, 0.2f));
+            material->setAmbient(Vec3(0.1f, 0.1f, 0.1f));
             material->setShininess(32.0f);
 
             return material;
         }
 
         // Factory method that creates appropriate material based on features
-        static std::shared_ptr<Material> createFromFeatures(const std::set<MaterialFeature>& features) {
+        static std::shared_ptr<Material> createFromFeatures(const std::set<MaterialFeature>& features) 
+        {
             bool needsPBR = features.count(MaterialFeature::Metallic) ||
                 features.count(MaterialFeature::MetallicTexture) ||
                 features.count(MaterialFeature::Roughness) ||
@@ -260,7 +263,8 @@ namespace chai::brew
         }
 
         static std::shared_ptr<Material> createCustom(const std::string& vertexPath,
-            const std::string& fragmentPath) {
+            const std::string& fragmentPath) 
+        {
             auto shaderDesc = std::make_shared<ShaderDescription>();
             shaderDesc->name = "custom_" + std::to_string(generateUniqueId());
             shaderDesc->stages = {
@@ -271,7 +275,8 @@ namespace chai::brew
         }
 
     private:
-        static int generateUniqueId() {
+        static int generateUniqueId() 
+        {
             static int idCounter = 0;
             return idCounter++;
         }

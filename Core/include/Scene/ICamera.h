@@ -1,6 +1,6 @@
 #pragma once
 #include <CoreExport.h>
-#include <glm/glm.hpp>
+#include <ChaiMath.h>
 
 namespace chai
 {
@@ -19,9 +19,9 @@ namespace chai
         ICamera(const ICamera&) = delete;
         ICamera& operator=(const ICamera&) = delete;
 
-        virtual glm::mat4 getProjectionMatrix() = 0;
-        virtual glm::mat4 getViewMatrix() = 0;
-        virtual void setViewMatrix(const glm::mat4& viewMatrix) = 0;
+        virtual Mat4 getProjectionMatrix() = 0;
+        virtual Mat4 getViewMatrix() = 0;
+        virtual void setViewMatrix(const Mat4& viewMatrix) = 0;
 
         virtual void setAspectRatio(float aspect) = 0;
         virtual void setFarPlane(float far) = 0;

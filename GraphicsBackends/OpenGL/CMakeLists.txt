@@ -13,7 +13,7 @@ set(OpenGLRenderer_source
 
 add_library (OpenGLRenderer SHARED ${OpenGLRenderer_headers} ${OpenGLRenderer_source})
 
-target_link_libraries(OpenGLRenderer PUBLIC ChaiGraphics WindowModule PRIVATE glad)
+target_link_libraries(OpenGLRenderer PUBLIC ChaiGraphics WindowModule ChaiMath PRIVATE glad)
 target_include_directories(OpenGLRenderer PUBLIC include)
 
 target_compile_definitions(OpenGLRenderer PRIVATE 

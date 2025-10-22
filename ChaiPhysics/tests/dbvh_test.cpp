@@ -20,13 +20,13 @@ TEST(dbvh, construct)
 TEST(aabb, expand)
 {
     auto aabb1 = chai::aabb{
-        .center = glm::vec3(0, 0, 0),
+        .center = chai::Vec3(0, 0, 0),
         .width = 1,
         .length = 1,
         .height = 1
     };
     auto aabb2 = chai::aabb{
-        .center = glm::vec3(0, 0, 0),
+        .center = chai::Vec3(0, 0, 0),
         .width = 1,
         .length = 1,
         .height = 1
@@ -35,7 +35,7 @@ TEST(aabb, expand)
     EXPECT_THAT(aabb1.expand(aabb2), aabb1);
 
     auto aabb3 = chai::aabb{
-        .center = glm::vec3(0, 0, 0),
+        .center = chai::Vec3(0, 0, 0),
         .width = 2,
         .length = 2,
         .height = 2
@@ -44,13 +44,13 @@ TEST(aabb, expand)
     EXPECT_THAT(aabb1.expand(aabb3), aabb3);
 
     auto aabb4 = chai::aabb{
-        .center = glm::vec3(1, 1, 1),
+        .center = chai::Vec3(1, 1, 1),
         .width = 1,
         .length = 1,
         .height = 1
     };
     auto aabb5 = chai::aabb{
-        .center = glm::vec3(0.5, 0.5, 0.5),
+        .center = chai::Vec3(0.5f, 0.5f, 0.5f),
         .width = 2,
         .length = 2,
         .height = 2
@@ -79,13 +79,13 @@ TEST(dbvh, single_box)
             .length { 1 },
             .height { 1 }
         },
-        .center { glm::vec3(0, 0, 0) },
-        .rot { glm::quat(1, 0, 0, 0) }
+        .center { chai::Vec3(0, 0, 0) },
+        .rot { chai::Quat(1, 0, 0, 0) }
     };
     dbvh.insert(&box);
 
     auto aabb = box.getWorldBounds();
-    EXPECT_EQ(aabb.center, glm::vec3(0, 0, 0));
+    EXPECT_EQ(aabb.center, chai::Vec3(0, 0, 0));
     EXPECT_EQ(aabb.width, 1.0);
     EXPECT_EQ(aabb.length, 1.0);
     EXPECT_EQ(aabb.height, 1.0);
@@ -114,8 +114,8 @@ TEST(dbvh, insert_two_nodes_into_dbvh)
             .length { 1 },
             .height { 1 }
         },
-        .center { glm::vec3(0, 0, 0) },
-        .rot { glm::quat(1, 0, 0, 0) }
+        .center { chai::Vec3(0, 0, 0) },
+        .rot { chai::Quat(1, 0, 0, 0) }
     };
     chai::BoxCollider box2{
         .box {
@@ -126,8 +126,8 @@ TEST(dbvh, insert_two_nodes_into_dbvh)
             .length { 1 },
             .height { 1 }
         },
-        .center { glm::vec3(0, 0, 0) },
-        .rot { glm::quat(1, 0, 0, 0) }
+        .center { chai::Vec3(0, 0, 0) },
+        .rot { chai::Quat(1, 0, 0, 0) }
     };
     dbvh.insert(&box1);
     dbvh.insert(&box2);

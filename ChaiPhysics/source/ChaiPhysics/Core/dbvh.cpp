@@ -17,7 +17,7 @@ namespace chai
         virtual dbvh::Node* findBestSibling(dbvh::Node* root, dbvh::Node* nodeToAdd) = 0;
     };
 
-    // \brief Evaluates heuristic cost based on surface area of the node
+    //// \brief Evaluates heuristic cost based on surface area of the node
     class SurfaceAreaHeuristic : public ICostHeuristic
     {
     public:
@@ -104,9 +104,9 @@ namespace chai
             // Add padding to bounds
             auto worldBounds = obj->getWorldBounds();
             auto enlargedBounds = worldBounds;
-            enlargedBounds.width += 5.0;
-            enlargedBounds.height += 5.0;
-            enlargedBounds.length += 5.0;
+            enlargedBounds.width += 5.f;
+            enlargedBounds.height += 5.f;
+            enlargedBounds.length += 5.f;
 
             if (m_root == nullptr)
             {

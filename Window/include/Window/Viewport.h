@@ -11,7 +11,7 @@ namespace chai
     {
         std::string name;
         int x, y, width, height;
-        glm::vec4 clearColor{ 0.2f, 0.3f, 0.3f, 1.0f };
+        Vec4 clearColor{ 0.2f, 0.3f, 0.3f, 1.0f };
         bool clearDepth = true;
         bool clearStencil = false;
     };

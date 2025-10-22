@@ -1,17 +1,17 @@
 #pragma once
-#include <glm/glm.hpp>
+#include <ChaiMath.h>
 
 namespace chai::brew
 {
     struct Light 
     {
         int type; // 0=directional, 1=point, 2=spot
-        glm::vec3 position;
-        glm::vec3 direction;
-        glm::vec3 color;
+        Vec3 position;
+        Vec3 direction;
+        Vec3 color;
         float intensity;
         float range;
-        glm::vec3 attenuation;
+        Vec3 attenuation;
         float innerCone;
         float outerCone;
         int enabled;

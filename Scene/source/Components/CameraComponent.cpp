@@ -9,26 +9,26 @@ namespace chai::cup
         m_camera = std::make_unique<Camera>();
     }
 
-    glm::mat4 CameraComponent::getViewMatrix() const
+    Mat4 CameraComponent::getViewMatrix() const
     {
         TransformComponent const* transform = getGameObject()->getComponent<TransformComponent>();
-        if (!transform) return glm::mat4(1.0f);
+        if (!transform) return Mat4{ 1.0f };
 
         // Build view matrix from transform
-        glm::vec3 pos = transform->getWorldPosition();
-        glm::vec3 forward = transform->forward();
-        glm::vec3 up = transform->up();
+        Vec3 pos = transform->getWorldPosition();
+        Vec3 forward = transform->forward();
+        Vec3 up = transform->up();
 
-        return glm::lookAt(pos, pos + forward, up);
+        return lookAt(pos, pos + forward, up);
     }
 
     void CameraComponent::updateViewMatrix(TransformComponent* transform)
     {
-        glm::vec3 position = transform->getWorldPosition();
-        glm::vec3 forward = transform->forward();
-        glm::vec3 up = transform->up();
+        Vec3 position = transform->getWorldPosition();
+        Vec3 forward = transform->forward();
+        Vec3 up = transform->up();
 
-        glm::mat4 viewMatrix = glm::lookAt(position, position + forward, up);
+        Mat4 viewMatrix = lookAt(position, position + forward, up);
         m_camera->setViewMatrix(viewMatrix);
     }
 

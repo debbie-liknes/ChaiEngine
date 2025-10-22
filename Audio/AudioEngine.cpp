@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <map>
-#include <cmath>
+#include <assert.h>
 
 #ifdef FMOD_FOUND
     #include <fmod.hpp>
@@ -19,9 +19,9 @@ inline float volumeToDb(float volume)
 }
 
 #ifdef FMOD_FOUND
-inline FMOD_VECTOR vec3ToFmod(const glm::vec3& vec)
+inline FMOD_VECTOR vec3ToFmod(const chai::Vec3& vec)
 {
-    return { vec.x, vec.y, vec.z };
+    return { vec.x, vec.y, vec.z};
 }
 #endif
 
@@ -39,7 +39,7 @@ struct Implementation
         mpSystem->init(512, flags, nullptr);
 #endif
     }
-    ~Implementation() {}
+    ~Implementation() = default;
 
     void Update();
 
@@ -48,8 +48,8 @@ struct Implementation
 
     int mnNextChannelId = 0;
 
-    typedef std::map<std::string, FMOD::Sound*> SoundMap;
-    typedef std::map<int, FMOD::Channel*> ChannelMap;
+    using SoundMap = std::map<std::string, FMOD::Sound *>;
+    using ChannelMap = std::map<int, FMOD::Channel *>;
     SoundMap mSounds;
     ChannelMap mChannels;
 #endif
@@ -131,7 +131,7 @@ void AudioEngine::UnLoadSound(const std::string& strSoundName)
 }
 
 int AudioEngine::PlaySound(const std::string& strSoundName,
-    const glm::vec3& vPosition, float fVolumedB)
+    const chai::Vec3& vPosition, float fVolumedB)
 {
 #ifdef FMOD_FOUND
     int nChannelId = sgpImplementation->mnNextChannelId++;
@@ -162,8 +162,8 @@ int AudioEngine::PlaySound(const std::string& strSoundName,
 #endif
 }
 
-void AudioEngine::Set3dListenerAndOrientation(const glm::vec3& vPosition,
-    const glm::vec3& vLook, const glm::vec3& vUp)
+void AudioEngine::Set3dListenerAndOrientation(const chai::Vec3& vPosition,
+    const chai::Vec3& vLook, const chai::Vec3& vUp)
 {
 #ifdef FMOD_FOUND
     auto pos = vec3ToFmod(vPosition);
@@ -215,7 +215,7 @@ void AudioEngine::StopAllChannels()
 }
 
 void AudioEngine::SetChannel3dPosition(int nChannelId,
-    const glm::vec3& vPosition)
+    const chai::Vec3& vPosition)
 {
 #ifdef FMOD_FOUND
     CHECK_BOUNDS(nChannelId, sgpImplementation->mChannels,);

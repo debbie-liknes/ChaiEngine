@@ -1,7 +1,6 @@
 #pragma once
 
-#include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
+#include <ChaiMath.h>
 
 namespace chai
 {
@@ -10,14 +9,14 @@ namespace chai
     {
         bool operator==(const aabb&) const;
 
-        double getSurfaceArea() const;
+        float getSurfaceArea() const;
         aabb expand(const aabb& box) const;
 
         // The center point in the AABB
-        glm::vec3 center;
-        double width;
-        double length;
-        double height;
+        Vec3 center;
+        float width;
+        float length;
+        float height;
     };
 
     struct BoxCollider
@@ -26,12 +25,13 @@ namespace chai
 
         // Local rotation is represented by centroid starting point
         // multiplied by quaternion for rotational axis + degree.
-        glm::vec3 center;
-        glm::quat rot;
+        Vec3 center;
+        Quat rot;
 
-        glm::vec4 rotateAt(glm::vec3 pos) const
+        Vec4 rotateAt(Vec3 pos) const
         {
-            return rot * glm::vec4(pos, 1.) * glm::inverse(rot);
+            Vec3 r = rot * pos;
+            return Vec4{ r[0], r[1], r[2], 1.0f };
         }
 
         aabb getWorldBounds() const;

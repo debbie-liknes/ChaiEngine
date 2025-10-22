@@ -1,9 +1,7 @@
 #pragma once
 #include <SceneExport.h>
 #include <Components/ComponentBase.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/quaternion.hpp>
+#include <ChaiMath.h>
 
 namespace chai::cup
 {
@@ -13,24 +11,24 @@ namespace chai::cup
 	public:
 		explicit TransformComponent(GameObject* owner = nullptr);
 		~TransformComponent() override = default;
-		glm::mat4 getLocalMatrix() const;
-		glm::mat4 getWorldMatrix() const;
+		Mat4 getLocalMatrix() const;
+		Mat4 getWorldMatrix() const;
 
-		void setPosition(glm::vec3 newPos);
+		void setPosition(chai::Vec3 newPos);
 
-		glm::vec3 up() const;
-		glm::vec3 forward() const;
-		glm::vec3 right() const;
+		Vec3 up() const;
+		Vec3 forward() const;
+		Vec3 right() const;
 
-		glm::vec3 getWorldPosition() const;
-		glm::quat getWorldRotation() const;
+		Vec3 getWorldPosition() const;
+		Quat getWorldRotation() const;
 
-		void lookAt(const glm::vec3& target, const glm::vec3& worldUp);
+		void lookAt(const Vec3& target, const Vec3& worldUp);
 	private:
 
 		TransformComponent* m_parent{ nullptr };
-		glm::vec3 m_position{ 0.0f, 0.0f, 0.0f };
-		glm::quat m_rotation{ 1.0f, 0.0f, 0.0f, 0.0f }; // w, x, y, z
-		glm::vec3 m_scale{ 1.0f, 1.0f, 1.0f };
+		Vec3 m_position{ 0.0f, 0.0f, 0.0f };
+		Quat m_rotation{ 1.0f, 0.0f, 0.0f, 0.0f }; // w, x, y, z
+		Vec3 m_scale{ 1.0f, 1.0f, 1.0f };
 	};
 }
