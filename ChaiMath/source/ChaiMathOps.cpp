@@ -1,5 +1,5 @@
 #include <ChaiMathOps.h>
-#include "internal/glm_internal.h"
+#include <MathIncludes.h>
 
 namespace chai
 {
@@ -12,7 +12,7 @@ namespace chai
 	template<typename T>
 	T radians(T degrees)
 	{
-		return glm::radians(degrees);
+		return degrees * M_PI / static_cast<T>(180);
 	}
 
 	template<typename T, int N>
@@ -25,14 +25,6 @@ namespace chai
 		T len = std::sqrt(lenSq);
 		return v / len;
 	}
-
-	//template<typename T>
-	//Quaternion<T> normalize(const Quaternion<T>& q)
-	//{
-	//	T len = std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
-	//	if (len == T(0)) return Quaternion<T>::identity(); // or throw/assert
-	//	return { q.x / len, q.y / len, q.z / len, q.w / len };
-	//}
 
 	template<typename T, int N>
 	T dot(const Vec<T, N>& a, const Vec<T, N>& b)

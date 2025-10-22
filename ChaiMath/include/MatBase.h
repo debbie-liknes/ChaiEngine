@@ -1,5 +1,6 @@
 #pragma once
 #include <VecBase.h>
+#include <MathIncludes.h>
 #include <cassert>
 
 #ifndef CHAI_ROW_MAJOR
@@ -19,26 +20,30 @@ namespace chai
         static constexpr int Elements = R * C;
 
         // contiguous storage
-        T m[Elements]; // size/alignment == Elements*sizeof(T) & alignof(T)
+        T m[Elements];
 
-        class RowProxy {
+        class RowProxy 
+        {
         public:
             explicit constexpr RowProxy(T* p) noexcept : p_(p) {}
             constexpr       T& operator[](int c)       noexcept { return p_[c]; }
             constexpr const T& operator[](int c) const noexcept { return p_[c]; }
 
             // assign from Vec<T,C>
-            RowProxy& operator=(const Vec<T, C>& rhs) noexcept {
+            RowProxy& operator=(const Vec<T, C>& rhs) noexcept 
+            {
                 for (int c = 0; c < C; ++c) p_[c] = rhs[c];
                 return *this;
             }
             // assign from initializer_list (strict)
-            RowProxy& operator=(std::initializer_list<T> il) {
+            RowProxy& operator=(std::initializer_list<T> il) 
+            {
                 assert(il.size() == (size_t)C);
                 int i = 0; for (const T& v : il) p_[i++] = v; return *this;
             }
             // implicit readback as Vec<T,C>
-            constexpr operator Vec<T, C>() const noexcept {
+            constexpr operator Vec<T, C>() const noexcept 
+            {
                 Vec<T, C> out{};
                 for (int c = 0; c < C; ++c) out[c] = p_[c];
                 return out;
@@ -54,17 +59,17 @@ namespace chai
             T* p_;
         };
 
-        class ConstRowProxy {
+        class ConstRowProxy 
+        {
         public:
             explicit constexpr ConstRowProxy(const T* p) noexcept : p_(p) {}
             constexpr const T& operator[](int c) const noexcept { return p_[c]; }
-            // implicit readback to Vec<T,C>
-            constexpr operator Vec<T, C>() const noexcept {
+            constexpr operator Vec<T, C>() const noexcept 
+            {
                 Vec<T, C> out{};
                 for (int c = 0; c < C; ++c) out[c] = p_[c];
                 return out;
             }
-            // iterators / data
             constexpr const T* data() const noexcept { return p_; }
             constexpr const T* begin() const noexcept { return p_; }
             constexpr const T* end()   const noexcept { return p_ + C; }
@@ -72,21 +77,20 @@ namespace chai
             const T* p_;
         };
 
-        // -------- constructors --------
-        Mat() = default;                                // uninitialized (fast)
+        Mat() = default;
         Mat(const Mat&) = default;
         Mat& operator=(const Mat&) = default;
         ~Mat() = default;
 
-        // Fill (splat) constructor: fills all elements with 'v'
-        explicit constexpr Mat(T v) {
+        explicit constexpr Mat(T v) 
+        {
             for (int i = 0; i < Elements; ++i) m[i] = v;
         }
 
-        // Strict initializer_list (no narrowing)
-        constexpr Mat(std::initializer_list<T> ilist) {
-            if (ilist.size() == 1 && (*ilist.begin()) == T(1)) {
-                // create identity if square, otherwise diagonal-1
+        constexpr Mat(std::initializer_list<T> ilist) 
+        {
+            if (ilist.size() == 1 && (*ilist.begin()) == T(1)) 
+            {
                 for (int r = 0; r < R; ++r)
                     for (int c = 0; c < C; ++c)
                         m[r * C + c] = (r == c ? T(1) : T(0));
@@ -99,7 +103,8 @@ namespace chai
 
         // Relaxed initializer_list (accept arithmetic types; explicit)
         template<class U, class = std::enable_if_t<std::is_arithmetic_v<U>&& std::is_convertible_v<U, T>>>
-        explicit constexpr Mat(std::initializer_list<U> ilist) {
+        explicit constexpr Mat(std::initializer_list<U> ilist) 
+        {
             assert(ilist.size() == static_cast<size_t>(Elements) && "Mat init wrong size");
             int i = 0; for (const U& v : ilist) m[i++] = static_cast<T>(v);
         }
@@ -112,20 +117,18 @@ namespace chai
             ((is_scalar_or_vec_v<Args>) && ...) &&
             (all_convertible_to_v<T, Args...>)
             >>
-            constexpr explicit Mat(const Args&... args) {
+            constexpr explicit Mat(const Args&... args) 
+        {
             size_t i = 0;
-            append_all(i, m, args...); // row-major fill
+            append_all(i, m, args...);
         }
 
-        // ---- element/row access ----
         constexpr       T& operator()(int r, int c)       noexcept { return m[index(r, c)]; }
         constexpr const T& operator()(int r, int c) const noexcept { return m[index(r, c)]; }
 
-        // row view (so M[r][c] works and M[r] = Vec<T,C>{...} works)
         constexpr RowProxy      operator[](int r)       noexcept { return RowProxy(&m[index(r, 0)]); }
         constexpr ConstRowProxy operator[](int r) const noexcept { return ConstRowProxy(&m[index(r, 0)]); }
 
-        // Raw data / iterators
         constexpr       T* data()       noexcept { return m; }
         constexpr const  T* data() const noexcept { return m; }
         constexpr       T* begin()       noexcept { return m; }
@@ -133,7 +136,7 @@ namespace chai
         constexpr       T* end()         noexcept { return m + Elements; }
         constexpr const  T* end()   const noexcept { return m + Elements; }
 
-        // -------- basics --------
+        // basic helpers
         static constexpr Mat zero() noexcept {
             Mat z{};
             for (int i = 0; i < Elements; ++i) z.m[i] = T(0);
@@ -147,34 +150,37 @@ namespace chai
             return I;
         }
 
-        // Construct from rows: r0, r1, ...
+        // From rows
         template<class... RowVecs,
             class = std::enable_if_t<(sizeof...(RowVecs) == R) && (is_vec_v<RowVecs> && ...)>>
-            static constexpr Mat from_rows(const RowVecs&... rows) {
+            static constexpr Mat from_rows(const RowVecs&... rows) 
+        {
             Mat M{};
             const Vec<T, C> rr[] = { Vec<T,C>(rows)... };
             for (int r = 0; r < R; ++r) for (int c = 0; c < C; ++c) M(r, c) = rr[r][c];
             return M;
         }
 
-        // Construct from cols: c0, c1, ...
+        // From cols.
         template<class... ColVecs,
             class = std::enable_if_t<(sizeof...(ColVecs) == C) && (is_vec_v<ColVecs> && ...)>>
-            static constexpr Mat from_cols(const ColVecs&... cols) {
+            static constexpr Mat from_cols(const ColVecs&... cols) 
+        {
             Mat M{};
             const Vec<T, R> cc[] = { Vec<T,R>(cols)... };
             for (int c = 0; c < C; ++c) for (int r = 0; r < R; ++r) M(r, c) = cc[c][r];
             return M;
         }
 
-        // -------- comparisons --------
-        constexpr bool operator==(const Mat& o) const noexcept {
+        // comparison
+        constexpr bool operator==(const Mat& o) const noexcept 
+        {
             for (int i = 0; i < Elements; ++i) if (m[i] != o.m[i]) return false;
             return true;
         }
         constexpr bool operator!=(const Mat& o) const noexcept { return !(*this == o); }
 
-        // -------- arithmetic --------
+        // arithmetic
         constexpr Mat& operator+=(const Mat& b) noexcept { for (int i = 0; i < Elements; ++i) m[i] += b.m[i]; return *this; }
         constexpr Mat& operator-=(const Mat& b) noexcept { for (int i = 0; i < Elements; ++i) m[i] -= b.m[i]; return *this; }
         constexpr Mat& operator*=(T s)          noexcept { for (int i = 0; i < Elements; ++i) m[i] *= s;     return *this; }
@@ -186,12 +192,13 @@ namespace chai
         friend constexpr Mat operator*(T s, Mat a)          noexcept { a *= s; return a; }
         friend constexpr Mat operator/(Mat a, T s)          noexcept { a /= s; return a; }
 
-        // Matrix * Matrix (R x C) * (C x K) = (R x K)
         template<int K>
-        friend constexpr Mat<T, R, K> operator*(const Mat& A, const Mat<T, C, K>& B) noexcept {
+        friend constexpr Mat<T, R, K> operator*(const Mat& A, const Mat<T, C, K>& B) noexcept 
+        {
             Mat<T, R, K> out = Mat<T, R, K>::zero();
             for (int r = 0; r < R; ++r)
-                for (int k = 0; k < K; ++k) {
+                for (int k = 0; k < K; ++k) 
+                {
                     T acc = T(0);
                     for (int c = 0; c < C; ++c)
                         acc += A(r, c) * B(c, k);
@@ -201,9 +208,11 @@ namespace chai
         }
 
         // Matrix * Vec (R x C) * Vec<C> = Vec<R>
-        friend constexpr Vec<T, R> operator*(const Mat& A, const Vec<T, C>& x) noexcept {
+        friend constexpr Vec<T, R> operator*(const Mat& A, const Vec<T, C>& x) noexcept 
+        {
             Vec<T, R> out{};
-            for (int r = 0; r < R; ++r) {
+            for (int r = 0; r < R; ++r) 
+            {
                 T acc = T(0);
                 for (int c = 0; c < C; ++c) acc += A(r, c) * x[c];
                 out[r] = acc;
@@ -212,9 +221,11 @@ namespace chai
         }
 
         //Vec * Matrix  Vec<R>^T * (R x C) = Vec<C>
-        friend constexpr Vec<T, C> operator*(const Vec<T, R>& x, const Mat& A) noexcept {
+        friend constexpr Vec<T, C> operator*(const Vec<T, R>& x, const Mat& A) noexcept 
+        {
             Vec<T, C> out{};
-            for (int c = 0; c < C; ++c) {
+            for (int c = 0; c < C; ++c) 
+            {
                 T acc = T(0);
                 for (int r = 0; r < R; ++r) acc += x[r] * A(r, c);
                 out[c] = acc;
@@ -223,14 +234,16 @@ namespace chai
         }
 
         // Transpose
-        constexpr Mat<T, C, R> transpose() const noexcept {
+        constexpr Mat<T, C, R> transpose() const noexcept 
+        {
             Mat<T, C, R> t{};
             for (int r = 0; r < R; ++r) for (int c = 0; c < C; ++c) t(c, r) = (*this)(r, c);
             return t;
         }
 
     private:
-        static constexpr int index(int r, int c) noexcept {
+        static constexpr int index(int r, int c) noexcept 
+        {
 #if CHAI_ROW_MAJOR
             return r * C + c;
 #else

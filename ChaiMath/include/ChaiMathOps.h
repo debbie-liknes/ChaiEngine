@@ -2,8 +2,8 @@
 #include <VecBase.h>
 #include <Vec3.h>
 #include <Mat_4x4.h>
-#include <ChaiMatrix.h>
-#include <QuatBase.h>
+#include <MatBase.h>
+#include <ChaiQuat.h>
 #include <ChaiMathExport.h>
 
 namespace chai
@@ -13,9 +13,6 @@ namespace chai
 
     template<typename T, int N>
     Vec<T, N> normalize(const Vec<T, N>& vec);
-
-    //template<typename T>
-    //Quaternion<T> normalize(const Quaternion<T>& q);
 
     template<typename T>
     Mat4T<T> translate(const Mat4T<T>& m, const Vec3T<T>& offset);

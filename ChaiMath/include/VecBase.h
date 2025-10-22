@@ -1,5 +1,6 @@
 #pragma once
 #include <ChaiMathExport.h>
+#include <MathIncludes.h>
 #include <type_traits>
 #include <memory>
 #include <initializer_list>
@@ -56,7 +57,8 @@ namespace chai
 	}
 
 	template<class T, class First, class... Rest>
-	constexpr void append_all(size_t& idx, T* dst, const First& f, const Rest&... r) {
+	constexpr void append_all(size_t& idx, T* dst, const First& f, const Rest&... r) 
+	{
 		append_components(idx, dst, f);
 		if constexpr (sizeof...(Rest) > 0) append_all(idx, dst, r...);
 	}
@@ -67,8 +69,10 @@ namespace chai
 
 	// N = 2 with .x .y
 	template<typename T>
-	struct VecStorage<T, 2> {
-		union {
+	struct VecStorage<T, 2> 
+	{
+		union 
+		{
 			struct { T x, y; };
 			T data[2];
 		};
@@ -76,8 +80,10 @@ namespace chai
 
 	// N = 3 with .x .y .z
 	template<typename T>
-	struct VecStorage<T, 3> {
-		union {
+	struct VecStorage<T, 3> 
+	{
+		union 
+		{
 			struct { T x, y, z; };
 			T data[3];
 		};
@@ -85,8 +91,10 @@ namespace chai
 
 	// N = 4 with .x .y .z .w
 	template<typename T>
-	struct VecStorage<T, 4> {
-		union {
+	struct VecStorage<T, 4> 
+	{
+		union 
+		{
 			struct { T x, y, z, w; };
 			T data[4];
 		};
@@ -119,37 +127,40 @@ namespace chai
 		constexpr const T& operator[](int i) const noexcept { return this->data[i]; }
 
 		// Fill (splat) constructor
-		explicit constexpr Vec(T fill) {
+		explicit constexpr Vec(T fill) 
+		{
 			for (int i = 0; i < N; ++i) this->data[i] = fill;
 		}
 
-		// -------- initializer_list (strict: no narrowing) ----------
-		constexpr Vec(std::initializer_list<T> ilist) {
+		// initializer list (strict)
+		constexpr Vec(std::initializer_list<T> ilist) 
+		{
 			assert(ilist.size() == static_cast<size_t>(N) && "initializer_list wrong size");
-			// If you prefer exceptions over assert in release builds:
-			// if (ilist.size() != static_cast<size_t>(N)) throw std::length_error("Vec init size");
 			int i = 0;
 			for (const T& v : ilist) this->data[i++] = v;
 		}
 
-		// -------- initializer_list (relaxed: accepts other arithmetic types) ----------
+		// initializer list (relaxed)
 		template<class U,
 			class = std::enable_if_t<std::is_arithmetic_v<U>&& std::is_convertible_v<U, T>>>
-		explicit constexpr Vec(std::initializer_list<U> ilist) {
+		explicit constexpr Vec(std::initializer_list<U> ilist) 
+		{
 			assert(ilist.size() == static_cast<size_t>(N) && "initializer_list wrong size");
 			int i = 0;
 			for (const U& v : ilist) this->data[i++] = static_cast<T>(v);
 		}
 
-		// -------- assignment from initializer_list ----------
-		Vec& operator=(std::initializer_list<T> ilist) {
+		// assignment
+		Vec& operator=(std::initializer_list<T> ilist) 
+		{
 			assert(ilist.size() == static_cast<size_t>(N) && "initializer_list wrong size");
 			int i = 0; for (const T& v : ilist) this->data[i++] = v;
 			return *this;
 		}
 		template<class U,
 			class = std::enable_if_t<std::is_arithmetic_v<U>&& std::is_convertible_v<U, T>>>
-		Vec& operator=(std::initializer_list<U> ilist) {
+		Vec& operator=(std::initializer_list<U> ilist) 
+		{
 			assert(ilist.size() == static_cast<size_t>(N) && "initializer_list wrong size");
 			int i = 0; for (const U& v : ilist) this->data[i++] = static_cast<T>(v);
 			return *this;
@@ -164,13 +175,16 @@ namespace chai
 			(all_convertible_to_v<T, Args...>) &&
 			(not_exact_vec_copy_v<T, N, Args...>)
 			>>
-			constexpr explicit Vec(const Args&... args) {
+			constexpr explicit Vec(const Args&... args) 
+		{
 			size_t i = 0;
 			append_all(i, this->data, args...);
 		}
 
-		constexpr bool operator==(const Vec& other) const noexcept {
-			for (int i = 0; i < N; ++i) {
+		constexpr bool operator==(const Vec& other) const noexcept 
+		{
+			for (int i = 0; i < N; ++i) 
+			{
 				if (this->data[i] != other.data[i])
 					return false;
 			}
@@ -178,7 +192,8 @@ namespace chai
 		}
 
 		// Inequality operator
-		constexpr bool operator!=(const Vec& other) const noexcept {
+		constexpr bool operator!=(const Vec& other) const noexcept 
+		{
 			return !(*this == other);
 		}
 	};
@@ -195,7 +210,8 @@ namespace chai
 	Vec<T, N> operator+(const Vec<T, N>& a, const Vec<T, N>& b) 
 	{
 		Vec<T, N> result;
-		for (int i = 0; i < N; ++i) {
+		for (int i = 0; i < N; ++i) 
+		{
 			result.data[i] = a.data[i] + b.data[i];
 		}
 		return result;
@@ -205,7 +221,8 @@ namespace chai
 	Vec<T, N> operator-(const Vec<T, N>& a, const Vec<T, N>& b)
 	{
 		Vec<T, N> result;
-		for (int i = 0; i < N; ++i) {
+		for (int i = 0; i < N; ++i) 
+		{
 			result.data[i] = a.data[i] - b.data[i];
 		}
 		return result;
@@ -215,7 +232,8 @@ namespace chai
 	Vec<T, N> operator*(const Vec<T, N>& v, const T scalar)
 	{
 		Vec<T, N> result;
-		for (int i = 0; i < N; ++i) {
+		for (int i = 0; i < N; ++i) 
+		{
 			result.data[i] = v.data[i] * scalar;
 		}
 		return result;
@@ -225,7 +243,8 @@ namespace chai
 	Vec<T, N> operator*(const T scalar, const Vec<T, N>& v)
 	{
 		Vec<T, N> result;
-		for (int i = 0; i < N; ++i) {
+		for (int i = 0; i < N; ++i) 
+		{
 			result.data[i] = v.data[i] * scalar;
 		}
 		return result;
@@ -235,7 +254,8 @@ namespace chai
 	Vec<T, N> operator/(const Vec<T, N>& v, const T scalar)
 	{
 		Vec<T, N> result;
-		for (int i = 0; i < N; ++i) {
+		for (int i = 0; i < N; ++i) 
+		{
 			result.data[i] = v.data[i] / scalar;
 		}
 		return result;
@@ -245,7 +265,8 @@ namespace chai
 	Vec<T, N> operator-(const Vec<T, N>& v)
 	{
 		Vec<T, N> result;
-		for (int i = 0; i < N; ++i) {
+		for (int i = 0; i < N; ++i) 
+		{
 			result.data[i] = -v.data[i];
 		}
 		return result;

@@ -1,6 +1,4 @@
 #include "test_helpers.h"
-#include <QuatBase.h>
-
 #include <ChaiMath.h>
 
 namespace chai

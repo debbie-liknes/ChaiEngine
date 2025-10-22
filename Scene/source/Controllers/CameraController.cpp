@@ -1,6 +1,5 @@
 #include <Controllers/CameraController.h>
 #include <stdexcept>
-#include <cmath>
 
 namespace chai::cup
 {
