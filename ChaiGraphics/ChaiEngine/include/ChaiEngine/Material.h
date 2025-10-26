@@ -5,7 +5,7 @@
 #include <set>
 #include <ChaiMath.h>
 
-namespace chai::brew
+namespace chai
 {
     enum class MaterialFeature 
     {
@@ -52,14 +52,14 @@ namespace chai::brew
         // Unified property setters
         void setProperty(const std::string& name, const Vec3& value) 
         {
-            auto uniform = std::make_shared<brew::UniformBuffer<Vec3>>(value);
+            auto uniform = std::make_shared<UniformBuffer<Vec3>>(value);
             m_uniforms[name] = uniform;
             m_dirty = true;
         }
 
         void setProperty(const std::string& name, float value) 
         {
-            auto uniform = std::make_shared<brew::UniformBuffer<float>>(value);
+            auto uniform = std::make_shared<UniformBuffer<float>>(value);
             m_uniforms[name] = uniform;
             m_dirty = true;
         }

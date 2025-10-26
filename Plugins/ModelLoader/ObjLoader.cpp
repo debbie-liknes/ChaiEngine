@@ -18,7 +18,7 @@ namespace chai
 		return ext == "obj";
 	}
 
-	std::shared_ptr<IResource> ObjLoader::load(const std::string& path)
+	std::shared_ptr<IAsset> ObjLoader::load(const std::string& path)
 	{
 		tinyobj::ObjReaderConfig reader_config;
 		tinyobj::ObjReader reader;
@@ -42,7 +42,7 @@ namespace chai
 		auto& materials = reader.GetMaterials();
 
 		// Create mesh data containers
-		std::vector<brew::Vertex> vertices;
+		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
 		CMap<std::string, uint32_t> uniqueVertices;
 
@@ -59,7 +59,7 @@ namespace chai
 				{
 					tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
 
-					brew::Vertex vertex{};
+					Vertex vertex{};
 
 					// Position
 					vertex.position.x = attrib.vertices[3 * size_t(idx.vertex_index) + 0];
@@ -104,15 +104,15 @@ namespace chai
 			}
 		}
 
-		auto mesh = std::make_shared<brew::Mesh>(vertices, indices);
-		auto asset = std::make_shared<brew::MeshAsset>(mesh);
+		auto mesh = std::make_shared<Mesh>(vertices, indices);
+		//auto asset = std::make_shared<MeshAsset>(mesh);
 
-		for (auto& material : materials)
-		{
-			asset->addMaterialLibrary(material.name);
-		}
+		//for (auto& material : materials)
+		//{
+		//	asset->addMaterialLibrary(material.name);
+		//}
 
-		return asset;
+		return mesh;
 	}
 
 	bool MtlLoader::canLoad(const std::string& ext) const
@@ -120,7 +120,7 @@ namespace chai
 		return ext == "mtl";
 	}
 
-	std::shared_ptr<IResource> MtlLoader::load(const std::string& path)
+	std::shared_ptr<IAsset> MtlLoader::load(const std::string& path)
 	{
 		std::filesystem::path filePath(path);
 		tinyobj::MaterialFileReader reader(filePath.parent_path().string());
@@ -152,7 +152,7 @@ namespace chai
 		//TODO: need to support multiple materials in 1 file
 		auto const& tinyMat = materials[0];
 
-		auto mat = brew::MaterialSystem::createPhong();
+		auto mat = MaterialSystem::createPhong();
 		std::cout << "Applying material: " << tinyMat.name << std::endl;
 
 		// Set specular color

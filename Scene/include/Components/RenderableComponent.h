@@ -11,11 +11,12 @@ namespace chai::cup
 	{
 	public:
 		explicit RenderableComponent(GameObject* owner = nullptr) : Component(owner) {}
-		std::shared_ptr<brew::IMesh> getMesh() const { return mesh; }
-		std::vector<std::shared_ptr<brew::Material>> getMaterials() const { return materials; }
+		Handle getMesh() const { return meshHandle; }
+		std::vector<std::shared_ptr<Material>> getMaterials() const { return materials; }
 
 	protected:
-		std::shared_ptr<brew::IMesh> mesh;
-		std::vector<std::shared_ptr<brew::Material>> materials;
+		Handle meshHandle;
+		//std::shared_ptr<IMesh> mesh;
+		std::vector<std::shared_ptr<Material>> materials;
 	};
 }

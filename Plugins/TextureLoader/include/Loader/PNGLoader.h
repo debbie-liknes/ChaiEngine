@@ -6,13 +6,13 @@
 
 namespace chai
 {
-    class PngLoader : public IResourceLoader 
+    class PngLoader : public IAssetLoader 
     {
     public:
         PngLoader() = default;
 
         bool canLoad(const std::string& ext) const override;
-        std::shared_ptr<IResource> load(const std::string& path) override;
+        std::shared_ptr<IAsset> load(const std::string& path) override;
     };
 }
 

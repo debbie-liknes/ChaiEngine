@@ -4,7 +4,7 @@
 #include <cstring>
 #include <ChaiMath.h>
 
-namespace chai::brew
+namespace chai
 {
     enum class UniformType 
     {

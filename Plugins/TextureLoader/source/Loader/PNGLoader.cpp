@@ -9,7 +9,7 @@ namespace chai
         return ext == ".png";
     }
 
-    std::shared_ptr<IResource> PngLoader::load(const std::string& path)
+    std::shared_ptr<IAsset> PngLoader::load(const std::string& path)
     {
         return nullptr;
     }

@@ -1,10 +1,12 @@
 #pragma once
 #include <Resource/ResourceLoader.h>
+#include <Resource/ResourceHandle.h>
 #include <ChaiEngine/IMaterial.h>
 
-namespace chai::brew
+namespace chai
 {
-    class MaterialAsset : public IResource
+    //using MaterialHandle = ResourceHandle<struct MaterialTag>;
+    class MaterialAsset : public IAsset
     {
     public:
         explicit MaterialAsset(std::shared_ptr<IMaterial> mat);
@@ -13,7 +15,7 @@ namespace chai::brew
         IMaterial* getMaterial() const { return m_material.get(); }
 
         bool isValid() const override { return m_valid; }
-        const std::string& getResourceId() const override { return m_assetId; }
+        const std::string& getAssetId() const override { return m_assetId; }
 
     private:
         std::shared_ptr<IMaterial> m_material;

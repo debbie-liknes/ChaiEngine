@@ -206,7 +206,13 @@ void main()
 
 	void OpenGLBackend::drawMesh(const RenderCommand& cmd)
 	{
-		if (!cmd.mesh) return;
+		//check if mesh handle is valid
+		if (!cmd.mesh.isValid())
+		{
+			std::cerr << "Invalid mesh handle in drawMesh command" << std::endl;
+			return;
+		}
+
 		// Get or create OpenGL mesh data
 		OpenGLMeshData* glMeshData = getOrCreateMeshData(cmd.mesh);
 
@@ -563,17 +569,27 @@ void main()
 		checkGLError("set uniform: " + name);
 	}
 
-	OpenGLMeshData* OpenGLBackend::getOrCreateMeshData(IMesh* mesh) 
+	OpenGLMeshData* OpenGLBackend::getOrCreateMeshData(Handle meshHandle) 
 	{
-		auto it = m_meshCache.find(mesh);
-		if (it == m_meshCache.end()) 
+		auto found = chai::NewAssetManager::instance().get<Mesh>(meshHandle, [&](const Mesh& m) {
+			auto it = m_meshCache.find(meshHandle.index);
+			if (it == m_meshCache.end())
+			{
+				auto glMeshData = std::make_unique<OpenGLMeshData>();
+				auto* ptr = glMeshData.get();
+				m_meshCache[meshHandle.index] = std::move(glMeshData);
+				return ptr;
+			}
+			return it->second.get();
+			});
+
+		if (!found.has_value())
 		{
-			auto glMeshData = std::make_unique<OpenGLMeshData>();
-			auto* ptr = glMeshData.get();
-			m_meshCache[mesh] = std::move(glMeshData);
-			return ptr;
+			std::cerr << "Invalid mesh handle, cannot upload to GPU" << std::endl;
+			return nullptr;
 		}
-		return it->second.get();
+
+		return found.value();
 	}
 
 	OpenGLMaterialData* OpenGLBackend::getOrCreateMaterialData(IMaterial* material) 
@@ -589,37 +605,39 @@ void main()
 		return it->second.get();
 	}
 
-	void OpenGLBackend::uploadMeshToGPU(const IMesh* mesh, OpenGLMeshData* glMeshData) 
+	void OpenGLBackend::uploadMeshToGPU(const Handle meshHandle, OpenGLMeshData* glMeshData) 
 	{
 		if (glMeshData->isUploaded) return;
 
-		const auto& vertices = mesh->getVertices();
-		const auto& indices = mesh->getIndices();
+		chai::NewAssetManager::instance().get<Mesh>(meshHandle, [&, glMeshData](const Mesh& mesh) {
+			const auto& vertices = mesh.getVertices();
+			const auto& indices = mesh.getIndices();
 
-		// Generate buffers
-		glGenVertexArrays(1, &glMeshData->VAO);
-		glGenBuffers(1, &glMeshData->VBO);
-		glGenBuffers(1, &glMeshData->EBO);
+			// Generate buffers
+			glGenVertexArrays(1, &glMeshData->VAO);
+			glGenBuffers(1, &glMeshData->VBO);
+			glGenBuffers(1, &glMeshData->EBO);
 
-		// Bind VAO
-		glBindVertexArray(glMeshData->VAO);
+			// Bind VAO
+			glBindVertexArray(glMeshData->VAO);
 
-		// Upload vertices
-		glBindBuffer(GL_ARRAY_BUFFER, glMeshData->VBO);
-		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
+			// Upload vertices
+			glBindBuffer(GL_ARRAY_BUFFER, glMeshData->VBO);
+			glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
 
-		// Upload indices
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glMeshData->EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), indices.data(), GL_STATIC_DRAW);
+			// Upload indices
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glMeshData->EBO);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), indices.data(), GL_STATIC_DRAW);
 
-		// Set up vertex attributes
-		setupVertexAttributes();
+			// Set up vertex attributes
+			setupVertexAttributes();
 
-		glMeshData->indexCount = indices.size();
-		glMeshData->isUploaded = true;
+			glMeshData->indexCount = indices.size();
+			glMeshData->isUploaded = true;
 
-		// Unbind
-		glBindVertexArray(0);
+			// Unbind
+			glBindVertexArray(0);
+			});
 	}
 
 	void OpenGLBackend::setupVertexAttributes() 

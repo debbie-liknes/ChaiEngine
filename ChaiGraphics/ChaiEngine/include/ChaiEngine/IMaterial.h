@@ -6,7 +6,7 @@
 #include <memory>
 #include <ChaiEngine/UniformBuffer.h>
 
-namespace chai::brew
+namespace chai
 {
     class UniformBufferBase;
     struct TextureSlot 

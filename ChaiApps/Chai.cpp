@@ -20,6 +20,7 @@
 #include <chrono>
 #include <AudioEngine.h>
 #include <ChaiPhysics/ChaiPhysics.h>
+#include <Resource/ResourceHandle.h>
 
 using namespace std;
 
@@ -64,7 +65,10 @@ int main()
 	//make an object for the scene
 	auto gameObject = std::make_unique<chai::cup::GameObject>();
 	chai::cup::MeshComponent* meshComp = gameObject->addComponent<chai::cup::MeshComponent>(gameObject.get());
-	meshComp->setMesh(chai::brew::AssetManager::instance().loadMesh("assets/suzanne.obj")->getMesh());
+	//meshComp->setMesh(chai::brew::AssetManager::instance().loadMesh("assets/suzanne.obj")->getMesh());
+	//auto mesh = chai::AssetManager::instance().requestMesh("assets/suzanne.obj");
+	auto meshHandle = chai::NewAssetManager::instance().load<chai::Mesh>("assets/suzanne.obj");
+	meshComp->setMesh(meshHandle.value());
 	gameObject->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{ 0.0, 0.0, 0.0 });
 
 	//add a camera to look through

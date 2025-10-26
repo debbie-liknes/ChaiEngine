@@ -15,7 +15,7 @@
     }, name_);
 
 #define CHAI_LOADER(LoaderType, LoaderName) \
-    chai::ResourceManager::instance().registerLoader(std::make_shared<LoaderType>()); \
+    chai::NewAssetManager::instance().registerLoader(std::make_shared<LoaderType>()); \
 
 #define CHAI_SERVICE_AS(InterfaceType, ConcreteType, ServiceName) \
     services_.registerServiceAs<InterfaceType, ConcreteType>(ServiceName, []() { \
@@ -23,17 +23,15 @@
     });
 
 #define CHAI_CLASS(ClassName) \
-    namespace { \
-        struct ClassName##_TypeRegistration { \
-            ClassName##_TypeRegistration() { \
-                auto& typeReg = chai::TypeRegistry::instance(); \
-                typeReg.registerType<ClassName>(#ClassName); \
-                auto typeInfo = typeReg.getType<ClassName>(); \
-                registerTypeInfo_##ClassName(typeInfo); \
-            } \
-        }; \
-        static ClassName##_TypeRegistration ClassName##_reg; \
-    } \
+    struct ClassName##_TypeRegistration { \
+        ClassName##_TypeRegistration() { \
+            auto& typeReg = chai::TypeRegistry::instance(); \
+            typeReg.registerType<ClassName>(#ClassName); \
+            auto typeInfo = typeReg.getType<ClassName>(); \
+            registerTypeInfo_##ClassName(typeInfo); \
+        } \
+    }; \
+    static ClassName##_TypeRegistration ClassName##_reg; \
     void registerTypeInfo_##ClassName(std::shared_ptr<chai::TypeInfo> typeInfo)
 
 #define CHAI_IMPLEMENTS(ClassName, InterfaceName) \

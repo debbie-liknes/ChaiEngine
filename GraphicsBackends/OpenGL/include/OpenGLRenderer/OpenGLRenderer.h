@@ -49,14 +49,14 @@ namespace chai::brew
         void cacheUniformLocations(GLuint shaderProgram, OpenGLMaterialData* glMaterialData);
         void setLightsUniforms();
 
-        OpenGLMeshData* getOrCreateMeshData(IMesh* mesh);
+        OpenGLMeshData* getOrCreateMeshData(Handle mesh);
 		void drawMesh(const RenderCommand& cmd);
-        void uploadMeshToGPU(const IMesh* mesh, OpenGLMeshData* glMeshData);
+        void uploadMeshToGPU(const Handle mesh, OpenGLMeshData* glMeshData);
         void setupVertexAttributes();
         void bindVertexArray(GLuint vao);
         void clear(float r, float g, float b, float a);
 
-        CMap<IMesh*, std::unique_ptr<OpenGLMeshData>> m_meshCache;
+        CMap<size_t, std::unique_ptr<OpenGLMeshData>> m_meshCache;
         CMap<IMaterial*, std::unique_ptr<OpenGLMaterialData>> m_materialCache;
         CMap<std::string, GLuint> m_shaderCache;
 

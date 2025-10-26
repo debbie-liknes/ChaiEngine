@@ -2,6 +2,7 @@
 #include <SceneExport.h>
 #include <Components/RenderableComponent.h>
 #include <ChaiEngine/IMesh.h>
+#include <Resource/ResourceHandle.h>
 
 namespace chai::cup
 {
@@ -11,6 +12,6 @@ namespace chai::cup
         MeshComponent(GameObject* owner = nullptr);
         ~MeshComponent() override;
 
-        void setMesh(std::shared_ptr<brew::IMesh> meshAsset);
+        void setMesh(Handle meshAsset);
 	};
 }

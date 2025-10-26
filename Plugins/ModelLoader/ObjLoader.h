@@ -5,22 +5,22 @@
 
 namespace chai
 {
-	class ObjLoader : public IResourceLoader
+	class ObjLoader : public IAssetLoader
 	{
 	public:
 		ObjLoader() = default;
 
 		bool canLoad(const std::string& ext) const override;
-		std::shared_ptr<IResource> load(const std::string& path) override;
+		std::shared_ptr<IAsset> load(const std::string& path) override;
 	};
 
-	class MtlLoader : public IResourceLoader
+	class MtlLoader : public IAssetLoader
 	{
 	public:
 		MtlLoader() = default;
 
 		bool canLoad(const std::string& ext) const override;
-		std::shared_ptr<IResource> load(const std::string& path) override;
+		std::shared_ptr<IAsset> load(const std::string& path) override;
 	};
 }
 
