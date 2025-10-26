@@ -5,7 +5,7 @@
 #include <Plugin/PluginBase.h>
 #include <Plugin/ServiceRegistry.h>
 #include <Plugin/PluginRegistry.h>
-#include <Resource/ResourceManager.h>
+#include <Asset/AssetManager.h>
 
 
 //type reflection macros
@@ -15,7 +15,7 @@
     }, name_);
 
 #define CHAI_LOADER(LoaderType, LoaderName) \
-    chai::NewAssetManager::instance().registerLoader(std::make_shared<LoaderType>()); \
+    chai::AssetManager::instance().registerLoader(std::make_shared<LoaderType>()); \
 
 #define CHAI_SERVICE_AS(InterfaceType, ConcreteType, ServiceName) \
     services_.registerServiceAs<InterfaceType, ConcreteType>(ServiceName, []() { \

@@ -571,7 +571,7 @@ void main()
 
 	OpenGLMeshData* OpenGLBackend::getOrCreateMeshData(Handle meshHandle) 
 	{
-		auto found = chai::NewAssetManager::instance().get<Mesh>(meshHandle, [&](const Mesh& m) {
+		auto found = chai::AssetManager::instance().get<Mesh>(meshHandle, [&](const Mesh& m) {
 			auto it = m_meshCache.find(meshHandle.index);
 			if (it == m_meshCache.end())
 			{
@@ -609,7 +609,7 @@ void main()
 	{
 		if (glMeshData->isUploaded) return;
 
-		chai::NewAssetManager::instance().get<Mesh>(meshHandle, [&, glMeshData](const Mesh& mesh) {
+		chai::AssetManager::instance().get<Mesh>(meshHandle, [&, glMeshData](const Mesh& mesh) {
 			const auto& vertices = mesh.getVertices();
 			const auto& indices = mesh.getIndices();
 

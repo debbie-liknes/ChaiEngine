@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 #include <typeindex>
-#include <Resource/ResourceHandle.h>
+#include <Asset/AssetHandle.h>
 
 namespace chai
 {

@@ -19,7 +19,7 @@
 #include <chrono>
 #include <AudioEngine.h>
 #include <ChaiPhysics/ChaiPhysics.h>
-#include <Resource/ResourceHandle.h>
+#include <Asset/AssetHandle.h>
 
 using namespace std;
 
@@ -66,7 +66,7 @@ int main()
 	chai::cup::MeshComponent* meshComp = gameObject->addComponent<chai::cup::MeshComponent>(gameObject.get());
 	//meshComp->setMesh(chai::brew::AssetManager::instance().loadMesh("assets/suzanne.obj")->getMesh());
 	//auto mesh = chai::AssetManager::instance().requestMesh("assets/suzanne.obj");
-	auto meshHandle = chai::NewAssetManager::instance().load<chai::Mesh>("assets/suzanne.obj");
+	auto meshHandle = chai::AssetManager::instance().load<chai::Mesh>("assets/suzanne.obj");
 	meshComp->setMesh(meshHandle.value());
 	gameObject->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{ 0.0, 0.0, 0.0 });
 

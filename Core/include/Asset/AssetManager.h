@@ -7,16 +7,16 @@
 #include <stdexcept>
 #include <optional>
 #include <shared_mutex>
-#include <Resource/ResourceLoader.h>
-#include <Resource/ResourceHandle.h>
-#include <Resource/ResourcePool.h>
+#include <Asset/AssetLoader.h>
+#include <Asset/AssetHandle.h>
+#include <Asset/AssetPool.h>
 
 namespace chai
 {
-    class NewAssetManager 
+    class AssetManager 
     {
     public:
-        static NewAssetManager& instance();
+        static AssetManager& instance();
         void registerLoader(std::shared_ptr<IAssetLoader> loader);
 
         // Load or get existing asset by path

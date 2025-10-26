@@ -2,7 +2,7 @@
 #include <SceneExport.h>
 #include <Components/RenderableComponent.h>
 #include <ChaiEngine/IMesh.h>
-#include <Resource/ResourceHandle.h>
+#include <Asset/AssetHandle.h>
 
 namespace chai::cup
 {

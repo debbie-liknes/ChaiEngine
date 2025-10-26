@@ -3,8 +3,8 @@
 #include <vector>
 #include <memory>
 #include <string>
-#include <Resource/ResourceLoader.h>
-#include <Resource/ResourceHandle.h>
+#include <Asset/AssetLoader.h>
+#include <Asset/AssetHandle.h>
 #include <ChaiEngine/Vertex.h>
 #include <Meta/ChaiMacros.h>
 

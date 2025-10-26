@@ -16,10 +16,10 @@ set(Core_headers
 	include/Plugin/PluginRegistry.h
 	include/Plugin/ServiceLocator.h
 	include/Plugin/ServiceRegistry.h
-	include/Resource/ResourceHandle.h
-	include/Resource/ResourceLoader.h
-	include/Resource/ResourceManager.h
-	include/Resource/ResourcePool.h
+	include/Asset/AssetHandle.h
+	include/Asset/AssetLoader.h
+	include/Asset/AssetManager.h
+	include/Asset/AssetPool.h
 	include/Scene/ICamera.h
 	include/Types/CMap.h
 )

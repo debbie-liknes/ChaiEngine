@@ -1,7 +1,7 @@
 #pragma once
 #include <ModelLoaderExport.h>
 #include <Meta/ChaiMacros.h>
-#include <Resource/ResourceLoader.h>
+#include <Asset/AssetLoader.h>
 
 namespace chai
 {

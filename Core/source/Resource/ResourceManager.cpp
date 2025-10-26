@@ -1,19 +1,19 @@
-#include <Resource/ResourceManager.h>
+#include <Asset/AssetManager.h>
 
 namespace chai
 {
-	NewAssetManager& NewAssetManager::instance()
+	AssetManager& AssetManager::instance()
 	{
-		static NewAssetManager manager;
+		static AssetManager manager;
 		return manager;
 	}
 
-	void NewAssetManager::registerLoader(std::shared_ptr<IAssetLoader> loader)
+	void AssetManager::registerLoader(std::shared_ptr<IAssetLoader> loader)
 	{
 		m_loaders.push_back(loader);
 	}
 
-	std::string NewAssetManager::getExtension(const std::string& file)
+	std::string AssetManager::getExtension(const std::string& file)
 	{
 		if (size_t dotPosition = file.find_last_of('.'); dotPosition != std::string::npos && dotPosition != 0)
 		{

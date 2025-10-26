@@ -1,5 +1,5 @@
 #pragma once
-#include <Resource/ResourceLoader.h>
+#include <Asset/AssetLoader.h>
 #include <Meta/ChaiMacros.h>
 #include <ChaiEngine/Renderer.h>
 
