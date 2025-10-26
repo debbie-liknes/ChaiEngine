@@ -15,7 +15,7 @@ namespace chai::cup
     class LightComponent : public Component
     {
     public:
-        LightComponent(GameObject* owner = nullptr);
+        explicit LightComponent(GameObject* owner = nullptr);
         LightType type = LightType::DIRECTIONAL;
         Vec3 color = Vec3(1.0f, 1.0f, 1.0f);
         float intensity = 0.7f;

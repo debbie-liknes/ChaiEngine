@@ -16,6 +16,7 @@ namespace chai
 {
 	template<typename T, int N> class Vec;
 
+	//type traits
 	template<class> struct is_vec : std::false_type {};
 	template<class U, int M> struct is_vec<class Vec<U, M>> : std::true_type {};
 	template<class A> inline constexpr bool is_vec_v = is_vec<std::decay_t<A>>::value;
@@ -42,6 +43,7 @@ namespace chai
 		!(sizeof...(Args) == 1 &&
 			(std::is_same_v<std::decay_t<Args>, Vec<T, N>> && ...));
 
+	//append to vec
 	template<class T>
 	constexpr void append_components(size_t& idx, T* dst, const T& v) { dst[idx++] = v; }
 
@@ -63,11 +65,14 @@ namespace chai
 		if constexpr (sizeof...(Rest) > 0) append_all(idx, dst, r...);
 	}
 
-	//storage
+	//storage for vec data
+	//need to maintain alignment and have named memebers
 	template<typename T, int N>
 	struct VecStorage { T data[N]; };
 
-	// N = 2 with .x .y
+	//vec types with named members for small N
+	// common to need .x .y .z .w access
+
 	template<typename T>
 	struct VecStorage<T, 2> 
 	{
@@ -78,7 +83,6 @@ namespace chai
 		};
 	};
 
-	// N = 3 with .x .y .z
 	template<typename T>
 	struct VecStorage<T, 3> 
 	{
@@ -89,7 +93,6 @@ namespace chai
 		};
 	};
 
-	// N = 4 with .x .y .z .w
 	template<typename T>
 	struct VecStorage<T, 4> 
 	{
@@ -100,6 +103,7 @@ namespace chai
 		};
 	};
 
+	//Vec base class to allow specialization later
 	template<typename T, int N>
 	class VecBase
 	{
@@ -126,13 +130,13 @@ namespace chai
 		constexpr       T& operator[](int i)       noexcept { return this->data[i]; }
 		constexpr const T& operator[](int i) const noexcept { return this->data[i]; }
 
-		// Fill (splat) constructor
+		// Fill in constructor
 		explicit constexpr Vec(T fill) 
 		{
 			for (int i = 0; i < N; ++i) this->data[i] = fill;
 		}
 
-		// initializer list (strict)
+		//initializer_list constructors
 		constexpr Vec(std::initializer_list<T> ilist) 
 		{
 			assert(ilist.size() == static_cast<size_t>(N) && "initializer_list wrong size");
@@ -140,7 +144,6 @@ namespace chai
 			for (const T& v : ilist) this->data[i++] = v;
 		}
 
-		// initializer list (relaxed)
 		template<class U,
 			class = std::enable_if_t<std::is_arithmetic_v<U>&& std::is_convertible_v<U, T>>>
 		explicit constexpr Vec(std::initializer_list<U> ilist) 
@@ -166,7 +169,6 @@ namespace chai
 			return *this;
 		}
 
-		// -------- your flexible variadic ctor for mixes of vecs + scalars ----------
 		template<class... Args,
 			typename = std::enable_if_t<
 			(sizeof...(Args) > 0) &&
@@ -198,14 +200,15 @@ namespace chai
 		}
 	};
 
-	extern template class Vec<float, 2>;
-	extern template class Vec<float, 3>;
-	extern template class Vec<float, 4>;
-	extern template class Vec<double, 2>;
-	extern template class Vec<double, 3>;
-	extern template class Vec<double, 4>;
+	template class Vec<float, 2>;
+	template class Vec<float, 3>;
+	template class Vec<float, 4>;
+	template class Vec<double, 2>;
+	template class Vec<double, 3>;
+	template class Vec<double, 4>;
 
 	//free function operators
+
 	template<typename T, int N>
 	Vec<T, N> operator+(const Vec<T, N>& a, const Vec<T, N>& b) 
 	{

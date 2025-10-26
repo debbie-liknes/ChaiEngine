@@ -35,7 +35,6 @@ namespace chai
         Handle insert(std::shared_ptr<U> asset) 
         {
             const std::type_index type_id = std::type_index(typeid(*asset));
-            //std::type_index type_id = std::type_index(typeid(U));
 
             if (!free_list_.empty()) 
             {
@@ -78,53 +77,6 @@ namespace chai
                 return nullptr;
             }
         }
-
-        //template<typename T>
-        //T* get_mut(Handle handle) {
-        //    if (!validate_handle<T>(handle)) return nullptr;
-
-        //    auto& entry = entries_[handle.index];
-        //    try {
-        //        return std::any_cast<T>(&entry.asset);
-        //    }
-        //    catch (...) {
-        //        return nullptr;
-        //    }
-        //}
-
-        //template<typename T>
-        //std::optional<T> remove(Handle handle) {
-        //    if (!validate_handle<T>(handle)) return std::nullopt;
-
-        //    auto& entry = entries_[handle.index];
-        //    try {
-        //        T result = std::any_cast<T>(std::move(entry.asset));
-        //        entry.asset.reset();
-        //        free_list_.push_back(handle.index);
-        //        return result;
-        //    }
-        //    catch (...) {
-        //        return std::nullopt;
-        //    }
-        //}
-
-        //bool is_valid(const GenericHandle& h) const 
-        //{
-        //    const uint64_t idx = h.index;
-        //    if (idx >= entries_.size()) return false;
-
-        //    const auto& e = entries_[idx];
-        //    return e.has_value() && e.generation == h.generation;
-        //}
-
-        //size_t size() const {
-        //    return entries_.size() - free_list_.size();
-        //}
-
-        //void clear() {
-        //    entries_.clear();
-        //    free_list_.clear();
-        //}
 
     private:
         template<typename T>

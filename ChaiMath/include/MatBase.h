@@ -22,6 +22,7 @@ namespace chai
         // contiguous storage
         T m[Elements];
 
+        // Proxy for returning a vec when getting a row by index
         class RowProxy 
         {
         public:
@@ -29,26 +30,23 @@ namespace chai
             constexpr       T& operator[](int c)       noexcept { return p_[c]; }
             constexpr const T& operator[](int c) const noexcept { return p_[c]; }
 
-            // assign from Vec<T,C>
             RowProxy& operator=(const Vec<T, C>& rhs) noexcept 
             {
                 for (int c = 0; c < C; ++c) p_[c] = rhs[c];
                 return *this;
             }
-            // assign from initializer_list (strict)
             RowProxy& operator=(std::initializer_list<T> il) 
             {
                 assert(il.size() == (size_t)C);
                 int i = 0; for (const T& v : il) p_[i++] = v; return *this;
             }
-            // implicit readback as Vec<T,C>
             constexpr operator Vec<T, C>() const noexcept 
             {
                 Vec<T, C> out{};
                 for (int c = 0; c < C; ++c) out[c] = p_[c];
                 return out;
             }
-            // iterators / data
+
             constexpr       T* data()       noexcept { return p_; }
             constexpr const T* data() const noexcept { return p_; }
             constexpr       T* begin()       noexcept { return p_; }
@@ -77,6 +75,8 @@ namespace chai
             const T* p_;
         };
 
+        // Constructors
+
         Mat() = default;
         Mat(const Mat&) = default;
         Mat& operator=(const Mat&) = default;
@@ -101,7 +101,7 @@ namespace chai
             int i = 0; for (const T& v : ilist) m[i++] = v;
         }
 
-        // Relaxed initializer_list (accept arithmetic types; explicit)
+		// Initializer list that can accept arithmetic types
         template<class U, class = std::enable_if_t<std::is_arithmetic_v<U>&& std::is_convertible_v<U, T>>>
         explicit constexpr Mat(std::initializer_list<U> ilist) 
         {
@@ -109,7 +109,7 @@ namespace chai
             int i = 0; for (const U& v : ilist) m[i++] = static_cast<T>(v);
         }
 
-        // Flexible “GLM-style” ctor: any mix of scalars and Vecs whose total components == R*C.
+        // GLM-style ctor
         template<class... Args,
             class = std::enable_if_t<
             (sizeof...(Args) > 0) &&
@@ -129,47 +129,27 @@ namespace chai
         constexpr RowProxy      operator[](int r)       noexcept { return RowProxy(&m[index(r, 0)]); }
         constexpr ConstRowProxy operator[](int r) const noexcept { return ConstRowProxy(&m[index(r, 0)]); }
 
-        constexpr       T* data()       noexcept { return m; }
-        constexpr const  T* data() const noexcept { return m; }
+        constexpr       T* data()        noexcept { return m; }
+        constexpr const T* data() const  noexcept { return m; }
         constexpr       T* begin()       noexcept { return m; }
-        constexpr const  T* begin() const noexcept { return m; }
+        constexpr const T* begin() const noexcept { return m; }
         constexpr       T* end()         noexcept { return m + Elements; }
-        constexpr const  T* end()   const noexcept { return m + Elements; }
+        constexpr const T* end()   const noexcept { return m + Elements; }
 
-        // basic helpers
-        static constexpr Mat zero() noexcept {
+        
+        static constexpr Mat zero() noexcept 
+        {
             Mat z{};
             for (int i = 0; i < Elements; ++i) z.m[i] = T(0);
             return z;
         }
 
-        static constexpr Mat identity() noexcept {
+        static constexpr Mat identity() noexcept 
+        {
             static_assert(R == C, "identity() requires square matrix");
             Mat I = zero();
             for (int i = 0; i < R; ++i) I(i, i) = T(1);
             return I;
-        }
-
-        // From rows
-        template<class... RowVecs,
-            class = std::enable_if_t<(sizeof...(RowVecs) == R) && (is_vec_v<RowVecs> && ...)>>
-            static constexpr Mat from_rows(const RowVecs&... rows) 
-        {
-            Mat M{};
-            const Vec<T, C> rr[] = { Vec<T,C>(rows)... };
-            for (int r = 0; r < R; ++r) for (int c = 0; c < C; ++c) M(r, c) = rr[r][c];
-            return M;
-        }
-
-        // From cols.
-        template<class... ColVecs,
-            class = std::enable_if_t<(sizeof...(ColVecs) == C) && (is_vec_v<ColVecs> && ...)>>
-            static constexpr Mat from_cols(const ColVecs&... cols) 
-        {
-            Mat M{};
-            const Vec<T, R> cc[] = { Vec<T,R>(cols)... };
-            for (int c = 0; c < C; ++c) for (int r = 0; r < R; ++r) M(r, c) = cc[c][r];
-            return M;
         }
 
         // comparison
@@ -192,6 +172,8 @@ namespace chai
         friend constexpr Mat operator*(T s, Mat a)          noexcept { a *= s; return a; }
         friend constexpr Mat operator/(Mat a, T s)          noexcept { a /= s; return a; }
 
+        //Matrix math ops
+
         template<int K>
         friend constexpr Mat<T, R, K> operator*(const Mat& A, const Mat<T, C, K>& B) noexcept 
         {
@@ -207,7 +189,6 @@ namespace chai
             return out;
         }
 
-        // Matrix * Vec (R x C) * Vec<C> = Vec<R>
         friend constexpr Vec<T, R> operator*(const Mat& A, const Vec<T, C>& x) noexcept 
         {
             Vec<T, R> out{};
@@ -220,7 +201,6 @@ namespace chai
             return out;
         }
 
-        //Vec * Matrix  Vec<R>^T * (R x C) = Vec<C>
         friend constexpr Vec<T, C> operator*(const Vec<T, R>& x, const Mat& A) noexcept 
         {
             Vec<T, C> out{};
@@ -233,7 +213,6 @@ namespace chai
             return out;
         }
 
-        // Transpose
         constexpr Mat<T, C, R> transpose() const noexcept 
         {
             Mat<T, C, R> t{};

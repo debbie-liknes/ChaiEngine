@@ -28,7 +28,6 @@ namespace chai::kettle
         std::string path;
     };
 
-    // Plugin registry
     class PluginRegistry 
     {
     public:

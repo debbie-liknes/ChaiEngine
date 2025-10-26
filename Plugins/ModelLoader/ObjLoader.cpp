@@ -4,9 +4,9 @@
 #include <iostream>
 #include <format>
 #include <ChaiEngine/Vertex.h>
-#include <Assets/MeshAsset.h>
 #include <ChaiEngine/Material.h>
 #include <ChaiEngine/UniformBuffer.h>
+#include <ChaiEngine/IMesh.h>
 #include <Types/CMap.h>
 #include <filesystem>
 #include <ChaiMath.h>
@@ -105,12 +105,11 @@ namespace chai
 		}
 
 		auto mesh = std::make_shared<Mesh>(vertices, indices);
-		//auto asset = std::make_shared<MeshAsset>(mesh);
 
-		//for (auto& material : materials)
-		//{
-		//	asset->addMaterialLibrary(material.name);
-		//}
+		for (auto& material : materials)
+		{
+			mesh->addMaterialLibrary(material.name);
+		}
 
 		return mesh;
 	}

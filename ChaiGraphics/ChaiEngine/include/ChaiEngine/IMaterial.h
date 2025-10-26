@@ -16,6 +16,7 @@ namespace chai
         std::string samplerName;
     };
 
+	//Move this to its own file later
     struct ShaderStage 
     {
         enum Type { Vertex, Fragment, Geometry, Compute };

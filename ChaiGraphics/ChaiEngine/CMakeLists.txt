@@ -1,9 +1,6 @@
 # Add source to this project's executable.
 
 set(ChaiGraphics_headers
-	include/Assets/AssetManager.h
-	include/Assets/MaterialAsset.h
-	include/Assets/MeshAsset.h
 	include/Coordinate/CoordinateSpace.h
 	include/Coordinate/Spherical.h
 	include/Coordinate/Euclidean.h
@@ -19,9 +16,6 @@ set(ChaiGraphics_headers
 )
 
 set(ChaiGraphics_source
-	source/Assets/AssetManager.cpp
-	source/Assets/MeshAsset.cpp
-	source/Assets/MaterialAsset.cpp
 	source/Coordinate/Euclidean.cpp
 	source/Coordinate/Spherical.cpp
 	source/ChaiEngine/Material.cpp

@@ -13,7 +13,6 @@
 #include <Components/MeshComponent.h>
 #include <Components/CameraComponent.h>
 #include <Components/LightComponent.h>
-#include <Assets/AssetManager.h>
 #include <Components/TransformComponent.h>
 #include <Input/InputState.h>
 #include <Controllers/CameraController.h>

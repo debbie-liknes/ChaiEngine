@@ -24,12 +24,12 @@ namespace chai
             T data[4];
         };
 
+        // Constructors
         Quaternion() = default;
         constexpr Quaternion(T _x, T _y, T _z, T _w) : x(_x), y(_y), z(_z), w(_w) {}
 
         explicit constexpr Quaternion(T fill) : x(fill), y(fill), z(fill), w(fill) {}
 
-        // From initializer_list<T>
         explicit constexpr Quaternion(std::initializer_list<T> il) 
         {
             assert(il.size() == 4 && "Quaternion init requires 4 elements");
@@ -37,25 +37,26 @@ namespace chai
             x = *it++; y = *it++; z = *it++; w = *it++;
         }
 
-        // Indexing
+		// Indexing
         constexpr       T& operator[](int i)       noexcept { return data[i]; }
         constexpr const T& operator[](int i) const noexcept { return data[i]; }
 
-        // Identity
+		// Identity quaternion
         static constexpr Quaternion identity() noexcept { return Quaternion(0, 0, 0, 1); }
 
-        // From axis-angle
         static constexpr Quaternion fromAxisAngle(const Vec3T<T>& axis, T angle_rad) noexcept;
 
-        // From Euler (Useful for cameras)
         static constexpr Quaternion fromEulerZYX(T rollZ, T pitchX, T yawY) noexcept;
 
         // Basic comparisons
+
         constexpr bool operator==(const Quaternion& o) const noexcept 
         {
             return x == o.x && y == o.y && z == o.z && w == o.w;
         }
         constexpr bool operator!=(const Quaternion& o) const noexcept { return !(*this == o); }
+
+		// Basic math operations
 
         static constexpr T dot(const Quaternion& a, const Quaternion& b) noexcept 
         {
@@ -81,15 +82,13 @@ namespace chai
             );
         }
 
-        // Scale / add (handy in integrations)
         friend constexpr Quaternion operator*(const Quaternion& q, T s) noexcept { return Quaternion(q.x * s, q.y * s, q.z * s, q.w * s); }
         friend constexpr Quaternion operator*(T s, const Quaternion& q) noexcept { return q * s; }
         friend constexpr Quaternion operator+(const Quaternion& a, const Quaternion& b) noexcept { return Quaternion(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w); }
 
-        // Rotate a Vec3: v' = q * v * q^{-1}  (fast form using cross products)
+        // Rotate a vec3
         friend constexpr Vec3T<T> operator*(const Quaternion& q, const Vec3T<T>& v) noexcept 
-{
-            // t = 2 * cross(q.xyz, v)
+        {
             T qx = q.x, qy = q.y, qz = q.z, qw = q.w;
             T tx = T(2) * (qy * v[2] - qz * v[1]);
             T ty = T(2) * (qz * v[0] - qx * v[2]);
@@ -129,9 +128,10 @@ namespace chai
 
         static Quaternion quatFromMat4(const Mat<T, 4, 4>& M) noexcept;
 
-        // Convert to Mat3/Mat4 (unit quaternion expected)
+        // Conversion to mat3/mat4
         template<int R = 3, int C = 3>
-        auto toMat3() const noexcept {
+        auto toMat3() const noexcept 
+        {
             static_assert(R == 3 && C == 3, "Mat3 size mismatch");
             T xx = x * x, yy = y * y, zz = z * z;
             T xy = x * y, xz = x * z, yz = y * z;

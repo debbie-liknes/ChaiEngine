@@ -52,7 +52,7 @@ namespace chai
     template <typename T>
     Quaternion<T> Quaternion<T>::fromTo(const Vec3T<T>& a, const Vec3T<T>& b) noexcept
     {
-        // Normalize inputs
+        // normalize inputs
         auto n = [](const Vec3T<T>& v) {
             T lx = v[0], ly = v[1], lz = v[2];
             T L = std::sqrt(lx * lx + ly * ly + lz * lz);
@@ -69,9 +69,7 @@ namespace chai
 
         if (d < T(-1) + T(1e-6)) 
         {
-            // 180 deg: pick any orthogonal axis
             Vec3T<T> axis = std::abs(u[0]) < T(0.9) ? Vec3T<T>{T(1), 0, 0} : Vec3T<T>{ 0,T(1),0 };
-            // axis = normalize(cross(u, axis))
             axis = Vec3T<T>{ u[1] * axis[2] - u[2] * axis[1],
                              u[2] * axis[0] - u[0] * axis[2],
                              u[0] * axis[1] - u[1] * axis[0] };
@@ -80,7 +78,6 @@ namespace chai
             else { axis[0] /= L; axis[1] /= L; axis[2] /= L; }
             return fromAxisAngle(axis, T(M_PI));
         }
-        // w = sqrt((1+d)*2)/2 ; xyz = c / (2w)
         T s = std::sqrt((T(1) + d) * T(2));
         T inv = T(1) / s;
         return Quaternion(c[0] * inv, c[1] * inv, c[2] * inv, s * T(0.5)).normalized();
@@ -98,7 +95,7 @@ namespace chai
         Quaternion<T> q;
         if (trace > T(0)) 
         {
-            const T s = std::sqrt(trace + T(1)) * T(2); // s = 4*w
+            const T s = std::sqrt(trace + T(1)) * T(2);
             q.w = T(0.25) * s;
             q.x = (m21 - m12) / s;
             q.y = (m02 - m20) / s;
@@ -106,7 +103,7 @@ namespace chai
         }
         else if (m00 > m11 && m00 > m22) 
         {
-            const T s = std::sqrt(T(1) + m00 - m11 - m22) * T(2); // s = 4*x
+            const T s = std::sqrt(T(1) + m00 - m11 - m22) * T(2);
             q.w = (m21 - m12) / s;
             q.x = T(0.25) * s;
             q.y = (m01 + m10) / s;
@@ -114,7 +111,7 @@ namespace chai
         }
         else if (m11 > m22) 
         {
-            const T s = std::sqrt(T(1) + m11 - m00 - m22) * T(2); // s = 4*y
+            const T s = std::sqrt(T(1) + m11 - m00 - m22) * T(2);
             q.w = (m02 - m20) / s;
             q.x = (m01 + m10) / s;
             q.y = T(0.25) * s;
@@ -122,19 +119,19 @@ namespace chai
         }
         else 
         {
-            const T s = std::sqrt(T(1) + m22 - m00 - m11) * T(2); // s = 4*z
+            const T s = std::sqrt(T(1) + m22 - m00 - m11) * T(2);
             q.w = (m10 - m01) / s;
             q.x = (m02 + m20) / s;
             q.y = (m12 + m21) / s;
             q.z = T(0.25) * s;
         }
-        return q.normalized(); // defend against tiny numeric drift
+        return q.normalized();
     }
 
     template<typename T>
     Quaternion<T> Quaternion<T>::quatFromMat4(const Mat<T, 4, 4>& M) noexcept
     {
-        // Take the upper-left 3x3 block as rotation
+        // take the upper-left 3x3 block as rotation
         Mat<T, 3, 3> R
         {
             M(0,0), M(0,1), M(0,2),
