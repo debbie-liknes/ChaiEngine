@@ -22,7 +22,7 @@ namespace chai::brew
 
         // Mesh rendering data
         Handle mesh;
-        IMaterial* material = nullptr;
+        Handle material;
         Mat4 transform{ 1.f };
         IViewport* viewport = nullptr;
         Mat4 viewMatrix{ 1.f };

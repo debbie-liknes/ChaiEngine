@@ -13,5 +13,7 @@ namespace chai::cup
         ~MeshComponent() override;
 
         void setMesh(Handle meshAsset);
+		void setMaterial(Handle material);
+	
 	};
 }

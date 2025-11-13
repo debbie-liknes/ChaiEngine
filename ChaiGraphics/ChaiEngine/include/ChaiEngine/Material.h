@@ -4,6 +4,8 @@
 #include <Types/CMap.h>
 #include <set>
 #include <ChaiMath.h>
+#include <Asset/AssetLoader.h>
+#include <Asset/AssetManager.h>
 
 namespace chai
 {
@@ -23,13 +25,23 @@ namespace chai
         DoubleSided
     };
 
-    class Material : public IMaterial
+    class Material : public IMaterial, public IAsset
     {
     public:
         explicit Material(std::shared_ptr<ShaderDescription> shaderDesc)
             : m_shaderDescription(shaderDesc)
         {
         }
+
+        bool isValid() const override 
+        {
+            return m_shaderDescription != nullptr;
+		}
+
+        const std::string& getAssetId() const override 
+        {
+            return m_shaderDescription->name;
+		}
 
         // Feature-based material properties
         void setFeature(MaterialFeature feature, bool enabled) {
@@ -201,9 +213,24 @@ namespace chai
         }
     };
 
-    class MaterialSystem
+    class CHAIGRAPHICS_EXPORT MaterialSystem
     {
     public:
+        MaterialSystem()
+        {
+        }
+
+        static Handle getPhongHandle()
+        {
+            static std::optional<Handle> phongHandle;
+			if (phongHandle.has_value())
+                return phongHandle.value();
+
+            //Handle temp;
+			phongHandle = chai::AssetManager::instance().add(createPhong());
+			return phongHandle.value();
+		}
+
         // PBR materials
         static std::shared_ptr<Material> createPBR() 
         {

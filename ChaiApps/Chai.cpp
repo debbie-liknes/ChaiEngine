@@ -68,6 +68,7 @@ int main()
 	//auto mesh = chai::AssetManager::instance().requestMesh("assets/suzanne.obj");
 	auto meshHandle = chai::AssetManager::instance().load<chai::Mesh>("assets/suzanne.obj");
 	meshComp->setMesh(meshHandle.value());
+	meshComp->setMaterial(chai::MaterialSystem::getPhongHandle());
 	gameObject->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{ 0.0, 0.0, 0.0 });
 
 	//add a camera to look through

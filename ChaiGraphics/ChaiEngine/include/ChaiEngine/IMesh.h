@@ -34,11 +34,12 @@ namespace chai
 
         const std::vector<Vertex>& getVertices() const override { return vertices; }
         const std::vector<uint32_t>& getIndices() const override { return indices; }
+        const std::vector<Handle>& getMaterials() const { return m_materials; }
 
         size_t getVertexCount() const override { return vertices.size(); }
         size_t getIndexCount() const override { return indices.size(); }
 
-        void addMaterialLibrary(const std::string& mat) { m_materialLibraries.push_back(mat); }
+        void addMaterial(const Handle mat) { m_materials.push_back(mat); }
 
         bool isValid() const override { return m_valid; }
         const std::string& getAssetId() const override { return m_assetId; }
@@ -53,6 +54,7 @@ namespace chai
         std::string m_assetId;
         int m_refCount = 0;
         bool m_valid = false;
-        std::vector<std::string> m_materialLibraries;
+        //std::vector<std::string> m_materialLibraries;
+        std::vector<Handle> m_materials;
     };
 }

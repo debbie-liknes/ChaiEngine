@@ -108,7 +108,10 @@ namespace chai
 
 		for (auto& material : materials)
 		{
-			mesh->addMaterialLibrary(material.name);
+			auto matHandle = chai::AssetManager::instance().load<chai::Material>(material.name);
+
+			if(matHandle.has_value())
+				mesh->addMaterial(matHandle.value());
 		}
 
 		return mesh;

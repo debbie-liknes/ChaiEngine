@@ -32,10 +32,10 @@ namespace chai::brew
         void executeCommands(const std::vector<RenderCommand>& commands) override;
 
     private:
-        void applyMaterialState(IMaterial* material, GLuint shaderProgram, OpenGLMaterialData* glMaterialData);
-        OpenGLMaterialData* getOrCreateMaterialData(IMaterial* material);
+        void applyMaterialState(Handle material, GLuint shaderProgram, OpenGLMaterialData* glMaterialData);
+        OpenGLMaterialData* getOrCreateMaterialData(Handle material);
         void setUniformFromData(GLuint shaderProgram, const std::string& name, const UniformBufferBase& uniform);
-        void compileMaterial(IMaterial* material, OpenGLMaterialData* glMaterialData);
+        void compileMaterial(Handle material, OpenGLMaterialData* glMaterialData);
         void setBuiltinUniforms(GLuint shaderProgram, const RenderCommand& cmd);
         void unbindTextures(OpenGLMaterialData* glMaterialData);
         GLuint createDefaultShaderProgram();
@@ -57,7 +57,7 @@ namespace chai::brew
         void clear(float r, float g, float b, float a);
 
         CMap<size_t, std::unique_ptr<OpenGLMeshData>> m_meshCache;
-        CMap<IMaterial*, std::unique_ptr<OpenGLMaterialData>> m_materialCache;
+        CMap<size_t, std::unique_ptr<OpenGLMaterialData>> m_materialCache;
         CMap<std::string, GLuint> m_shaderCache;
 
         // Current render state

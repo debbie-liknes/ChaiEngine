@@ -65,6 +65,19 @@ namespace chai
             return handle;
         }
 
+        template<class U>
+        requires std::derived_from<U, IAsset>
+        std::optional<Handle> add(std::shared_ptr<U> asset)
+        {
+            Handle handle;
+            {
+                std::unique_lock<std::shared_mutex> pool_lock(pool_mutex_);
+                handle = pool_.insert(asset);  // overload taking shared_ptr<IAsset>
+            }
+
+            return handle;
+        }
+
         template<typename T, typename Func>
         auto get(Handle handle, Func&& func) const
             -> std::conditional_t<
