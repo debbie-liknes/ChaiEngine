@@ -68,6 +68,10 @@ namespace chai::brew
 			return false;
 		}
 
+		auto defaultShaderData = std::make_unique<OpenGLShaderData>();
+		cacheBuiltinUniformLocations(defaultShaderProgram, defaultShaderData.get());
+		m_shaderCache["__default__"] = std::move(defaultShaderData);
+
 		return true;
 	}
 
@@ -161,7 +165,17 @@ void main()
 		m_meshCache.clear();
 		m_materialCache.clear();
 
-		if (defaultShaderProgram) 
+		// Clean up all shader programs
+		for (auto& [hash, shaderData] : m_shaderCache)
+		{
+			if (shaderData->program != 0)
+			{
+				glDeleteProgram(shaderData->program);
+			}
+		}
+		m_shaderCache.clear();
+
+		if (defaultShaderProgram)
 		{
 			glDeleteProgram(defaultShaderProgram);
 			defaultShaderProgram = 0;
@@ -254,23 +268,40 @@ void main()
 			}
 		}
 
+		OpenGLShaderData* shaderData = nullptr;
+		if (cmd.material.isValid() && glMaterialData && glMaterialData->shaderProgram != 0)
+		{
+			// Find shader data from your cache
+			shaderData = getShaderData(glMaterialData->shaderProgram);
+		}
+		else
+		{
+			shaderData = getShaderData(defaultShaderProgram);
+		}
+
+		if (!shaderData)
+		{
+			std::cerr << "Failed to get shader data for program" << std::endl;
+			return;
+		}
+
 		// Bind shader
-		bindShaderProgram(shaderToUse);
+		bindShaderProgram(shaderData->program);
 
 		if (m_lightsDirty)
 		{
-			setLightsUniforms(); // Update lights if they are dirty
+			setLightsUniforms(shaderData); // Pass shader data!
 			m_lightsDirty = false;
 		}
 
-		// Apply material state to OpenGL
+		// Apply material state
 		if (cmd.material.isValid() && glMaterialData)
 		{
-			applyMaterialState(cmd.material, shaderToUse, glMaterialData);
+			applyMaterialState(cmd.material, shaderData->program, glMaterialData);
 		}
 
 		// Set built-in transform uniforms
-		setBuiltinUniforms(shaderToUse, cmd);
+		setBuiltinUniforms(shaderData, cmd);
 
 		// Bind and draw mesh
 		bindVertexArray(glMeshData->VAO);
@@ -281,38 +312,58 @@ void main()
 		unbindTextures(glMaterialData);
 	}
 
-	void OpenGLBackend::setLightsUniforms()
+	void OpenGLBackend::cacheBuiltinUniformLocations(GLuint shaderProgram, OpenGLShaderData* shaderData)
 	{
-		// Assuming you have a current shader program bound
-		GLint lightCountLoc = glGetUniformLocation(currentShaderProgram, "u_lightCount");
-		glUniform1i(lightCountLoc, (GLint)m_cachedLights.size());
+		shaderData->program = shaderProgram;
+
+		// Cache built-in uniforms
+		shaderData->u_transform = glGetUniformLocation(shaderProgram, "u_transform");
+		shaderData->u_view = glGetUniformLocation(shaderProgram, "u_view");
+		shaderData->u_projection = glGetUniformLocation(shaderProgram, "u_projection");
+		shaderData->u_lightCount = glGetUniformLocation(shaderProgram, "u_lightCount");
+
+		// Cache light array uniforms ONCE
+		for (size_t i = 0; i < 16; ++i)
+		{
+			std::string base = "u_lights[" + std::to_string(i) + "]";
+			auto& light = shaderData->lights[i];
+
+			light.type = glGetUniformLocation(shaderProgram, (base + ".type").c_str());
+			light.position = glGetUniformLocation(shaderProgram, (base + ".position").c_str());
+			light.direction = glGetUniformLocation(shaderProgram, (base + ".direction").c_str());
+			light.color = glGetUniformLocation(shaderProgram, (base + ".color").c_str());
+			light.intensity = glGetUniformLocation(shaderProgram, (base + ".intensity").c_str());
+			light.range = glGetUniformLocation(shaderProgram, (base + ".range").c_str());
+			light.attenuation = glGetUniformLocation(shaderProgram, (base + ".attenuation").c_str());
+			light.innerCone = glGetUniformLocation(shaderProgram, (base + ".innerCone").c_str());
+			light.outerCone = glGetUniformLocation(shaderProgram, (base + ".outerCone").c_str());
+			light.enabled = glGetUniformLocation(shaderProgram, (base + ".enabled").c_str());
+		}
+	}
+
+	void OpenGLBackend::setLightsUniforms(OpenGLShaderData* shaderData)
+	{
+		if (shaderData->u_lightCount != -1)
+		{
+			glUniform1i(shaderData->u_lightCount, (GLint)m_cachedLights.size());
+		}
 
 		for (size_t i = 0; i < m_cachedLights.size() && i < 16; ++i)
 		{
-			std::string base = "u_lights[" + std::to_string(i) + "]";
-
-			GLint typeLoc = glGetUniformLocation(currentShaderProgram, (base + ".type").c_str());
-			GLint posLoc = glGetUniformLocation(currentShaderProgram, (base + ".position").c_str());
-			GLint dirLoc = glGetUniformLocation(currentShaderProgram, (base + ".direction").c_str());
-			GLint colorLoc = glGetUniformLocation(currentShaderProgram, (base + ".color").c_str());
-			GLint intensityLoc = glGetUniformLocation(currentShaderProgram, (base + ".intensity").c_str());
-			GLint rangeLoc = glGetUniformLocation(currentShaderProgram, (base + ".range").c_str());
-			GLint attenuationLoc = glGetUniformLocation(currentShaderProgram, (base + ".attenuation").c_str());
-			GLint innerConeLoc = glGetUniformLocation(currentShaderProgram, (base + ".innerCone").c_str());
-			GLint outerConeLoc = glGetUniformLocation(currentShaderProgram, (base + ".outerCone").c_str());
-			GLint enabledLoc = glGetUniformLocation(currentShaderProgram, (base + ".enabled").c_str());
-
+			const auto& lightLocs = shaderData->lights[i];
 			const Light& light = m_cachedLights[i];
-			glUniform1i(typeLoc, light.type);
-			glUniform3fv(posLoc, 1, &light.position[0]);
-			glUniform3fv(dirLoc, 1, &light.direction[0]);
-			glUniform3fv(colorLoc, 1, &light.color[0]);
-			glUniform1f(intensityLoc, light.intensity);
-			glUniform1f(rangeLoc, light.range);
-			glUniform3fv(attenuationLoc, 1, &light.attenuation[0]);
-			glUniform1f(innerConeLoc, light.innerCone);
-			glUniform1f(outerConeLoc, light.outerCone);
-			glUniform1i(enabledLoc, light.enabled);
+
+			// Direct uniform calls - no string lookups!
+			if (lightLocs.type != -1) glUniform1i(lightLocs.type, light.type);
+			if (lightLocs.position != -1) glUniform3fv(lightLocs.position, 1, &light.position[0]);
+			if (lightLocs.direction != -1) glUniform3fv(lightLocs.direction, 1, &light.direction[0]);
+			if (lightLocs.color != -1) glUniform3fv(lightLocs.color, 1, &light.color[0]);
+			if (lightLocs.intensity != -1) glUniform1f(lightLocs.intensity, light.intensity);
+			if (lightLocs.range != -1) glUniform1f(lightLocs.range, light.range);
+			if (lightLocs.attenuation != -1) glUniform3fv(lightLocs.attenuation, 1, &light.attenuation[0]);
+			if (lightLocs.innerCone != -1) glUniform1f(lightLocs.innerCone, light.innerCone);
+			if (lightLocs.outerCone != -1) glUniform1f(lightLocs.outerCone, light.outerCone);
+			if (lightLocs.enabled != -1) glUniform1i(lightLocs.enabled, light.enabled);
 		}
 	}
 
@@ -331,103 +382,95 @@ void main()
 		glActiveTexture(GL_TEXTURE0);
 	}
 
-	void OpenGLBackend::setBuiltinUniforms(GLuint shaderProgram, const RenderCommand& cmd)
+	void OpenGLBackend::setBuiltinUniforms(OpenGLShaderData* shaderData, const RenderCommand& cmd)
 	{
-		// Set transform matrix uniform
-		if (GLint transformLoc = glGetUniformLocation(shaderProgram, "u_transform"); transformLoc != -1) 
+		if (shaderData->u_transform != -1)
 		{
-			glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &cmd.transform[0][0]);
+			glUniformMatrix4fv(shaderData->u_transform, 1, GL_FALSE, &cmd.transform[0][0]);
 		}
 
-		if (GLint viewLoc = glGetUniformLocation(shaderProgram, "u_view"); viewLoc != -1) 
+		if (shaderData->u_view != -1)
 		{
-			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &cmd.viewMatrix[0][0]);
+			glUniformMatrix4fv(shaderData->u_view, 1, GL_FALSE, &cmd.viewMatrix[0][0]);
 		}
 
-		GLint projLoc = glGetUniformLocation(shaderProgram, "u_projection");
-		if (projLoc != -1) 
+		if (shaderData->u_projection != -1)
 		{
-			glUniformMatrix4fv(projLoc, 1, GL_FALSE, &cmd.projectionMatrix[0][0]);
+			glUniformMatrix4fv(shaderData->u_projection, 1, GL_FALSE, &cmd.projectionMatrix[0][0]);
 		}
 	}
 
 	void OpenGLBackend::applyMaterialState(Handle materialHandle, GLuint shaderProgram, OpenGLMaterialData* glMaterialData)
 	{
 		chai::AssetManager::instance().get<Material>(materialHandle, [&, glMaterialData](const Material& mat) {
-			//auto const* concreteMaterial = static_cast<Material*>(material);
-			// Apply uniforms from the material
 			const auto& uniforms = mat.getUniforms();
 			for (const auto& [name, uniform] : uniforms)
 			{
-				setUniformFromData(shaderProgram, name, *uniform);
+				// Use cached location from glMaterialData->uniformLocations if available
+				GLint location = -1;
+				if (auto it = glMaterialData->uniformLocations.find(name); it != glMaterialData->uniformLocations.end())
+				{
+					location = it->second;
+				}
+				else
+				{
+					// Fallback for uniforms not in cache
+					location = glGetUniformLocation(shaderProgram, name.c_str());
+				}
+
+				if (location != -1)
+				{
+					setUniformFromData(shaderProgram, location, *uniform);
+				}
 			}
 
 			// Apply textures from the material
 			const auto& textures = mat.getTextures();
 			int textureSlot = 0;
-
-			// Clear previous texture bindings
 			glMaterialData->boundTextures.clear();
 
 			for (const auto& [samplerName, textureInfo] : textures)
 			{
-				// Bind texture to slot
 				glActiveTexture(GL_TEXTURE0 + textureSlot);
 				glBindTexture(GL_TEXTURE_2D, textureInfo.id);
 
-				// Set sampler uniform
-				if (GLint samplerLoc = glGetUniformLocation(shaderProgram, samplerName.c_str()); samplerLoc != -1)
+				// Use cached sampler location
+				GLint samplerLoc = -1;
+				if (auto it = glMaterialData->uniformLocations.find(samplerName); it != glMaterialData->uniformLocations.end())
+				{
+					samplerLoc = it->second;
+				}
+
+				if (samplerLoc != -1)
 				{
 					glUniform1i(samplerLoc, textureSlot);
 				}
 
-				// Track bound textures for cleanup
 				glMaterialData->boundTextures.push_back(textureSlot);
 				textureSlot++;
 			}
 
-			// Set material feature flags as uniforms (for shaders that need runtime checks)
+			// Use cached feature flag locations
 			const auto& features = mat.getEnabledFeatures();
 
-			if (GLint hasBaseColorTexLoc = glGetUniformLocation(shaderProgram, "u_hasBaseColorTexture"); hasBaseColorTexLoc != -1)
+			if (auto it = glMaterialData->uniformLocations.find("u_hasBaseColorTexture"); it != glMaterialData->uniformLocations.end() && it->second != -1)
 			{
-				glUniform1i(hasBaseColorTexLoc, features.contains(MaterialFeature::BaseColorTexture) ? 1 : 0);
+				glUniform1i(it->second, features.contains(MaterialFeature::BaseColorTexture) ? 1 : 0);
 			}
 
-			if (GLint hasNormalTexLoc = glGetUniformLocation(shaderProgram, "u_hasNormalTexture"); hasNormalTexLoc != -1)
+			if (auto it = glMaterialData->uniformLocations.find("u_hasNormalTexture"); it != glMaterialData->uniformLocations.end() && it->second != -1)
 			{
-				glUniform1i(hasNormalTexLoc, features.contains(MaterialFeature::NormalTexture) ? 1 : 0);
+				glUniform1i(it->second, features.contains(MaterialFeature::NormalTexture) ? 1 : 0);
 			}
 
-			if (GLint hasMetallicTexLoc = glGetUniformLocation(shaderProgram, "u_hasMetallicTexture"); hasMetallicTexLoc != -1)
+			if (auto it = glMaterialData->uniformLocations.find("u_hasMetallicTexture"); it != glMaterialData->uniformLocations.end() && it->second != -1)
 			{
-				glUniform1i(hasMetallicTexLoc, features.contains(MaterialFeature::MetallicTexture) ? 1 : 0);
+				glUniform1i(it->second, features.contains(MaterialFeature::MetallicTexture) ? 1 : 0);
 			}
 
-			if (GLint hasRoughnessTexLoc = glGetUniformLocation(shaderProgram, "u_hasRoughnessTexture"); hasRoughnessTexLoc != -1)
+			if (auto it = glMaterialData->uniformLocations.find("u_hasRoughnessTexture"); it != glMaterialData->uniformLocations.end() && it->second != -1)
 			{
-				glUniform1i(hasRoughnessTexLoc, features.contains(MaterialFeature::RoughnessTexture) ? 1 : 0);
-			}
-
-			// Handle transparency rendering state
-			if (features.contains(MaterialFeature::Transparency))
-			{
-				// Enable blending if not already enabled
-				if (!glIsEnabled(GL_BLEND))
-				{
-					glEnable(GL_BLEND);
-					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-				}
-			}
-
-			// Handle double-sided rendering
-			if (features.contains(MaterialFeature::DoubleSided))
-			{
-				glDisable(GL_CULL_FACE);
-			}
-			else
-			{
-				glEnable(GL_CULL_FACE);
+				glUniform1i(it->second, features.contains(MaterialFeature::RoughnessTexture) ? 1 : 0);
 			}
 			});
 	}
@@ -517,9 +560,9 @@ void main()
 		return defines.str() + source;
 	}
 
-	void OpenGLBackend::setUniformFromData(GLuint shaderProgram, const std::string& name, const UniformBufferBase& uniform)
+	void OpenGLBackend::setUniformFromData(GLuint shaderProgram, GLint location, const UniformBufferBase& uniform)
 	{
-		GLint location = glGetUniformLocation(shaderProgram, name.c_str());
+		//GLint location = glGetUniformLocation(shaderProgram, name.c_str());
 		if (location == -1) return;
 
 
@@ -550,7 +593,7 @@ void main()
 		case UniformType::VEC4:
 		{
 			Vec4 value;
-			uniform.getData(&value, sizeof(float) * 3);
+			uniform.getData(&value, sizeof(float) * 4);
 			glUniform4fv(location, 1, &value[0]);
 		}
 		break;
@@ -576,11 +619,11 @@ void main()
 		}
 		break;
 		default:
-			std::cerr << "Unsupported uniform type for: " << name << std::endl;
+			std::cerr << "Unsupported uniform type" << std::endl;
 			break;
 		}
 
-		checkGLError("set uniform: " + name);
+		checkGLError("set uniform");
 	}
 
 	OpenGLMeshData* OpenGLBackend::getOrCreateMeshData(Handle meshHandle) 
@@ -594,9 +637,6 @@ void main()
 			return ptr;
 		}
 		return it->second.get();
-
-		std::cerr << "Invalid mesh handle, cannot upload to GPU" << std::endl;
-		return nullptr;
 	}
 
 	OpenGLMaterialData* OpenGLBackend::getOrCreateMaterialData(Handle material) 
@@ -682,7 +722,7 @@ void main()
 			// Check if we already have this shader variant compiled
 			if (auto it = m_shaderCache.find(shaderHash); it != m_shaderCache.end())
 			{
-				glMaterialData->shaderProgram = it->second;
+				glMaterialData->shaderProgram = it->second->program;
 				glMaterialData->isCompiled = true;
 				cacheUniformLocations(glMaterialData->shaderProgram, glMaterialData);
 				return;
@@ -692,7 +732,7 @@ void main()
 
 			if (GLuint shaderProgram = compileShaderFromDescription(shaderDesc, mat.getEnabledFeatures()); shaderProgram != 0)
 			{
-				m_shaderCache[shaderHash] = shaderProgram;
+				//m_shaderCache[shaderHash] = shaderProgram;
 				glMaterialData->shaderProgram = shaderProgram;
 			}
 			else
@@ -773,8 +813,28 @@ void main()
 		glDeleteShader(vertexShader);
 		glDeleteShader(fragmentShader);
 
+		std::string shaderHash = generateShaderHash(shaderDesc, features);
+		auto shaderData = std::make_unique<OpenGLShaderData>();
+		cacheBuiltinUniformLocations(program, shaderData.get());
+		m_shaderCache[shaderHash] = std::move(shaderData);
+
 		std::cout << "Compiled shader variant: " << shaderDesc->name << std::endl;
 		return program;
+	}
+
+	OpenGLShaderData* OpenGLBackend::getShaderData(GLuint program)
+	{
+		// Linear search through cache to find shader by program ID
+		// (Not ideal, but simple for now)
+		for (auto& [hash, shaderData] : m_shaderCache)
+		{
+			if (shaderData->program == program)
+			{
+				return shaderData.get();
+			}
+		}
+
+		return nullptr;
 	}
 
 	std::string OpenGLBackend::loadShaderFile(const std::string& filePath)

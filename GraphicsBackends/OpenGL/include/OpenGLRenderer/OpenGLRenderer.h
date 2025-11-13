@@ -34,9 +34,9 @@ namespace chai::brew
     private:
         void applyMaterialState(Handle material, GLuint shaderProgram, OpenGLMaterialData* glMaterialData);
         OpenGLMaterialData* getOrCreateMaterialData(Handle material);
-        void setUniformFromData(GLuint shaderProgram, const std::string& name, const UniformBufferBase& uniform);
+        void setUniformFromData(GLuint shaderProgram, GLint location, const UniformBufferBase& uniform);
         void compileMaterial(Handle material, OpenGLMaterialData* glMaterialData);
-        void setBuiltinUniforms(GLuint shaderProgram, const RenderCommand& cmd);
+        void setBuiltinUniforms(OpenGLShaderData* shaderData, const RenderCommand& cmd);
         void unbindTextures(OpenGLMaterialData* glMaterialData);
         GLuint createDefaultShaderProgram();
         void bindShaderProgram(GLuint program);
@@ -47,7 +47,8 @@ namespace chai::brew
         std::string injectFeatureDefines(const std::string& source,
             const std::set<MaterialFeature>& features);
         void cacheUniformLocations(GLuint shaderProgram, OpenGLMaterialData* glMaterialData);
-        void setLightsUniforms();
+        void setLightsUniforms(OpenGLShaderData* shaderData);
+        OpenGLShaderData* getShaderData(GLuint program);
 
         OpenGLMeshData* getOrCreateMeshData(Handle mesh);
 		void drawMesh(const RenderCommand& cmd);
@@ -55,10 +56,12 @@ namespace chai::brew
         void setupVertexAttributes();
         void bindVertexArray(GLuint vao);
         void clear(float r, float g, float b, float a);
+        void cacheBuiltinUniformLocations(GLuint shaderProgram, OpenGLShaderData* shaderData);
+
 
         CMap<size_t, std::unique_ptr<OpenGLMeshData>> m_meshCache;
         CMap<size_t, std::unique_ptr<OpenGLMaterialData>> m_materialCache;
-        CMap<std::string, GLuint> m_shaderCache;
+        CMap<std::string, std::unique_ptr<OpenGLShaderData>> m_shaderCache;
 
         // Current render state
         GLuint currentShaderProgram = 0;
