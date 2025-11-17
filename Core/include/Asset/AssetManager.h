@@ -9,7 +9,7 @@
 #include <shared_mutex>
 #include <Asset/AssetLoader.h>
 #include <Asset/AssetHandle.h>
-#include <Asset/AssetPool.h>
+#include <Resource/ResourcePool.h>
 
 namespace chai
 {
@@ -37,7 +37,7 @@ namespace chai
             std::string searchPath = RESOURCE_PATH + path;
             const auto ext = getExtension(searchPath);
 
-            std::shared_ptr<IAsset> asset_result;
+            std::unique_ptr<IAsset> asset_result;
             for (auto& loader : m_loaders) 
             {
                 if (loader->canLoad(ext)) 
@@ -52,7 +52,7 @@ namespace chai
             Handle handle;
             {
                 std::unique_lock<std::shared_mutex> pool_lock(pool_mutex_);
-                handle = pool_.insert(asset_result);  // overload taking shared_ptr<IAsset>
+                handle = pool_.add(std::move(asset_result));
             }
 
             // Update caches
@@ -67,48 +67,26 @@ namespace chai
 
         template<class U>
         requires std::derived_from<U, IAsset>
-        std::optional<Handle> add(std::shared_ptr<U> asset)
+        std::optional<Handle> add(std::unique_ptr<U> asset)
         {
             Handle handle;
             {
                 std::unique_lock<std::shared_mutex> pool_lock(pool_mutex_);
-                handle = pool_.insert(asset);  // overload taking shared_ptr<IAsset>
+                handle = pool_.add(std::move(asset));
             }
 
             return handle;
         }
 
-        template<typename T, typename Func>
-        auto get(Handle handle, Func&& func) const
-            -> std::conditional_t<
-            std::is_void_v<std::invoke_result_t<Func, const T&>>,
-            std::optional<std::monostate>,
-            std::optional<std::invoke_result_t<Func, const T&>>
-            >
+		//DO NOT store the returned pointer, it may be invalidated
+        template<typename T>
+        const T* get(Handle handle) const
         {
-            using R = std::invoke_result_t<Func, const T&>;
-            using Ret = std::conditional_t<std::is_void_v<R>, std::optional<std::monostate>, std::optional<R>>;
-
-            std::shared_lock<std::shared_mutex> lock(pool_mutex_);
-            if (const T* asset = pool_.template get<T>(handle)) 
-            {
-                if constexpr (std::is_void_v<R>) 
-                {
-                    std::invoke(std::forward<Func>(func), *asset);
-                    return Ret{ std::in_place, std::monostate{} };
-                }
-                else 
-                {
-                    return Ret{ std::in_place, std::invoke(std::forward<Func>(func), *asset) };
-                }
-            }
-
-            std::cerr << "Invalid handle, could not locate asset.\n";
-            return std::nullopt;
+            return dynamic_cast<const T*>(pool_.get(handle));
         }
 
     private:
-        AssetPool pool_;
+        ResourcePool<IAsset> pool_;
         std::unordered_map<std::string, Handle> path_cache_;
         std::unordered_map<std::type_index, std::vector<Handle>> type_handles_;
 

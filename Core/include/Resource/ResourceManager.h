@@ -1,22 +1,40 @@
 #pragma once
+#include <Asset/AssetHandle.h>
+#include <Asset/AssetManager.h>
+#include <Resource/Resource.h>
+#include <Resource/ResourcePool.h>
 
 namespace chai
 {
-	class ResourceManager
-	{
-	public:
-		static ResourceManager& instance();
+    class ResourceManager 
+    {
+    public:
+        static ResourceManager& instance();
 
-		//void addResource(const std::string& name, std::shared_ptr<IAsset> resource)
-		//{
-		//	resources_[name] = resource;
-		//}
+		template<typename ResourceType, typename... Args>
+        Handle createFromAsset(Handle assetHandle) 
+        {
+            static_assert(std::is_base_of_v<Resource, ResourceType>,
+                "ResourceType must derive from Resource");
 
-	private:
-		ResourceManager() = default;
-		~ResourceManager() = default;
-		ResourceManager(const ResourceManager&) = delete;
-		ResourceManager& operator=(const ResourceManager&) = delete;
-		//std::unordered_map<std::string, std::shared_ptr<IAsset>> resources_;
-	};
+			return m_resourcePool.add(std::make_unique<ResourceType>(assetHandle));
+		}
+
+        template<typename ResourceType>
+        Handle add(std::unique_ptr<ResourceType> resource)
+        {
+            static_assert(std::is_base_of_v<Resource, ResourceType>,
+                "ResourceType must derive from Resource");
+			return m_resourcePool.add(std::move(resource));
+        }
+
+		template<typename ResourceType>
+        ResourceType* getResource(Handle handle) 
+        {
+            return m_resourcePool.get(handle);
+		}
+
+    private:
+        ResourcePool<Resource> m_resourcePool;
+    };
 }

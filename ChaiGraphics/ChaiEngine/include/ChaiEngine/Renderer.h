@@ -15,5 +15,6 @@ namespace chai::brew
             virtual bool initialize(void* winProcAddress = nullptr) = 0;
             virtual void shutdown() = 0;
             virtual void executeCommands(const std::vector<RenderCommand>& commands) = 0;
+			virtual void beginFrame() {}
 		};
 }

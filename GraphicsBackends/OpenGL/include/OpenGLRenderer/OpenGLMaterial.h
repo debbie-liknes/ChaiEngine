@@ -1,8 +1,9 @@
 #pragma once
 #include <ChaiEngine/Material.h>
+#include <ChaiEngine/UniformBuffer.h>
+#include <Types/CMap.h>
 #include <glad/gl.h>
 #include <vector>
-#include <Types/CMap.h>
 #include <set>
 #include <sstream>
 
@@ -12,68 +13,42 @@ namespace chai::brew
     {
         GLuint shaderProgram = 0;
         bool isCompiled = false;
+        bool isTransparent = false;
 
+        // Material properties
+        CMap<std::string, Handle> textures;
+        CMap<std::string, std::unique_ptr<UniformBufferBase>> uniforms;
+
+        // Cached uniform locations (per material instance)
         CMap<std::string, GLint> uniformLocations;
-        std::vector<int> boundTextures;
-        uint32_t lastAppliedVersion = 0;
     };
 
-    struct OpenGLShaderData
+    class OPENGLRENDERER_EXPORT OpenGLMaterialManager
     {
-        GLuint program = 0;
+    public:
+        OpenGLMaterialManager() = default;
+        virtual ~OpenGLMaterialManager() = default;
 
-        // Cached built-in uniform locations
-        GLint u_transform = -1;
-        GLint u_view = -1;
-        GLint u_projection = -1;
-        GLint u_lightCount = -1;
+        OpenGLMaterialManager(const OpenGLMaterialManager&) = delete;
+        OpenGLMaterialManager& operator=(const OpenGLMaterialManager&) = delete;
 
-        // Cache light uniform locations (for 16 lights)
-        struct LightUniforms {
-            GLint type = -1;
-            GLint position = -1;
-            GLint direction = -1;
-            GLint color = -1;
-            GLint intensity = -1;
-            GLint range = -1;
-            GLint attenuation = -1;
-            GLint innerCone = -1;
-            GLint outerCone = -1;
-            GLint enabled = -1;
-        };
-        std::array<LightUniforms, 16> lights;
-    };
+        OpenGLMaterialManager(OpenGLMaterialManager&&) = default;
+        OpenGLMaterialManager& operator=(OpenGLMaterialManager&&) = default;
 
-    std::string generateShaderHash(std::shared_ptr<ShaderDescription> shaderDesc,
-        const std::set<MaterialFeature>& features)
-    {
-        std::stringstream hash;
-
-        // Include shader name/path
-        hash << shaderDesc->name;
-
-        // Include all shader stage paths (vertex, fragment, etc.)
-        for (const auto& stage : shaderDesc->stages)
+        OpenGLMaterialData* getOrCreateMaterialData(Handle material)
         {
-            hash << "_" << stage.path;
+            auto it = m_materialCache.find(material.index);
+            if (it == m_materialCache.end())
+            {
+                auto glMaterialData = std::make_unique<OpenGLMaterialData>();
+                auto* ptr = glMaterialData.get();
+                m_materialCache[material.index] = std::move(glMaterialData);
+                return ptr;
+            }
+            return it->second.get();
         }
 
-        // Include feature flags that affect compilation
-        if (features.contains(MaterialFeature::BaseColorTexture))
-            hash << "_BC";
-        if (features.contains(MaterialFeature::NormalTexture))
-            hash << "_NM";
-        if (features.contains(MaterialFeature::MetallicTexture))
-            hash << "_MT";
-        if (features.contains(MaterialFeature::RoughnessTexture))
-            hash << "_RG";
-        if (features.contains(MaterialFeature::EmissionTexture))
-            hash << "_EM";
-        if (features.contains(MaterialFeature::Transparency))
-            hash << "_TR";
-        if (features.contains(MaterialFeature::DoubleSided))
-            hash << "_DS";
-
-        return hash.str();
-    }
+    private:
+        CMap<size_t, std::unique_ptr<OpenGLMaterialData>> m_materialCache;
+    };
 }

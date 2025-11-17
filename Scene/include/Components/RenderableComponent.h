@@ -10,19 +10,8 @@ namespace chai::cup
 	{
 	public:
 		explicit RenderableComponent(GameObject* owner = nullptr) : Component(owner) {}
-		Handle getMesh() const { return meshHandle; }
-		Handle getMaterial() const 
-		{ 
-			//auto found = chai::AssetManager::instance().get<Mesh>(meshHandle, [](const Mesh& m) {
-			//	return m.getMaterials();
-			//	});
-
-			//return found.value_or({});
-			return material;
-		}
 
 	protected:
-		Handle meshHandle;
-		Handle material;
+
 	};
 }

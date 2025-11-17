@@ -21,6 +21,8 @@ set(Core_headers
 	include/Plugin/ServiceLocator.h
 	include/Plugin/ServiceRegistry.h
 	include/Resource/ResourceManager.h
+	include/Resource/ResourcePool.h
+	include/Resource/Resource.h
 	include/Scene/ICamera.h
 	include/Types/CMap.h
 )

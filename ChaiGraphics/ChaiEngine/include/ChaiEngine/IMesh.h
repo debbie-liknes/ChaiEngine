@@ -7,6 +7,7 @@
 #include <Asset/AssetHandle.h>
 #include <ChaiEngine/Vertex.h>
 #include <Meta/ChaiMacros.h>
+#include <Resource/Resource.h>
 
 namespace chai
 {
@@ -23,7 +24,16 @@ namespace chai
         virtual const std::vector<uint32_t>& getIndices() const = 0;
     };
 
-    class Mesh : public IMesh, public IAsset 
+	class MeshResource : public Resource
+    {
+    public:
+        explicit MeshResource(Handle assetHandle)
+            : Resource(assetHandle) 
+		{
+		}
+    };
+
+	class Mesh : public IMesh, public IAsset
     {
     public:
         Mesh(const std::vector<Vertex>& verts, const std::vector<uint32_t>& inds)

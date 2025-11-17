@@ -220,6 +220,44 @@ namespace chai
             return t;
         }
 
+        constexpr Mat<T, R, C> inverse() const noexcept 
+        {
+            static_assert(R == C, "inverse() requires square matrix");
+            Mat<T, R, C> inv = Mat<T, R, C>::identity();
+            Mat<T, R, C> mcopy = *this;
+            for (int i = 0; i < R; ++i) 
+            {
+                // Find pivot
+                T pivot = mcopy(i, i);
+                if (pivot == T(0)) 
+                {
+                    // Singular matrix, return identity as fallback
+                    return Mat<T, R, C>::identity();
+                }
+                T invPivot = T(1) / pivot;
+                // Normalize pivot row
+                for (int c = 0; c < C; ++c) 
+                {
+                    mcopy(i, c) *= invPivot;
+                    inv(i, c) *= invPivot;
+                }
+                // Eliminate other rows
+                for (int r = 0; r < R; ++r) 
+                {
+                    if (r != i) 
+                    {
+                        T factor = mcopy(r, i);
+                        for (int c = 0; c < C; ++c) 
+                        {
+                            mcopy(r, c) -= factor * mcopy(i, c);
+                            inv(r, c) -= factor * inv(i, c);
+                        }
+                    }
+                }
+            }
+            return inv;
+		}
+
     private:
         static constexpr int index(int r, int c) noexcept 
         {

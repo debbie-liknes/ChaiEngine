@@ -1,7 +1,7 @@
 #pragma once
 #include <ChaiGraphicsExport.h>
 #include <ChaiEngine/IMesh.h>
-#include <ChaiEngine/IMaterial.h>
+#include <ChaiEngine/Material.h>
 #include <Graphics/Viewport.h>
 #include <ChaiEngine/Light.h>
 

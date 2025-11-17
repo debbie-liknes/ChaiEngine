@@ -11,37 +11,29 @@
 
 namespace chai
 {
-    //rename this file to asset handle
-
-    struct CORE_EXPORT Handle 
+    struct Handle 
     {
-        size_t index = 0;
-        uint64_t generation = 0;
-        std::type_index type = std::type_index(typeid(void));
+        uint32_t index;
+        uint32_t generation;
+        std::type_index type;
 
-        bool operator==(const Handle& other) const 
-        {
-            return index == other.index &&
-                generation == other.generation &&
-                type == other.type;
+		Handle() : index(INVALID_INDEX), generation(0), type(typeid(void)) {}
+        Handle(uint32_t idx, uint32_t gen, std::type_index t)
+			: index(idx), generation(gen), type(t) {
+		}
+
+        static constexpr uint32_t INVALID_INDEX = 0xFFFFFFFF;
+
+        bool operator==(const Handle& other) const {
+            return index == other.index;
         }
 
-        bool operator!=(const Handle& other) const 
-        {
-            return !(*this == other);
+        bool operator!=(const Handle& other) const {
+            return index != other.index;
         }
 
-        size_t hash() const 
-        {
-            size_t h1 = std::hash<size_t>()(index);
-            size_t h2 = std::hash<uint64_t>()(generation);
-            size_t h3 = std::hash<std::type_index>()(type);
-            return h1 ^ (h2 << 1) ^ (h3 << 2);
-        }
-
-        bool isValid() const 
-        {
-            return generation != 0 || index != 0;
-        }
+        bool isValid() const {
+            return index != INVALID_INDEX;
+		}
     };
 }

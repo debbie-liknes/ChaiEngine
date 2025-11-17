@@ -16,33 +16,6 @@ namespace chai
         std::string samplerName;
     };
 
-	//Move this to its own file later
-    struct ShaderStage 
-    {
-        enum Type { Vertex, Fragment, Geometry, Compute };
-
-        Type type;
-        std::string sourceCode;
-        std::string path;
-        std::vector<std::string> defines;
-        std::string entryPoint = "main";
-    };
-
-    struct ShaderDescription 
-    {
-        std::string name;
-        std::vector<ShaderStage> stages;
-        std::vector<std::string> globalDefines;
-
-        // metadata
-        struct 
-        {
-            bool isTransparent = false;
-            bool requiresDepthTesting = true;
-            bool writeToDepth = true;
-        } renderHints;
-    };
-
     class IMaterial 
     {
     public:

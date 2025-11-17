@@ -1,6 +1,6 @@
 #include <Scene/GameObject.h>
 #include <Components/TransformComponent.h>
-#include <Components/RenderableComponent.h>
+#include <Components/MeshComponent.h>
 #include <Core/Updatable.h>
 
 namespace chai::cup
@@ -14,7 +14,7 @@ namespace chai::cup
 	{
 		for (const auto& component : m_components)
 		{
-			if (auto renderable = dynamic_cast<RenderableComponent*>(component.get()))
+			if (auto renderable = dynamic_cast<MeshComponent*>(component.get()))
 			{
 				brew::RenderCommand cmd;
 				cmd.type = brew::RenderCommand::DRAW_MESH;

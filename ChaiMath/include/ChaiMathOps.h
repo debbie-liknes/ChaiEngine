@@ -2,6 +2,7 @@
 #include <VecBase.h>
 #include <Vec3.h>
 #include <Mat_4x4.h>
+#include <Mat_3x3.h>
 #include <MatBase.h>
 #include <ChaiQuat.h>
 #include <ChaiMathExport.h>
@@ -31,6 +32,12 @@ namespace chai
 
     template<typename T>
     T radians(T degrees);
+
+    template<typename T>
+    Mat3T<T> toMat3(const Mat4T<T>& m);
+
+    template<typename T>
+    Mat4T<T> toMat4(const Mat3T<T>& m);
 
     template<typename T>
     Mat4T<T> perspective(T fov, T aspect, T near, T far);

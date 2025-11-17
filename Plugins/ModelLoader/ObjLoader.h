@@ -11,7 +11,7 @@ namespace chai
 		ObjLoader() = default;
 
 		bool canLoad(const std::string& ext) const override;
-		std::shared_ptr<IAsset> load(const std::string& path) override;
+		std::unique_ptr<IAsset> load(const std::string& path) override;
 	};
 
 	class MtlLoader : public IAssetLoader
@@ -20,7 +20,7 @@ namespace chai
 		MtlLoader() = default;
 
 		bool canLoad(const std::string& ext) const override;
-		std::shared_ptr<IAsset> load(const std::string& path) override;
+		std::unique_ptr<IAsset> load(const std::string& path) override;
 	};
 }
 

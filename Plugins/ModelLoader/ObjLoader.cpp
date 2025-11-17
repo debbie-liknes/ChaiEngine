@@ -18,7 +18,7 @@ namespace chai
 		return ext == "obj";
 	}
 
-	std::shared_ptr<IAsset> ObjLoader::load(const std::string& path)
+	std::unique_ptr<IAsset> ObjLoader::load(const std::string& path)
 	{
 		tinyobj::ObjReaderConfig reader_config;
 		tinyobj::ObjReader reader;
@@ -104,11 +104,11 @@ namespace chai
 			}
 		}
 
-		auto mesh = std::make_shared<Mesh>(vertices, indices);
+		auto mesh = std::make_unique<Mesh>(vertices, indices);
 
 		for (auto& material : materials)
 		{
-			auto matHandle = chai::AssetManager::instance().load<chai::Material>(material.name);
+			auto matHandle = chai::AssetManager::instance().load<chai::MaterialAsset>(material.name);
 
 			if(matHandle.has_value())
 				mesh->addMaterial(matHandle.value());
@@ -122,7 +122,7 @@ namespace chai
 		return ext == "mtl";
 	}
 
-	std::shared_ptr<IAsset> MtlLoader::load(const std::string& path)
+	std::unique_ptr<IAsset> MtlLoader::load(const std::string& path)
 	{
 		std::filesystem::path filePath(path);
 		tinyobj::MaterialFileReader reader(filePath.parent_path().string());
@@ -154,37 +154,37 @@ namespace chai
 		//TODO: need to support multiple materials in 1 file
 		auto const& tinyMat = materials[0];
 
-		auto mat = MaterialSystem::createPhong();
+		//auto mat = MaterialSystem::createPhong();
 		std::cout << "Applying material: " << tinyMat.name << std::endl;
 
 		// Set specular color
-		if (tinyMat.specular[0] != 0.0f || tinyMat.specular[1] != 0.0f || tinyMat.specular[2] != 0.0f)
-		{
-			mat->setSpecular(Vec3(tinyMat.specular[0], tinyMat.specular[1], tinyMat.specular[2]));
-		}
+		//if (tinyMat.specular[0] != 0.0f || tinyMat.specular[1] != 0.0f || tinyMat.specular[2] != 0.0f)
+		//{
+		//	mat->setSpecular(Vec3(tinyMat.specular[0], tinyMat.specular[1], tinyMat.specular[2]));
+		//}
 
-		if (tinyMat.diffuse[0] != 0.0f || tinyMat.diffuse[1] != 0.0f || tinyMat.diffuse[2] != 0.0f)
-		{
-			mat->setDiffuse(Vec3(tinyMat.diffuse[0], tinyMat.diffuse[1], tinyMat.diffuse[2]));
-		}
+		//if (tinyMat.diffuse[0] != 0.0f || tinyMat.diffuse[1] != 0.0f || tinyMat.diffuse[2] != 0.0f)
+		//{
+		//	mat->setDiffuse(Vec3(tinyMat.diffuse[0], tinyMat.diffuse[1], tinyMat.diffuse[2]));
+		//}
 
-		// Set ambient color
-		if (tinyMat.ambient[0] != 0.0f || tinyMat.ambient[1] != 0.0f || tinyMat.ambient[2] != 0.0f)
-		{
-			mat->setAmbient(Vec3(tinyMat.ambient[0], tinyMat.ambient[1], tinyMat.ambient[2]));
-		}
+		//// Set ambient color
+		//if (tinyMat.ambient[0] != 0.0f || tinyMat.ambient[1] != 0.0f || tinyMat.ambient[2] != 0.0f)
+		//{
+		//	mat->setAmbient(Vec3(tinyMat.ambient[0], tinyMat.ambient[1], tinyMat.ambient[2]));
+		//}
 
-		// Set shininess/specular exponent
-		if (tinyMat.shininess > 0.0f)
-		{
-			mat->setShininess(tinyMat.shininess);
-		}
+		//// Set shininess/specular exponent
+		//if (tinyMat.shininess > 0.0f)
+		//{
+		//	mat->setShininess(tinyMat.shininess);
+		//}
 
-		// Set transparency/alpha
-		if (tinyMat.dissolve < 1.0f)
-		{
-			mat->setTransparency(tinyMat.dissolve);
-		}
+		//// Set transparency/alpha
+		//if (tinyMat.dissolve < 1.0f)
+		//{
+		//	mat->setTransparency(tinyMat.dissolve);
+		//}
 
 		return nullptr;
 	}
