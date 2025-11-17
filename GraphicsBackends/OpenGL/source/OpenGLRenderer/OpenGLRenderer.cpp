@@ -25,7 +25,11 @@ namespace chai::brew
 
         m_perFrameUBOData = createUniform<CommonUniforms>();
         m_perFrameUBOData->setValue({ Mat4::identity() , Mat4::identity() });
-		m_uniManager.buildUniforms({ m_perFrameUBOData.get() });
+
+        m_perDrawUBOData = createUniform<DrawUniforms>();
+        m_perDrawUBOData->setValue(DrawUniforms{ Mat4::identity() , Mat4::identity() });
+
+        m_uniManager.buildUniforms({ m_perFrameUBOData.get(), m_perDrawUBOData.get() });
 
         // Create default shader
         defaultShaderProgram = m_shaderManager.createDefaultShaderProgram();
@@ -74,7 +78,8 @@ namespace chai::brew
                 int x, y, width, height;
                 cmd.viewport->getViewport(x, y, width, height);
                 glViewport(x, y, width, height);
-				m_perFrameUBOData->setValue({ cmd.viewMatrix, cmd.projectionMatrix });
+                m_perFrameUBOData->setValue({ cmd.viewMatrix, cmd.projectionMatrix });
+
             }
             break;
 
@@ -228,6 +233,28 @@ namespace chai::brew
     // BATCHED DRAWING (State Change Minimization)
     // ============================================================================
 
+    void OpenGLBackend::updateShader(OpenGLShaderData* shaderData, uint32_t& stateChanges)
+    {
+        glUseProgram(shaderData->program);
+        stateChanges++;
+
+        //apply pipeline description?
+
+        auto uni = m_uniManager.getUniformBufferData(*m_perFrameUBOData);
+
+        if (shaderData && uni)
+        {
+            // Re-bind per-frame UBO (shader changed)
+            glBindBufferBase(GL_UNIFORM_BUFFER, shaderData->perFrameUBOBinding, uni->ubo);
+
+            // Update lights if dirty
+            if (m_lightsDirty)
+            {
+                setLightsUniforms(shaderData);
+            }
+        }
+    }
+
     void OpenGLBackend::drawBatchedCommands(const std::vector<SortedDrawCommand>& sortedDraws)
     {
         if (sortedDraws.empty()) return;
@@ -235,9 +262,7 @@ namespace chai::brew
         // Track current state to minimize changes
         GLuint currentShader = 0;
         GLuint currentVAO = 0;
-        uint32_t currentMaterialID = 0;
-
-        //OpenGLShaderData* currentShaderData = nullptr;
+        int currentMaterialID = -1;
 
         // Statistics
         uint32_t drawCalls = 0;
@@ -262,43 +287,29 @@ namespace chai::brew
             // Change shader only when necessary
             if (shaderData && shaderData->program != currentShader) 
             {
-                glUseProgram(shaderData->program);
                 currentShader = shaderData->program;
-                stateChanges++;
-
-                // Get shader data for uniform locations
-                auto uni = m_uniManager.getUniformBufferData(*m_perFrameUBOData);
-
-                if (shaderData && uni)
-                {
-                    // Re-bind per-frame UBO (shader changed)
-                    glBindBufferBase(GL_UNIFORM_BUFFER, 0, uni->ubo);
-
-                    // Update lights if dirty
-                    if (m_lightsDirty) 
-                    {
-                        setLightsUniforms(shaderData);
-                    }
-                }
+                updateShader(shaderData, stateChanges);
             }
 
             // Change VAO only when necessary
-            if (meshData->VAO != currentVAO) {
+            if (meshData->VAO != currentVAO) 
+            {
                 glBindVertexArray(meshData->VAO);
                 currentVAO = meshData->VAO;
                 stateChanges++;
             }
 
             // Apply material properties if material changed
-            if (cmd.material.index != currentMaterialID) {
-                if (matData && matData->isCompiled) {
+            if (cmd.material.index != currentMaterialID && cmd.material.isValid()) 
+            {
+                if (matData && matData->isCompiled) 
+                {
                     applyMaterialState(matData, shaderData);
                 }
                 currentMaterialID = cmd.material.index;
             }
 
             // Set per-draw uniforms (model matrix, etc.)
-            // This uses UBO so it's fast
             updatePerDrawUniforms(cmd, shaderData);
 
             // DRAW!
@@ -319,7 +330,7 @@ namespace chai::brew
 
     void OpenGLBackend::updatePerFrameUniforms()
     {
-        //// Update per-frame UBO once per frame
+        // Update per-frame UBO once per frame
 		m_uniManager.updateUniform(*m_perFrameUBOData);
     }
 
@@ -352,19 +363,23 @@ namespace chai::brew
     void OpenGLBackend::updatePerDrawUniforms(const RenderCommand& cmd,
         OpenGLShaderData* shaderData)
     {
-        //if (!shaderData) return;
+        if (!shaderData) return;
 
-        //// Update per-draw UBO
-        //PerDrawUniforms uniforms;
-        //uniforms.model = cmd.transform;
+        DrawUniforms uniforms{};
+        uniforms.model = cmd.transform;
 
-        //// Calculate normal matrix (inverse transpose of upper 3x3)
-        //Mat3 normalMat = toMat3(cmd.transform).inverse().transpose();
-        //uniforms.normalMatrix = toMat4(normalMat);
+        Mat3 normalMat = toMat3(cmd.transform).inverse().transpose();
+        uniforms.normalMatrix = toMat4(normalMat);
 
-        //// Fast update
-        //glBindBuffer(GL_UNIFORM_BUFFER, m_perDrawUBO);
-        //glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(PerDrawUniforms), &uniforms);
+        // Update CPU?GPU
+        m_perDrawUBOData->setValue(uniforms);
+        m_uniManager.updateUniform(*m_perDrawUBOData);
+
+        // Bind to the per-draw binding index for this program
+        if (auto ub = m_uniManager.getUniformBufferData(*m_perDrawUBOData))
+        {
+            glBindBufferBase(GL_UNIFORM_BUFFER, shaderData->perDrawUBOBinding, ub->ubo);
+        }
     }
 
     void OpenGLBackend::setUniformValue(GLint location, const std::unique_ptr<UniformBufferBase>& uniform)
@@ -459,14 +474,14 @@ namespace chai::brew
         //}
 
         // Set material uniforms (color, roughness, metallic, etc.)
-        //for (const auto& [name, uniform] : matData->uniforms) 
-        //{
-        //    auto it = shaderData->uniformLocations.find(name);
-        //    if (it != shaderData->uniformLocations.end()) 
-        //    {
-        //        setUniformValue(it->second, uniform);
-        //    }
-        //}
+        for (const auto& [name, uniform] : matData->uniforms) 
+        {
+            auto it = shaderData->uniformLocations.find(name);
+            if (it != shaderData->uniformLocations.end()) 
+            {
+                setUniformValue(it->second, uniform);
+            }
+        }
     }
 
     // ============================================================================

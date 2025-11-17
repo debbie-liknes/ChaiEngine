@@ -81,12 +81,24 @@ namespace chai
         static constexpr UniformType value = UniformType::BOOL;
     };
 
+    static uint64_t getNextId()
+    {
+        static uint64_t currentId = 0;
+        return ++currentId;
+    }
+
     template<typename T>
     class UniformBuffer : public UniformBufferBase
     {
     public:
-		UniformBuffer() : m_value{}, m_id(getNextId()) {}
-        explicit UniformBuffer(const T& value) : m_value(value), m_id(getNextId()) {}
+		UniformBuffer() : m_value{}
+        {
+			m_id = getNextId();
+        }
+        explicit UniformBuffer(const T& value) : m_value(value) 
+        {
+			m_id = getNextId();
+        }
 
         uint64_t getId() const override
         {
@@ -123,12 +135,6 @@ namespace chai
     private:
         T m_value;
         uint64_t m_id;
-
-        static uint64_t getNextId()
-        {
-            static uint64_t currentId = 0;
-			return ++currentId;
-        }
     };
 
     inline std::shared_ptr<UniformBufferBase> createUniform(float value) 

@@ -50,10 +50,16 @@ namespace chai::brew
 			    mat4 u_view;
 			    mat4 u_proj;
 			};
+
+			layout(std140, binding = 1) uniform PerDraw
+			{
+			    mat4 u_model;
+			    mat4 u_normal;
+			};
 			
 			void main()
 			{
-			    gl_Position = u_proj * u_view * vec4(a_position, 1.0);
+			    gl_Position = u_proj * u_view * u_model * vec4(a_position, 1.0);
 			}
 			)";
 

@@ -104,7 +104,7 @@ namespace chai::brew
 		OpenGLTextureManager m_texManager;
 		GLShaderManager m_shaderManager;
 
-        //CMap<GLuint, OpenGLShaderData*> m_programToShaderData;
+        void updateShader(OpenGLShaderData* program, uint32_t& stateChanges);
 
         // Upload system
         UploadQueue m_uploadQueue;
@@ -114,6 +114,7 @@ namespace chai::brew
 
         // Uniform Buffer Objects
 		std::shared_ptr<UniformBuffer<CommonUniforms>> m_perFrameUBOData;
+		std::shared_ptr<UniformBuffer<DrawUniforms>> m_perDrawUBOData;
         GLuint m_lightingUBO = 0;
 
         // State tracking (minimize redundant state changes)

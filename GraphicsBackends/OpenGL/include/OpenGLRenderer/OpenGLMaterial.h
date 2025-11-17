@@ -1,6 +1,7 @@
 #pragma once
 #include <ChaiEngine/Material.h>
 #include <ChaiEngine/UniformBuffer.h>
+#include <Resource/ResourceManager.h>
 #include <Types/CMap.h>
 #include <glad/gl.h>
 #include <vector>
@@ -41,6 +42,7 @@ namespace chai::brew
             if (it == m_materialCache.end())
             {
                 auto glMaterialData = std::make_unique<OpenGLMaterialData>();
+				//auto mat = ResourceManager::instance().getResource<MaterialInstance>(material);
                 auto* ptr = glMaterialData.get();
                 m_materialCache[material.index] = std::move(glMaterialData);
                 return ptr;

@@ -14,13 +14,12 @@ namespace chai::brew
         GLuint program = 0;
 
         // Material uniform locations
-        //std::unordered_map<std::string, GLint> uniformLocations;
+        CMap<std::string, GLint> uniformLocations;
 
         // UBO binding points
         GLuint perFrameUBOBinding = 0;
         GLuint perDrawUBOBinding = 1;
         GLuint lightingUBOBinding = 2;
-        ////////////////////////////////////////////////////////
 
         // Cached built-in uniform locations
         //GLint u_transform = -1;
