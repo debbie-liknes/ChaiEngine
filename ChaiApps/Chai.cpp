@@ -68,12 +68,13 @@ int main()
 	auto meshAsset = chai::AssetManager::instance().load<chai::Mesh>("assets/suzanne.obj");
 	meshComp->setMesh(meshAsset.value());
 
+	auto asset = chai::MaterialSystem::instance().getDefaultMaterialAsset();
 	auto material = chai::MaterialSystem::instance().createInstance(
-		chai::MaterialSystem::instance().getDefaultMaterialAsset()
+		asset
 	);
 
 	// Customize instance
-	material->setDiffuseColor(chai::Vec3(1.0f, 0.0f, 0.0f));  // Red monkey!
+	material->setDiffuseColor(chai::Vec3(0.0f, 1.0f, 0.0f));  // Red monkey!
 	material->setShininess(64.0f);
 
 	auto matHandle = chai::ResourceManager::instance().add(std::move(material));

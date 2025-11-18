@@ -21,6 +21,19 @@ namespace chai::brew
         const auto* version = (const char*)glGetString(GL_VERSION);
         std::cout << "OpenGL Version: " << version << std::endl;
 
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);  // or GL_LEQUAL
+
+        // Enable back-face culling (optional but recommended)
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+        glFrontFace(GL_CCW);  // Counter-clockwise is front
+
+        // Disable blending by default (we enable it only for transparent pass)
+        glDisable(GL_BLEND);
+
+        m_matManager.setShaderManager(&m_shaderManager);
+
         std::cout << "Creating common uniforms..." << std::endl;
 
         m_perFrameUBOData = createUniform<CommonUniforms>();
@@ -259,40 +272,43 @@ namespace chai::brew
     {
         if (sortedDraws.empty()) return;
 
-        // Track current state to minimize changes
         GLuint currentShader = 0;
         GLuint currentVAO = 0;
         int currentMaterialID = -1;
 
-        // Statistics
-        uint32_t drawCalls = 0;
-        uint32_t stateChanges = 0;
+		uint32_t stateChanges = 0;
+		uint32_t drawCalls = 0;
 
         for (const auto& sorted : sortedDraws)
         {
             const RenderCommand& cmd = sorted.command;
-
-            // Get mesh data (we know it's uploaded from executeCommands)
             OpenGLMeshData* meshData = m_meshManager.getOrCreateMeshData(cmd.mesh);
             if (!meshData || !meshData->isUploaded) continue;
 
-            // Get material and shader
+            // Get material data
             OpenGLMaterialData* matData = cmd.material.isValid() ?
                 m_matManager.getOrCreateMaterialData(cmd.material) : nullptr;
 
+            // COMPILE MATERIAL IF NEEDED (NEW)
+            if (matData && !matData->isCompiled)
+            {
+                m_matManager.compileMaterial(cmd.material, matData);
+            }
+
+            // Get shader (either from material or default)
             OpenGLShaderData* shaderData = m_shaderManager.getShaderData(
                 (matData && matData->shaderProgram) ?
-				matData->shaderProgram : defaultShaderProgram);
+                matData->shaderProgram : defaultShaderProgram);
 
             // Change shader only when necessary
-            if (shaderData && shaderData->program != currentShader) 
+            if (shaderData && shaderData->program != currentShader)
             {
                 currentShader = shaderData->program;
                 updateShader(shaderData, stateChanges);
             }
 
             // Change VAO only when necessary
-            if (meshData->VAO != currentVAO) 
+            if (meshData->VAO != currentVAO)
             {
                 glBindVertexArray(meshData->VAO);
                 currentVAO = meshData->VAO;
@@ -300,28 +316,22 @@ namespace chai::brew
             }
 
             // Apply material properties if material changed
-            if (cmd.material.index != currentMaterialID && cmd.material.isValid()) 
+            if (cmd.material.index != currentMaterialID)
             {
-                if (matData && matData->isCompiled) 
+                if (cmd.material.isValid() && matData && matData->isCompiled)
                 {
                     applyMaterialState(matData, shaderData);
                 }
-                currentMaterialID = cmd.material.index;
+                currentMaterialID = cmd.material.index;  // ALWAYS update tracking
             }
 
-            // Set per-draw uniforms (model matrix, etc.)
+            // Set per-draw uniforms
             updatePerDrawUniforms(cmd, shaderData);
 
             // DRAW!
             glDrawElements(GL_TRIANGLES, meshData->indexCount, GL_UNSIGNED_INT, 0);
             drawCalls++;
         }
-
-        m_lightsDirty = false;
-
-        // Debug statistics
-        //m_stats.drawCalls = drawCalls;
-        //m_stats.stateChanges = stateChanges;
     }
 
     // ============================================================================

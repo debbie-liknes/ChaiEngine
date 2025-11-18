@@ -101,7 +101,10 @@ namespace chai
               //}
 
     private:
-		MaterialSystem() = default;
+        MaterialSystem()
+        {
+            init();
+        }
         void init();
         Handle m_defaultMaterialAsset;
 

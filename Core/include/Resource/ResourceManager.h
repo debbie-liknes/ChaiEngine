@@ -31,7 +31,8 @@ namespace chai
 		template<typename ResourceType>
         ResourceType* getResource(Handle handle) 
         {
-            return m_resourcePool.get(handle);
+			return dynamic_cast<ResourceType*>(m_resourcePool.get(handle));
+            //return m_resourcePool.get(handle);
 		}
 
     private:
