@@ -1,4 +1,4 @@
-#include <OpenGLRenderer/OpenGLRenderer.h>
+﻿#include <OpenGLRenderer/OpenGLRenderer.h>
 #include <algorithm>
 #include <chrono>
 #include <OpenGLRenderer/GLHelpers.h>
@@ -381,7 +381,7 @@ namespace chai::brew
         Mat3 normalMat = toMat3(cmd.transform).inverse().transpose();
         uniforms.normalMatrix = toMat4(normalMat);
 
-        // Update CPU?GPU
+        // Update CPU→GPU
         m_perDrawUBOData->setValue(uniforms);
         m_uniManager.updateUniform(*m_perDrawUBOData);
 
@@ -460,28 +460,7 @@ namespace chai::brew
     {
         if (!matData || !shaderData) return;
 
-        // Bind textures
-        //int textureUnit = 0;
-        //for (const auto& [name, textureHandle] : matData->textures) 
-        //{
-        //    if (textureHandle.isValid()) 
-        //    {
-        //        auto* texData = m_texManager.getOrCreateTextureData(textureHandle);
-        //        if (texData && texData->isUploaded) 
-        //        {
-        //            glActiveTexture(GL_TEXTURE0 + textureUnit);
-        //            glBindTexture(GL_TEXTURE_2D, texData->textureID);
-
-        //            // Set sampler uniform
-        //            if (auto it = shaderData->uniformLocations.find(name); it != shaderData->uniformLocations.end()) 
-        //            {
-        //                glUniform1i(it->second, textureUnit);
-        //            }
-
-        //            textureUnit++;
-        //        }
-        //    }
-        //}
+        // Bind textures later
 
         // Set material uniforms (color, roughness, metallic, etc.)
         for (const auto& [name, uniform] : matData->uniforms) 
