@@ -129,6 +129,28 @@ namespace chai
 		return result;
 	}
 
+	template<typename T>
+	Mat3T<T> toMat3(const Mat4T<T>& m)
+	{
+		Mat3T<T> result{};
+
+		for (int r = 0; r < 3; ++r)
+			for (int c = 0; c < 3; ++c)
+				result(r, c) = m(r, c);
+
+		return result;
+	}
+
+	template<typename T>
+	Mat4T<T> toMat4(const Mat3T<T>& m)
+	{
+		Mat4T<T> result = Mat4T<T>::identity();
+		for (int r = 0; r < 3; ++r)
+			for (int c = 0; c < 3; ++c)
+				result(r, c) = m(r, c);
+		return result;
+	}
+
 
 	template CHAIMATH_EXPORT Mat<float, 4, 4> perspective<float>(float, float, float, float);
 	template CHAIMATH_EXPORT Mat<double, 4, 4> perspective<double>(double, double, double, double);
@@ -144,6 +166,12 @@ namespace chai
 
 	template CHAIMATH_EXPORT Vec3T<float> cross<float>(const Vec3T<float>&, const Vec3T<float>&);
 	template CHAIMATH_EXPORT Vec3T<double> cross<double>(const Vec3T<double>&, const Vec3T<double>&);
+
+	template CHAIMATH_EXPORT Mat3T<float> toMat3<float>(const Mat4T<float>&);
+	template CHAIMATH_EXPORT Mat3T<double> toMat3<double>(const Mat4T<double>&);
+
+	template CHAIMATH_EXPORT Mat4T<float> toMat4<float>(const Mat3T<float>&);
+	template CHAIMATH_EXPORT Mat4T<double> toMat4<double>(const Mat3T<double>&);
 
 	template CHAIMATH_EXPORT float radians<float>(float);
 	template CHAIMATH_EXPORT double radians<double>(double);

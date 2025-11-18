@@ -1,10 +1,8 @@
 #pragma once
-#include <string>
-#include <memory>
-#include <unordered_map>
-#include <vector>
-#include <stdexcept>
-#include <Resource/ResourceLoader.h>
+#include <Asset/AssetHandle.h>
+#include <Asset/AssetManager.h>
+#include <Resource/Resource.h>
+#include <Resource/ResourcePool.h>
 
 namespace chai
 {
@@ -13,38 +11,31 @@ namespace chai
     public:
         static ResourceManager& instance();
 
-        void registerLoader(std::shared_ptr<IResourceLoader> loader);
-
-        template <typename T = IResource>
-        std::shared_ptr<T> load(const std::string& path) 
+		template<typename ResourceType, typename... Args>
+        Handle createFromAsset(Handle assetHandle) 
         {
-			std::string searchPath = RESOURCE_PATH + path;
-            // Check cache
-			// This implies that every resource is loaded on the main thread
-			// TODO: Add support for async loading
-			// Most large resource loads (images, models, etc.) should be done on a separate thread
-            auto it = m_cache.find(searchPath);
-            if (it != m_cache.end()) {
-                return std::dynamic_pointer_cast<T>(it->second);
-            }
+            static_assert(std::is_base_of_v<Resource, ResourceType>,
+                "ResourceType must derive from Resource");
 
-            // Find loader
-            auto ext = getExtension(searchPath);
-            for (auto& loader : m_loaders) {
-                if (loader->canLoad(ext)) {
-                    auto resource = loader->load(searchPath);
-                    m_cache[searchPath] = resource;
-                    return std::dynamic_pointer_cast<T>(resource);
-                }
-            }
+			return m_resourcePool.add(std::make_unique<ResourceType>(assetHandle));
+		}
 
-            throw std::runtime_error("No loader found for: " + searchPath);
+        template<typename ResourceType>
+        Handle add(std::unique_ptr<ResourceType> resource)
+        {
+            static_assert(std::is_base_of_v<Resource, ResourceType>,
+                "ResourceType must derive from Resource");
+			return m_resourcePool.add(std::move(resource));
         }
 
-    private:
-        CMap<std::string, std::shared_ptr<IResource>> m_cache;
-        std::vector<std::shared_ptr<IResourceLoader>> m_loaders;
+		template<typename ResourceType>
+        ResourceType* getResource(Handle handle) 
+        {
+			return dynamic_cast<ResourceType*>(m_resourcePool.get(handle));
+            //return m_resourcePool.get(handle);
+		}
 
-        std::string getExtension(const std::string& file);
+    private:
+        ResourcePool<Resource> m_resourcePool;
     };
 }

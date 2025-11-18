@@ -1,6 +1,6 @@
 #include <ChaiEngine/UniformBuffer.h>
 
-namespace chai::brew
+namespace chai
 {
 	UniformBufferBase::~UniformBufferBase()
 	{}

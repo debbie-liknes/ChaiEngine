@@ -10,19 +10,23 @@
 
 namespace chai
 {
-    class CORE_EXPORT IResource 
+    class CORE_EXPORT IAsset
     {
     public:
-        virtual ~IResource() = default;
+        virtual ~IAsset() = default;
         virtual bool isValid() const = 0;
-        virtual const std::string& getResourceId() const = 0;
+        virtual const std::string& getAssetId() const = 0;
+
+    protected:
+        bool m_valid{ false };
+		std::string m_assetId;
     };
 
-    class CORE_EXPORT IResourceLoader 
+    class CORE_EXPORT IAssetLoader
     {
     public:
-        virtual ~IResourceLoader() = default;
+        virtual ~IAssetLoader() = default;
         virtual bool canLoad(const std::string& extension) const = 0;
-        virtual std::shared_ptr<IResource> load(const std::string& path) = 0;
+        virtual std::unique_ptr<IAsset> load(const std::string& path) = 0;
     };
 }

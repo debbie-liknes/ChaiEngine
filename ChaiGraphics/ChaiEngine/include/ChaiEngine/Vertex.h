@@ -1,7 +1,7 @@
 #pragma once
 #include <ChaiMath.h>
 
-namespace chai::brew
+namespace chai
 {
     struct Vertex 
     {

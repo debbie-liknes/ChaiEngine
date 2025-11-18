@@ -3,6 +3,10 @@
 set(RESOURCE_DIR ${CMAKE_SOURCE_DIR}/)
 
 set(Core_headers
+	include/Asset/AssetHandle.h
+	include/Asset/AssetLoader.h
+	include/Asset/AssetManager.h
+	include/Asset/AssetPool.h
 	include/Core/Updatable.h
 	include/Graphics/Viewport.h
 	include/Input/EventHandler.h
@@ -16,13 +20,15 @@ set(Core_headers
 	include/Plugin/PluginRegistry.h
 	include/Plugin/ServiceLocator.h
 	include/Plugin/ServiceRegistry.h
-	include/Resource/ResourceLoader.h
 	include/Resource/ResourceManager.h
+	include/Resource/ResourcePool.h
+	include/Resource/Resource.h
 	include/Scene/ICamera.h
 	include/Types/CMap.h
 )
 
 set(Core_source
+	source/Asset/AssetManager.cpp
 	source/Core/Updatable.cpp
 	source/Graphics/Viewport.cpp
 	source/Input/InputState.cpp

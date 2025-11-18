@@ -1,22 +1,36 @@
 #pragma once
-#include <Core/TextureBackend.h>
 #include <glad/gl.h>
-#include <memory>
+#include <Types/CMap.h>
 
 namespace chai::brew
 {
-    class OpenGLTextureBackend : public ITextureBackend {
-    public:
-        OpenGLTextureBackend();
-        OpenGLTextureBackend(const uint8_t* data, uint32_t width, uint32_t height);
-        ~OpenGLTextureBackend();
+    struct OpenGLTextureData 
+    {
+        GLuint textureID = 0;
+        bool isUploaded = false;
+        GLenum format = GL_RGBA;
+        GLenum internalFormat = GL_RGBA8;
+        int width = 0;
+        int height = 0;
+    };
 
-        void Bind(uint32_t slot) override;
-        void* GetNativeHandle() override;
+    class OpenGLTextureManager
+    {
+    public:
+        OpenGLTextureData* getOrCreateTextureData(Handle textureHandle)
+        {
+            auto it = m_textureCache.find(textureHandle.index);
+            if (it == m_textureCache.end())
+            {
+                auto glTextureData = std::make_unique<OpenGLTextureData>();
+                auto* ptr = glTextureData.get();
+                m_textureCache[textureHandle.index] = std::move(glTextureData);
+                return ptr;
+            }
+            return it->second.get();
+		}
 
     private:
-        GLuint m_textureID = 0;
-        uint32_t m_width = 0;
-        uint32_t m_height = 0;
+		CMap<size_t, std::unique_ptr<OpenGLTextureData>> m_textureCache;
     };
 }

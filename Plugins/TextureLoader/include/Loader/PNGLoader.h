@@ -1,18 +1,18 @@
 #pragma once
-#include <Resource/ResourceLoader.h>
+#include <Asset/AssetLoader.h>
 #include <Meta/ChaiMacros.h>
 #include <ChaiEngine/Renderer.h>
 
 
 namespace chai
 {
-    class PngLoader : public IResourceLoader 
+    class PngLoader : public IAssetLoader 
     {
     public:
         PngLoader() = default;
 
         bool canLoad(const std::string& ext) const override;
-        std::shared_ptr<IResource> load(const std::string& path) override;
+        std::unique_ptr<IAsset> load(const std::string& path) override;
     };
 }
 

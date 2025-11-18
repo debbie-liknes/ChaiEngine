@@ -3,12 +3,21 @@ set(OpenGLRenderer_headers
 	include/OpenGLRenderer/OpenGLRenderer.h
 	include/OpenGLRenderer/OpenGLMesh.h
 	include/OpenGLRenderer/OpenGLMaterial.h
+	include/OpenGLRenderer/OpenGLShader.h
+	include/OpenGLRenderer/OpenGLTexture.h
+	include/OpenGLRenderer/RenderKey.h
+	include/OpenGLRenderer/Uploads.h
+	include/OpenGLRenderer/GLHelpers.h
+	include/OpenGLRenderer/GLPipeline.h
+	include/OpenGLRenderer/UniformManager.h
 )
 
 set(OpenGLRenderer_source
 	source/OpenGLRenderer/OpenGLRenderer.cpp
 	source/OpenGLRenderer/OpenGLMesh.cpp
 	source/OpenGLRenderer/OpenGLMaterial.cpp
+	source/OpenGLRenderer/OpenGLShader.cpp
+	source/OpenGLRenderer/Uploads.cpp
 )
 
 add_library (OpenGLRenderer SHARED ${OpenGLRenderer_headers} ${OpenGLRenderer_source})

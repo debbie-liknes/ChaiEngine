@@ -3,10 +3,13 @@
 #include <vector>
 #include <memory>
 #include <string>
-#include <Resource/ResourceLoader.h>
+#include <Asset/AssetLoader.h>
+#include <Asset/AssetHandle.h>
 #include <ChaiEngine/Vertex.h>
+#include <Meta/ChaiMacros.h>
+#include <Resource/Resource.h>
 
-namespace chai::brew
+namespace chai
 {
     class IMesh 
     {
@@ -21,23 +24,47 @@ namespace chai::brew
         virtual const std::vector<uint32_t>& getIndices() const = 0;
     };
 
-    class Mesh : public IMesh 
+	class MeshResource : public Resource
+    {
+    public:
+        explicit MeshResource(Handle assetHandle)
+            : Resource(assetHandle) 
+		{
+		}
+    };
+
+	class Mesh : public IMesh, public IAsset
     {
     public:
         Mesh(const std::vector<Vertex>& verts, const std::vector<uint32_t>& inds)
             : vertices(verts), indices(inds) 
         {}
 
+		virtual ~Mesh() = default;
+
         const std::vector<Vertex>& getVertices() const override { return vertices; }
         const std::vector<uint32_t>& getIndices() const override { return indices; }
+        const std::vector<Handle>& getMaterials() const { return m_materials; }
 
         size_t getVertexCount() const override { return vertices.size(); }
         size_t getIndexCount() const override { return indices.size(); }
+
+        void addMaterial(const Handle mat) { m_materials.push_back(mat); }
+
+        bool isValid() const override { return m_valid; }
+        const std::string& getAssetId() const override { return m_assetId; }
 
     private:
         std::vector<Vertex> vertices;
         std::vector<uint32_t> indices;
         //want this
         //AABB boundingBox;
+
+        std::shared_ptr<IMesh> m_mesh;
+        std::string m_assetId;
+        int m_refCount = 0;
+        bool m_valid = false;
+        //std::vector<std::string> m_materialLibraries;
+        std::vector<Handle> m_materials;
     };
 }

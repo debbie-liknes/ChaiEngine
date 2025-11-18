@@ -1,7 +1,7 @@
 #pragma once
 #include <ChaiGraphicsExport.h>
 #include <ChaiEngine/IMesh.h>
-#include <ChaiEngine/IMaterial.h>
+#include <ChaiEngine/Material.h>
 #include <Graphics/Viewport.h>
 #include <ChaiEngine/Light.h>
 
@@ -21,8 +21,8 @@ namespace chai::brew
         Type type{ Type::CLEAR };
 
         // Mesh rendering data
-        IMesh* mesh = nullptr;
-        IMaterial* material = nullptr;
+        Handle mesh;
+        Handle material;
         Mat4 transform{ 1.f };
         IViewport* viewport = nullptr;
         Mat4 viewMatrix{ 1.f };

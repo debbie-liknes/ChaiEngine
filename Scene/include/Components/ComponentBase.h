@@ -9,7 +9,7 @@ namespace chai::cup
 	{
 	public:
 		explicit Component(GameObject* owningObject = nullptr) : m_owningObject(owningObject) {}
-		virtual ~Component() override = default;
+		~Component() override = default;
 
 		virtual void update(double deltaTime) override {}
 

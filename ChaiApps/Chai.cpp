@@ -13,13 +13,14 @@
 #include <Components/MeshComponent.h>
 #include <Components/CameraComponent.h>
 #include <Components/LightComponent.h>
-#include <Assets/AssetManager.h>
 #include <Components/TransformComponent.h>
 #include <Input/InputState.h>
 #include <Controllers/CameraController.h>
 #include <chrono>
 #include <AudioEngine.h>
 #include <ChaiPhysics/ChaiPhysics.h>
+#include <Asset/AssetHandle.h>
+#include <ChaiEngine/MaterialSystem.h>
 
 using namespace std;
 
@@ -64,7 +65,21 @@ int main()
 	//make an object for the scene
 	auto gameObject = std::make_unique<chai::cup::GameObject>();
 	chai::cup::MeshComponent* meshComp = gameObject->addComponent<chai::cup::MeshComponent>(gameObject.get());
-	meshComp->setMesh(chai::brew::AssetManager::instance().loadMesh("assets/suzanne.obj")->getMesh());
+	auto meshAsset = chai::AssetManager::instance().load<chai::Mesh>("assets/suzanne.obj");
+	meshComp->setMesh(meshAsset.value());
+
+	auto asset = chai::MaterialSystem::instance().getDefaultMaterialAsset();
+	auto material = chai::MaterialSystem::instance().createInstance(
+		asset
+	);
+
+	// Customize instance
+	material->setDiffuseColor(chai::Vec3(0.0f, 1.0f, 0.0f));  // Red monkey!
+	material->setShininess(64.0f);
+
+	auto matHandle = chai::ResourceManager::instance().add(std::move(material));
+	meshComp->setMaterial(matHandle);
+
 	gameObject->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{ 0.0, 0.0, 0.0 });
 
 	//add a camera to look through
@@ -140,6 +155,7 @@ int main()
 
 
 			renderer->executeCommands(collector.getCommands());
+			renderer->beginFrame();
 		}
 
 		//updates and buffer swap

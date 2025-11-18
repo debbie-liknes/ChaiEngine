@@ -4,7 +4,7 @@
 #include <cstring>
 #include <ChaiMath.h>
 
-namespace chai::brew
+namespace chai
 {
     enum class UniformType 
     {
@@ -26,6 +26,7 @@ namespace chai::brew
         UniformBufferBase() = default;
         virtual ~UniformBufferBase();
 
+        virtual uint64_t getId() const = 0;
         virtual UniformType getType() const = 0;
         virtual size_t getSize() const = 0;
         virtual void getData(void* dest, size_t maxSize) const = 0;
@@ -80,11 +81,29 @@ namespace chai::brew
         static constexpr UniformType value = UniformType::BOOL;
     };
 
+    static uint64_t getNextId()
+    {
+        static uint64_t currentId = 0;
+        return ++currentId;
+    }
+
     template<typename T>
     class UniformBuffer : public UniformBufferBase
     {
     public:
-        explicit UniformBuffer(const T& value) : m_value(value) {}
+		UniformBuffer() : m_value{}
+        {
+			m_id = getNextId();
+        }
+        explicit UniformBuffer(const T& value) : m_value(value) 
+        {
+			m_id = getNextId();
+        }
+
+        uint64_t getId() const override
+        {
+            return m_id;
+		}
 
         UniformType getType() const override
         {
@@ -115,6 +134,7 @@ namespace chai::brew
 
     private:
         T m_value;
+        uint64_t m_id;
     };
 
     inline std::shared_ptr<UniformBufferBase> createUniform(float value) 
@@ -150,5 +170,11 @@ namespace chai::brew
     inline std::shared_ptr<UniformBufferBase> createUniform(bool value) 
     {
         return std::make_shared<UniformBuffer<bool>>(value);
+    }
+
+    template<typename T>
+    inline std::shared_ptr<UniformBuffer<T>> createUniform()
+    {
+        return std::make_shared<UniformBuffer<T>>();
     }
 }
