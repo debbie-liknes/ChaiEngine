@@ -7,6 +7,7 @@ namespace chai
 	{
 	public:
 		explicit Resource(Handle assetHandle) {}
+		Resource() = default;
 		virtual ~Resource() = default;
 	};
 }

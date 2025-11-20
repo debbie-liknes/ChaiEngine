@@ -109,11 +109,10 @@ namespace chai
 		for (auto& mat : materials)
 		{
 			auto material = std::make_unique<MaterialAsset>();
-			material->properties.ambientColor = Vec3(mat.ambient[0], mat.ambient[1], mat.ambient[2]);
-			material->properties.diffuseColor = Vec3(mat.diffuse[0], mat.diffuse[1], mat.diffuse[2]);
-			material->properties.specularColor = Vec3(mat.specular[0], mat.specular[1], mat.specular[2]);
-			material->properties.shininess = mat.shininess;
-			material->texturePaths.diffuseMap = mat.diffuse_texname;
+			material->addParameter("ambientColor", Vec3(mat.ambient[0], mat.ambient[1], mat.ambient[2]));
+			material->addParameter("diffuseColor", Vec3(mat.diffuse[0], mat.diffuse[1], mat.diffuse[2]));
+			material->addParameter("specularColor", Vec3(mat.specular[0], mat.specular[1], mat.specular[2]));
+			material->addParameter("shininess", mat.shininess);
 
 
 			auto matHandle = chai::AssetManager::instance().add(std::move(material));

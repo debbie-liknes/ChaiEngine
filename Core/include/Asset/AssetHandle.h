@@ -11,17 +11,18 @@
 
 namespace chai
 {
+    static constexpr uint32_t INVALID_HANDLE = 0xFFFFFFFF;
+
     struct Handle 
     {
         uint32_t index;
         uint32_t generation;
         std::type_index type;
 
-		Handle() : index(INVALID_INDEX), generation(0), type(typeid(void)) {}
+		Handle() : index(INVALID_HANDLE), generation(0), type(typeid(void)) {}
         Handle(uint32_t idx, uint32_t gen, std::type_index t)
 			: index(idx), generation(gen), type(t) {}
 
-        static constexpr uint32_t INVALID_INDEX = 0xFFFFFFFF;
 
         bool operator==(const Handle& other) const 
         {
@@ -35,7 +36,13 @@ namespace chai
 
         bool isValid() const 
         {
-            return index != INVALID_INDEX;
+            return index != INVALID_HANDLE;
 		}
     };
+
+	struct AssetHandle : public Handle
+    {};
+
+    struct ResourceHandle : public Handle
+    {};
 }

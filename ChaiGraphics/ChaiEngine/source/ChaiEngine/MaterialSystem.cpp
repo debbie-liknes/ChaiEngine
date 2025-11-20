@@ -2,14 +2,14 @@
 
 namespace chai
 {
-    MaterialSystem& MaterialSystem::instance()
-    {
-        static MaterialSystem instance;
-        return instance;
-    }
+    //MaterialSystem& MaterialSystem::instance()
+    //{
+    //    static MaterialSystem instance;
+    //    return instance;
+    //}
 
-    void MaterialSystem::init()
-    {
-        createDefaultMaterial();
-    }
+    //void MaterialSystem::init()
+    //{
+    //    createDefaultMaterial();
+    //}
 }

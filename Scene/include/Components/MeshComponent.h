@@ -12,26 +12,21 @@ namespace chai::cup
         MeshComponent(GameObject* owner = nullptr);
         ~MeshComponent() override;
 
-        void setMesh(Handle meshAsset);
-		void setMaterial(Handle material);
-		Handle getMeshResource();
+        void setMesh(AssetHandle meshAsset);
+		void setMaterial(ResourceHandle material);
+		ResourceHandle getMeshResource();
 
-		Handle getMesh() const { return m_meshAsset; }
-		Handle getMaterial() const
+		ResourceHandle getMesh() const { return m_meshResource; }
+		ResourceHandle getMaterialInstance() const
 		{
-			//auto found = chai::AssetManager::instance().get<Mesh>(meshHandle, [](const Mesh& m) {
-			//	return m.getMaterials();
-			//	});
-
-			//return found.value_or({});
 			return m_materialInstance;
 		}
 
 
 	private:
-		Handle m_meshResource;
-		Handle m_meshAsset;
-		Handle m_materialInstance;
+		ResourceHandle m_meshResource;
+		ResourceHandle m_materialResource;
+		ResourceHandle m_materialInstance;
 	
 	};
 }

@@ -68,17 +68,16 @@ int main()
 	auto meshAsset = chai::AssetManager::instance().load<chai::MeshAsset>("assets/suzanne.obj");
 	meshComp->setMesh(meshAsset.value());
 
-	auto asset = chai::MaterialSystem::instance().getDefaultMaterialAsset();
-	auto material = chai::MaterialSystem::instance().createInstance(
-		asset
-	);
+	//could load a material and set it here
+	//auto materialAsset = chai::AssetManager::instance().load<chai::MaterialAsset>("assets/default_material.mat");
+	
+	auto materialResource = std::make_unique<chai::MaterialResource>();
+	auto resourceHandle = chai::ResourceManager::instance().add<chai::MaterialResource>(std::move(materialResource));
+	auto materialInstance = std::make_unique<chai::MaterialInstance>(resourceHandle);
 
 	// Customize instance
-	material->setDiffuseColor(chai::Vec3(0.0f, 1.0f, 0.0f));  // Red monkey!
-	material->setShininess(64.0f);
-
-	auto matHandle = chai::ResourceManager::instance().add(std::move(material));
-	meshComp->setMaterial(matHandle);
+	materialInstance->setParameter("ambientColor", chai::Vec3(0.0f, 1.0f, 0.0f));
+	meshComp->setMaterial(resourceHandle);
 
 	gameObject->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{ 0.0, 0.0, 0.0 });
 

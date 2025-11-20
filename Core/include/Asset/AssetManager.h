@@ -21,7 +21,7 @@ namespace chai
 
         // Load or get existing asset by path
         template<typename T>
-        std::optional<Handle> load(const std::string& path)
+        std::optional<AssetHandle> load(const std::string& path)
         {
 			//Read lock to check cache
             {
@@ -49,17 +49,17 @@ namespace chai
             if (!asset_result) return std::nullopt;
 
             // Insert into pool
-            Handle handle;
+            AssetHandle handle;
             {
                 std::unique_lock<std::shared_mutex> pool_lock(pool_mutex_);
-                handle = pool_.add(std::move(asset_result));
+                handle = AssetHandle(pool_.add(std::move(asset_result)));
             }
 
             // Update caches
             {
                 std::unique_lock<std::shared_mutex> cache_lock(cache_mutex_);
                 path_cache_[path] = handle;
-                type_handles_[std::type_index(typeid(Handle))].push_back(handle);
+                type_handles_[std::type_index(typeid(AssetHandle))].push_back(handle);
             }
 
             return handle;
@@ -67,12 +67,12 @@ namespace chai
 
         template<class U>
         requires std::derived_from<U, IAsset>
-        std::optional<Handle> add(std::unique_ptr<U> asset)
+        std::optional<AssetHandle> add(std::unique_ptr<U> asset)
         {
-            Handle handle;
+            AssetHandle handle;
             {
                 std::unique_lock<std::shared_mutex> pool_lock(pool_mutex_);
-                handle = pool_.add(std::move(asset));
+                handle = AssetHandle(pool_.add(std::move(asset)));
             }
 
             return handle;
@@ -80,15 +80,15 @@ namespace chai
 
 		//DO NOT store the returned pointer, it may be invalidated
         template<typename T>
-        const T* get(Handle handle) const
+        const T* get(AssetHandle handle) const
         {
             return dynamic_cast<const T*>(pool_.get(handle));
         }
 
     private:
         ResourcePool<IAsset> pool_;
-        CMap<std::string, Handle> path_cache_;
-        CMap<std::type_index, std::vector<Handle>> type_handles_;
+        CMap<std::string, AssetHandle> path_cache_;
+        CMap<std::type_index, std::vector<AssetHandle>> type_handles_;
 
         mutable std::shared_mutex pool_mutex_;
         mutable std::shared_mutex cache_mutex_;

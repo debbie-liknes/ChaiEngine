@@ -12,24 +12,21 @@ namespace chai::cup
 
 	}
 
-	void MeshComponent::setMesh(Handle meshAsset)
+	void MeshComponent::setMesh(AssetHandle meshAsset)
 	{
-		m_meshAsset = meshAsset;
-
-		m_meshResource = Handle();
+		if (!meshAsset.isValid())
+		{
+			m_meshResource = ResourceManager::instance().createFromAsset<MeshResource>(meshAsset);
+		}
 	}
 
-	Handle MeshComponent::getMeshResource()
+	ResourceHandle MeshComponent::getMeshResource()
 	{
-		if (!m_meshResource.isValid()) 
-		{
-			m_meshResource = ResourceManager::instance().createFromAsset<MeshResource>(m_meshAsset);
-		}
 		return m_meshResource;
 	}
 
-	void MeshComponent::setMaterial(Handle materialAsset)
+	void MeshComponent::setMaterial(ResourceHandle materialInstance)
 	{
-		m_materialInstance = materialAsset;
+		m_materialInstance = materialInstance;
 	}
 }

@@ -15,7 +15,7 @@ namespace chai::brew
     struct UploadRequest 
     {
         UploadType type;
-        Handle handle;
+        ResourceHandle handle;
         void* userData;
     };
 

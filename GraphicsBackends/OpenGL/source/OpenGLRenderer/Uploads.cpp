@@ -1,6 +1,7 @@
 #include <OpenGLRenderer/Uploads.h>
 #include <chrono>
 #include <OpenGLRenderer/OpenGLMesh.h>
+#include <Resource/ResourceManager.h>
 
 namespace chai::brew
 {
@@ -60,7 +61,7 @@ namespace chai::brew
         {
             auto* meshData = static_cast<OpenGLMeshData*>(request.userData);
 
-            const auto* meshPtr = chai::AssetManager::instance().get<MeshAsset>(request.handle);
+            const auto* meshPtr = chai::ResourceManager::instance().getResource<MeshResource>(request.handle);
             if (!meshPtr)
             {
                 std::cerr << "UploadQueue: Invalid mesh handle during upload.\n";
@@ -69,7 +70,7 @@ namespace chai::brew
 
 			auto& mesh = *meshPtr;
 
-            const auto& vertices = mesh.getVertices();
+            const auto& vertices = mesh.
             const auto& indices = mesh.getIndices();
 
             // Generate and upload
