@@ -104,88 +104,24 @@ namespace chai
 			}
 		}
 
-		auto mesh = std::make_unique<Mesh>(vertices, indices);
+		auto mesh = std::make_unique<MeshAsset>(vertices, indices);
 
-		for (auto& material : materials)
+		for (auto& mat : materials)
 		{
-			auto matHandle = chai::AssetManager::instance().load<chai::MaterialAsset>(material.name);
+			auto material = std::make_unique<MaterialAsset>();
+			material->properties.ambientColor = Vec3(mat.ambient[0], mat.ambient[1], mat.ambient[2]);
+			material->properties.diffuseColor = Vec3(mat.diffuse[0], mat.diffuse[1], mat.diffuse[2]);
+			material->properties.specularColor = Vec3(mat.specular[0], mat.specular[1], mat.specular[2]);
+			material->properties.shininess = mat.shininess;
+			material->texturePaths.diffuseMap = mat.diffuse_texname;
+
+
+			auto matHandle = chai::AssetManager::instance().add(std::move(material));
 
 			if(matHandle.has_value())
 				mesh->addMaterial(matHandle.value());
 		}
 
 		return mesh;
-	}
-
-	bool MtlLoader::canLoad(const std::string& ext) const
-	{
-		return ext == "mtl";
-	}
-
-	std::unique_ptr<IAsset> MtlLoader::load(const std::string& path)
-	{
-		std::filesystem::path filePath(path);
-		tinyobj::MaterialFileReader reader(filePath.parent_path().string());
-
-		std::string fileName = filePath.filename().string();
-		std::vector<tinyobj::material_t> materials;
-		std::map<std::string, int> matMap;
-		std::string warn;
-		std::string err;
-
-		bool success = reader(fileName, &materials, &matMap, &warn, &err);
-
-		if (materials.empty())
-		{
-			std::cerr << "ERROR: could not load material: " << path << std::endl;
-		}
-
-		if (!warn.empty()) std::cerr << "WARN: " << warn << "\n";
-		if (!err.empty()) std::cerr << "ERR: " << err << "\n";
-
-		if (success) 
-		{
-			for (const auto& mat : materials) 
-			{
-				std::cout << "Loaded material: " << mat.name << "\n";
-			}
-		}
-
-		//TODO: need to support multiple materials in 1 file
-		auto const& tinyMat = materials[0];
-
-		//auto mat = MaterialSystem::createPhong();
-		std::cout << "Applying material: " << tinyMat.name << std::endl;
-
-		// Set specular color
-		//if (tinyMat.specular[0] != 0.0f || tinyMat.specular[1] != 0.0f || tinyMat.specular[2] != 0.0f)
-		//{
-		//	mat->setSpecular(Vec3(tinyMat.specular[0], tinyMat.specular[1], tinyMat.specular[2]));
-		//}
-
-		//if (tinyMat.diffuse[0] != 0.0f || tinyMat.diffuse[1] != 0.0f || tinyMat.diffuse[2] != 0.0f)
-		//{
-		//	mat->setDiffuse(Vec3(tinyMat.diffuse[0], tinyMat.diffuse[1], tinyMat.diffuse[2]));
-		//}
-
-		//// Set ambient color
-		//if (tinyMat.ambient[0] != 0.0f || tinyMat.ambient[1] != 0.0f || tinyMat.ambient[2] != 0.0f)
-		//{
-		//	mat->setAmbient(Vec3(tinyMat.ambient[0], tinyMat.ambient[1], tinyMat.ambient[2]));
-		//}
-
-		//// Set shininess/specular exponent
-		//if (tinyMat.shininess > 0.0f)
-		//{
-		//	mat->setShininess(tinyMat.shininess);
-		//}
-
-		//// Set transparency/alpha
-		//if (tinyMat.dissolve < 1.0f)
-		//{
-		//	mat->setTransparency(tinyMat.dissolve);
-		//}
-
-		return nullptr;
 	}
 }

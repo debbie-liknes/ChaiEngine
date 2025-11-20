@@ -112,37 +112,4 @@ namespace chai
         Vec3 m_ambientColor;
         float m_shininess;
     };
-
-  //  class Material : public IMaterial, public IAsset
-  //  {
-  //  public:
-  //      void setShader(const std::string& shaderName) 
-  //      {
-  //          m_shaderName = shaderName;
-  //          m_dirty = true;
-  //      }
-
-		////Mat parameters
-  //      void setProperty(const std::string& name, const Vec3& value);
-  //      void setTexture(const std::string& name, Handle textureHandle);
-
-  //      // Get compiled GPU resources (lazy, cached)
-  //      Handle getShaderHandle(const std::string& passName) const;
-  //      Handle getPipelineHandle(const std::string& passName, const RenderPassInfo& rpInfo) const;
-
-  //  private:
-  //      std::string m_name;
-  //      std::string m_shaderName;  // "pbr_standard", NOT the actual shader!
-
-  //      // Material instance data (this is what makes each material unique)
-  //      CMap<std::string, UniformValue> m_properties;
-  //      CMap<std::string, Handle> m_textureHandles;
-  //      std::set<MaterialFeature> m_enabledFeatures;
-
-  //      // Render state overrides (optional)
-  //      std::optional<BlendState> m_blendOverride;
-  //      std::optional<RasterizerState> m_rasterizerOverride;
-
-  //      mutable bool m_dirty = true;
-  //  };
 }

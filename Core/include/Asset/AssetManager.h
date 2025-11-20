@@ -87,8 +87,8 @@ namespace chai
 
     private:
         ResourcePool<IAsset> pool_;
-        std::unordered_map<std::string, Handle> path_cache_;
-        std::unordered_map<std::type_index, std::vector<Handle>> type_handles_;
+        CMap<std::string, Handle> path_cache_;
+        CMap<std::type_index, std::vector<Handle>> type_handles_;
 
         mutable std::shared_mutex pool_mutex_;
         mutable std::shared_mutex cache_mutex_;

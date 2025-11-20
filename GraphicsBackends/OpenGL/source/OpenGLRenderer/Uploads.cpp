@@ -60,7 +60,7 @@ namespace chai::brew
         {
             auto* meshData = static_cast<OpenGLMeshData*>(request.userData);
 
-            const auto* meshPtr = chai::AssetManager::instance().get<Mesh>(request.handle);
+            const auto* meshPtr = chai::AssetManager::instance().get<MeshAsset>(request.handle);
             if (!meshPtr)
             {
                 std::cerr << "UploadQueue: Invalid mesh handle during upload.\n";

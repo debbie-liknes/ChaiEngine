@@ -65,7 +65,7 @@ int main()
 	//make an object for the scene
 	auto gameObject = std::make_unique<chai::cup::GameObject>();
 	chai::cup::MeshComponent* meshComp = gameObject->addComponent<chai::cup::MeshComponent>(gameObject.get());
-	auto meshAsset = chai::AssetManager::instance().load<chai::Mesh>("assets/suzanne.obj");
+	auto meshAsset = chai::AssetManager::instance().load<chai::MeshAsset>("assets/suzanne.obj");
 	meshComp->setMesh(meshAsset.value());
 
 	auto asset = chai::MaterialSystem::instance().getDefaultMaterialAsset();

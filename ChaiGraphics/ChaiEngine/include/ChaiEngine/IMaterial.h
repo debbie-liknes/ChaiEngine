@@ -8,14 +8,6 @@
 
 namespace chai
 {
-    class UniformBufferBase;
-    struct TextureSlot 
-    {
-        uint32_t id;
-        int slot;
-        std::string samplerName;
-    };
-
     class IMaterial 
     {
     public:

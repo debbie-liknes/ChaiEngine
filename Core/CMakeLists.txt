@@ -6,7 +6,6 @@ set(Core_headers
 	include/Asset/AssetHandle.h
 	include/Asset/AssetLoader.h
 	include/Asset/AssetManager.h
-	include/Asset/AssetPool.h
 	include/Core/Updatable.h
 	include/Graphics/Viewport.h
 	include/Input/EventHandler.h

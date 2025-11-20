@@ -19,20 +19,22 @@ namespace chai
 
 		Handle() : index(INVALID_INDEX), generation(0), type(typeid(void)) {}
         Handle(uint32_t idx, uint32_t gen, std::type_index t)
-			: index(idx), generation(gen), type(t) {
-		}
+			: index(idx), generation(gen), type(t) {}
 
         static constexpr uint32_t INVALID_INDEX = 0xFFFFFFFF;
 
-        bool operator==(const Handle& other) const {
+        bool operator==(const Handle& other) const 
+        {
             return index == other.index;
         }
 
-        bool operator!=(const Handle& other) const {
+        bool operator!=(const Handle& other) const 
+        {
             return index != other.index;
         }
 
-        bool isValid() const {
+        bool isValid() const 
+        {
             return index != INVALID_INDEX;
 		}
     };

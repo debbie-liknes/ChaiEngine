@@ -19,7 +19,6 @@ namespace chai
         virtual size_t getVertexCount() const = 0;
         virtual size_t getIndexCount() const = 0;
 
-        // Data access (for engine systems that need it)
         virtual const std::vector<Vertex>& getVertices() const = 0;
         virtual const std::vector<uint32_t>& getIndices() const = 0;
     };
@@ -29,18 +28,17 @@ namespace chai
     public:
         explicit MeshResource(Handle assetHandle)
             : Resource(assetHandle) 
-		{
-		}
+		{}
     };
 
-	class Mesh : public IMesh, public IAsset
+	class MeshAsset : public IMesh, public IAsset
     {
     public:
-        Mesh(const std::vector<Vertex>& verts, const std::vector<uint32_t>& inds)
+        MeshAsset(const std::vector<Vertex>& verts, const std::vector<uint32_t>& inds)
             : vertices(verts), indices(inds) 
         {}
 
-		virtual ~Mesh() = default;
+		virtual ~MeshAsset() = default;
 
         const std::vector<Vertex>& getVertices() const override { return vertices; }
         const std::vector<uint32_t>& getIndices() const override { return indices; }
@@ -64,7 +62,6 @@ namespace chai
         std::string m_assetId;
         int m_refCount = 0;
         bool m_valid = false;
-        //std::vector<std::string> m_materialLibraries;
         std::vector<Handle> m_materials;
     };
 }
