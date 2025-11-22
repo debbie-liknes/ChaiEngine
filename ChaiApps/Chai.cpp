@@ -86,11 +86,19 @@ int main()
 	auto shaderAssetHandle = chai::AssetManager::instance().add<chai::ShaderAsset>(std::move(shaderAsset));
 
 	auto materialResource = std::make_unique<chai::MaterialResource>();
+	materialResource->defaultParameters.emplace("u_DiffuseColor", chai::Vec3(1.0,1.0,1.0));
+	materialResource->defaultParameters.emplace("u_SpecularColor", chai::Vec3(1.0,1.0,1.0));
+	materialResource->defaultParameters.emplace("u_Shininess", 1.f);
 	auto resourceHandle = chai::ResourceManager::instance().add<chai::MaterialResource>(std::move(materialResource));
 	auto materialInstance = std::make_unique<chai::MaterialInstance>(resourceHandle);
+	materialInstance->defaultParameters.emplace("u_DiffuseColor", chai::Vec3(1.0,1.0,1.0));
+	materialInstance->defaultParameters.emplace("u_SpecularColor", chai::Vec3(1.0,1.0,1.0));
+	materialInstance->defaultParameters.emplace("u_Shininess", 1.f);
+	chai::MaterialLayout matLayout;
+	materialInstance->materialLayout = matLayout;
 
 	// Customize instance
-	materialInstance->setParameter("ambientColor", chai::Vec3(0.0f, 1.0f, 0.0f));
+	materialInstance->setParameter("u_DiffuseColor", chai::Vec3(0.0f, 0.0f, 1.0f));
 	materialInstance->shaderAsset = shaderAssetHandle.value();
 	meshComp->setMaterial(chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance)));
 
