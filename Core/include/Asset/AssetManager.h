@@ -17,6 +17,7 @@ namespace chai
     {
     public:
         static AssetManager& instance();
+        ~AssetManager();
         void registerLoader(std::shared_ptr<IAssetLoader> loader);
 
         // Load or get existing asset by path

@@ -12,15 +12,15 @@ layout(std140, binding = 0) uniform PerFrameUniforms
     mat4 u_projection;
 };
 
-//uniform vec3 u_DiffuseColor;
-//uniform vec3 u_SpecularColor;
-//uniform float u_Shininess;
+uniform vec3 u_DiffuseColor;
+uniform vec3 u_SpecularColor;
+uniform float u_Shininess;
 
 void main()
 {
-    vec3 u_DiffuseColor = vec3(0.0, 1.0, 0.0);
-    vec3 u_SpecularColor = vec3(1.0, 1.0, 1.0);
-    float u_Shininess = 1.0;
+    //vec3 u_DiffuseColor = vec3(0.0, 1.0, 0.0);
+    //vec3 u_SpecularColor = vec3(1.0, 1.0, 1.0);
+    //float u_Shininess = 1.0;
     // Hardcoded lighting for now
     vec3 lightDir = normalize(vec3(-0.5, -1.0, -0.3));
     vec3 lightColor = vec3(1.0, 1.0, 1.0);

@@ -23,7 +23,9 @@ namespace chai
 
         explicit MeshAsset(const MeshData& mesh) : m_meshData(mesh) {
         }
-        ~MeshAsset() override = default;
+        ~MeshAsset() override {
+            m_defaultMaterials.clear();
+        }
 
         const std::vector<Vec3>& getPositions() const { return m_meshData.positons; }
         const std::vector<Vec3>& getNormals() const { return m_meshData.normals; }

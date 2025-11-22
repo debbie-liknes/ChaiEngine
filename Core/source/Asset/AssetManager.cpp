@@ -8,6 +8,11 @@ namespace chai
 		return manager;
 	}
 
+	AssetManager::~AssetManager() {
+		m_loaders.clear();
+	}
+
+
 	void AssetManager::registerLoader(std::shared_ptr<IAssetLoader> loader)
 	{
 		m_loaders.push_back(loader);

@@ -10,6 +10,10 @@ namespace chai
     class ResourcePool 
     {
     public:
+        ~ResourcePool() {
+            for (auto& res : m_resources) {
+            }
+        }
         // Add resource, get stable handle
         Handle add(std::unique_ptr<T> resource) {
             uint32_t index;
