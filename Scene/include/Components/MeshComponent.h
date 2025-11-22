@@ -21,6 +21,10 @@ namespace chai::cup
 		{
 			return m_materialInstance;
 		}
+	//private:
+		// Somewhere in your material system
+		static ResourceHandle createMeshResourceFromAsset(const MeshAsset* asset);
+		static ResourceHandle createMaterialResourceFromAsset(const MaterialAsset* asset);
 
 
 	private:

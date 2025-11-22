@@ -12,7 +12,7 @@ namespace chai
         static ResourceManager& instance();
 
 		template<typename ResourceType, typename... Args>
-        ResourceHandle createFromAsset(Handle assetHandle) 
+        ResourceHandle createFromAsset(AssetHandle assetHandle)
         {
             static_assert(std::is_base_of_v<Resource, ResourceType>,
                 "ResourceType must derive from Resource");

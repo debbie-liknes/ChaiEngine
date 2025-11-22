@@ -4,9 +4,6 @@
 #include <Plugin/PluginBase.h>
 #include <string>
 #include <memory>
-#include <unordered_map>
-#include <vector>
-#include <typeindex>
 
 namespace chai
 {

@@ -2,6 +2,7 @@
 #include <glad/gl.h>
 #include <string>
 #include <iostream>
+#include <Graphics/VertexAttribute.h>
 
 namespace chai::brew
 {
@@ -27,6 +28,26 @@ namespace chai::brew
 		while ((err = glGetError()) != GL_NO_ERROR)
 		{
 			std::cerr << "OpenGL Error (" << context << "): " << getGLErrorString(err) << std::endl;
+		}
+	}
+
+	static GLenum toGLType(const AttributeType type) {
+		switch (type) {
+			case AttributeType::Float:
+			case AttributeType::Float2:
+			case AttributeType::Float3:
+			case AttributeType::Float4:
+				return GL_FLOAT;
+			case AttributeType::Int:
+			case AttributeType::Int2:
+			case AttributeType::Int3:
+			case AttributeType::Int4:
+				return GL_INT;
+			case AttributeType::UnsignedByte:
+			case AttributeType::UnsignedByte4:
+				return GL_UNSIGNED_BYTE;
+			default:
+				return GL_FLOAT;
 		}
 	}
 }

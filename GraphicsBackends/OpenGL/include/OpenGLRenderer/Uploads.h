@@ -22,11 +22,11 @@ namespace chai::brew
     class UploadQueue 
     {
     public:
-        void requestUpload(Handle handle, void* userData, UploadType type = UploadType::MESH);
+        void requestUpload(ResourceHandle handle, void* userData, UploadType type = UploadType::MESH);
         void processUploads(float timeBudgetMs);
 
-        bool isQueued(Handle handle) const;
-        bool isReady(Handle handle) const;
+        bool isQueued(ResourceHandle handle) const;
+        bool isReady(ResourceHandle handle) const;
 
     private:
         void performUpload(const UploadRequest& request);

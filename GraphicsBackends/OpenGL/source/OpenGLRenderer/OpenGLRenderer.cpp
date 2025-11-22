@@ -2,14 +2,12 @@
 #include <algorithm>
 #include <chrono>
 #include <OpenGLRenderer/GLHelpers.h>
-#include <OpenGLRenderer/GLPipeline.h>
 
-namespace chai::brew
-{
-    bool OpenGLBackend::initialize(void* winProcAddress)
-    {
-        if (!gladLoadGL((GLADloadfunc)winProcAddress))
-        {
+#include "Graphics/ShaderAsset.h"
+
+namespace chai::brew {
+    bool OpenGLBackend::initialize(void *winProcAddress) {
+        if (!gladLoadGL((GLADloadfunc) winProcAddress)) {
             std::cerr << "Failed to initialize GLAD" << std::endl;
             checkGLError("setProcAddress");
             return false;
@@ -18,16 +16,16 @@ namespace chai::brew
         checkGLError("setProcAddress");
 
         // Check OpenGL version
-        const auto* version = (const char*)glGetString(GL_VERSION);
+        const auto *version = (const char *) glGetString(GL_VERSION);
         std::cout << "OpenGL Version: " << version << std::endl;
 
         glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);  // or GL_LEQUAL
+        glDepthFunc(GL_LESS); // or GL_LEQUAL
 
         // Enable back-face culling (optional but recommended)
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
-        glFrontFace(GL_CCW);  // Counter-clockwise is front
+        glFrontFace(GL_CCW); // Counter-clockwise is front
 
         // Disable blending by default (we enable it only for transparent pass)
         glDisable(GL_BLEND);
@@ -37,17 +35,18 @@ namespace chai::brew
         std::cout << "Creating common uniforms..." << std::endl;
 
         m_perFrameUBOData = createUniform<CommonUniforms>();
-        m_perFrameUBOData->setValue({ Mat4::identity() , Mat4::identity() });
+        m_perFrameUBOData->setValue({Mat4::identity(), Mat4::identity()});
 
         m_perDrawUBOData = createUniform<DrawUniforms>();
-        m_perDrawUBOData->setValue(DrawUniforms{ Mat4::identity() , Mat4::identity() });
+        m_perDrawUBOData->setValue(DrawUniforms{Mat4::identity(), Mat4::identity()});
 
-        m_uniManager.buildUniforms({ m_perFrameUBOData.get(), m_perDrawUBOData.get() });
+        m_uniManager.buildUniforms({m_perFrameUBOData.get(), m_perDrawUBOData.get()});
+
+        std::cout << "=========================\n" << std::endl;
 
         // Create default shader
         defaultShaderProgram = m_shaderManager.createDefaultShaderProgram();
-        if (defaultShaderProgram == 0)
-        {
+        if (defaultShaderProgram == 0) {
             std::cerr << "Failed to create default shader program" << std::endl;
             return false;
         }
@@ -56,8 +55,7 @@ namespace chai::brew
         return true;
     }
 
-    void OpenGLBackend::shutdown()
-    {
+    void OpenGLBackend::shutdown() {
         std::cout << "Shutting down OpenGL Backend..." << std::endl;
 
         // Delete default shader
@@ -73,8 +71,7 @@ namespace chai::brew
     // OPTIMIZED COMMAND EXECUTION
     // ============================================================================
 
-    void OpenGLBackend::executeCommands(const std::vector<RenderCommand>& commands)
-    {
+    void OpenGLBackend::executeCommands(const std::vector<RenderCommand> &commands) {
         if (commands.empty()) return;
 
         // Separate commands by type
@@ -82,80 +79,70 @@ namespace chai::brew
         std::vector<SortedDrawCommand> transparentDraws;
 
         // Process Uploads
-        for (const auto& cmd : commands)
-        {
-            switch (cmd.type)
-            {
-            case RenderCommand::SET_VIEWPORT:
-            {
-                int x, y, width, height;
-                cmd.viewport->getViewport(x, y, width, height);
-                glViewport(x, y, width, height);
-                m_perFrameUBOData->setValue({ cmd.viewMatrix, cmd.projectionMatrix });
-
-            }
-            break;
-
-            case RenderCommand::CLEAR:
-                // Clear before sorting/drawing
-                clear(0.0f, 0.0f, 0.0f, 1.0f);
+        for (const auto &cmd: commands) {
+            switch (cmd.type) {
+                case RenderCommand::SET_VIEWPORT: {
+                    int x, y, width, height;
+                    cmd.viewport->getViewport(x, y, width, height);
+                    glViewport(x, y, width, height);
+                    m_perFrameUBOData->setValue({cmd.viewMatrix, cmd.projectionMatrix});
+                }
                 break;
 
-            case RenderCommand::SET_LIGHTS:
-                m_cachedLights = cmd.lights;
-                m_lightsDirty = true;
-                break;
+                case RenderCommand::CLEAR:
+                    // Clear before sorting/drawing
+                    clear(0.0f, 0.0f, 0.0f, 1.0f);
+                    break;
 
-            case RenderCommand::DRAW_MESH:
-            {
-                if (!cmd.mesh.isValid()) continue;
+                case RenderCommand::SET_LIGHTS:
+                    m_cachedLights = cmd.lights;
+                    m_lightsDirty = true;
+                    break;
 
-                // Get or create mesh data
-                OpenGLMeshData* meshData = m_meshManager.getOrCreateMeshData(cmd.mesh);
-                if (!meshData) continue;
+                case RenderCommand::DRAW_MESH: {
+                    if (!cmd.mesh.isValid()) continue;
 
-                //Schedule upload if needed (non-blocking)
-                if (!meshData->isUploaded)
-                {
-                    if (!m_uploadQueue.isQueued(cmd.mesh))
-                    {
-                        m_uploadQueue.requestUpload(cmd.mesh, (void*)meshData);
+                    // Get or create mesh data
+                    OpenGLMeshData *meshData = m_meshManager.getOrCreateMeshData(cmd.mesh);
+                    if (!meshData) continue;
+
+                    //Schedule upload if needed (non-blocking)
+                    if (!meshData->isUploaded) {
+                        if (!m_uploadQueue.isQueued(cmd.mesh)) {
+                            m_uploadQueue.requestUpload(cmd.mesh, (void *) meshData);
+                        }
+                        continue; // Skip this frame, will render when ready
                     }
-                    continue;  // Skip this frame, will render when ready
-                }
 
-                //Create sort key
-                SortedDrawCommand sorted;
-                sorted.command = cmd;
-                sorted.sortKey = createSortKey(cmd, meshData);
-                
-                // Categorize by transparency
-                if (sorted.sortKey.transparency)
-                {
-                    transparentDraws.push_back(sorted);
+                    //Create sort key
+                    SortedDrawCommand sorted;
+                    sorted.command = cmd;
+                    sorted.sortKey = createSortKey(cmd, meshData);
+
+                    // Categorize by transparency
+                    if (sorted.sortKey.transparency) {
+                        transparentDraws.push_back(sorted);
+                    } else {
+                        opaqueDraws.push_back(sorted);
+                    }
                 }
-                else 
-                {
-                    opaqueDraws.push_back(sorted);
-                }
-            }
-            break;
+                break;
             }
         }
 
         // Sort opaque front-to-back (minimize overdraw, maximize early-Z)
         // Sort by: shader -> material -> mesh -> depth
         std::sort(opaqueDraws.begin(), opaqueDraws.end(),
-            [](const SortedDrawCommand& a, const SortedDrawCommand& b) {
-                return a.sortKey < b.sortKey;
-            });
+                  [](const SortedDrawCommand &a, const SortedDrawCommand &b) {
+                      return a.sortKey < b.sortKey;
+                  });
 
         // Sort transparent back-to-front (correct alpha blending)
         // Depth is most significant for transparents
         std::sort(transparentDraws.begin(), transparentDraws.end(),
-            [](const SortedDrawCommand& a, const SortedDrawCommand& b) {
-                return a.sortKey.depth > b.sortKey.depth;
-            });
+                  [](const SortedDrawCommand &a, const SortedDrawCommand &b) {
+                      return a.sortKey.depth > b.sortKey.depth;
+                  });
 
         // Update per-frame uniforms once
         updatePerFrameUniforms();
@@ -172,7 +159,7 @@ namespace chai::brew
             // Transparent pass
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glDepthMask(GL_FALSE);  // Don't write to depth buffer
+            glDepthMask(GL_FALSE); // Don't write to depth buffer
             drawBatchedCommands(transparentDraws);
             glDepthMask(GL_TRUE);
         }
@@ -182,8 +169,7 @@ namespace chai::brew
     // COMMAND EXECUTION
     // ============================================================================
 
-    void OpenGLBackend::clear(float r, float g, float b, float a)
-    {
+    void OpenGLBackend::clear(float r, float g, float b, float a) {
         glClearColor(r, g, b, a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
@@ -192,20 +178,17 @@ namespace chai::brew
     // SORT KEY CREATION
     // ============================================================================
 
-    RenderKey OpenGLBackend::createSortKey(const RenderCommand& cmd,
-        OpenGLMeshData* meshData)
-    {
+    RenderKey OpenGLBackend::createSortKey(const RenderCommand &cmd,
+                                           OpenGLMeshData *meshData) {
         RenderKey key;
 
         // Determine transparency
         bool isTransparent = false;
-        OpenGLMaterialData* matData = nullptr;
+        OpenGLMaterialData *matData = nullptr;
 
-        if (cmd.material.isValid()) 
-        {
+        if (cmd.material.isValid()) {
             matData = m_matManager.getOrCreateMaterialData(cmd.material);
-            if (matData && matData->isCompiled) 
-            {
+            if (matData && matData->isCompiled) {
                 // Check material properties for transparency
                 isTransparent = matData->isTransparent;
             }
@@ -225,16 +208,14 @@ namespace chai::brew
 
         // Shader ID (for batching)
         GLuint shaderProgram = defaultShaderProgram;
-        if (matData && matData->shaderProgram) 
-        {
+        if (matData && matData->shaderProgram) {
             shaderProgram = matData->shaderProgram;
         }
         // Use upper bits of program ID for better distribution
         key.shader = (shaderProgram >> 4) & 0xFFFF;
 
         // Material ID (for batching)
-        key.material = cmd.material.isValid() ?
-            (cmd.material.index & 0xFFF) : 0;
+        key.material = cmd.material.isValid() ? (cmd.material.index & 0xFFF) : 0;
 
         // Mesh ID (for batching)
         key.mesh = (meshData->VAO >> 4) & 0xFFF;
@@ -246,91 +227,84 @@ namespace chai::brew
     // BATCHED DRAWING (State Change Minimization)
     // ============================================================================
 
-    void OpenGLBackend::updateShader(OpenGLShaderData* shaderData, uint32_t& stateChanges)
-    {
-        glUseProgram(shaderData->program);
-        stateChanges++;
+    void bindMeshToShader(OpenGLMeshData* mesh, const ShaderAsset* shader) {
+        glBindVertexArray(mesh->VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, mesh->VBO);
 
-        //apply pipeline description?
+        for (uint32_t i = 0; i < 16; ++i) {
+            glDisableVertexAttribArray(i);
+        }
 
-        auto uni = m_uniManager.getUniformBufferData(*m_perFrameUBOData);
+        for (const auto& input : shader->getVertexInputs()) {
+            const VertexAttribute* meshAttr = mesh->layout.findAttribute(input.name);
 
-        if (shaderData && uni)
-        {
-            // Re-bind per-frame UBO (shader changed)
-            glBindBufferBase(GL_UNIFORM_BUFFER, shaderData->perFrameUBOBinding, uni->ubo);
+            if (meshAttr) {
+                glEnableVertexAttribArray(input.location);
 
-            // Update lights if dirty
-            if (m_lightsDirty)
-            {
-                setLightsUniforms(shaderData);
+                GLenum glType = toGLType(meshAttr->type);
+                GLint componentCount = meshAttr->getComponentCount();
+
+                glVertexAttribPointer(input.location,
+                    componentCount,
+                    glType,
+                    meshAttr->normalized ? GL_TRUE : GL_FALSE,
+                    mesh->layout.getStride(),
+                    (void*)(uintptr_t)meshAttr->offset);
             }
         }
     }
 
-    void OpenGLBackend::drawBatchedCommands(const std::vector<SortedDrawCommand>& sortedDraws)
+    void OpenGLBackend::bindShaderProgram(GLuint program)
     {
-        if (sortedDraws.empty()) return;
-
-        GLuint currentShader = 0;
-        GLuint currentVAO = 0;
-        int currentMaterialID = -1;
-
-		uint32_t stateChanges = 0;
-		uint32_t drawCalls = 0;
-
-        for (const auto& sorted : sortedDraws)
+        // Only call glUseProgram if we're switching to a different shader
+        if (currentShaderProgram != program)
         {
-            const RenderCommand& cmd = sorted.command;
-            OpenGLMeshData* meshData = m_meshManager.getOrCreateMeshData(cmd.mesh);
-            if (!meshData || !meshData->isUploaded) continue;
+            glUseProgram(program);
+            currentShaderProgram = program;
+        }
+    }
 
-            // Get material data
-            OpenGLMaterialData* matData = cmd.material.isValid() ?
-                m_matManager.getOrCreateMaterialData(cmd.material) : nullptr;
+    void OpenGLBackend::drawBatchedCommands(const std::vector<SortedDrawCommand> &sortedDraws) {
+        for (const auto &draw: sortedDraws) {
+            const auto &cmd = draw.command;
 
-            // COMPILE MATERIAL IF NEEDED (NEW)
-            if (matData && !matData->isCompiled)
-            {
-                m_matManager.compileMaterial(cmd.material, matData);
+            // Get mesh data
+            OpenGLMeshData *meshData = m_meshManager.getOrCreateMeshData(cmd.mesh);
+            if (!meshData || !meshData->isUploaded) {
+                continue;
             }
 
-            // Get shader (either from material or default)
-            OpenGLShaderData* shaderData = m_shaderManager.getShaderData(
-                (matData && matData->shaderProgram) ?
-                matData->shaderProgram : defaultShaderProgram);
-
-            // Change shader only when necessary
-            if (shaderData && shaderData->program != currentShader)
-            {
-                currentShader = shaderData->program;
-                updateShader(shaderData, stateChanges);
+            // Get material data and compile if needed
+            OpenGLMaterialData *matData = m_matManager.getOrCreateMaterialData(cmd.material);
+            if (!m_matManager.compileMaterial(cmd.material, matData)) {
+                continue;
             }
 
-            // Change VAO only when necessary
-            if (meshData->VAO != currentVAO)
-            {
-                glBindVertexArray(meshData->VAO);
-                currentVAO = meshData->VAO;
-                stateChanges++;
+            // Get shader data
+            OpenGLShaderData *shaderData = m_shaderManager.getShaderData(matData->shaderProgram);
+            if (!shaderData) {
+                continue;
             }
 
-            // Apply material properties if material changed
-            if (cmd.material.index != currentMaterialID)
-            {
-                if (cmd.material.isValid() && matData && matData->isCompiled)
-                {
-                    applyMaterialState(matData, shaderData);
-                }
-                currentMaterialID = cmd.material.index;  // ALWAYS update tracking
-            }
+            // Bind shader program
+            bindShaderProgram(matData->shaderProgram);
 
-            // Set per-draw uniforms
+            // Update per-draw uniforms
             updatePerDrawUniforms(cmd, shaderData);
 
-            // DRAW!
-            glDrawElements(GL_TRIANGLES, meshData->indexCount, GL_UNSIGNED_INT, 0);
-            drawCalls++;
+            // Apply material uniforms
+            applyMaterialState(matData, shaderData);
+
+            // Bind mesh attributes to shader inputs (name matching!)
+            auto shaderAsset = AssetManager::instance().get<ShaderAsset>(shaderData->shaderAssetHandle);
+            bindMeshToShader(meshData, shaderAsset);
+
+            // Draw
+            if (meshData->indexCount > 0) {
+                glDrawElements(GL_TRIANGLES, meshData->indexCount, GL_UNSIGNED_INT, nullptr);
+            } else {
+                glDrawArrays(GL_TRIANGLES, 0, meshData->vertexCount);
+            }
         }
     }
 
@@ -338,136 +312,99 @@ namespace chai::brew
     // UNIFORM BUFFER OBJECTS (Fast Uniform Updates)
     // ============================================================================
 
-    void OpenGLBackend::updatePerFrameUniforms()
-    {
-        // Update per-frame UBO once per frame
-		m_uniManager.updateUniform(*m_perFrameUBOData);
+    void OpenGLBackend::updatePerFrameUniforms() {
+        // Update
+        m_uniManager.updateUniform(*m_perFrameUBOData);
+
+        // Get the buffer
+        auto* glBuffer = m_uniManager.getUniformBufferData(*m_perFrameUBOData);
+        if (glBuffer) {
+            glBindBufferBase(GL_UNIFORM_BUFFER, 0, glBuffer->ubo);
+        }
     }
 
-    void OpenGLBackend::setLightsUniforms(OpenGLShaderData* shaderData)
-    {
-        //if (shaderData->u_lightCount != -1)
-        //{
-        //    glUniform1i(shaderData->u_lightCount, (GLint)m_cachedLights.size());
-        //}
-
-        //for (size_t i = 0; i < m_cachedLights.size() && i < 16; ++i)
-        //{
-        //    const auto& lightLocs = shaderData->lights[i];
-        //    const Light& light = m_cachedLights[i];
-
-        //    // Direct uniform calls - no string lookups!
-        //    if (lightLocs.type != -1) glUniform1i(lightLocs.type, light.type);
-        //    if (lightLocs.position != -1) glUniform3fv(lightLocs.position, 1, &light.position[0]);
-        //    if (lightLocs.direction != -1) glUniform3fv(lightLocs.direction, 1, &light.direction[0]);
-        //    if (lightLocs.color != -1) glUniform3fv(lightLocs.color, 1, &light.color[0]);
-        //    if (lightLocs.intensity != -1) glUniform1f(lightLocs.intensity, light.intensity);
-        //    if (lightLocs.range != -1) glUniform1f(lightLocs.range, light.range);
-        //    if (lightLocs.attenuation != -1) glUniform3fv(lightLocs.attenuation, 1, &light.attenuation[0]);
-        //    if (lightLocs.innerCone != -1) glUniform1f(lightLocs.innerCone, light.innerCone);
-        //    if (lightLocs.outerCone != -1) glUniform1f(lightLocs.outerCone, light.outerCone);
-        //    if (lightLocs.enabled != -1) glUniform1i(lightLocs.enabled, light.enabled);
-        //}
-    }
-
-    void OpenGLBackend::updatePerDrawUniforms(const RenderCommand& cmd,
-        OpenGLShaderData* shaderData)
-    {
+    void OpenGLBackend::updatePerDrawUniforms(const RenderCommand &cmd,
+                                              const OpenGLShaderData *shaderData) {
         if (!shaderData) return;
 
         DrawUniforms uniforms{};
         uniforms.model = cmd.transform;
-
         Mat3 normalMat = toMat3(cmd.transform).inverse().transpose();
         uniforms.normalMatrix = toMat4(normalMat);
 
-        // Update CPU→GPU
         m_perDrawUBOData->setValue(uniforms);
         m_uniManager.updateUniform(*m_perDrawUBOData);
 
-        // Bind to the per-draw binding index for this program
-        if (auto ub = m_uniManager.getUniformBufferData(*m_perDrawUBOData))
-        {
+        auto* ub = m_uniManager.getUniformBufferData(*m_perDrawUBOData);
+        if (ub) {
             glBindBufferBase(GL_UNIFORM_BUFFER, shaderData->perDrawUBOBinding, ub->ubo);
         }
     }
 
-    void OpenGLBackend::setUniformValue(GLint location, const std::unique_ptr<UniformBufferBase>& uniform)
-    {
+    void OpenGLBackend::setUniformValue(GLint location, const std::unique_ptr<UniformBufferBase> &uniform) {
         if (location == -1 || !uniform) return;
-        switch (uniform->getType())
-        {
-        case UniformType::FLOAT:
-        {
-            float value;
-            uniform->getData(&value, sizeof(float));
-            glUniform1f(location, value);
-        }
-        break;
-        case UniformType::VEC2:
-        {
-            Vec2 value;
-            uniform->getData(&value, sizeof(Vec2));
-            glUniform2fv(location, 1, &value[0]);
-        }
-        break;
-        case UniformType::VEC3:
-        {
-            Vec3 value;
-            uniform->getData(&value, sizeof(Vec3));
-            glUniform3fv(location, 1, &value[0]);
-        }
-        break;
-        case UniformType::VEC4:
-        {
-            Vec4 value;
-            uniform->getData(&value, sizeof(Vec4));
-            glUniform4fv(location, 1, &value[0]);
-        }
-        break;
-        case UniformType::MAT4:
-        {
-            Mat4 value;
-            uniform->getData(&value, sizeof(Mat4));
-            glUniformMatrix4fv(location, 1, GL_FALSE, &value[0][0]);
-        }
-        break;
-        case UniformType::INT:
-        {
-            int value;
-            uniform->getData(&value, sizeof(int));
-            glUniform1i(location, value);
-        }
-        break;
-        case UniformType::BOOL:
-        {
-            bool value;
-            uniform->getData(&value, sizeof(bool));
-            glUniform1i(location, value ? 1 : 0);
-        }
-        break;
-        default:
+        switch (uniform->getType()) {
+            case UniformType::FLOAT: {
+                float value;
+                uniform->getData(&value, sizeof(float));
+                glUniform1f(location, value);
+            }
             break;
-		}
+            case UniformType::VEC2: {
+                Vec2 value;
+                uniform->getData(&value, sizeof(Vec2));
+                glUniform2fv(location, 1, &value[0]);
+            }
+            break;
+            case UniformType::VEC3: {
+                Vec3 value;
+                uniform->getData(&value, sizeof(Vec3));
+                glUniform3fv(location, 1, &value[0]);
+            }
+            break;
+            case UniformType::VEC4: {
+                Vec4 value;
+                uniform->getData(&value, sizeof(Vec4));
+                glUniform4fv(location, 1, &value[0]);
+            }
+            break;
+            case UniformType::MAT4: {
+                Mat4 value;
+                uniform->getData(&value, sizeof(Mat4));
+                glUniformMatrix4fv(location, 1, GL_FALSE, &value[0][0]);
+            }
+            break;
+            case UniformType::INT: {
+                int value;
+                uniform->getData(&value, sizeof(int));
+                glUniform1i(location, value);
+            }
+            break;
+            case UniformType::BOOL: {
+                bool value;
+                uniform->getData(&value, sizeof(bool));
+                glUniform1i(location, value ? 1 : 0);
+            }
+            break;
+            default:
+                break;
+        }
     }
 
     // ============================================================================
     // MATERIAL STATE APPLICATION
     // ============================================================================
 
-    void OpenGLBackend::applyMaterialState(OpenGLMaterialData* matData,
-        OpenGLShaderData* shaderData)
-    {
+    void OpenGLBackend::applyMaterialState(OpenGLMaterialData *matData,
+                                           OpenGLShaderData *shaderData) {
         if (!matData || !shaderData) return;
 
         // Bind textures later
 
         // Set material uniforms (color, roughness, metallic, etc.)
-        for (const auto& [name, uniform] : matData->uniforms) 
-        {
+        for (const auto &[name, uniform]: matData->uniforms) {
             auto it = shaderData->uniformLocations.find(name);
-            if (it != shaderData->uniformLocations.end()) 
-            {
+            if (it != shaderData->uniformLocations.end()) {
                 setUniformValue(it->second, uniform);
             }
         }
@@ -477,8 +414,7 @@ namespace chai::brew
     // ASYNC UPLOAD SYSTEM
     // ============================================================================
 
-    void OpenGLBackend::beginFrame()
-    {
+    void OpenGLBackend::beginFrame() {
         // Process pending uploads with time budget (2ms)
         m_uploadQueue.processUploads(2.0f);
 

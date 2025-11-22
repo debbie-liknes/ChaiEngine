@@ -39,6 +39,9 @@ namespace chai
         bool isMat4() const { return getType() == UniformType::MAT4; }
         bool isInt() const { return getType() == UniformType::INT; }
         bool isBool() const { return getType() == UniformType::BOOL; }
+
+    protected:
+        static uint64_t getNextId();
     };
 
     template<typename T>
@@ -80,12 +83,6 @@ namespace chai
     {
         static constexpr UniformType value = UniformType::BOOL;
     };
-
-    static uint64_t getNextId()
-    {
-        static uint64_t currentId = 0;
-        return ++currentId;
-    }
 
     template<typename T>
     class UniformBuffer : public UniformBufferBase

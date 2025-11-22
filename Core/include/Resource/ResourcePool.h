@@ -24,7 +24,7 @@ namespace chai
             }
             else {
                 // New slot
-                index = m_resources.size();
+                index = static_cast<uint32_t>(m_resources.size());
                 m_resources.push_back(std::move(resource));
                 m_generations.push_back(0);
             }

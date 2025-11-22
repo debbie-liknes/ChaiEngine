@@ -18,6 +18,9 @@ set(ChaiGraphics_headers
 	include/ChaiEngine/RenderCommandList.h
 	include/ChaiEngine/RenderCommandCollector.h
 	include/ChaiEngine/Vertex.h
+	include/Graphics/VertexAttribute.h
+	include/Graphics/MaterialParameter.h
+	include/Graphics/ShaderAsset.h
 )
 
 set(ChaiGraphics_source

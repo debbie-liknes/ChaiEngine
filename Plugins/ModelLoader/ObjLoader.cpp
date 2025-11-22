@@ -3,9 +3,7 @@
 #include "ObjLoader.h"
 #include <iostream>
 #include <format>
-#include <ChaiEngine/Vertex.h>
 #include <ChaiEngine/Material.h>
-#include <ChaiEngine/UniformBuffer.h>
 #include <ChaiEngine/IMesh.h>
 #include <Types/CMap.h>
 #include <filesystem>
@@ -17,6 +15,12 @@ namespace chai
 	{
 		return ext == "obj";
 	}
+
+	struct OBJVertex {
+		Vec3 position;
+		Vec3 normal;
+		Vec2 uv;
+	};
 
 	std::unique_ptr<IAsset> ObjLoader::load(const std::string& path)
 	{
@@ -42,11 +46,12 @@ namespace chai
 		auto& materials = reader.GetMaterials();
 
 		// Create mesh data containers
-		std::vector<Vertex> vertices;
+		std::vector<OBJVertex> vertices;
 		std::vector<uint32_t> indices;
 		CMap<std::string, uint32_t> uniqueVertices;
 
 		uint32_t currentIndex = 0;
+
 
 		// Loop over shapes
 		for (auto& shape : shapes)
@@ -59,7 +64,7 @@ namespace chai
 				{
 					tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
 
-					Vertex vertex{};
+					OBJVertex vertex{};
 
 					// Position
 					vertex.position.x = attrib.vertices[3 * size_t(idx.vertex_index) + 0];
@@ -77,15 +82,15 @@ namespace chai
 					// Texture coordinates
 					if (idx.texcoord_index >= 0)
 					{
-						vertex.texCoord.x = attrib.texcoords[2 * size_t(idx.texcoord_index) + 0];
-						vertex.texCoord.y = 1.0f - attrib.texcoords[2 * size_t(idx.texcoord_index) + 1]; // Flip Y
+						vertex.uv.x = attrib.texcoords[2 * size_t(idx.texcoord_index) + 0];
+						vertex.uv.y = 1.0f - attrib.texcoords[2 * size_t(idx.texcoord_index) + 1]; // Flip Y
 					}
 
 					// Create unique vertex key for deduplication
 					std::string vertexKey = std::format("{},{},{},{},{},{},{},{}",
 						vertex.position.x, vertex.position.y, vertex.position.z,
 						vertex.normal.x, vertex.normal.y, vertex.normal.z,
-						vertex.texCoord.x, vertex.texCoord.y);
+						vertex.uv.x, vertex.uv.y);
 
 					// Check if vertex already exists
 					if (!uniqueVertices.contains(vertexKey))
@@ -104,21 +109,37 @@ namespace chai
 			}
 		}
 
-		auto mesh = std::make_unique<MeshAsset>(vertices, indices);
+		MeshAsset::MeshData meshData{};
+		meshData.positons.reserve(vertices.size());
+		meshData.normals.reserve(vertices.size());
+		meshData.uvs.reserve(vertices.size());
+		meshData.indices.reserve(indices.size());
+
+		for (auto& m : vertices) {
+			meshData.positons.push_back(m.position);
+			meshData.normals.push_back(m.normal);
+			meshData.uvs.push_back(m.uv);
+		}
+
+		for (auto& ind : indices) {
+			meshData.indices.push_back(ind);
+		}
+
+		auto mesh = std::make_unique<MeshAsset>(meshData);
 
 		for (auto& mat : materials)
 		{
-			auto material = std::make_unique<MaterialAsset>();
-			material->addParameter("ambientColor", Vec3(mat.ambient[0], mat.ambient[1], mat.ambient[2]));
+			//auto material = std::make_unique<MaterialAsset>();
+			/*material->addParameter("ambientColor", Vec3(mat.ambient[0], mat.ambient[1], mat.ambient[2]));
 			material->addParameter("diffuseColor", Vec3(mat.diffuse[0], mat.diffuse[1], mat.diffuse[2]));
 			material->addParameter("specularColor", Vec3(mat.specular[0], mat.specular[1], mat.specular[2]));
-			material->addParameter("shininess", mat.shininess);
+			material->addParameter("shininess", mat.shininess);*/
 
 
-			auto matHandle = chai::AssetManager::instance().add(std::move(material));
+			//uto matHandle = chai::AssetManager::instance().add(std::move(material));
 
-			if(matHandle.has_value())
-				mesh->addMaterial(matHandle.value());
+			//if(matHandle.has_value())
+			//	mesh->addMaterial(matHandle.value());
 		}
 
 		return mesh;

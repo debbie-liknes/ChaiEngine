@@ -12,6 +12,7 @@ namespace chai::brew
     struct OpenGLShaderData
     {
         GLuint program = 0;
+        AssetHandle shaderAssetHandle;
 
         // Material uniform locations
         CMap<std::string, GLint> uniformLocations;
@@ -26,7 +27,9 @@ namespace chai::brew
     {
     public:
         GLuint createDefaultShaderProgram();
-        GLuint getOrCreatePhongShader();  // NEW: Get shared Phong shader
+        GLuint compileShaderFromAsset(AssetHandle shaderAssetHandle);
+
+        //GLuint getOrCreatePhongShader();
         GLuint compileShader(const char* source, GLenum type);
         GLuint compileShaderProgram(const char* vertexSource, const char* fragmentSource);
 

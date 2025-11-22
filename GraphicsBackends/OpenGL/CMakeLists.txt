@@ -8,7 +8,6 @@ set(OpenGLRenderer_headers
 	include/OpenGLRenderer/RenderKey.h
 	include/OpenGLRenderer/Uploads.h
 	include/OpenGLRenderer/GLHelpers.h
-	include/OpenGLRenderer/GLPipeline.h
 	include/OpenGLRenderer/UniformManager.h
 )
 

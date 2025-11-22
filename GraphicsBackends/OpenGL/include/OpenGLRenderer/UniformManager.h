@@ -41,8 +41,10 @@ namespace chai::brew
             auto& uniformBuffer = it->second;
 
             uniform.getData(uniformBuffer->data.data(), uniform.getSize());
+
             glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer->ubo);
             glBufferSubData(GL_UNIFORM_BUFFER, 0, uniformBuffer->size, uniformBuffer->data.data());
+
             glBindBuffer(GL_UNIFORM_BUFFER, 0);
 		}
 

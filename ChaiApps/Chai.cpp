@@ -17,10 +17,12 @@
 #include <Input/InputState.h>
 #include <Controllers/CameraController.h>
 #include <chrono>
-#include <AudioEngine.h>
+//#include <AudioEngine.h>
 #include <ChaiPhysics/ChaiPhysics.h>
 #include <Asset/AssetHandle.h>
 #include <ChaiEngine/MaterialSystem.h>
+
+#include "Graphics/ShaderAsset.h"
 
 using namespace std;
 
@@ -64,26 +66,39 @@ int main()
 
 	//make an object for the scene
 	auto gameObject = std::make_unique<chai::cup::GameObject>();
-	chai::cup::MeshComponent* meshComp = gameObject->addComponent<chai::cup::MeshComponent>(gameObject.get());
+	auto* meshComp = gameObject->addComponent<chai::cup::MeshComponent>(gameObject.get());
 	auto meshAsset = chai::AssetManager::instance().load<chai::MeshAsset>("assets/suzanne.obj");
 	meshComp->setMesh(meshAsset.value());
 
 	//could load a material and set it here
-	//auto materialAsset = chai::AssetManager::instance().load<chai::MaterialAsset>("assets/default_material.mat");
-	
+	auto vertAssetHandle = chai::AssetManager::instance().load<chai::ShaderStageAsset>("shaders/phong.vert");
+	auto vertAsset = chai::AssetManager::instance().get<chai::ShaderStageAsset>(vertAssetHandle.value());
+	auto fragAssetHandle = chai::AssetManager::instance().load<chai::ShaderStageAsset>("shaders/phong.frag");
+	auto fragAsset = chai::AssetManager::instance().get<chai::ShaderStageAsset>(fragAssetHandle.value());
+
+	auto shaderAsset = std::make_unique<chai::ShaderAsset>("phong");
+	shaderAsset->addStage(vertAsset->source);
+	shaderAsset->addStage(fragAsset->source);
+	shaderAsset->addVertexInput("a_Position", 0, chai::MaterialParameterType::Float3);
+	shaderAsset->addVertexInput("a_Normal", 1, chai::MaterialParameterType::Float3);
+	shaderAsset->addVertexInput("a_TexCoord", 2, chai::MaterialParameterType::Float2);
+
+	auto shaderAssetHandle = chai::AssetManager::instance().add<chai::ShaderAsset>(std::move(shaderAsset));
+
 	auto materialResource = std::make_unique<chai::MaterialResource>();
 	auto resourceHandle = chai::ResourceManager::instance().add<chai::MaterialResource>(std::move(materialResource));
 	auto materialInstance = std::make_unique<chai::MaterialInstance>(resourceHandle);
 
 	// Customize instance
 	materialInstance->setParameter("ambientColor", chai::Vec3(0.0f, 1.0f, 0.0f));
-	meshComp->setMaterial(resourceHandle);
+	materialInstance->shaderAsset = shaderAssetHandle.value();
+	meshComp->setMaterial(chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance)));
 
 	gameObject->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{ 0.0, 0.0, 0.0 });
 
 	//add a camera to look through
 	auto cameraObject = std::make_unique<chai::cup::GameObject>();
-	chai::cup::CameraComponent* camComponent = cameraObject->addComponent<chai::cup::CameraComponent>(cameraObject.get());
+	auto* camComponent = cameraObject->addComponent<chai::cup::CameraComponent>(cameraObject.get());
 	auto camTransform = cameraObject->getComponent<chai::cup::TransformComponent>();
 	camTransform->setPosition(chai::Vec3{ -5.0, 0.0, -10.0 });
 	camTransform->lookAt(chai::Vec3{ 0.f, 0.f, 0.f }, chai::Vec3{0.0, -1.0, 0.0});
@@ -105,8 +120,8 @@ int main()
 	testScene->addGameObject(std::move(lightObject));
 
 	//audio
-	std::shared_ptr<AudioEngine> m_audioEngine;
-	m_audioEngine->Init();
+	//std::shared_ptr<AudioEngine> m_audioEngine;
+	//m_audioEngine->Init();
 
 	//uncomment for sound at location of cube
 	//m_audioEngine->LoadSound(/*path to wav*/, true, true, true);
@@ -167,10 +182,10 @@ int main()
 		//	camTransform->forward(),
 		//	camTransform->up()
 		//);
-		m_audioEngine->Update();
+		//m_audioEngine->Update();
 	}
 
-	m_audioEngine->Shutdown();
+	//m_audioEngine->Shutdown();
 	renderer->shutdown();
 
 	return 0;

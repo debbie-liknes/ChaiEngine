@@ -4,7 +4,7 @@
 
 namespace chai
 {
-    class ShaderAsset : public IAsset
+    /*class ShaderAsset : public IAsset
     {
     public:
 		bool isValid() const override { return m_valid; }
@@ -15,7 +15,7 @@ namespace chai
 		// Additional metadata can be added here
 		std::string m_entryPoint = "main";
 		std::string m_filename;
-    };
+    };*/
     //class ShaderProgram
     //{
     //public:

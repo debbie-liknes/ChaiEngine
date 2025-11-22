@@ -35,8 +35,6 @@ namespace chai::brew
 	class OPENGLRENDERER_EXPORT OpenGLBackend : public Renderer
     {
     public:
-        //OpenGLBackend() = default;
-
         bool initialize(void* winProcAddress) override;
         void shutdown() override;
 
@@ -52,49 +50,22 @@ namespace chai::brew
         //void printPerformanceStats();
 
     private:
-        // Initialization
-        GLuint createDefaultShaderProgram();
-        GLuint compileShader(const char* source, GLenum type);
-        //void setupVertexAttributes();
 
         // Command execution
         RenderKey createSortKey(const RenderCommand& cmd, OpenGLMeshData* meshData);
         void drawBatchedCommands(const std::vector<SortedDrawCommand>& sortedDraws);
+	    void bindShaderProgram(GLuint program);
 
-        // Drawing
-        //void drawInstanced(const InstanceBatch& batch);
-        //void setupInstancing(OpenGLMeshData* meshData, uint32_t maxInstances);
-
-        // State management
-        void bindShaderProgram(GLuint program);
-        void bindVertexArray(GLuint vao);
         void clear(float r, float g, float b, float a);
 
         // Uniform management
         void updatePerFrameUniforms();
-        void updatePerDrawUniforms(const RenderCommand& cmd, OpenGLShaderData* shaderData);
-        void setLightsUniforms(OpenGLShaderData* shaderData);
+        void updatePerDrawUniforms(const RenderCommand& cmd, const OpenGLShaderData* shaderData);
+        //void setLightsUniforms(OpenGLShaderData* shaderData);
         void setUniformValue(GLint location, const std::unique_ptr<UniformBufferBase>& uniform);
 
         // Material handling
         void applyMaterialState(OpenGLMaterialData* matData, OpenGLShaderData* shaderData);
-        //void compileMaterial(Handle materialHandle, OpenGLMaterialData* glMaterialData);
-        //GLuint compileShaderFromDescription(std::shared_ptr<ShaderDescription> shaderDesc,
-        //    const std::set<MaterialFeature>& features);
-
-        // Resource management
-        //OpenGLShaderData* getShaderData(GLuint program);
-
-        //void uploadMeshToGPU(Handle meshHandle, OpenGLMeshData* glMeshData);
-        //void cacheBuiltinUniformLocations(GLuint program, OpenGLShaderData* shaderData);
-        //void cacheUniformLocations(GLuint program, OpenGLMaterialData* matData);
-
-        // Utility
-        //std::string loadShaderFile(const std::string& filePath);
-        //std::string injectFeatureDefines(const std::string& source,
-        //    const std::set<MaterialFeature>& features);
-        //std::string generateShaderHash(std::shared_ptr<ShaderDescription> desc,
-        //    const std::set<MaterialFeature>& features);
 
     private:
         
@@ -103,8 +74,6 @@ namespace chai::brew
 		OpenGLMaterialManager m_matManager;
 		OpenGLTextureManager m_texManager;
 		GLShaderManager m_shaderManager;
-
-        void updateShader(OpenGLShaderData* program, uint32_t& stateChanges);
 
         // Upload system
         UploadQueue m_uploadQueue;

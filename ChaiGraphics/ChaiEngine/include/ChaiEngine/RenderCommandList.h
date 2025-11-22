@@ -21,7 +21,7 @@ namespace chai::brew
         Type type{ Type::CLEAR };
 
         // Mesh rendering data
-        Handle mesh;
+        ResourceHandle mesh;
         ResourceHandle material;
         Mat4 transform{ 1.f };
         IViewport* viewport = nullptr;

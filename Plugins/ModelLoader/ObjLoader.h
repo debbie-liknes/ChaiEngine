@@ -1,5 +1,4 @@
 #pragma once
-#include <ModelLoaderExport.h>
 #include <Meta/ChaiMacros.h>
 #include <Asset/AssetLoader.h>
 

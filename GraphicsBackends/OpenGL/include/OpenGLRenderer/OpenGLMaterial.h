@@ -10,6 +10,8 @@
 #include <memory>
 #include <OpenGLRenderer/OpenGLShader.h>
 
+#include "Graphics/ShaderAsset.h"
+
 namespace chai::brew
 {
     // Forward declare
@@ -60,7 +62,7 @@ namespace chai::brew
             return it->second.get();
         }
 
-        bool compileMaterial(Handle materialHandle, OpenGLMaterialData* glMaterialData)
+        bool compileMaterial(ResourceHandle materialHandle, OpenGLMaterialData* glMaterialData)
         {
             if (!glMaterialData || glMaterialData->isCompiled)
             {
@@ -73,48 +75,94 @@ namespace chai::brew
                 return false;
             }
 
-            std::cout << "Compiling material..." << std::endl;
-
-            // Get or create the shared Phong shader
-            GLuint phongShader = m_shaderManager->getOrCreatePhongShader();
-            if (phongShader == 0)
+            const auto* materialResource = ResourceManager::instance().getResource<MaterialInstance>(materialHandle);
+            if (!materialResource)
             {
-                std::cerr << "Failed to get Phong shader!" << std::endl;
+                std::cerr << "Failed to get material resource!" << std::endl;
                 return false;
             }
 
-            glMaterialData->shaderProgram = phongShader;
-
-            // Set default material properties if not already set
-            if (glMaterialData->uniforms.find("u_DiffuseColor") == glMaterialData->uniforms.end())
+            AssetHandle shaderAssetHandle = materialResource->shaderAsset;
+            const auto* shaderAsset = AssetManager::instance().get<ShaderAsset>(shaderAssetHandle);
+            if (!shaderAsset)
             {
-                auto diffuse = std::make_unique<UniformBuffer<Vec3>>();
-                diffuse->setValue(Vec3(0.8f, 0.8f, 0.8f));  // Default gray
-                glMaterialData->uniforms["u_DiffuseColor"] = std::move(diffuse);
+                std::cerr << "Failed to get shader asset for material!" << std::endl;
+                return false;
             }
 
-            if (glMaterialData->uniforms.find("u_SpecularColor") == glMaterialData->uniforms.end())
+            std::cout << "Compiling material with shader: " << shaderAsset->getName() << std::endl;
+
+            GLuint shaderProgram = m_shaderManager->compileShaderFromAsset(shaderAssetHandle);
+            if (shaderProgram == 0)
             {
-                auto specular = std::make_unique<UniformBuffer<Vec3>>();
-                specular->setValue(Vec3(0.5f, 0.5f, 0.5f));  // Default gray
-                glMaterialData->uniforms["u_SpecularColor"] = std::move(specular);
+                std::cerr << "Failed to compile shader for material!" << std::endl;
+                return false;
             }
 
-            if (glMaterialData->uniforms.find("u_Shininess") == glMaterialData->uniforms.end())
-            {
-                auto shininess = std::make_unique<UniformBuffer<float>>();
-                shininess->setValue(32.0f);  // Default shininess
-                glMaterialData->uniforms["u_Shininess"] = std::move(shininess);
+            glMaterialData->shaderProgram = shaderProgram;
+
+            const auto& materialParams = materialResource->defaultParameters;
+
+            for (const auto& [paramName, paramValue] : materialParams) {
+                GLint location = glGetUniformLocation(shaderProgram, paramName.c_str());
+                if (location != -1) {
+                    glMaterialData->uniformLocations[paramName] = location;
+                    glMaterialData->uniforms[paramName] = createUniformBuffer(paramValue);
+                }
             }
 
             glMaterialData->isCompiled = true;
-            glMaterialData->isTransparent = false;
-
-            std::cout << "Material compiled successfully!" << std::endl;
-            return true;
+            std::cout << "Created material shader: " << shaderAsset->getName() << std::endl;
         }
 
     private:
+        std::unique_ptr<UniformBufferBase> createUniformBuffer(const MaterialParameterValue& value)
+        {
+            return std::visit([](auto&& arg) -> std::unique_ptr<UniformBufferBase> {
+                using T = std::decay_t<decltype(arg)>;
+
+                if constexpr (std::is_same_v<T, float>)
+                {
+                    auto buf = std::make_unique<UniformBuffer<float>>();
+                    buf->setValue(arg);
+                    return buf;
+                }
+                else if constexpr (std::is_same_v<T, Vec3>)
+                {
+                    auto buf = std::make_unique<UniformBuffer<Vec3>>();
+                    buf->setValue(arg);
+                    return buf;
+                }
+                else if constexpr (std::is_same_v<T, Vec4>)
+                {
+                    auto buf = std::make_unique<UniformBuffer<Vec4>>();
+                    buf->setValue(arg);
+                    return buf;
+                }
+                else if constexpr (std::is_same_v<T, int>)
+                {
+                    auto buf = std::make_unique<UniformBuffer<int>>();
+                    buf->setValue(arg);
+                    return buf;
+                }
+                else if constexpr (std::is_same_v<T, Mat4>)
+                {
+                    auto buf = std::make_unique<UniformBuffer<Mat4>>();
+                    buf->setValue(arg);
+                    return buf;
+                }
+                else if constexpr (std::is_same_v<T, Handle>)  // Texture handle
+                {
+                    // Textures are handled separately
+                    return nullptr;
+                }
+                else
+                {
+                    return nullptr;
+                }
+            }, value);
+        }
+
         CMap<size_t, std::unique_ptr<OpenGLMaterialData>> m_materialCache;
         GLShaderManager* m_shaderManager = nullptr;
     };
