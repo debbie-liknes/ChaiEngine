@@ -11,29 +11,29 @@ static constexpr uint32_t INVALID_HANDLE = 0xFFFFFFFF;
 
 struct CORE_EXPORT Handle
 {
-    uint32_t m_index;
-    uint32_t m_generation;
-    std::type_index m_type;
+    uint32_t index;
+    uint32_t generation;
+    std::type_index type;
 
-    Handle() : m_index(INVALID_HANDLE), m_generation(0), m_type(typeid(void)) {}
+    Handle() : index(INVALID_HANDLE), generation(0), type(typeid(void)) {}
 
     Handle(uint32_t idx, uint32_t gen, std::type_index t)
-        : m_index(idx), m_generation(gen), m_type(t) {}
+        : index(idx), generation(gen), type(t) {}
 
 
     bool operator==(const Handle& other) const
     {
-        return m_index == other.m_index;
+        return index == other.index;
     }
 
     bool operator!=(const Handle& other) const
     {
-        return m_index != other.m_index;
+        return index != other.index;
     }
 
     bool isValid() const
     {
-        return m_index != INVALID_HANDLE;
+        return index != INVALID_HANDLE;
     }
 };
 

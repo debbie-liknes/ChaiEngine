@@ -30,13 +30,13 @@ void UploadQueue::processUploads(float timeBudgetMs)
         // Pop next upload request
         UploadRequest request = m_pendingUploads.front();
         m_pendingUploads.pop();
-        m_uploading.erase(request.handle.m_index);
+        m_uploading.erase(request.handle.index);
 
         // Perform the actual GPU upload
         performUpload(request);
 
         // Mark as ready
-        m_ready.insert(request.handle.m_index);
+        m_ready.insert(request.handle.index);
     }
 }
 
@@ -104,12 +104,12 @@ void UploadQueue::performUpload(const UploadRequest& request)
 
 bool UploadQueue::isQueued(ResourceHandle handle) const
 {
-    return m_uploading.contains(handle.m_index) ||
+    return m_uploading.contains(handle.index) ||
            !m_pendingUploads.empty();
 }
 
 bool UploadQueue::isReady(ResourceHandle handle) const
 {
-    return m_ready.contains(handle.m_index);
+    return m_ready.contains(handle.index);
 }
 }

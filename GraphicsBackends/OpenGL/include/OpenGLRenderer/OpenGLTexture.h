@@ -19,11 +19,11 @@ class OpenGLTextureManager
 public:
     OpenGLTextureData* getOrCreateTextureData(Handle textureHandle)
     {
-        auto it = m_textureCache.find(textureHandle.m_index);
+        auto it = m_textureCache.find(textureHandle.index);
         if (it == m_textureCache.end()) {
             auto glTextureData = std::make_unique<OpenGLTextureData>();
             auto* ptr = glTextureData.get();
-            m_textureCache[textureHandle.m_index] = std::move(glTextureData);
+            m_textureCache[textureHandle.index] = std::move(glTextureData);
             return ptr;
         }
         return it->second.get();

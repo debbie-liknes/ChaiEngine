@@ -2,7 +2,6 @@
 #include <ChaiGraphicsExport.h>
 #include <string>
 #include <memory>
-#include <ChaiEngine/UniformBuffer.h>
 
 namespace chai
 {

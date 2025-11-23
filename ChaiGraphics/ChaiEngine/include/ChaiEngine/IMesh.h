@@ -22,7 +22,7 @@ namespace chai
             std::vector<Vec2> uvs;
         };
 
-        explicit MeshAsset(const MeshData& mesh) : m_meshData(mesh)
+        explicit MeshAsset(const MeshData& mesh) : m_meshData(std::move(mesh))
         {
         }
 
@@ -44,7 +44,7 @@ namespace chai
         const std::string& getAssetId() const override { return m_assetId; }
 
     private:
-        const MeshData m_meshData;
+        MeshData m_meshData;
         std::vector<AssetHandle> m_defaultMaterials;
         //want this
         //AABB boundingBox;

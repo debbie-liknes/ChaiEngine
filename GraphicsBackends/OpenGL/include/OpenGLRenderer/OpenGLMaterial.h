@@ -50,11 +50,11 @@ public:
 
     OpenGLMaterialData* getOrCreateMaterialData(Handle material)
     {
-        auto it = m_materialCache.find(material.m_index);
+        auto it = m_materialCache.find(material.index);
         if (it == m_materialCache.end()) {
             auto glMaterialData = std::make_unique<OpenGLMaterialData>();
             auto* ptr = glMaterialData.get();
-            m_materialCache[material.m_index] = std::move(glMaterialData);
+            m_materialCache[material.index] = std::move(glMaterialData);
             return ptr;
         }
         return it->second.get();

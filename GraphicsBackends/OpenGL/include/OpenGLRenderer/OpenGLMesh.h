@@ -37,12 +37,12 @@ public:
 
     OpenGLMeshData* getOrCreateMeshData(Handle meshHandle)
     {
-        auto it = m_meshCache.find(meshHandle.m_index);
+        auto it = m_meshCache.find(meshHandle.index);
         if (it == m_meshCache.end()) {
             auto glMeshData = std::make_unique<OpenGLMeshData>();
             auto* ptr = glMeshData.get();
-            m_meshCache[meshHandle.m_index] = std::move(glMeshData);
-            return m_meshCache[meshHandle.m_index].get();
+            m_meshCache[meshHandle.index] = std::move(glMeshData);
+            return m_meshCache[meshHandle.index].get();
         }
         return it->second.get();
     }

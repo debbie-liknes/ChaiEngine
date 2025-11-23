@@ -43,9 +43,9 @@ public:
         if (!isValid(handle))
             return;
 
-        m_resources[handle.m_index].reset();  // Delete resource
-        m_freeList.push_back(handle.m_index); // Mark slot as free
-        m_generations[handle.m_index]++;      // Invalidate old handles
+        m_resources[handle.index].reset();  // Delete resource
+        m_freeList.push_back(handle.index); // Mark slot as free
+        m_generations[handle.index]++;      // Invalidate old handles
     }
 
     // Get resource (safe!)
@@ -53,22 +53,22 @@ public:
     {
         if (!isValid(handle))
             return nullptr;
-        return m_resources[handle.m_index].get();
+        return m_resources[handle.index].get();
     }
 
     const T* get(Handle handle) const
     {
         if (!isValid(handle))
             return nullptr;
-        return m_resources[handle.m_index].get();
+        return m_resources[handle.index].get();
     }
 
     // Check if handle is still valid
     bool isValid(Handle handle) const
     {
-        return handle.m_index < m_resources.size() &&
-               m_generations[handle.m_index] == handle.m_generation &&
-               m_resources[handle.m_index] != nullptr;
+        return handle.index < m_resources.size() &&
+               m_generations[handle.index] == handle.generation &&
+               m_resources[handle.index] != nullptr;
     }
 
 private:

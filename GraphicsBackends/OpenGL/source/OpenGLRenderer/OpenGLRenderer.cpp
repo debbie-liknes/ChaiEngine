@@ -227,10 +227,10 @@ RenderKey OpenGLBackend::createSortKey(const RenderCommand& cmd,
     key.shader = (shaderProgram >> 4) & 0xFFFF;
 
     // Material ID (for batching)
-    key.material = cmd.material.isValid() ? (cmd.material.m_index & 0xFFF) : 0;
+    key.material = cmd.material.isValid() ? (cmd.material.index & 0xFFF) : 0;
 
     // Mesh ID (for batching)
-    key.mesh = cmd.mesh.m_index & 0xFFF;
+    key.mesh = cmd.mesh.index & 0xFFF;
 
     return key;
 }
