@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 #include <ChaiEngine/Light.h>
-#include <Scene/Camera.h>
 #include <Scene/GameObject.h>
 #include <ChaiEngine/RenderCommandCollector.h>
 #include <Core/Updatable.h>

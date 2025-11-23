@@ -1,11 +1,8 @@
 #pragma once
 #include <WindowModuleExport.h>
 #include <Window/Window.h>
-#include <string>
 #include <memory>
 #include <vector>
-#include <map>
-#include <Input/EventHandler.h>
 
 namespace chai
 {

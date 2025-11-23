@@ -2,9 +2,6 @@
 #include <ChaiEngine/Material.h>
 #include <glad/gl.h>
 #include <Types/CMap.h>
-#include <iostream>
-#include <set>
-#include <sstream>
 
 
 namespace chai::brew

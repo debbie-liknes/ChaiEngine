@@ -2,10 +2,8 @@
 #include <OpenGLRendererExport.h>
 #include <Meta/ChaiMacros.h>
 #include <ChaiEngine/IMesh.h>
-#include <ChaiEngine/Vertex.h>
 #include <Types/CMap.h>
 #include <glad/gl.h>
-#include <vector>
 #include <memory>
 
 #include "Graphics/ShaderAsset.h"
@@ -39,13 +37,13 @@ namespace chai::brew
 
         OpenGLMeshData* getOrCreateMeshData(Handle meshHandle)
         {
-            auto it = m_meshCache.find(meshHandle.index);
+            auto it = m_meshCache.find(meshHandle.m_index);
             if (it == m_meshCache.end())
             {
                 auto glMeshData = std::make_unique<OpenGLMeshData>();
                 auto* ptr = glMeshData.get();
-                m_meshCache[meshHandle.index] = std::move(glMeshData);
-                return m_meshCache[meshHandle.index].get();
+                m_meshCache[meshHandle.m_index] = std::move(glMeshData);
+                return m_meshCache[meshHandle.m_index].get();
             }
             return it->second.get();
         }

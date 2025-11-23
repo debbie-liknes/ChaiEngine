@@ -11,28 +11,28 @@ namespace chai
 
     struct CORE_EXPORT Handle
     {
-        uint32_t index;
-        uint32_t generation;
-        std::type_index type;
+        uint32_t m_index;
+        uint32_t m_generation;
+        std::type_index m_type;
 
-		Handle() : index(INVALID_HANDLE), generation(0), type(typeid(void)) {}
+		Handle() : m_index(INVALID_HANDLE), m_generation(0), m_type(typeid(void)) {}
         Handle(uint32_t idx, uint32_t gen, std::type_index t)
-			: index(idx), generation(gen), type(t) {}
+			: m_index(idx), m_generation(gen), m_type(t) {}
 
 
         bool operator==(const Handle& other) const 
         {
-            return index == other.index;
+            return m_index == other.m_index;
         }
 
         bool operator!=(const Handle& other) const 
         {
-            return index != other.index;
+            return m_index != other.m_index;
         }
 
         bool isValid() const 
         {
-            return index != INVALID_HANDLE;
+            return m_index != INVALID_HANDLE;
 		}
     };
 

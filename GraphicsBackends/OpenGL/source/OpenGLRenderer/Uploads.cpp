@@ -4,7 +4,6 @@
 #include <Resource/ResourceManager.h>
 #include <Graphics/VertexAttribute.h>
 
-#include "Graphics/ShaderAsset.h"
 #include "OpenGLRenderer/GLHelpers.h"
 
 namespace chai::brew {
@@ -28,13 +27,13 @@ namespace chai::brew {
             // Pop next upload request
             UploadRequest request = m_pendingUploads.front();
             m_pendingUploads.pop();
-            m_uploading.erase(request.handle.index);
+            m_uploading.erase(request.handle.m_index);
 
             // Perform the actual GPU upload
             performUpload(request);
 
             // Mark as ready
-            m_ready.insert(request.handle.index);
+            m_ready.insert(request.handle.m_index);
         }
     }
 
@@ -100,11 +99,11 @@ namespace chai::brew {
     }
 
     bool UploadQueue::isQueued(ResourceHandle handle) const {
-        return m_uploading.contains(handle.index) ||
+        return m_uploading.contains(handle.m_index) ||
                !m_pendingUploads.empty();
     }
 
     bool UploadQueue::isReady(ResourceHandle handle) const {
-        return m_ready.contains(handle.index);
+        return m_ready.contains(handle.m_index);
     }
 }

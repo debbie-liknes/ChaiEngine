@@ -6,9 +6,6 @@
 #include <Types/CMap.h>
 #include <Meta/ChaiMacros.h>
 #include <ChaiEngine/Renderer.h>
-#include <ChaiEngine/IMesh.h>
-#include <ChaiEngine/IMaterial.h>
-#include <ChaiEngine/Material.h>
 #include <OpenGLRenderer/RenderKey.h>
 #include <OpenGLRenderer/Uploads.h>
 #include <OpenGLRenderer/OpenGLMesh.h>

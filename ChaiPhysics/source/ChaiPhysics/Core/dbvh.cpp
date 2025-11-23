@@ -1,6 +1,5 @@
 #include <ChaiPhysics/Core/dbvh.h>
 
-#include <array>
 #include <vector>
 #include <queue>
 #include <stack>

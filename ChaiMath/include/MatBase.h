@@ -1,6 +1,5 @@
 #pragma once
 #include <VecBase.h>
-#include <MathIncludes.h>
 #include <cassert>
 
 #ifndef CHAI_ROW_MAJOR

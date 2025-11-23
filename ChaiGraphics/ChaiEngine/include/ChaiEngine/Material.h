@@ -1,18 +1,15 @@
 #pragma once
 #include <ChaiGraphicsExport.h>
-#include <ChaiEngine/IMaterial.h>
 #include <Types/CMap.h>
 #include <Asset/AssetLoader.h>
 #include <Asset/AssetHandle.h>
-#include <ChaiEngine/PipelineState.h>
 #include <Resource/Resource.h>
 #include <Graphics/MaterialParameter.h>
-
-#include "Resource/ResourceManager.h"
+#include <Resource/ResourceManager.h>
 
 namespace chai
 {
-    enum class MaterialFeature 
+    enum class MaterialFeature
     {
         BaseColor,
         BaseColorTexture,
@@ -29,7 +26,7 @@ namespace chai
     };
 
     //shared by multiple instances
-    struct MaterialAsset : public IAsset 
+    struct CHAIGRAPHICS_EXPORT MaterialAsset : public IAsset
     {
     public:
 		MaterialAsset() = default;
@@ -89,7 +86,7 @@ namespace chai
 
 	//GPU resource representation
 	//PSO etc
-    struct MaterialResource : public Resource
+    struct CHAIGRAPHICS_EXPORT MaterialResource : public Resource
     {
         AssetHandle sourceAsset;
         AssetHandle shaderAsset;
@@ -104,7 +101,7 @@ namespace chai
     };
 
 	//Runtime material instance (parameters unique per instance)
-    class MaterialInstance : public Resource
+    class CHAIGRAPHICS_EXPORT MaterialInstance : public Resource
     {
     public:
         explicit MaterialInstance(AssetHandle source)

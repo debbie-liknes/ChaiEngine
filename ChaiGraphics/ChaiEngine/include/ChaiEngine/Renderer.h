@@ -2,7 +2,6 @@
 #include <ChaiGraphicsExport.h>
 #include <ChaiEngine/RenderCommandList.h>
 #include <ChaiEngine/IMesh.h>
-#include <ChaiEngine/IMaterial.h>
 
 namespace chai::brew
 {

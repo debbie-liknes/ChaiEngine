@@ -1,9 +1,9 @@
 #pragma once
 #include <functional>
 #include <memory>
-#include <Input/InputState.h>
 #include <queue>
 #include <array>
+#include <Input/EventHandler.h>
 
 namespace chai
 {

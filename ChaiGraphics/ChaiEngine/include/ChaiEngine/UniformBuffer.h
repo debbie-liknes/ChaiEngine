@@ -20,7 +20,7 @@ namespace chai
         UNKNOWN
     };
 
-    class UniformBufferBase
+    class CHAIGRAPHICS_EXPORT UniformBufferBase
     {
     public:
         UniformBufferBase() = default;

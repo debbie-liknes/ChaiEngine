@@ -1,15 +1,8 @@
 #pragma once
-#include <ChaiMathExport.h>
 #include <MathIncludes.h>
 #include <type_traits>
 #include <memory>
 #include <initializer_list>
-#include <stdexcept>
-#include <stddef.h>
-#include <array>
-#include <algorithm>
-#include <cstring>
-#include <cstddef>
 #include <cassert>
 
 namespace chai

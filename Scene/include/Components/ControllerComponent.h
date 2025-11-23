@@ -6,7 +6,6 @@
 #include <Controllers/Controller.h>
 #include <Types/CMap.h>
 #include <Components/ComponentBase.h>
-#include <Core/Updatable.h>
 
 namespace chai::cup
 {

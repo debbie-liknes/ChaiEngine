@@ -30,6 +30,8 @@ CheckOptions:
     value: camelBack
   - key: readability-identifier-naming.MemberPrefix
     value: m_
+  - key: readability-identifier-naming.MemberAllowedRegexp
+    value: '^[a-z][a-zA-Z0-9]*$'
   - key: readability-identifier-naming.ParameterCase
     value: camelBack
   - key: readability-identifier-naming.ConstantCase

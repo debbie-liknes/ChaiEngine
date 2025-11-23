@@ -1,14 +1,12 @@
 #pragma once
 #include <ChaiGraphicsExport.h>
 #include <string>
-#include <variant>
-#include <unordered_map>
 #include <memory>
 #include <ChaiEngine/UniformBuffer.h>
 
 namespace chai
 {
-    class IMaterial 
+    class CHAIGRAPHICS_EXPORT IMaterial
     {
     public:
         virtual ~IMaterial() = default;
