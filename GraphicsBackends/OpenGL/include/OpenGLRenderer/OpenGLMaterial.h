@@ -75,14 +75,23 @@ namespace chai::brew
                 return false;
             }
 
-            const auto* materialResource = ResourceManager::instance().getResource<MaterialInstance>(materialHandle);
-            if (!materialResource)
+            //Prefer to use a material instance, but fallback to a material resource
+            const MaterialResource* matResource;
+            const auto* materialInstance = ResourceManager::instance().getResource<MaterialInstance>(materialHandle);
+            if (materialInstance) {
+                matResource = ResourceManager::instance().getResource<MaterialResource>(materialInstance->getResource());
+            }
+            else {
+                matResource = ResourceManager::instance().getResource<MaterialResource>(materialHandle);
+            }
+
+            if (!matResource)
             {
                 std::cerr << "Failed to get material resource!" << std::endl;
                 return false;
             }
 
-            AssetHandle shaderAssetHandle = materialResource->shaderAsset;
+            AssetHandle shaderAssetHandle = matResource->shaderAsset;
             const auto* shaderAsset = AssetManager::instance().get<ShaderAsset>(shaderAssetHandle);
             if (!shaderAsset)
             {
@@ -101,13 +110,20 @@ namespace chai::brew
 
             glMaterialData->shaderProgram = shaderProgram;
 
-            const auto& materialParams = materialResource->defaultParameters;
+            const auto& materialParams = matResource->defaultParameters;
+
 
             for (const auto& [paramName, paramValue] : materialParams) {
                 GLint location = glGetUniformLocation(shaderProgram, paramName.c_str());
                 if (location != -1) {
                     glMaterialData->uniformLocations[paramName] = location;
-                    glMaterialData->uniforms[paramName] = createUniformBuffer(paramValue);
+                    if (materialInstance && materialInstance->hasOverride(paramName)) {
+                        auto& overrides = materialInstance->getParameterOverrides();
+                        glMaterialData->uniforms[paramName] = createUniformBuffer(overrides.at(paramName));
+                    }
+                    else {
+                        glMaterialData->uniforms[paramName] = createUniformBuffer(paramValue);
+                    }
                 }
             }
 

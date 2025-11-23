@@ -24,7 +24,7 @@ namespace chai::cup
 	//private:
 		// Somewhere in your material system
 		static ResourceHandle createMeshResourceFromAsset(const MeshAsset* asset);
-		static ResourceHandle createMaterialResourceFromAsset(const MaterialAsset* asset);
+		//static ResourceHandle createMaterialResourceFromAsset(const MaterialAsset* asset);
 
 
 	private:

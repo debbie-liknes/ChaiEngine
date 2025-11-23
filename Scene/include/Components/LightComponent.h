@@ -31,5 +31,6 @@ namespace chai::cup
         float outerCone = 17.5f; // degrees
 
         bool enabled = true;
+        bool shadowsEnabled = true;
     };
 }

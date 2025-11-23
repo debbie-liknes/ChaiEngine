@@ -8,6 +8,8 @@
 #include <Resource/Resource.h>
 #include <Graphics/MaterialParameter.h>
 
+#include "Resource/ResourceManager.h"
+
 namespace chai
 {
     enum class MaterialFeature 
@@ -31,6 +33,9 @@ namespace chai
     {
     public:
 		MaterialAsset() = default;
+        MaterialAsset(const std::string& name)
+        : m_name(name)
+        {}
         MaterialAsset(const std::string& name, Handle shader)
             : m_name(name), m_shaderHandle(shader) 
         {}
@@ -99,7 +104,7 @@ namespace chai
     };
 
 	//Runtime material instance (parameters unique per instance)
-    class MaterialInstance : public MaterialResource
+    class MaterialInstance : public Resource
     {
     public:
         explicit MaterialInstance(AssetHandle source)

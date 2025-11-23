@@ -80,20 +80,4 @@ namespace chai::cup
 
 		return ResourceManager::instance().add(std::move(resource));
 	}
-
-	ResourceHandle MeshComponent::createMaterialResourceFromAsset(const MaterialAsset* asset)
-	{
-		auto resource = std::make_unique<MaterialResource>();
-
-		//set which shader to use
-		resource->shaderAsset = asset->getShaderHandle();
-
-		// Copy all parameters
-		for (const auto& [name, value] : asset->getParameters())
-		{
-			resource->defaultParameters.emplace(name, value);
-		}
-
-		return ResourceManager::instance().add(std::move(resource));
-	}
 }

@@ -70,36 +70,14 @@ int main()
 	auto meshAsset = chai::AssetManager::instance().load<chai::MeshAsset>("assets/suzanne.obj");
 	meshComp->setMesh(meshAsset.value());
 
-	//could load a material and set it here
-	auto vertAssetHandle = chai::AssetManager::instance().load<chai::ShaderStageAsset>("shaders/phong.vert");
-	auto vertAsset = chai::AssetManager::instance().get<chai::ShaderStageAsset>(vertAssetHandle.value());
-	auto fragAssetHandle = chai::AssetManager::instance().load<chai::ShaderStageAsset>("shaders/phong.frag");
-	auto fragAsset = chai::AssetManager::instance().get<chai::ShaderStageAsset>(fragAssetHandle.value());
+	chai::MaterialSystem matSystem;
 
-	auto shaderAsset = std::make_unique<chai::ShaderAsset>("phong");
-	shaderAsset->addStage(vertAsset->source);
-	shaderAsset->addStage(fragAsset->source);
-	shaderAsset->addVertexInput("a_Position", 0, chai::MaterialParameterType::Float3);
-	shaderAsset->addVertexInput("a_Normal", 1, chai::MaterialParameterType::Float3);
-	shaderAsset->addVertexInput("a_TexCoord", 2, chai::MaterialParameterType::Float2);
+	auto resourceHandle = matSystem.createMaterialResourceFromAsset(matSystem.getDefaultAsset());
 
-	auto shaderAssetHandle = chai::AssetManager::instance().add<chai::ShaderAsset>(std::move(shaderAsset));
-
-	auto materialResource = std::make_unique<chai::MaterialResource>();
-	materialResource->defaultParameters.emplace("u_DiffuseColor", chai::Vec3(1.0,1.0,1.0));
-	materialResource->defaultParameters.emplace("u_SpecularColor", chai::Vec3(1.0,1.0,1.0));
-	materialResource->defaultParameters.emplace("u_Shininess", 1.f);
-	auto resourceHandle = chai::ResourceManager::instance().add<chai::MaterialResource>(std::move(materialResource));
 	auto materialInstance = std::make_unique<chai::MaterialInstance>(resourceHandle);
-	materialInstance->defaultParameters.emplace("u_DiffuseColor", chai::Vec3(1.0,1.0,1.0));
-	materialInstance->defaultParameters.emplace("u_SpecularColor", chai::Vec3(1.0,1.0,1.0));
-	materialInstance->defaultParameters.emplace("u_Shininess", 1.f);
-	chai::MaterialLayout matLayout;
-	materialInstance->materialLayout = matLayout;
 
 	// Customize instance
-	materialInstance->setParameter("u_DiffuseColor", chai::Vec3(0.0f, 0.0f, 1.0f));
-	materialInstance->shaderAsset = shaderAssetHandle.value();
+	materialInstance->setParameter("u_DiffuseColor", chai::Vec3(0.0f, 1.0f, 0.0f));
 	meshComp->setMaterial(chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance)));
 
 	gameObject->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{ 0.0, 0.0, 0.0 });
