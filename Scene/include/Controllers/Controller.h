@@ -1,10 +1,11 @@
 #pragma once
+#include <SceneExport.h>
 
 namespace chai::cup
 {
     class GameObject;
 
-    class IController
+    class SCENE_EXPORT IController
     {
     public:
         virtual ~IController() = default;

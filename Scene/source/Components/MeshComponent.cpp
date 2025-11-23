@@ -54,7 +54,7 @@ namespace chai::cup
 
         //interleave the data
         uint32_t stride = vertexLayout.getStride();
-        uint32_t vertexCount = asset->getPositions().size();
+        uint32_t vertexCount = static_cast<uint32_t>(asset->getPositions().size());
 
         std::vector<uint8_t> vertexData(vertexCount * stride);
 

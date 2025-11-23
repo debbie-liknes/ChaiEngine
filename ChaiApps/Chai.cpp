@@ -51,8 +51,8 @@ int main()
     renderer->initialize(windowSystem->getProcAddress());
 
     //create viewports to go inside the window
-    uint32_t mainVpId = viewportManager.createViewport(mainWindow, {"MainView", 0, 0, 1080, 720});
-    chai::Viewport* vp = viewportManager.getViewport(mainVpId);
+    uint64_t mainVpId = viewportManager.createViewport(mainWindow, {"MainView", 0, 0, 1080, 720});
+    chai::Viewport* vp = viewportManager.getViewport(static_cast<uint32_t>(mainVpId));
 
     // initialize physics engine
     chai::ChaiPhysics physicsEngine;

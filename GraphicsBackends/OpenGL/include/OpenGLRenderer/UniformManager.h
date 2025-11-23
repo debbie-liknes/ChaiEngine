@@ -69,8 +69,7 @@ namespace chai::brew
 
         OpenGLUniformBuffer* getUniformBufferData(const UniformBufferBase& uniform) const
         {
-            auto it = m_uniformBuffers.find(uniform.getId());
-            if (it != m_uniformBuffers.end())
+            if (auto it = m_uniformBuffers.find(uniform.getId()); it != m_uniformBuffers.end())
             {
                 return it->second.get();
             }
