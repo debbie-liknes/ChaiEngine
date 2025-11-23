@@ -40,7 +40,9 @@ namespace chai::brew {
         m_perDrawUBOData = createUniform<DrawUniforms>();
         m_perDrawUBOData->setValue(DrawUniforms{Mat4::identity(), Mat4::identity()});
 
-        m_uniManager.buildUniforms({m_perFrameUBOData.get(), m_perDrawUBOData.get()});
+        m_lightingUBO = createUniform<LightingData>();
+
+        m_uniManager.buildUniforms({m_perFrameUBOData.get(), m_perDrawUBOData.get(), m_lightingUBO.get()});
 
         std::cout << "=========================\n" << std::endl;
 
@@ -95,8 +97,7 @@ namespace chai::brew {
                     break;
 
                 case RenderCommand::SET_LIGHTS:
-                    m_cachedLights = cmd.lights;
-                    m_lightsDirty = true;
+                    setLights(cmd.lights);
                     break;
 
                 case RenderCommand::DRAW_MESH: {
@@ -254,6 +255,11 @@ namespace chai::brew {
         }
     }
 
+    void OpenGLBackend::setLights(const std::vector<Light> &lights) {
+        m_cachedLights = lights;
+        m_lightsDirty = true;
+    }
+
     void OpenGLBackend::bindShaderProgram(GLuint program)
     {
         // Only call glUseProgram if we're switching to a different shader
@@ -291,6 +297,8 @@ namespace chai::brew {
 
             // Update per-draw uniforms
             updatePerDrawUniforms(cmd, shaderData);
+
+            updateLightUniforms(shaderData);
 
             // Apply material uniforms
             applyMaterialState(matData, shaderData);
@@ -338,6 +346,22 @@ namespace chai::brew {
         auto* ub = m_uniManager.getUniformBufferData(*m_perDrawUBOData);
         if (ub) {
             glBindBufferBase(GL_UNIFORM_BUFFER, shaderData->perDrawUBOBinding, ub->ubo);
+        }
+    }
+
+    void OpenGLBackend::updateLightUniforms(const OpenGLShaderData* shaderData) {
+        LightingData lightingData;
+        lightingData.numLights = std::min<int>((int)m_cachedLights.size(), MAX_LIGHTS);
+        for (int i = 0; i < m_cachedLights.size(); ++i) {
+            lightingData.lights[i] = m_cachedLights[i];
+        }
+
+        m_lightingUBO->setValue(lightingData);
+        m_uniManager.updateUniform(*m_lightingUBO);
+
+        auto* glBuffer = m_uniManager.getUniformBufferData(*m_lightingUBO);
+        if (glBuffer) {
+            glBindBufferBase(GL_UNIFORM_BUFFER, shaderData->lightingUBOBinding, glBuffer->ubo);
         }
     }
 

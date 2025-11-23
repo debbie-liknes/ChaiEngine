@@ -61,11 +61,13 @@ namespace chai::brew
         // Uniform management
         void updatePerFrameUniforms();
         void updatePerDrawUniforms(const RenderCommand& cmd, const OpenGLShaderData* shaderData);
-        //void setLightsUniforms(OpenGLShaderData* shaderData);
+        void updateLightUniforms(const OpenGLShaderData* shaderData);
         void setUniformValue(GLint location, const std::unique_ptr<UniformBufferBase>& uniform);
 
         // Material handling
         void applyMaterialState(OpenGLMaterialData* matData, OpenGLShaderData* shaderData);
+
+	    void setLights(const std::vector<Light>& lights);
 
     private:
         
@@ -84,7 +86,7 @@ namespace chai::brew
         // Uniform Buffer Objects
 		std::shared_ptr<UniformBuffer<CommonUniforms>> m_perFrameUBOData;
 		std::shared_ptr<UniformBuffer<DrawUniforms>> m_perDrawUBOData;
-        GLuint m_lightingUBO = 0;
+		std::shared_ptr<UniformBuffer<LightingData>> m_lightingUBO;
 
         // State tracking (minimize redundant state changes)
         GLuint currentShaderProgram = 0;

@@ -31,21 +31,13 @@ namespace chai::cup
 			//we should limit the number of lights to a reasonable amount
 			//should we cache this? lights dont change much
 
-			brew::Light light = {};
-			light.type = static_cast<int>(lightComp->type);
-			light.color = lightComp->color;
-			light.intensity = lightComp->intensity;
-			light.range = lightComp->range;
-			light.attenuation = lightComp->attenuation;
-			light.innerCone = cos(radians(lightComp->innerCone));
-			light.outerCone = cos(radians(lightComp->outerCone));
-			light.enabled = lightComp->enabled ? 1 : 0;
-			//light.direction = lightComp->direction;
-
-			// Get transform from GameObject
 			auto transform = object->getComponent<TransformComponent>();
-			light.position = transform->getWorldPosition();
-			light.direction = transform->forward();
+
+			brew::Light light = {};
+			light.positionAndType = Vec4(transform->getWorldPosition(), static_cast<int>(lightComp->type));
+			light.color = Vec4(lightComp->color, lightComp->intensity);
+			light.directionAndRange = Vec4(transform->forward(), lightComp->range);
+			light.spotParams = Vec4(lightComp->innerCone, lightComp->outerCone, 0.0, 0.0);
 
 			cmd.lights.push_back(light);
 		}
