@@ -3,7 +3,7 @@
 
 namespace chai::brew
 {
-    class SphericalSpace : public ICoordinateSpace 
+    class SphericalSpace : public ICoordinateSpace
     {
     public:
         chai::Vec3 ToWorld(const chai::Vec3& local) const override;

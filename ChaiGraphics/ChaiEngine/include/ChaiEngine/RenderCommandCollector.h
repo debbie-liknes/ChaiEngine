@@ -5,14 +5,14 @@
 
 namespace chai::brew
 {
-    class RenderCommandCollector 
+    class RenderCommandCollector
     {
     public:
         void submit(RenderCommand& cmd);
         const std::vector<RenderCommand>& getCommands() const;
 
-		void setCamera(ICamera* cam);
-		void setViewport(IViewport* vp);
+        void setCamera(ICamera* cam);
+        void setViewport(IViewport* vp);
 
     private:
         std::vector<RenderCommand> commands;

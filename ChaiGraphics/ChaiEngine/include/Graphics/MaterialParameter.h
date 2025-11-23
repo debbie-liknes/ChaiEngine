@@ -3,8 +3,10 @@
 #include <variant>
 #include <vector>
 
-namespace chai {
-    enum class MaterialParameterType {
+namespace chai
+{
+    enum class MaterialParameterType
+    {
         Float,
         Float2,
         Float3,
@@ -27,42 +29,48 @@ namespace chai {
         int,
         Mat3,
         Mat4,
-        bool
-    > ;
+        bool>;
 
-    struct MaterialParameter {
+    struct MaterialParameter
+    {
         std::string name;
         MaterialParameterType type;
         MaterialParameterValue defaultValue;
 
-        static uint32_t getSize(MaterialParameterType type) {
-            switch (type) {
-                case MaterialParameterType::Float:      return 4;
-                case MaterialParameterType::Float2:     return 8;
-                case MaterialParameterType::Float3:     return 12;
-                case MaterialParameterType::Float4:     return 16;
-                case MaterialParameterType::Int:       return 4;
-                case MaterialParameterType::Mat3:      return 36;
-                case MaterialParameterType::Mat4:      return 64;
-                case MaterialParameterType::Bool:      return 4;
-                default: return 0;
+        static uint32_t getSize(MaterialParameterType type)
+        {
+            switch (type)
+            {
+            case MaterialParameterType::Float: return 4;
+            case MaterialParameterType::Float2: return 8;
+            case MaterialParameterType::Float3: return 12;
+            case MaterialParameterType::Float4: return 16;
+            case MaterialParameterType::Int: return 4;
+            case MaterialParameterType::Mat3: return 36;
+            case MaterialParameterType::Mat4: return 64;
+            case MaterialParameterType::Bool: return 4;
+            default: return 0;
             }
         }
 
-        uint32_t getSize() const {
+        uint32_t getSize() const
+        {
             return getSize(type);
         }
 
-        bool isSampler() const {
+        bool isSampler() const
+        {
             return false;
         }
     };
 
-    class MaterialLayout {
+    class MaterialLayout
+    {
     public:
         MaterialLayout() = default;
 
-        void addParameter(const std::string& name, MaterialParameterType type, MaterialParameterValue defaultValue = {}) {
+        void addParameter(const std::string& name, MaterialParameterType type, MaterialParameterValue defaultValue = {})
+        {
             MaterialParameter param;
             param.name = name;
             param.type = type;
@@ -71,23 +79,30 @@ namespace chai {
             m_parameters.push_back(param);
         }
 
-        const std::vector<MaterialParameter>& getParameters() const {
+        const std::vector<MaterialParameter>& getParameters() const
+        {
             return m_parameters;
         }
 
-        const MaterialParameter* findParameter(const std::string& name) const {
-            for (const auto& param : m_parameters) {
-                if (param.name == name) {
+        const MaterialParameter* findParameter(const std::string& name) const
+        {
+            for (const auto& param : m_parameters)
+            {
+                if (param.name == name)
+                {
                     return &param;
                 }
             }
             return nullptr;
         }
 
-        std::vector<const MaterialParameter*> getUniforms() const {
+        std::vector<const MaterialParameter*> getUniforms() const
+        {
             std::vector<const MaterialParameter*> uniforms;
-            for (const auto& param : m_parameters) {
-                if (!param.isSampler()) {
+            for (const auto& param : m_parameters)
+            {
+                if (!param.isSampler())
+                {
                     uniforms.push_back(&param);
                 }
             }

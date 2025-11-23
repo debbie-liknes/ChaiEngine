@@ -7,9 +7,9 @@
 
 namespace chai::brew
 {
-    struct CHAIGRAPHICS_EXPORT RenderCommand 
+    struct CHAIGRAPHICS_EXPORT RenderCommand
     {
-        enum Type 
+        enum Type
         {
             DRAW_MESH,
             SET_VIEWPORT,
@@ -18,16 +18,15 @@ namespace chai::brew
             SET_LIGHTS
         };
 
-        Type type{ Type::CLEAR };
+        Type type{Type::CLEAR};
 
         // Mesh rendering data
         ResourceHandle mesh;
         ResourceHandle material;
-        Mat4 transform{ 1.f };
+        Mat4 transform{1.f};
         IViewport* viewport = nullptr;
-        Mat4 viewMatrix{ 1.f };
-        Mat4 projectionMatrix{ 1.f };
+        Mat4 viewMatrix{1.f};
+        Mat4 projectionMatrix{1.f};
         std::vector<Light> lights;
-
     };
 }

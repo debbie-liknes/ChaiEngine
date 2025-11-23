@@ -18,7 +18,8 @@ namespace chai
         }
 
         ~MaterialSystem()
-        {}
+        {
+        }
 
         static ResourceHandle createMaterialResourceFromAsset(const MaterialAsset* asset)
         {
@@ -41,21 +42,24 @@ namespace chai
             return createMaterialResourceFromAsset(AssetManager::instance().get<MaterialAsset>(asset));
         }
 
-        AssetHandle getDefaultAsset() {
+        AssetHandle getDefaultAsset()
+        {
             return m_defaultAsset;
         }
 
     private:
-        void createDefaultAsset() {
+        void createDefaultAsset()
+        {
             auto matAsset = std::make_unique<MaterialAsset>("phong_default", m_phongDefaultAsset);
-            matAsset->setParameter("u_DiffuseColor", chai::Vec3(1.0,1.0,1.0));
-            matAsset->setParameter("u_SpecularColor", chai::Vec3(1.0,1.0,1.0));
+            matAsset->setParameter("u_DiffuseColor", chai::Vec3(1.0, 1.0, 1.0));
+            matAsset->setParameter("u_SpecularColor", chai::Vec3(1.0, 1.0, 1.0));
             matAsset->setParameter("u_Shininess", 1.f);
 
             m_defaultAsset = AssetManager::instance().add(std::move(matAsset)).value();
         }
 
-        void loadPhongShaderDefault() {
+        void loadPhongShaderDefault()
+        {
             auto vertAssetHandle = chai::AssetManager::instance().load<chai::ShaderStageAsset>("shaders/phong.vert");
             auto vertAsset = chai::AssetManager::instance().get<chai::ShaderStageAsset>(vertAssetHandle.value());
             auto fragAssetHandle = chai::AssetManager::instance().load<chai::ShaderStageAsset>("shaders/phong.frag");

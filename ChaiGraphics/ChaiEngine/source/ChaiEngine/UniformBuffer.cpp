@@ -2,12 +2,13 @@
 
 namespace chai
 {
-	UniformBufferBase::~UniformBufferBase()
-	{}
+    UniformBufferBase::~UniformBufferBase()
+    {
+    }
 
-	uint64_t UniformBufferBase::getNextId()
-	{
-		static uint64_t currentId = 0;
-		return ++currentId;
-	}
+    uint64_t UniformBufferBase::getNextId()
+    {
+        static uint64_t currentId = 0;
+        return ++currentId;
+    }
 }

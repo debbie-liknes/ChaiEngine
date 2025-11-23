@@ -14,16 +14,20 @@ namespace chai
     class CHAIGRAPHICS_EXPORT MeshAsset : public IAsset
     {
     public:
-        struct MeshData {
+        struct MeshData
+        {
             std::vector<Vec3> positons;
             std::vector<Vec3> normals;
             std::vector<uint32_t> indices;
             std::vector<Vec2> uvs;
         };
 
-        explicit MeshAsset(const MeshData& mesh) : m_meshData(mesh) {
+        explicit MeshAsset(const MeshData& mesh) : m_meshData(mesh)
+        {
         }
-        ~MeshAsset() override {
+
+        ~MeshAsset() override
+        {
             m_defaultMaterials.clear();
         }
 
@@ -60,7 +64,9 @@ namespace chai
 
         explicit MeshResource(AssetHandle source)
             : Resource(source), sourceAsset(source)
-        {}
+        {
+        }
+
         MeshResource() = default;
     };
 }

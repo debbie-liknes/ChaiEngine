@@ -3,7 +3,7 @@
 
 namespace chai::brew
 {
-    class ICoordinateSpace 
+    class ICoordinateSpace
     {
     public:
         virtual chai::Vec3 ToWorld(const chai::Vec3& local) const = 0;
