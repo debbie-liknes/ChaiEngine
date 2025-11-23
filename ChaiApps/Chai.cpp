@@ -14,7 +14,6 @@
 #include <Components/CameraComponent.h>
 #include <Components/LightComponent.h>
 #include <Components/TransformComponent.h>
-#include <Input/InputState.h>
 #include <Controllers/CameraController.h>
 #include <chrono>
 //#include <AudioEngine.h>
@@ -88,7 +87,6 @@ int main()
 	auto camTransform = cameraObject->getComponent<chai::cup::TransformComponent>();
 	camTransform->setPosition(chai::Vec3{ -5.0, 0.0, -10.0 });
 	camTransform->lookAt(chai::Vec3{ 0.f, 0.f, 0.f }, chai::Vec3{0.0, -1.0, 0.0});
-	camComponent->getViewMatrix();
 	cameraObject->addController<chai::cup::CameraController>();
 
 	//add some lighting so we can see
@@ -148,7 +146,7 @@ int main()
 			//multiple scenes? additive scenes?
 			chai::cup::Scene const* scene = sceneManager.getPrimaryScene();
 			scene->collectLights(collector);
-			if (scene) 
+			if (scene != nullptr)
 			{
 				scene->collectRenderables(collector);
 			}

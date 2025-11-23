@@ -37,7 +37,7 @@ namespace chai
             }
             RowProxy& operator=(std::initializer_list<T> il) 
             {
-                assert(il.size() == (size_t)C);
+                assert(il.size() == static_cast<size_t>(C));
                 int i = 0; for (const T& v : il) p_[i++] = v; return *this;
             }
             constexpr operator Vec<T, C>() const noexcept 

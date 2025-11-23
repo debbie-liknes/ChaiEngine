@@ -56,34 +56,34 @@ namespace chai
 		// Loop over shapes
 		for (auto& shape : shapes)
 		{
-			size_t index_offset = 0;
+			size_t indexOffset = 0;
 			for (auto& numVerts : shape.mesh.num_face_vertices)
 			{
 				// Loop over vertices in the face
 				for (size_t v = 0; v < numVerts; v++)
 				{
-					tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
+					tinyobj::index_t idx = shape.mesh.indices[indexOffset + v];
 
 					OBJVertex vertex{};
 
 					// Position
-					vertex.position.x = attrib.vertices[3 * size_t(idx.vertex_index) + 0];
-					vertex.position.y = attrib.vertices[3 * size_t(idx.vertex_index) + 1];
-					vertex.position.z = attrib.vertices[3 * size_t(idx.vertex_index) + 2];
+					vertex.position.x = attrib.vertices[3 * static_cast<size_t>(idx.vertex_index) + 0];
+					vertex.position.y = attrib.vertices[3 * static_cast<size_t>(idx.vertex_index) + 1];
+					vertex.position.z = attrib.vertices[3 * static_cast<size_t>(idx.vertex_index) + 2];
 
 					// Normal
 					if (idx.normal_index >= 0)
 					{
-						vertex.normal.x = attrib.normals[3 * size_t(idx.normal_index) + 0];
-						vertex.normal.y = attrib.normals[3 * size_t(idx.normal_index) + 1];
-						vertex.normal.z = attrib.normals[3 * size_t(idx.normal_index) + 2];
+						vertex.normal.x = attrib.normals[3 * static_cast<size_t>(idx.normal_index) + 0];
+						vertex.normal.y = attrib.normals[3 * static_cast<size_t>(idx.normal_index) + 1];
+						vertex.normal.z = attrib.normals[3 * static_cast<size_t>(idx.normal_index) + 2];
 					}
 
 					// Texture coordinates
 					if (idx.texcoord_index >= 0)
 					{
-						vertex.uv.x = attrib.texcoords[2 * size_t(idx.texcoord_index) + 0];
-						vertex.uv.y = 1.0f - attrib.texcoords[2 * size_t(idx.texcoord_index) + 1]; // Flip Y
+						vertex.uv.x = attrib.texcoords[(2 * static_cast<size_t>(idx.texcoord_index)) + 0];
+						vertex.uv.y = 1.0f - attrib.texcoords[(2 * static_cast<size_t>(idx.texcoord_index)) + 1]; // Flip Y
 					}
 
 					// Create unique vertex key for deduplication
@@ -105,7 +105,7 @@ namespace chai
 						indices.push_back(uniqueVertices[vertexKey]);
 					}
 				}
-				index_offset += numVerts;
+				indexOffset += numVerts;
 			}
 		}
 
@@ -127,7 +127,7 @@ namespace chai
 
 		auto mesh = std::make_unique<MeshAsset>(meshData);
 
-		for (auto& mat : materials)
+		for (const auto& mat : materials)
 		{
 			//auto material = std::make_unique<MaterialAsset>();
 			/*material->addParameter("ambientColor", Vec3(mat.ambient[0], mat.ambient[1], mat.ambient[2]));

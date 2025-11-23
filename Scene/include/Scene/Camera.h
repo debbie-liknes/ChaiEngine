@@ -1,7 +1,6 @@
 #pragma once
 #include <SceneExport.h>
 #include <Scene/ICamera.h>
-#include <Coordinate/CoordinateSpace.h>
 #include <ChaiMath.h>
 
 namespace chai::cup

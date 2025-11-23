@@ -1,6 +1,5 @@
 #pragma once
 #include <MathIncludes.h>
-#include <ChaiMathExport.h>
 
 #ifndef CHAI_ROW_MAJOR
 #define CHAI_ROW_MAJOR 1

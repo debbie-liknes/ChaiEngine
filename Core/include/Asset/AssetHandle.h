@@ -1,19 +1,15 @@
 #pragma once
-#include "CoreExport.h"
+#include <CoreExport.h>
 
 #include <Plugin/PluginBase.h>
-#include <string>
 #include <memory>
-#include <unordered_map>
-#include <vector>
 #include <typeindex>
-#include <optional>
 
 namespace chai
 {
     static constexpr uint32_t INVALID_HANDLE = 0xFFFFFFFF;
 
-    struct Handle 
+    struct CORE_EXPORT Handle
     {
         uint32_t index;
         uint32_t generation;

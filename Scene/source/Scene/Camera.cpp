@@ -1,5 +1,4 @@
 #include <Scene/Camera.h>
-#include <Coordinate/Euclidean.h>
 
 namespace chai::cup
 {

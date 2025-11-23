@@ -41,21 +41,4 @@ namespace chai
 		float length = sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
 		EXPECT_FLOAT_EQ(length, 1.0f);
 	}
-
-	TEST(QuaternionConversionTest, RotateVector90Degrees) 
-	{
-		//// Rotate 90° around Z axis
-		//float angle = M_PI / 2.0f;
-		//float c = std::cos(angle / 2.0f);
-		//float s = std::sin(angle / 2.0f);
-		//Quaternion<float> q{ 0.0f, 0.0f, s, c };
-
-		//struct Vec3 { float x, y, z; };
-		//Vec3 v{ 1.0f, 0.0f, 0.0f };
-		//Vec3 rotated = q.rotate(v); // should become (0, 1, 0)
-
-		//EXPECT_FLOAT_EQ(rotated.x, 0.0f);
-		//EXPECT_FLOAT_EQ(rotated.y, 1.0f);
-		//EXPECT_FLOAT_EQ(rotated.z, 0.0f);
-	}
 }

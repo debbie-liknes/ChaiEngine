@@ -45,7 +45,7 @@ namespace chai::brew
                 auto glMeshData = std::make_unique<OpenGLMeshData>();
                 auto* ptr = glMeshData.get();
                 m_meshCache[meshHandle.index] = std::move(glMeshData);
-                return ptr;
+                return m_meshCache[meshHandle.index].get();
             }
             return it->second.get();
         }

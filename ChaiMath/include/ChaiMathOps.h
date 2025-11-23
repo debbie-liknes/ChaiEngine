@@ -3,9 +3,7 @@
 #include <Vec3.h>
 #include <Mat_4x4.h>
 #include <Mat_3x3.h>
-#include <MatBase.h>
 #include <ChaiQuat.h>
-#include <ChaiMathExport.h>
 
 namespace chai
 {

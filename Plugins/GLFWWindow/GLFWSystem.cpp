@@ -39,11 +39,11 @@ namespace chai
 		{
 			if (action == GLFW_PRESS)
 			{
-				InputSystem::instance().queueEvent(std::make_unique<MouseDownEvent>(userPtr->window->getId(), (uint32_t)button));
+				InputSystem::instance().queueEvent(std::make_unique<MouseDownEvent>(userPtr->window->getId(), static_cast<uint32_t>(button)));
 			}
 			else if (action == GLFW_RELEASE)
 			{
-				InputSystem::instance().queueEvent(std::make_unique<MouseUpEvent>(userPtr->window->getId(), (uint32_t)button));
+				InputSystem::instance().queueEvent(std::make_unique<MouseUpEvent>(userPtr->window->getId(), static_cast<uint32_t>(button)));
 			}
 		}
 	}

@@ -56,7 +56,7 @@ namespace chai::brew
         void drawBatchedCommands(const std::vector<SortedDrawCommand>& sortedDraws);
 	    void bindShaderProgram(GLuint program);
 
-        void clear(float r, float g, float b, float a);
+        static void clear(float r, float g, float b, float a);
 
         // Uniform management
         void updatePerFrameUniforms();

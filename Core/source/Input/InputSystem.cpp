@@ -1,5 +1,7 @@
 #include <Input/InputSystem.h>
 
+#include <algorithm>
+
 namespace chai
 {
     InputSystem& InputSystem::instance()
@@ -22,11 +24,9 @@ namespace chai
 
     void InputSystem::unsubscribe(uint32_t handlerId)
     {
-        handlers.erase(
-            std::remove_if(handlers.begin(), handlers.end(),
-                [handlerId](const auto& pair) { return pair.first == handlerId; }),
-            handlers.end()
-        );
+        handlers.erase(std::ranges::remove_if(handlers, [handlerId](auto const& p) {
+            return p.first == handlerId;
+        }).begin(), handlers.end());
     }
 
     void InputSystem::processEvents()

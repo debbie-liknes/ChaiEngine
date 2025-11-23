@@ -46,7 +46,7 @@ namespace chai {
                     toGLType(meshAttr->type),
                     meshAttr->normalized ? GL_TRUE : GL_FALSE,
                     meshData->layout.getStride(),
-                    (void*)(uintptr_t)meshAttr->offset
+                    reinterpret_cast<void *>(static_cast<uintptr_t>(meshAttr->offset))
                 );
             }
         }

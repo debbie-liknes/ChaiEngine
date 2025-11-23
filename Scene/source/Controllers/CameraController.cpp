@@ -1,6 +1,6 @@
 #include <Controllers/CameraController.h>
-#include <stdexcept>
-#include <numbers>
+#include <Components/TransformComponent.h>
+#include <Scene/GameObject.h>
 
 namespace chai::cup
 {
@@ -56,7 +56,7 @@ namespace chai::cup
     void CameraController::processMovement(double deltaTime)
     {
         auto const& input = InputSystem::instance();
-        float velocity = moveSpeed * (float)deltaTime;
+        float velocity = moveSpeed * static_cast<float>(deltaTime);
 
         auto pos = transformComponent->getWorldPosition();
         auto forward = transformComponent->forward();
@@ -128,6 +128,8 @@ namespace chai::cup
         double z = cos(radians(yaw)) * cos(radians(pitch));
 
         auto pos = transformComponent->getWorldPosition();
-        transformComponent->lookAt({ pos.x + (float)x, pos.y + (float)y, pos.z + (float)z }, { 0.0f, -1.0f, 0.0f });
+        transformComponent->lookAt(
+            { pos.x + static_cast<float>(x), pos.y + static_cast<float>(y), pos.z + static_cast<float>(z) },
+            { 0.0f, -1.0f, 0.0f });
     }
 }

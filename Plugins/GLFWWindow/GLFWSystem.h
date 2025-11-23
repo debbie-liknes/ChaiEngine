@@ -6,11 +6,11 @@
 struct GLFWwindow;
 namespace chai
 {
-	class GLFWWINDOWPLUGIN_EXPORT GLFWSystem : public WindowSystem
+	class GLFWWINDOWPLUGIN_EXPORT GLFWSystem final : public WindowSystem
 	{
     public:
         GLFWSystem();
-        ~GLFWSystem();
+        ~GLFWSystem() override;
 
         bool initialize() override;
         void shutdown() override;

@@ -1,17 +1,13 @@
 #pragma once
 #include <SceneExport.h>
 #include <Controllers/Controller.h>
-#include <Scene/GameObject.h>
 #include <Components/CameraComponent.h>
-#include <Components/TransformComponent.h>
 #include <Input/InputSystem.h>
-#include <typeindex>
-#include <string>
 
 namespace chai::cup
 {
     // Camera controller class
-    class CameraController : public IController
+    class SCENE_EXPORT CameraController : public IController
     {
     public:
         explicit CameraController(chai::cup::GameObject* obj);

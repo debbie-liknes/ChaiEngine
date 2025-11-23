@@ -28,7 +28,7 @@ namespace chai
 			return result;
 		}
 
-		void assignCameraToViewport(uint32_t viewportId, ICamera* camera);
+		void assignCameraToViewport(uint32_t viewportId, ICamera* camera) {}
 
 		void handleEvent(const InputEvent& event) override;
 

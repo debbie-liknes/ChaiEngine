@@ -7,7 +7,7 @@
 
 namespace chai::brew {
     bool OpenGLBackend::initialize(void *winProcAddress) {
-        if (!gladLoadGL((GLADloadfunc) winProcAddress)) {
+        if (gladLoadGL(static_cast<GLADloadfunc>(winProcAddress)) == 0) {
             std::cerr << "Failed to initialize GLAD" << std::endl;
             checkGLError("setProcAddress");
             return false;
@@ -17,7 +17,7 @@ namespace chai::brew {
 
         // Check OpenGL version
         const auto *version = (const char *) glGetString(GL_VERSION);
-        std::cout << "OpenGL Version: " << version << std::endl;
+        std::cout << "OpenGL Version: " << version << '\n';
 
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS); // or GL_LEQUAL
@@ -32,7 +32,7 @@ namespace chai::brew {
 
         m_matManager.setShaderManager(&m_shaderManager);
 
-        std::cout << "Creating common uniforms..." << std::endl;
+        std::cout << "Creating common uniforms..." << '\n';
 
         m_perFrameUBOData = createUniform<CommonUniforms>();
         m_perFrameUBOData->setValue({Mat4::identity(), Mat4::identity()});
@@ -44,21 +44,21 @@ namespace chai::brew {
 
         m_uniManager.buildUniforms({m_perFrameUBOData.get(), m_perDrawUBOData.get(), m_lightingUBO.get()});
 
-        std::cout << "=========================\n" << std::endl;
+        std::cout << "=========================\n" << '\n';
 
         // Create default shader
         defaultShaderProgram = m_shaderManager.createDefaultShaderProgram();
         if (defaultShaderProgram == 0) {
-            std::cerr << "Failed to create default shader program" << std::endl;
+            std::cerr << "Failed to create default shader program" << '\n';
             return false;
         }
 
-        std::cout << "OpenGL Backend initialized successfully" << std::endl;
+        std::cout << "OpenGL Backend initialized successfully" << '\n';
         return true;
     }
 
     void OpenGLBackend::shutdown() {
-        std::cout << "Shutting down OpenGL Backend..." << std::endl;
+        std::cout << "Shutting down OpenGL Backend..." << '\n';
 
         // Delete default shader
         if (defaultShaderProgram != 0) {
@@ -66,7 +66,7 @@ namespace chai::brew {
             defaultShaderProgram = 0;
         }
 
-        std::cout << "OpenGL Backend shutdown complete" << std::endl;
+        std::cout << "OpenGL Backend shutdown complete" << '\n';
     }
 
     // ============================================================================
@@ -128,19 +128,20 @@ namespace chai::brew {
                     }
                 }
                 break;
+                default: ;
             }
         }
 
         // Sort opaque front-to-back (minimize overdraw, maximize early-Z)
         // Sort by: shader -> material -> mesh -> depth
-        std::sort(opaqueDraws.begin(), opaqueDraws.end(),
+        std::ranges::sort(opaqueDraws,
                   [](const SortedDrawCommand &a, const SortedDrawCommand &b) {
                       return a.sortKey < b.sortKey;
                   });
 
         // Sort transparent back-to-front (correct alpha blending)
         // Depth is most significant for transparents
-        std::sort(transparentDraws.begin(), transparentDraws.end(),
+        std::ranges::sort(transparentDraws,
                   [](const SortedDrawCommand &a, const SortedDrawCommand &b) {
                       return a.sortKey.depth > b.sortKey.depth;
                   });
@@ -332,8 +333,8 @@ namespace chai::brew {
 
     void OpenGLBackend::updateLightUniforms(const OpenGLShaderData* shaderData) {
         if (m_lightsDirty) {
-            LightingData lightingData;
-            lightingData.numLights = std::min<int>((int)m_cachedLights.size(), MAX_LIGHTS);
+            LightingData lightingData{};
+            lightingData.numLights = std::min<int>(static_cast<int>(m_cachedLights.size()), MAX_LIGHTS);
             for (int i = 0; i < m_cachedLights.size(); ++i) {
                 lightingData.lights[i] = m_cachedLights[i];
             }
@@ -343,8 +344,7 @@ namespace chai::brew {
             m_uniManager.updateUniform(*m_lightingUBO);
         }
 
-        auto* glBuffer = m_uniManager.getUniformBufferData(*m_lightingUBO);
-        if (glBuffer) {
+        if (auto* glBuffer = m_uniManager.getUniformBufferData(*m_lightingUBO)) {
             glBindBufferBase(GL_UNIFORM_BUFFER, shaderData->lightingUBOBinding, glBuffer->ubo);
         }
     }

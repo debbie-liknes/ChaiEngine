@@ -61,7 +61,7 @@ namespace chai::kettle
         auto getPlugin = (RegisterPluginFn)dlsym(handle, "GetPluginModule");
 #endif
 
-        if (!registerHandle) 
+        if (registerHandle == nullptr)
         {
             std::cerr << "Plugin " << path << " does not expose RegisterPlugin()\n";
             return false;

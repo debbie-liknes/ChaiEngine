@@ -15,9 +15,9 @@ namespace chai::cup
         if (!transform) return Mat4{ 1.0f };
 
         // Build view matrix from transform
-        Vec3 pos = transform->getWorldPosition();
-        Vec3 forward = transform->forward();
-        Vec3 up = transform->up();
+        const Vec3 pos = transform->getWorldPosition();
+        const Vec3 forward = transform->forward();
+        const Vec3 up = transform->up();
 
         return lookAt(pos, pos + forward, up);
     }

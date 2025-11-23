@@ -32,7 +32,7 @@ namespace chai
                 {
                     // priority_queue is a max-heap (greater = higher priority)
                     // compare inherited costs
-                    return lhs.second > lhs.second;
+                    return lhs.second > rhs.second;
                 }
             };
             std::priority_queue<SurfaceAreaPair, std::vector<SurfaceAreaPair>, SurfaceAreaComparator> m_saPriQueue;

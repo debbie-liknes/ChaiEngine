@@ -15,7 +15,9 @@ namespace chai
     {
     public:
         WindowSystem();
-        ~WindowSystem();
+
+        virtual ~WindowSystem();
+        WindowSystem(const WindowSystem&) = delete;
 
         virtual bool initialize() = 0;
         virtual void shutdown() = 0;

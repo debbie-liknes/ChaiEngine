@@ -11,7 +11,7 @@ namespace chai::cup
 
 		void addScene(const std::string& name, std::unique_ptr<Scene> scene);
 		Scene* setActiveScene(const std::string& name);
-		Scene* getPrimaryScene() { return m_activeScene; }
+		Scene* getPrimaryScene() const { return m_activeScene; }
 
 		void update(double deltaTime) override;
 

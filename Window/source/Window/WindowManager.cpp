@@ -1,6 +1,8 @@
 #include <Window/WindowManager.h>
 #include <Window/WindowSystem.h>
 
+#include <algorithm>
+
 namespace chai
 {
 	WindowManager::WindowManager(std::shared_ptr<WindowSystem> system) : m_windowSystem(system)
@@ -26,9 +28,9 @@ namespace chai
 		{
 			m_windowSystem->destroyWindow(win->nativeWindow);
 		}
-		auto it = std::remove_if(m_windows.begin(), m_windows.end(),
+		auto it = std::ranges::remove_if(m_windows,
 			[id](const std::unique_ptr<Window>& window) { return window->getId() == id; });
-		m_windows.erase(it, m_windows.end());
+		m_windows.erase(it.begin(), m_windows.end());
 	}
 
 	bool WindowManager::isDone() const
