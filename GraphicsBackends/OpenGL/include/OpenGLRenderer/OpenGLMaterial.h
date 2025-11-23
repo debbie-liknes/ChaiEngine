@@ -129,6 +129,7 @@ namespace chai::brew
 
             glMaterialData->isCompiled = true;
             std::cout << "Created material shader: " << shaderAsset->getName() << std::endl;
+            return true;
         }
 
     private:

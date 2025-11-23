@@ -219,7 +219,7 @@ namespace chai::brew {
         key.material = cmd.material.isValid() ? (cmd.material.index & 0xFFF) : 0;
 
         // Mesh ID (for batching)
-        key.mesh = (meshData->VAO >> 4) & 0xFFF;
+        key.mesh = cmd.mesh.index & 0xFFF;
 
         return key;
     }
@@ -227,33 +227,6 @@ namespace chai::brew {
     // ============================================================================
     // BATCHED DRAWING (State Change Minimization)
     // ============================================================================
-
-    void bindMeshToShader(OpenGLMeshData* mesh, const ShaderAsset* shader) {
-        glBindVertexArray(mesh->VAO);
-        glBindBuffer(GL_ARRAY_BUFFER, mesh->VBO);
-
-        for (uint32_t i = 0; i < 16; ++i) {
-            glDisableVertexAttribArray(i);
-        }
-
-        for (const auto& input : shader->getVertexInputs()) {
-            const VertexAttribute* meshAttr = mesh->layout.findAttribute(input.name);
-
-            if (meshAttr) {
-                glEnableVertexAttribArray(input.location);
-
-                GLenum glType = toGLType(meshAttr->type);
-                GLint componentCount = meshAttr->getComponentCount();
-
-                glVertexAttribPointer(input.location,
-                    componentCount,
-                    glType,
-                    meshAttr->normalized ? GL_TRUE : GL_FALSE,
-                    mesh->layout.getStride(),
-                    (void*)(uintptr_t)meshAttr->offset);
-            }
-        }
-    }
 
     void OpenGLBackend::setLights(const std::vector<Light> &lights) {
         m_cachedLights = lights;
@@ -292,20 +265,28 @@ namespace chai::brew {
                 continue;
             }
 
+            auto* shaderAsset = AssetManager::instance().get<ShaderAsset>(shaderData->shaderAssetHandle);
+
+            GLuint vao = m_meshManager.getOrCreateVAO(
+                meshData,
+                matData->shaderProgram,
+                shaderAsset
+            );
+
+            if (currentVAO != vao) {
+                glBindVertexArray(vao);
+                currentVAO = vao;
+            }
+
             // Bind shader program
             bindShaderProgram(matData->shaderProgram);
 
             // Update per-draw uniforms
             updatePerDrawUniforms(cmd, shaderData);
-
             updateLightUniforms(shaderData);
 
             // Apply material uniforms
             applyMaterialState(matData, shaderData);
-
-            // Bind mesh attributes to shader inputs (name matching!)
-            auto shaderAsset = AssetManager::instance().get<ShaderAsset>(shaderData->shaderAssetHandle);
-            bindMeshToShader(meshData, shaderAsset);
 
             // Draw
             if (meshData->indexCount > 0) {
@@ -350,14 +331,17 @@ namespace chai::brew {
     }
 
     void OpenGLBackend::updateLightUniforms(const OpenGLShaderData* shaderData) {
-        LightingData lightingData;
-        lightingData.numLights = std::min<int>((int)m_cachedLights.size(), MAX_LIGHTS);
-        for (int i = 0; i < m_cachedLights.size(); ++i) {
-            lightingData.lights[i] = m_cachedLights[i];
-        }
+        if (m_lightsDirty) {
+            LightingData lightingData;
+            lightingData.numLights = std::min<int>((int)m_cachedLights.size(), MAX_LIGHTS);
+            for (int i = 0; i < m_cachedLights.size(); ++i) {
+                lightingData.lights[i] = m_cachedLights[i];
+            }
+            m_lightsDirty = false;
 
-        m_lightingUBO->setValue(lightingData);
-        m_uniManager.updateUniform(*m_lightingUBO);
+            m_lightingUBO->setValue(lightingData);
+            m_uniManager.updateUniform(*m_lightingUBO);
+        }
 
         auto* glBuffer = m_uniManager.getUniformBufferData(*m_lightingUBO);
         if (glBuffer) {

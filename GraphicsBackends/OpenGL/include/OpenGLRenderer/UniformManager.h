@@ -16,6 +16,21 @@ namespace chai::brew
 	class UniformManager
 	{
 	public:
+		UniformManager() = default;
+		~UniformManager() {
+			for (auto& [id, uniformBuffer] : m_uniformBuffers) {
+				if (uniformBuffer->ubo != 0) {
+					glDeleteBuffers(1, &uniformBuffer->ubo);
+				}
+			}
+		}
+
+		UniformManager(const UniformManager&) = delete;
+		UniformManager& operator=(const UniformManager&) = delete;
+
+		UniformManager(UniformManager&&) = default;
+		UniformManager& operator=(UniformManager&&) = default;
+
 		void buildUniforms(std::vector<UniformBufferBase*> const& uniforms)
 		{
             for (auto& u : uniforms)

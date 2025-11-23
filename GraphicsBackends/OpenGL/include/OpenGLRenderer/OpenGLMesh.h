@@ -8,13 +8,16 @@
 #include <vector>
 #include <memory>
 
+#include "Graphics/ShaderAsset.h"
+
 namespace chai::brew
 {
     struct OPENGLRENDERER_EXPORT OpenGLMeshData 
     {
-        GLuint VAO = 0;
         GLuint VBO = 0;
         GLuint EBO = 0;
+
+        CMap<GLuint, GLuint> vaosPerShader;
 
         VertexLayout layout;       // Copy for convenience
         uint32_t vertexCount;
@@ -26,7 +29,7 @@ namespace chai::brew
     {
     public:
         OpenGLMeshManager() = default;
-        virtual ~OpenGLMeshManager() = default;
+        virtual ~OpenGLMeshManager();
 
         OpenGLMeshManager(const OpenGLMeshManager&) = delete;
         OpenGLMeshManager& operator=(const OpenGLMeshManager&) = delete;
@@ -46,6 +49,10 @@ namespace chai::brew
             }
             return it->second.get();
         }
+
+        GLuint getOrCreateVAO(OpenGLMeshData* meshData,
+                      GLuint shaderProgram,
+                      const ShaderAsset* shaderAsset);
 
     private:
         CMap<size_t, std::unique_ptr<OpenGLMeshData>> m_meshCache;
