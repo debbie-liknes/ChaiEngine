@@ -20,10 +20,8 @@ namespace chai::brew
 
         ~UniformManager()
         {
-            for (auto& [id, uniformBuffer] : m_uniformBuffers)
-            {
-                if (uniformBuffer->ubo != 0)
-                {
+            for (auto& [id, uniformBuffer] : m_uniformBuffers) {
+                if (uniformBuffer->ubo != 0) {
                     glDeleteBuffers(1, &uniformBuffer->ubo);
                 }
             }
@@ -37,8 +35,7 @@ namespace chai::brew
 
         void buildUniforms(std::vector<UniformBufferBase*> const& uniforms)
         {
-            for (auto& u : uniforms)
-            {
+            for (auto& u : uniforms) {
                 auto openglBuff = std::make_unique<OpenGLUniformBuffer>();
                 openglBuff->size = u->getSize();
                 openglBuff->data.resize(openglBuff->size);
@@ -46,7 +43,10 @@ namespace chai::brew
 
                 glGenBuffers(1, &openglBuff->ubo);
                 glBindBuffer(GL_UNIFORM_BUFFER, openglBuff->ubo);
-                glBufferData(GL_UNIFORM_BUFFER, openglBuff->size, openglBuff->data.data(), GL_DYNAMIC_DRAW);
+                glBufferData(GL_UNIFORM_BUFFER,
+                             openglBuff->size,
+                             openglBuff->data.data(),
+                             GL_DYNAMIC_DRAW);
                 glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
                 m_uniformBuffers[u->getId()] = std::move(openglBuff);
@@ -69,8 +69,7 @@ namespace chai::brew
 
         OpenGLUniformBuffer* getUniformBufferData(const UniformBufferBase& uniform) const
         {
-            if (auto it = m_uniformBuffers.find(uniform.getId()); it != m_uniformBuffers.end())
-            {
+            if (auto it = m_uniformBuffers.find(uniform.getId()); it != m_uniformBuffers.end()) {
                 return it->second.get();
             }
             return nullptr;

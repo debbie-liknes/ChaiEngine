@@ -21,8 +21,6 @@ namespace chai::cup
         chai::cup::GameObject* gameObject = nullptr;
         bool enabled = true;
 
-        explicit IController(chai::cup::GameObject* obj) : gameObject(obj)
-        {
-        }
+        explicit IController(chai::cup::GameObject* obj) : gameObject(obj) {}
     };
 }

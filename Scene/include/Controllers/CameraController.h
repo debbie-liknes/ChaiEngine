@@ -20,9 +20,7 @@ namespace chai::cup
         // IController interface
         void update(double deltaTime) override;
 
-        void setEnabled(bool enabled) override
-        {
-        }
+        void setEnabled(bool enabled) override {}
 
         bool isEnabled() const override { return enabled; }
         const char* getControllerType() const override { return "CameraController"; }

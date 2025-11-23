@@ -77,9 +77,11 @@ int main()
 
     // Customize instance
     materialInstance->setParameter("u_DiffuseColor", chai::Vec3(1.0f, 1.0f, 0.0f));
-    meshComp->setMaterial(chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance)));
+    meshComp->setMaterial(
+        chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance)));
 
-    gameObject->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{0.0, 0.0, 0.0});
+    gameObject->getComponent<chai::cup::TransformComponent>()->setPosition(
+        chai::Vec3{0.0, 0.0, 0.0});
 
     //add a camera to look through
     auto cameraObject = std::make_unique<chai::cup::GameObject>();
@@ -91,9 +93,10 @@ int main()
 
     //add some lighting so we can see
     auto lightObject = std::make_unique<chai::cup::GameObject>();
-    lightObject->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{-5.0, 5.0, -5.0});
+    lightObject->getComponent<chai::cup::TransformComponent>()->setPosition(
+        chai::Vec3{-5.0, 5.0, -5.0});
     lightObject->getComponent<chai::cup::TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0},
-                                                                       chai::Vec3{0.0, -1.0, 0.0});
+        chai::Vec3{0.0, -1.0, 0.0});
     lightObject->addComponent<chai::cup::LightComponent>(lightObject.get());
 
     //set up viewport camera association
@@ -112,12 +115,10 @@ int main()
     //m_audioEngine->LoadSound(/*path to wav*/, true, true, true);
     //m_audioEngine->PlaySound(/*path to wav*/, glm::vec3{0,0,0}, 3.0F);
 
-
     // Time tracking for delta time
     auto lastTime = std::chrono::high_resolution_clock::now();
 
-    while (!windowManager->isDone())
-    {
+    while (!windowManager->isDone()) {
         auto currentTime = std::chrono::high_resolution_clock::now();
         float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
         lastTime = currentTime;
@@ -126,8 +127,7 @@ int main()
         sceneManager.update(deltaTime);
 
         //render loop
-        for (auto& viewport : viewportManager.getAllViewports())
-        {
+        for (auto& viewport : viewportManager.getAllViewports()) {
             int x, y, w, h;
             viewport->getViewport(x, y, w, h);
             viewport->getCamera()->setAspectRatio(w / static_cast<float>(h));
@@ -147,11 +147,9 @@ int main()
             //multiple scenes? additive scenes?
             chai::cup::Scene const* scene = sceneManager.getPrimaryScene();
             scene->collectLights(collector);
-            if (scene != nullptr)
-            {
+            if (scene != nullptr) {
                 scene->collectRenderables(collector);
             }
-
 
             renderer->executeCommands(collector.getCommands());
             renderer->beginFrame();

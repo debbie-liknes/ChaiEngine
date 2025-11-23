@@ -2,9 +2,7 @@
 
 namespace chai
 {
-    ChaiPhysics::ChaiPhysics()
-    {
-    }
+    ChaiPhysics::ChaiPhysics() {}
 
     void ChaiPhysics::init()
     {
@@ -13,8 +11,7 @@ namespace chai
 
     ChaiPhysics::~ChaiPhysics()
     {
-        if (m_thread.joinable())
-        {
+        if (m_thread.joinable()) {
             m_done = true;
             m_thread.join();
         }
@@ -27,8 +24,7 @@ namespace chai
 
     void ChaiPhysics::run()
     {
-        while (!isDone())
-        {
+        while (!isDone()) {
             _sleep(1000.0 / 30.0);
         }
     }

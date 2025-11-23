@@ -24,25 +24,24 @@ namespace chai
 
     void InputSystem::unsubscribe(uint32_t handlerId)
     {
-        handlers.erase(std::ranges::remove_if(handlers, [handlerId](auto const& p)
-        {
-            return p.first == handlerId;
-        }).begin(), handlers.end());
+        handlers.erase(std::ranges::remove_if(handlers,
+                                              [handlerId](auto const& p) {
+                                                  return p.first == handlerId;
+                                              }).begin(),
+                       handlers.end());
     }
 
     void InputSystem::processEvents()
     {
         clearFrame();
-        while (!eventQueue.empty())
-        {
+        while (!eventQueue.empty()) {
             const auto& event = eventQueue.front();
 
             // Update internal state for polling
             updateState(*event.get());
 
             // Notify subscribers
-            for (const auto& [id, handler] : handlers)
-            {
+            for (const auto& [id, handler] : handlers) {
                 handler(*event.get());
             }
 
@@ -80,34 +79,28 @@ namespace chai
 
     void InputSystem::updateState(const InputEvent& event)
     {
-        switch (event.type)
-        {
-        case InputEventType::KeyPress:
-            {
+        switch (event.type) {
+            case InputEventType::KeyPress: {
                 auto keyEvent = static_cast<const KeyPressEvent&>(event);
                 keyStates[keyEvent.key] = true;
                 break;
             }
-        case InputEventType::KeyRelease:
-            {
+            case InputEventType::KeyRelease: {
                 auto keyReleaseEvent = static_cast<const KeyReleaseEvent&>(event);
                 keyStates[keyReleaseEvent.key] = false;
                 break;
             }
-        case InputEventType::MouseButtonPress:
-            {
+            case InputEventType::MouseButtonPress: {
                 auto mouseEvent = static_cast<const MouseDownEvent&>(event);
                 mouseStates[mouseEvent.button] = true;
                 break;
             }
-        case InputEventType::MouseButtonRelease:
-            {
+            case InputEventType::MouseButtonRelease: {
                 auto mouseReleaseEvent = static_cast<const MouseUpEvent&>(event);
                 mouseStates[mouseReleaseEvent.button] = false;
                 break;
             }
-        case InputEventType::MouseMove:
-            {
+            case InputEventType::MouseMove: {
                 auto mouseMoveEvent = static_cast<const MouseMoveEvent&>(event);
                 mouseDeltaX = mouseMoveEvent.xPos - mouseX;
                 mouseDeltaY = mouseMoveEvent.yPos - mouseY;
@@ -115,8 +108,8 @@ namespace chai
                 mouseY = mouseMoveEvent.yPos;
                 break;
             }
-        default:
-            break;
+            default:
+                break;
         }
     }
 }

@@ -8,10 +8,10 @@ namespace chai::brew
     //intended for caching by the renderer
     struct Light
     {
-        Vec4 positionAndType; // xyz = pos/dir, w = type
-        Vec4 color; // rgb = color, a = intensity
+        Vec4 positionAndType;   // xyz = pos/dir, w = type
+        Vec4 color;             // rgb = color, a = intensity
         Vec4 directionAndRange; // xyz = direction, w = range
-        Vec4 spotParams; // x = inner cone, y = outer cone
+        Vec4 spotParams;        // x = inner cone, y = outer cone
     };
 
     struct LightingData

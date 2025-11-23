@@ -1,3 +1,5 @@
 #include <ChaiEngine/Material.h>
 
-namespace chai {}
+namespace chai
+{
+}

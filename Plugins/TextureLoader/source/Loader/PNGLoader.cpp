@@ -4,13 +4,13 @@
 
 namespace chai
 {
-bool PngLoader::canLoad(const std::string& ext) const
-{
-    return ext == ".png";
-}
+    bool PngLoader::canLoad(const std::string& ext) const
+    {
+        return ext == ".png";
+    }
 
-std::unique_ptr<IAsset> PngLoader::load(const std::string& path)
-{
-    return nullptr;
-}
+    std::unique_ptr<IAsset> PngLoader::load(const std::string& path)
+    {
+        return nullptr;
+    }
 }

@@ -22,9 +22,7 @@ namespace chai
             std::vector<Vec2> uvs;
         };
 
-        explicit MeshAsset(const MeshData& mesh) : m_meshData(std::move(mesh))
-        {
-        }
+        explicit MeshAsset(const MeshData& mesh) : m_meshData(std::move(mesh)) {}
 
         ~MeshAsset() override
         {
@@ -63,9 +61,7 @@ namespace chai
         std::vector<uint32_t> indexData;
 
         explicit MeshResource(AssetHandle source)
-            : Resource(source), sourceAsset(source)
-        {
-        }
+            : Resource(source), sourceAsset(source) {}
 
         MeshResource() = default;
     };
