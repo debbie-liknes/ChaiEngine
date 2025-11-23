@@ -16,7 +16,7 @@
 #include <Components/TransformComponent.h>
 #include <Controllers/CameraController.h>
 #include <chrono>
-//#include <AudioEngine.h>
+#include <AudioEngine.h>
 #include <ChaiPhysics/ChaiPhysics.h>
 #include <Asset/AssetHandle.h>
 #include <ChaiEngine/MaterialSystem.h>
@@ -66,7 +66,7 @@ int main()
     //make an object for the scene
     auto gameObject = std::make_unique<chai::cup::GameObject>();
     auto* meshComp = gameObject->addComponent<chai::cup::MeshComponent>(gameObject.get());
-    auto meshAsset = chai::AssetManager::instance().load<chai::MeshAsset>("assets/suzanne.obj");
+    auto meshAsset = chai::AssetManager::instance().load<chai::MeshAsset>("assets/plane.obj");
     meshComp->setMesh(meshAsset.value());
 
     chai::MaterialSystem matSystem;
@@ -76,7 +76,7 @@ int main()
     auto materialInstance = std::make_unique<chai::MaterialInstance>(resourceHandle);
 
     // Customize instance
-    materialInstance->setParameter("u_DiffuseColor", chai::Vec3(0.0f, 1.0f, 0.0f));
+    materialInstance->setParameter("u_DiffuseColor", chai::Vec3(1.0f, 1.0f, 0.0f));
     meshComp->setMaterial(chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance)));
 
     gameObject->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{0.0, 0.0, 0.0});

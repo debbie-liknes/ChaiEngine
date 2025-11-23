@@ -16,7 +16,7 @@ BreakBeforeBraces: Linux
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
-NamespaceIndentation: None
+NamespaceIndentation: All
 
 # Indent case labels in switch
 IndentCaseLabels: true

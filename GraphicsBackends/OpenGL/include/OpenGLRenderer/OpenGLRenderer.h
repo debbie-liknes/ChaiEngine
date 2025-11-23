@@ -69,7 +69,7 @@ private:
     UniformManager m_uniManager;
     OpenGLMeshManager m_meshManager;
     OpenGLMaterialManager m_matManager;
-    OpenGLTextureManager m_texManager;
+    //OpenGLTextureManager m_texManager;
     GLShaderManager m_shaderManager;
 
     // Upload system
