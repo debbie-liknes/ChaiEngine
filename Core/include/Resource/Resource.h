@@ -4,10 +4,13 @@
 
 namespace chai
 {
-	struct CORE_EXPORT Resource
-	{
-		explicit Resource(AssetHandle sourceAsset) {}
-		Resource() = default;
-		virtual ~Resource() = default;
-	};
+    struct CORE_EXPORT Resource
+    {
+        explicit Resource(AssetHandle sourceAsset)
+        {
+        }
+
+        Resource() = default;
+        virtual ~Resource() = default;
+    };
 }

@@ -15,8 +15,7 @@
     }, name_);
 
 #define CHAI_LOADER(LoaderType, LoaderName) \
-    chai::AssetManager::instance().registerLoader(std::make_shared<LoaderType>()); \
-
+    chai::AssetManager::instance().registerLoader(std::make_shared<LoaderType>());
 #define CHAI_SERVICE_AS(InterfaceType, ConcreteType, ServiceName) \
     services_.registerServiceAs<InterfaceType, ConcreteType>(ServiceName, []() { \
         return std::make_shared<ConcreteType>(); \

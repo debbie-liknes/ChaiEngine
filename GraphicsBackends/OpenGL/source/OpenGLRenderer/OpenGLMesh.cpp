@@ -1,10 +1,14 @@
 #include <OpenGLRenderer/OpenGLMesh.h>
 #include <OpenGLRenderer/GLHelpers.h>
 
-namespace chai {
-    brew::OpenGLMeshManager::~OpenGLMeshManager() {
-        for (auto& [id, meshData] : m_meshCache) {
-            for (auto& [shader, vao] : meshData->vaosPerShader) {
+namespace chai
+{
+    brew::OpenGLMeshManager::~OpenGLMeshManager()
+    {
+        for (auto& [id, meshData] : m_meshCache)
+        {
+            for (auto& [shader, vao] : meshData->vaosPerShader)
+            {
                 glDeleteVertexArrays(1, &vao);
             }
             if (meshData->VBO != 0) glDeleteBuffers(1, &meshData->VBO);
@@ -13,12 +17,13 @@ namespace chai {
     }
 
     GLuint brew::OpenGLMeshManager::getOrCreateVAO(OpenGLMeshData* meshData,
-                      GLuint shaderProgram,
-                      const ShaderAsset* shaderAsset)
+                                                   GLuint shaderProgram,
+                                                   const ShaderAsset* shaderAsset)
     {
         // Check if we already have a VAO for this shader
         auto it = meshData->vaosPerShader.find(shaderProgram);
-        if (it != meshData->vaosPerShader.end()) {
+        if (it != meshData->vaosPerShader.end())
+        {
             return it->second; // Already exists!
         }
 
@@ -29,16 +34,19 @@ namespace chai {
 
         // Bind the mesh's VBO and EBO
         glBindBuffer(GL_ARRAY_BUFFER, meshData->VBO);
-        if (meshData->EBO != 0) {
+        if (meshData->EBO != 0)
+        {
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData->EBO);
         }
 
         // Configure vertex attributes for THIS shader
-        for (const auto& input : shaderAsset->getVertexInputs()) {
+        for (const auto& input : shaderAsset->getVertexInputs())
+        {
             const VertexAttribute* meshAttr =
                 meshData->layout.findAttribute(input.name);
 
-            if (meshAttr) {
+            if (meshAttr)
+            {
                 glEnableVertexAttribArray(input.location);
                 glVertexAttribPointer(
                     input.location,
@@ -46,7 +54,7 @@ namespace chai {
                     toGLType(meshAttr->type),
                     meshAttr->normalized ? GL_TRUE : GL_FALSE,
                     meshData->layout.getStride(),
-                    reinterpret_cast<void *>(static_cast<uintptr_t>(meshAttr->offset))
+                    reinterpret_cast<void*>(static_cast<uintptr_t>(meshAttr->offset))
                 );
             }
         }

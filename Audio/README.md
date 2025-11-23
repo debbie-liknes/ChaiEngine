@@ -22,17 +22,20 @@ classDiagram
 ```
 
 ### Audio File Sourcing
+
 - Audio Streaming
-  - The ability to stream direct from file I/O.
+    - The ability to stream direct from file I/O.
 - Fully Loaded Audio
-  - Loads the entire audio clip before playback.
+    - Loads the entire audio clip before playback.
 
 A centralized ring buffer is used for playback and buffering.
 
 ### Audio Prioritization
 
 # The Structure of Audio Playback
+
 - Listeners are the microphone of a game's audio engine.
+
 ```mermaid
 flowchart LR
   A(["Clip"])
@@ -50,6 +53,7 @@ flowchart LR
 ```
 
 # Audio-Physics Interaction
+
 ```mermaid
 sequenceDiagram
   participant PhysicsEngine
@@ -62,6 +66,7 @@ sequenceDiagram
 ```
 
 # Audio Effects
+
 - Doppler effect - most audio does not play at the original pitch unless it's a background audio.
 - Reverb is INTENSE on the CPU (25%) when built into the environment.
 - Defer mixing and panning as late as possible because endpoints change.

@@ -4,18 +4,24 @@
 
 namespace chai::cup
 {
-	class GameObject;
-	class SCENE_EXPORT Component : public IUpdatable
-	{
-	public:
-		explicit Component(GameObject* owningObject = nullptr) : m_owningObject(owningObject) {}
-		~Component() override = default;
+    class GameObject;
 
-		virtual void update(double deltaTime) override {}
+    class SCENE_EXPORT Component : public IUpdatable
+    {
+    public:
+        explicit Component(GameObject* owningObject = nullptr) : m_owningObject(owningObject)
+        {
+        }
 
-		GameObject* getGameObject() const { return m_owningObject; }
+        ~Component() override = default;
 
-	private:
-		GameObject* m_owningObject = nullptr;
-	};
+        virtual void update(double deltaTime) override
+        {
+        }
+
+        GameObject* getGameObject() const { return m_owningObject; }
+
+    private:
+        GameObject* m_owningObject = nullptr;
+    };
 }

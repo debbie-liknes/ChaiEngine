@@ -7,23 +7,24 @@
 
 namespace chai::cup
 {
-	class GameObject;
-	class TransformComponent;
-	class SCENE_EXPORT CameraComponent : public Component
-	{
-	public:
-		explicit CameraComponent(GameObject* owner = nullptr);
-		~CameraComponent() override = default;
+    class GameObject;
+    class TransformComponent;
 
-		Mat4 getViewMatrix() const;
-		Mat4 getProjectionMatrix() const { return m_camera->getProjectionMatrix(); }
-		ICamera* getCamera() { return m_camera.get(); }
+    class SCENE_EXPORT CameraComponent : public Component
+    {
+    public:
+        explicit CameraComponent(GameObject* owner = nullptr);
+        ~CameraComponent() override = default;
 
-		void update(double deltaTime) override;
+        Mat4 getViewMatrix() const;
+        Mat4 getProjectionMatrix() const { return m_camera->getProjectionMatrix(); }
+        ICamera* getCamera() { return m_camera.get(); }
 
-	private:
-		std::unique_ptr<ICamera> m_camera;
+        void update(double deltaTime) override;
 
-		void updateViewMatrix(TransformComponent* transform);
-	};
+    private:
+        std::unique_ptr<ICamera> m_camera;
+
+        void updateViewMatrix(TransformComponent* transform);
+    };
 }

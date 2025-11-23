@@ -13,10 +13,10 @@ layout(std140, binding = 0) uniform PerFrameUniforms
 };
 
 struct ShaderLightData {
-    vec4 positionAndType;   // xyz = pos/dir, w = type
-    vec4 color;             // rgb = color, a = intensity
-    vec4 directionAndRange; // xyz = direction, w = range
-    vec4 spotParams;        // x = inner cone, y = outer cone
+    vec4 positionAndType;// xyz = pos/dir, w = type
+    vec4 color;// rgb = color, a = intensity
+    vec4 directionAndRange;// xyz = direction, w = range
+    vec4 spotParams;// x = inner cone, y = outer cone
 };
 
 layout(std140, binding = 2) uniform LightingData {
@@ -46,7 +46,7 @@ vec3 CalculateLight(ShaderLightData light, vec3 worldPos, vec3 normal, vec3 view
 
     if (lightType == 0) { // Directional
         lightDir = normalize(-light.directionAndRange.xyz);
-        attenuation = 1.0; // No falloff
+        attenuation = 1.0;// No falloff
     }
     else if (lightType == 1) { // Point
         vec3 lightPos = light.positionAndType.xyz;
@@ -88,10 +88,10 @@ vec3 CalculateLight(ShaderLightData light, vec3 worldPos, vec3 normal, vec3 view
     // Specular (Blinn-Phong)
     vec3 halfDir = normalize(lightDir + viewDir);
     float NdotH = max(dot(normal, halfDir), 0.0);
-    float specular = pow(NdotH, u_Shininess); // Use your uniform shininess
-    vec3 specularColor = light.color.rgb * specular * u_SpecularColor; // Use your specular color
+    float specular = pow(NdotH, u_Shininess);// Use your uniform shininess
+    vec3 specularColor = light.color.rgb * specular * u_SpecularColor;// Use your specular color
 
-    return (diffuse + specularColor) * light.color.a * attenuation; // .a is intensity
+    return (diffuse + specularColor) * light.color.a * attenuation;// .a is intensity
 }
 
 void main()

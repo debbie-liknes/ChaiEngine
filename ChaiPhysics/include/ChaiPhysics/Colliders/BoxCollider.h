@@ -31,7 +31,7 @@ namespace chai
         Vec4 rotateAt(Vec3 pos) const
         {
             Vec3 r = rot * pos;
-            return Vec4{ r[0], r[1], r[2], 1.0f };
+            return Vec4{r[0], r[1], r[2], 1.0f};
         }
 
         aabb getWorldBounds() const;

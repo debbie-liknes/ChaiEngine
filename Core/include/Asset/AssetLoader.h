@@ -15,8 +15,8 @@ namespace chai
         virtual const std::string& getAssetId() const = 0;
 
     protected:
-        bool m_valid{ false };
-		std::string m_assetId;
+        bool m_valid{false};
+        std::string m_assetId;
     };
 
     class CORE_EXPORT IAssetLoader

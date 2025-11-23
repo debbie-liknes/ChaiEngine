@@ -11,23 +11,23 @@ jobs:
     name: Windows (VS2022)
     runs-on: windows-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Initialize submodules
-      uses: snickerbockers/submodules-init@v4
+      - name: Initialize submodules
+        uses: snickerbockers/submodules-init@v4
 
-    - name: Set up CMake
-      uses: jwlawson/actions-setup-cmake@v1
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v1
 
-    - name: Create build directory
-      run: mkdir -p build
+      - name: Create build directory
+        run: mkdir -p build
 
-    - name: Configure CMake
-      run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+      - name: Configure CMake
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 
-    - name: Build
-      run: cmake --build build
+      - name: Build
+        run: cmake --build build
 
-    - name: Run tests via CTest
-      run: ctest --test-dir build --output-on-failure -C Debug
+      - name: Run tests via CTest
+        run: ctest --test-dir build --output-on-failure -C Debug

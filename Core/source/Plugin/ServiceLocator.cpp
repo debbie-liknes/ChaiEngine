@@ -2,9 +2,9 @@
 
 namespace chai
 {
-	ServiceLocator& ServiceLocator::instance()
-	{
-		static ServiceLocator locator;
-		return locator;
-	}
+    ServiceLocator& ServiceLocator::instance()
+    {
+        static ServiceLocator locator;
+        return locator;
+    }
 }

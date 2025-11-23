@@ -4,7 +4,6 @@ namespace chai
 {
     Window::Window(const WindowDesc& desc) : m_desc(desc), m_data({this})
     {
-
     }
 
     Window::Window() : m_data()
@@ -14,7 +13,6 @@ namespace chai
 
     Window::~Window()
     {
-
     }
 
     //bool Window::initialize()

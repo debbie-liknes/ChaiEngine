@@ -2,12 +2,13 @@
 
 namespace chai
 {
-	WindowSystem::WindowSystem()
-	{
-		// Initialization code if needed
-	}
-	WindowSystem::~WindowSystem()
-	{
-		// Cleanup code if needed
-	}
+    WindowSystem::WindowSystem()
+    {
+        // Initialization code if needed
+    }
+
+    WindowSystem::~WindowSystem()
+    {
+        // Cleanup code if needed
+    }
 }

@@ -12,7 +12,7 @@ namespace chai::cup
     Mat4 CameraComponent::getViewMatrix() const
     {
         TransformComponent const* transform = getGameObject()->getComponent<TransformComponent>();
-        if (!transform) return Mat4{ 1.0f };
+        if (!transform) return Mat4{1.0f};
 
         // Build view matrix from transform
         const Vec3 pos = transform->getWorldPosition();

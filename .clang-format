@@ -106,17 +106,17 @@ IncludeBlocks: Regroup
 # Group includes
 IncludeCategories:
   # Main module header (same name as .cpp file)
-  - Regex:           '^".*\.h"$'
-    Priority:        1
+  - Regex: '^".*\.h"$'
+    Priority: 1
   # Project headers
-  - Regex:           '^<(OpenGLRenderer|ChaiEngine|Graphics|Resource|Types|Meta)/.*\.h>$'
-    Priority:        2
+  - Regex: '^<(OpenGLRenderer|ChaiEngine|Graphics|Resource|Types|Meta)/.*\.h>$'
+    Priority: 2
   # Third-party libraries
-  - Regex:           '^<(glad|GLFW|glm)/.*>$'
-    Priority:        3
+  - Regex: '^<(glad|GLFW|glm)/.*>$'
+    Priority: 3
   # Standard library
-  - Regex:           '^<.*>$'
-    Priority:        4
+  - Regex: '^<.*>$'
+    Priority: 4
 
 # ============================================================================
 # MISC

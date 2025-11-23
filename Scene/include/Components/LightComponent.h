@@ -4,7 +4,7 @@
 
 namespace chai::cup
 {
-    enum class LightType 
+    enum class LightType
     {
         DIRECTIONAL,
         POINT,
@@ -12,6 +12,7 @@ namespace chai::cup
     };
 
     class GameObject;
+
     class LightComponent : public Component
     {
     public:

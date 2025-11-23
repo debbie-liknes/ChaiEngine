@@ -6,33 +6,33 @@
 
 namespace chai
 {
-    class ResourceManager 
+    class ResourceManager
     {
     public:
         static ResourceManager& instance();
 
-		template<typename ResourceType, typename... Args>
+        template <typename ResourceType, typename... Args>
         ResourceHandle createFromAsset(AssetHandle assetHandle)
         {
             static_assert(std::is_base_of_v<Resource, ResourceType>,
-                "ResourceType must derive from Resource");
+                          "ResourceType must derive from Resource");
 
-			return ResourceHandle(m_resourcePool.add(std::make_unique<ResourceType>(assetHandle)));
-		}
+            return ResourceHandle(m_resourcePool.add(std::make_unique<ResourceType>(assetHandle)));
+        }
 
-        template<typename ResourceType>
+        template <typename ResourceType>
         ResourceHandle add(std::unique_ptr<ResourceType> resource)
         {
             static_assert(std::is_base_of_v<Resource, ResourceType>,
-                "ResourceType must derive from Resource");
-			return ResourceHandle(m_resourcePool.add(std::move(resource)));
+                          "ResourceType must derive from Resource");
+            return ResourceHandle(m_resourcePool.add(std::move(resource)));
         }
 
-		template<typename ResourceType>
-        ResourceType* getResource(Handle handle) 
+        template <typename ResourceType>
+        ResourceType* getResource(Handle handle)
         {
-			return dynamic_cast<ResourceType*>(m_resourcePool.get(handle));
-		}
+            return dynamic_cast<ResourceType*>(m_resourcePool.get(handle));
+        }
 
     private:
         ResourcePool<Resource> m_resourcePool;

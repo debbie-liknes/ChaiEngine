@@ -9,15 +9,16 @@
 
 namespace chai::cup
 {
-	class GameObject;
+    class GameObject;
+
     class ControllerComponent : public Component
     {
     public:
         explicit ControllerComponent(chai::cup::GameObject* owner);
 
         // Add a controller
-        template<typename T, typename... Args>
-        T* addController(Args&&... args) 
+        template <typename T, typename... Args>
+        T* addController(Args&&... args)
         {
             static_assert(std::is_base_of_v<IController, T>, "T must inherit from IController");
 
@@ -28,7 +29,7 @@ namespace chai::cup
             controllersByType[std::type_index(typeid(T))] = ptr;
 
             // Store by name if it has one
-            if (std::string name = controller->getControllerType(); !name.empty()) 
+            if (std::string name = controller->getControllerType(); !name.empty())
             {
                 controllersByName[name] = ptr;
             }
@@ -38,10 +39,10 @@ namespace chai::cup
         }
 
         // Get controller by type
-        template<typename T>
-        T* getController() 
+        template <typename T>
+        T* getController()
         {
-            if (auto it = controllersByType.find(std::type_index(typeid(T))); it != controllersByType.end()) 
+            if (auto it = controllersByType.find(std::type_index(typeid(T))); it != controllersByType.end())
             {
                 return static_cast<T*>(it->second);
             }
@@ -49,25 +50,26 @@ namespace chai::cup
         }
 
         // Get controller by name
-        IController* getController(const std::string& name) 
+        IController* getController(const std::string& name)
         {
             auto it = controllersByName.find(name);
             return (it != controllersByName.end()) ? it->second : nullptr;
         }
 
         // Remove controller
-        template<typename T>
-        bool removeController() 
+        template <typename T>
+        bool removeController()
         {
-            if (auto it = controllersByType.find(std::type_index(typeid(T))); it != controllersByType.end()) 
+            if (auto it = controllersByType.find(std::type_index(typeid(T))); it != controllersByType.end())
             {
                 IController const* controller = it->second;
 
                 // Remove from all maps
                 controllersByType.erase(it);
-                for (auto mapIt = controllersByName.begin(); mapIt != controllersByName.end(); ++mapIt) 
+                for (auto mapIt = controllersByName.begin(); mapIt != controllersByName.end(); ++mapIt)
                 {
-                    if (mapIt->second == controller) {
+                    if (mapIt->second == controller)
+                    {
                         controllersByName.erase(mapIt);
                         break;
                     }
@@ -76,7 +78,7 @@ namespace chai::cup
                 // Remove from vector
                 controllers.erase(
                     std::remove_if(controllers.begin(), controllers.end(),
-                        [controller](const auto& ptr) { return ptr.get() == controller; }),
+                                   [controller](const auto& ptr) { return ptr.get() == controller; }),
                     controllers.end()
                 );
 
@@ -88,9 +90,9 @@ namespace chai::cup
         // Update all controllers
         void update(double deltaTime) override
         {
-            for (auto const& controller : controllers) 
+            for (auto const& controller : controllers)
             {
-                if (controller->isEnabled()) 
+                if (controller->isEnabled())
                 {
                     controller->update(deltaTime);
                 }
@@ -100,14 +102,14 @@ namespace chai::cup
         // Enable/disable all controllers
         void setAllEnabled(bool enabled) const
         {
-            for (auto const& controller : controllers) 
+            for (auto const& controller : controllers)
             {
                 controller->setEnabled(enabled);
             }
         }
 
         // Get all controllers
-        const std::vector<std::unique_ptr<IController>>& getControllers() const 
+        const std::vector<std::unique_ptr<IController>>& getControllers() const
         {
             return controllers;
         }
@@ -120,6 +122,5 @@ namespace chai::cup
         CMap<std::type_index, IController*> controllersByType;
         CMap<std::string, IController*> controllersByName;
         chai::cup::GameObject* m_owner;
-
     };
 }

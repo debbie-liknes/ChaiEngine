@@ -2,7 +2,8 @@
 
 namespace chai
 {
-    TypeRegistry& TypeRegistry::instance() {
+    TypeRegistry& TypeRegistry::instance()
+    {
         static TypeRegistry reg;
         return reg;
     }

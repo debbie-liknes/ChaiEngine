@@ -2,31 +2,33 @@
 #include <WindowModuleExport.h>
 #include <memory>
 
-namespace chai 
+namespace chai
 {
-    class Window;
-    struct WindowDesc;
-	class WindowManager;
-    // Main window system
-    class WINDOWMODULE_EXPORT WindowSystem
-    {
-    public:
-        WindowSystem();
+class Window;
+struct WindowDesc;
+class WindowManager;
 
-        virtual ~WindowSystem();
-        WindowSystem(const WindowSystem&) = delete;
+// Main window system
+class WINDOWMODULE_EXPORT WindowSystem
+{
+public:
+    WindowSystem();
 
-        virtual bool initialize() = 0;
-        virtual void shutdown() = 0;
+    virtual ~WindowSystem();
+    WindowSystem(const WindowSystem&) = delete;
 
-		virtual void pollEvents() = 0;
+    virtual bool initialize() = 0;
+    virtual void shutdown() = 0;
 
-		virtual void* getProcAddress() = 0;
-        virtual void swapBuffers(void* nativeWindow) {}
+    virtual void pollEvents() = 0;
 
-        // Window management
-        virtual std::unique_ptr<Window> createWindow(const WindowDesc& desc, WindowManager* manager) = 0;
-        virtual void destroyWindow(void* nativeWindow) = 0;
-        virtual void destroyAllWindows() = 0;
-    };
+    virtual void* getProcAddress() = 0;
+    virtual void swapBuffers(void* nativeWindow) {}
+
+    // Window management
+    virtual std::unique_ptr<Window> createWindow(const WindowDesc& desc, WindowManager* manager) =
+    0;
+    virtual void destroyWindow(void* nativeWindow) = 0;
+    virtual void destroyAllWindows() = 0;
+};
 }

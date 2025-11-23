@@ -6,13 +6,15 @@
 
 namespace chai::brew
 {
-	GLShaderManager::~GLShaderManager() {
-		for (auto& [program, shaderData] : m_programToShaderData) {
-			if (program != 0) glDeleteProgram(program);
-		}
-	}
+    GLShaderManager::~GLShaderManager()
+    {
+        for (auto& [program, shaderData] : m_programToShaderData)
+        {
+            if (program != 0) glDeleteProgram(program);
+        }
+    }
 
-	GLuint GLShaderManager::compileShaderFromAsset(AssetHandle shaderAssetHandle)
+    GLuint GLShaderManager::compileShaderFromAsset(AssetHandle shaderAssetHandle)
     {
         const auto* shaderAsset = AssetManager::instance().get<ShaderAsset>(shaderAssetHandle);
         if (!shaderAsset)
@@ -55,7 +57,7 @@ namespace chai::brew
         shaderData->program = program;
         shaderData->shaderAssetHandle = shaderAssetHandle;
 
-		/*for (auto& un : shaderAsset->getVertexInputs()) {
+        /*for (auto& un : shaderAsset->getVertexInputs()) {
 			shaderData->uniformLocations[un->name] = glGetUniformLocation(program, un->name.c_str());
 		}*/
 
@@ -69,10 +71,10 @@ namespace chai::brew
         return program;
     }
 
-	GLuint GLShaderManager::createDefaultShaderProgram()
-	{
-		// Simple vertex shader
-		const char* vertexShaderSource = R"(
+    GLuint GLShaderManager::createDefaultShaderProgram()
+    {
+        // Simple vertex shader
+        const char* vertexShaderSource = R"(
 			#version 420 core
 
 			layout(location = 0) in vec3 a_position;
@@ -95,7 +97,7 @@ namespace chai::brew
 			}
 			)";
 
-		const char* fragmentShaderSource = R"(
+        const char* fragmentShaderSource = R"(
 			#version 330 core
 			out vec4 FragColor;
 
@@ -105,78 +107,78 @@ namespace chai::brew
 			}
 			)";
 
-		GLuint program = compileShaderProgram(vertexShaderSource, fragmentShaderSource);
-		if (program == 0) return 0;
+        GLuint program = compileShaderProgram(vertexShaderSource, fragmentShaderSource);
+        if (program == 0) return 0;
 
-		// Store shader data
-		auto shaderData = std::make_unique<OpenGLShaderData>();
-		shaderData->program = program;
-		m_programToShaderData[program] = std::move(shaderData);
+        // Store shader data
+        auto shaderData = std::make_unique<OpenGLShaderData>();
+        shaderData->program = program;
+        m_programToShaderData[program] = std::move(shaderData);
 
-		return program;
-	}
+        return program;
+    }
 
-	GLuint GLShaderManager::compileShaderProgram(const char* vertexSource, const char* fragmentSource)
-	{
-		GLuint vertexShader = compileShader(vertexSource, GL_VERTEX_SHADER);
-		checkGLError("compile vertex shader");
-		GLuint fragmentShader = compileShader(fragmentSource, GL_FRAGMENT_SHADER);
-		checkGLError("compile fragment shader");
+    GLuint GLShaderManager::compileShaderProgram(const char* vertexSource, const char* fragmentSource)
+    {
+        GLuint vertexShader = compileShader(vertexSource, GL_VERTEX_SHADER);
+        checkGLError("compile vertex shader");
+        GLuint fragmentShader = compileShader(fragmentSource, GL_FRAGMENT_SHADER);
+        checkGLError("compile fragment shader");
 
-		if (vertexShader == 0 || fragmentShader == 0)
-		{
-			if (vertexShader != 0) glDeleteShader(vertexShader);
-			if (fragmentShader != 0) glDeleteShader(fragmentShader);
-			return 0;
-		}
+        if (vertexShader == 0 || fragmentShader == 0)
+        {
+            if (vertexShader != 0) glDeleteShader(vertexShader);
+            if (fragmentShader != 0) glDeleteShader(fragmentShader);
+            return 0;
+        }
 
-		GLuint program = glCreateProgram();
-		checkGLError("create shader program");
-		glAttachShader(program, vertexShader);
-		checkGLError("attach vertex shader");
-		glAttachShader(program, fragmentShader);
-		checkGLError("attach fragment shader");
-		glLinkProgram(program);
-		checkGLError("link shader program");
+        GLuint program = glCreateProgram();
+        checkGLError("create shader program");
+        glAttachShader(program, vertexShader);
+        checkGLError("attach vertex shader");
+        glAttachShader(program, fragmentShader);
+        checkGLError("attach fragment shader");
+        glLinkProgram(program);
+        checkGLError("link shader program");
 
-		// Check linking
-		GLint success;
-		glGetProgramiv(program, GL_LINK_STATUS, &success);
-		if (!success)
-		{
-			char infoLog[512];
-			glGetProgramInfoLog(program, 512, NULL, infoLog);
-			std::cerr << "Shader program linking failed: " << infoLog << std::endl;
-			glDeleteProgram(program);
-			glDeleteShader(vertexShader);
-			glDeleteShader(fragmentShader);
-			return 0;
-		}
+        // Check linking
+        GLint success;
+        glGetProgramiv(program, GL_LINK_STATUS, &success);
+        if (!success)
+        {
+            char infoLog[512];
+            glGetProgramInfoLog(program, 512, NULL, infoLog);
+            std::cerr << "Shader program linking failed: " << infoLog << std::endl;
+            glDeleteProgram(program);
+            glDeleteShader(vertexShader);
+            glDeleteShader(fragmentShader);
+            return 0;
+        }
 
-		glDeleteShader(vertexShader);
-		glDeleteShader(fragmentShader);
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
 
-		return program;
-	}
+        return program;
+    }
 
-	GLuint GLShaderManager::compileShader(const char* source, GLenum type)
-	{
-		GLuint shader = glCreateShader(type);
-		glShaderSource(shader, 1, &source, NULL);
-		glCompileShader(shader);
+    GLuint GLShaderManager::compileShader(const char* source, GLenum type)
+    {
+        GLuint shader = glCreateShader(type);
+        glShaderSource(shader, 1, &source, NULL);
+        glCompileShader(shader);
 
-		// Check compilation
-		GLint success;
-		glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-		if (!success)
-		{
-			char infoLog[512];
-			glGetShaderInfoLog(shader, 512, NULL, infoLog);
-			std::cerr << "Shader compilation failed: " << infoLog << std::endl;
-			glDeleteShader(shader);
-			return 0;
-		}
+        // Check compilation
+        GLint success;
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+        if (!success)
+        {
+            char infoLog[512];
+            glGetShaderInfoLog(shader, 512, NULL, infoLog);
+            std::cerr << "Shader compilation failed: " << infoLog << std::endl;
+            glDeleteShader(shader);
+            return 0;
+        }
 
-		return shader;
-	}
+        return shader;
+    }
 }

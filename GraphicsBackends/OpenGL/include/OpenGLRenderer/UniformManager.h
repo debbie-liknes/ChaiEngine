@@ -10,29 +10,33 @@ namespace chai::brew
         GLuint ubo = 0;
         size_t size = 0;
         std::vector<uint8_t> data;
-		bool dirty = true;
+        bool dirty = true;
     };
 
-	class UniformManager
-	{
-	public:
-		UniformManager() = default;
-		~UniformManager() {
-			for (auto& [id, uniformBuffer] : m_uniformBuffers) {
-				if (uniformBuffer->ubo != 0) {
-					glDeleteBuffers(1, &uniformBuffer->ubo);
-				}
-			}
-		}
+    class UniformManager
+    {
+    public:
+        UniformManager() = default;
 
-		UniformManager(const UniformManager&) = delete;
-		UniformManager& operator=(const UniformManager&) = delete;
+        ~UniformManager()
+        {
+            for (auto& [id, uniformBuffer] : m_uniformBuffers)
+            {
+                if (uniformBuffer->ubo != 0)
+                {
+                    glDeleteBuffers(1, &uniformBuffer->ubo);
+                }
+            }
+        }
 
-		UniformManager(UniformManager&&) = default;
-		UniformManager& operator=(UniformManager&&) = default;
+        UniformManager(const UniformManager&) = delete;
+        UniformManager& operator=(const UniformManager&) = delete;
 
-		void buildUniforms(std::vector<UniformBufferBase*> const& uniforms)
-		{
+        UniformManager(UniformManager&&) = default;
+        UniformManager& operator=(UniformManager&&) = default;
+
+        void buildUniforms(std::vector<UniformBufferBase*> const& uniforms)
+        {
             for (auto& u : uniforms)
             {
                 auto openglBuff = std::make_unique<OpenGLUniformBuffer>();
@@ -45,9 +49,9 @@ namespace chai::brew
                 glBufferData(GL_UNIFORM_BUFFER, openglBuff->size, openglBuff->data.data(), GL_DYNAMIC_DRAW);
                 glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-				m_uniformBuffers[u->getId()] = std::move(openglBuff);
+                m_uniformBuffers[u->getId()] = std::move(openglBuff);
             }
-		}
+        }
 
         void updateUniform(const UniformBufferBase& uniform)
         {
@@ -61,11 +65,11 @@ namespace chai::brew
             glBufferSubData(GL_UNIFORM_BUFFER, 0, uniformBuffer->size, uniformBuffer->data.data());
 
             glBindBuffer(GL_UNIFORM_BUFFER, 0);
-		}
+        }
 
         OpenGLUniformBuffer* getUniformBufferData(const UniformBufferBase& uniform) const
         {
-			auto it = m_uniformBuffers.find(uniform.getId());
+            auto it = m_uniformBuffers.find(uniform.getId());
             if (it != m_uniformBuffers.end())
             {
                 return it->second.get();
@@ -74,6 +78,6 @@ namespace chai::brew
         }
 
     private:
-		CMap<GLuint, std::unique_ptr<OpenGLUniformBuffer>> m_uniformBuffers;
-	};
+        CMap<GLuint, std::unique_ptr<OpenGLUniformBuffer>> m_uniformBuffers;
+    };
 }

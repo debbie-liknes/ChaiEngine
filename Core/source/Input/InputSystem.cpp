@@ -24,7 +24,8 @@ namespace chai
 
     void InputSystem::unsubscribe(uint32_t handlerId)
     {
-        handlers.erase(std::ranges::remove_if(handlers, [handlerId](auto const& p) {
+        handlers.erase(std::ranges::remove_if(handlers, [handlerId](auto const& p)
+        {
             return p.first == handlerId;
         }).begin(), handlers.end());
     }
@@ -82,38 +83,38 @@ namespace chai
         switch (event.type)
         {
         case InputEventType::KeyPress:
-        {
-            auto keyEvent = static_cast<const KeyPressEvent&>(event);
-            keyStates[keyEvent.key] = true;
-            break;
-        }
+            {
+                auto keyEvent = static_cast<const KeyPressEvent&>(event);
+                keyStates[keyEvent.key] = true;
+                break;
+            }
         case InputEventType::KeyRelease:
-        {
-            auto keyReleaseEvent = static_cast<const KeyReleaseEvent&>(event);
-            keyStates[keyReleaseEvent.key] = false;
-            break;
-        }
+            {
+                auto keyReleaseEvent = static_cast<const KeyReleaseEvent&>(event);
+                keyStates[keyReleaseEvent.key] = false;
+                break;
+            }
         case InputEventType::MouseButtonPress:
-        {
-            auto mouseEvent = static_cast<const MouseDownEvent&>(event);
-            mouseStates[mouseEvent.button] = true;
-            break;
-        }
+            {
+                auto mouseEvent = static_cast<const MouseDownEvent&>(event);
+                mouseStates[mouseEvent.button] = true;
+                break;
+            }
         case InputEventType::MouseButtonRelease:
-        {
-            auto mouseReleaseEvent = static_cast<const MouseUpEvent&>(event);
-            mouseStates[mouseReleaseEvent.button] = false;
-            break;
-        }
+            {
+                auto mouseReleaseEvent = static_cast<const MouseUpEvent&>(event);
+                mouseStates[mouseReleaseEvent.button] = false;
+                break;
+            }
         case InputEventType::MouseMove:
-        {
-            auto mouseMoveEvent = static_cast<const MouseMoveEvent&>(event);
-            mouseDeltaX = mouseMoveEvent.xPos - mouseX;
-            mouseDeltaY = mouseMoveEvent.yPos - mouseY;
-            mouseX = mouseMoveEvent.xPos;
-            mouseY = mouseMoveEvent.yPos;
-            break;
-        }
+            {
+                auto mouseMoveEvent = static_cast<const MouseMoveEvent&>(event);
+                mouseDeltaX = mouseMoveEvent.xPos - mouseX;
+                mouseDeltaY = mouseMoveEvent.yPos - mouseY;
+                mouseX = mouseMoveEvent.xPos;
+                mouseY = mouseMoveEvent.yPos;
+                break;
+            }
         default:
             break;
         }

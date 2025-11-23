@@ -16,15 +16,18 @@ namespace chai
         ShaderStageSource shaderSource;
 
         std::filesystem::path filePath(path);
-        if (filePath.extension() == ".vert") {
+        if (filePath.extension() == ".vert")
+        {
             shaderSource.stage = ShaderStage::Vertex;
         }
-        else if (filePath.extension() == ".frag") {
+        else if (filePath.extension() == ".frag")
+        {
             shaderSource.stage = ShaderStage::Fragment;
         }
 
         std::ifstream shaderFile(path);
-        if (!shaderFile.is_open()) {
+        if (!shaderFile.is_open())
+        {
             throw std::runtime_error("Can't open file " + path + ".");
         }
 

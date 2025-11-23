@@ -1,12 +1,14 @@
 ﻿# ☕ Chai Engine
 
-**Chai** is a modular C++ game engine built from scratch for experimenting with traversal mechanics and non-Euclidean level design.
+**Chai** is a modular C++ game engine built from scratch for experimenting with traversal mechanics and non-Euclidean
+level design.
 
 ---
 
 ## ✨ Overview
 
-Chai is a playground for exploring engine architecture and gameplay systems. It's written in modern C++, with a focus on clean structure, rendering abstraction, and extensibility.
+Chai is a playground for exploring engine architecture and gameplay systems. It's written in modern C++, with a focus on
+clean structure, rendering abstraction, and extensibility.
 
 Currently only Windows is supported
 
@@ -19,12 +21,13 @@ Currently only Windows is supported
 Make sure you have the following:
 
 - **CMake**
-- **C++ Compiler**  
-  - MSVC (Windows)
+- **C++ Compiler**
+    - MSVC (Windows)
 - **Visual Studio**
 - FMOD (https://www.fmod.com/)
 
-`FMOD_HOME` must also be set in your environment for CMake to locate it. For Windows, it is likely at the following path:
+`FMOD_HOME` must also be set in your environment for CMake to locate it. For Windows, it is likely at the following
+path:
 `C:\Program Files (x86)\FMOD SoundSystem\FMOD Studio API Windows`
 
 ### Clone the Repository
@@ -37,6 +40,7 @@ git submodule update --init
 ```
 
 ### Generate .sln
+
 ```bash
 mkdir build && cd build
 cmake ..
@@ -67,10 +71,10 @@ start Chai.sln
 
 ## ⚙️ Tech Stack
 
-- **Language:** C++ 
+- **Language:** C++
 - **Rendering:** OpenGL
 - **Windowing:** GLFW
-- **Build:** CMake  
+- **Build:** CMake
 - **Utilities:** Custom math & event libraries
 
 ---
@@ -78,6 +82,7 @@ start Chai.sln
 ## 📎 Notes
 
 ---
+
 ## 📚 Libraries
 
 GLFW

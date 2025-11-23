@@ -6,7 +6,7 @@
 
 namespace chai
 {
-    class PngLoader : public IAssetLoader 
+    class PngLoader : public IAssetLoader
     {
     public:
         PngLoader() = default;
@@ -16,7 +16,7 @@ namespace chai
     };
 }
 
-CHAI_PLUGIN_CLASS(ImageLoaderPlugin) 
+CHAI_PLUGIN_CLASS (ImageLoaderPlugin)
 {
     CHAI_SERVICE(chai::PngLoader, "PNG loader")
 }

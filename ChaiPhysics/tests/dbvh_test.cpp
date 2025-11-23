@@ -71,16 +71,16 @@ TEST(dbvh, single_box)
 
     // Insert a box at origin
     chai::BoxCollider box{
-        .box {
-            .center {
+        .box{
+            .center{
                 0, 0, 0
             },
-            .width { 1 },
-            .length { 1 },
-            .height { 1 }
+            .width{1},
+            .length{1},
+            .height{1}
         },
-        .center { chai::Vec3(0, 0, 0) },
-        .rot { chai::Quat(1, 0, 0, 0) }
+        .center{chai::Vec3(0, 0, 0)},
+        .rot{chai::Quat(1, 0, 0, 0)}
     };
     dbvh.insert(&box);
 
@@ -106,28 +106,28 @@ TEST(dbvh, insert_two_nodes_into_dbvh)
 
     // Insert a box at origin
     chai::BoxCollider box1{
-        .box {
-            .center {
+        .box{
+            .center{
                 0, 0, 0
             },
-            .width { 1 },
-            .length { 1 },
-            .height { 1 }
+            .width{1},
+            .length{1},
+            .height{1}
         },
-        .center { chai::Vec3(0, 0, 0) },
-        .rot { chai::Quat(1, 0, 0, 0) }
+        .center{chai::Vec3(0, 0, 0)},
+        .rot{chai::Quat(1, 0, 0, 0)}
     };
     chai::BoxCollider box2{
-        .box {
-            .center {
+        .box{
+            .center{
                 1, 1, 1
             },
-            .width { 1 },
-            .length { 1 },
-            .height { 1 }
+            .width{1},
+            .length{1},
+            .height{1}
         },
-        .center { chai::Vec3(0, 0, 0) },
-        .rot { chai::Quat(1, 0, 0, 0) }
+        .center{chai::Vec3(0, 0, 0)},
+        .rot{chai::Quat(1, 0, 0, 0)}
     };
     dbvh.insert(&box1);
     dbvh.insert(&box2);

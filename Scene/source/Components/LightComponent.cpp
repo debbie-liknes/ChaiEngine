@@ -3,7 +3,7 @@
 
 namespace chai::cup
 {
-	LightComponent::LightComponent(GameObject* owner) : Component(owner)
-	{
-	}
+    LightComponent::LightComponent(GameObject* owner) : Component(owner)
+    {
+    }
 }

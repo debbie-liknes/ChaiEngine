@@ -4,10 +4,11 @@
 #include <Meta/ChaiMacros.h>
 
 struct GLFWwindow;
+
 namespace chai
 {
-	class GLFWWINDOWPLUGIN_EXPORT GLFWSystem final : public WindowSystem
-	{
+    class GLFWWINDOWPLUGIN_EXPORT GLFWSystem final : public WindowSystem
+    {
     public:
         GLFWSystem();
         ~GLFWSystem() override;
@@ -19,16 +20,17 @@ namespace chai
         std::unique_ptr<Window> createWindow(const WindowDesc& desc, WindowManager* manager) override;
         void destroyWindow(void* nativeWindow) override;
         void destroyAllWindows() override;
-		void swapBuffers(void* nativeWindow) override;
+        void swapBuffers(void* nativeWindow) override;
 
-		void* getProcAddress() override;
+        void* getProcAddress() override;
 
     private:
-		GLFWwindow* convertToGLFWWindow(void* nativeWindow);
-	};
+        GLFWwindow* convertToGLFWWindow(void* nativeWindow);
+    };
 }
 
-CHAI_PLUGIN_CLASS(GLFWWindowPlugin) {
+CHAI_PLUGIN_CLASS (GLFWWindowPlugin)
+{
     CHAI_SERVICE_AS(chai::WindowSystem, chai::GLFWSystem, "WindowSystem");
 }
 

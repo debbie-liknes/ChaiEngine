@@ -2,9 +2,9 @@
 
 namespace chai
 {
-	ResourceManager& ResourceManager::instance()
-	{
-		static ResourceManager instance;
-		return instance;
-	}
+    ResourceManager& ResourceManager::instance()
+    {
+        static ResourceManager instance;
+        return instance;
+    }
 }

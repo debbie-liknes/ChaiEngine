@@ -3,45 +3,45 @@
 set(RESOURCE_DIR ${CMAKE_SOURCE_DIR}/)
 
 set(Core_headers
-	include/Asset/AssetHandle.h
-	include/Asset/AssetLoader.h
-	include/Asset/AssetManager.h
-	include/Core/Updatable.h
-	include/Graphics/Viewport.h
-	include/Input/EventHandler.h
-	include/Input/InputState.h
-	include/Input/InputSystem.h
-	include/Meta/ChaiMacros.h
-	include/Meta/MethodInvoker.h
-	include/Meta/TypeInfo.h
-	include/Meta/TypeRegistry.h
-	include/Plugin/PluginBase.h
-	include/Plugin/PluginRegistry.h
-	include/Plugin/ServiceLocator.h
-	include/Plugin/ServiceRegistry.h
-	include/Resource/ResourceManager.h
-	include/Resource/ResourcePool.h
-	include/Resource/Resource.h
-	include/Scene/ICamera.h
-	include/Types/CMap.h
+        include/Asset/AssetHandle.h
+        include/Asset/AssetLoader.h
+        include/Asset/AssetManager.h
+        include/Core/Updatable.h
+        include/Graphics/Viewport.h
+        include/Input/EventHandler.h
+        include/Input/InputState.h
+        include/Input/InputSystem.h
+        include/Meta/ChaiMacros.h
+        include/Meta/MethodInvoker.h
+        include/Meta/TypeInfo.h
+        include/Meta/TypeRegistry.h
+        include/Plugin/PluginBase.h
+        include/Plugin/PluginRegistry.h
+        include/Plugin/ServiceLocator.h
+        include/Plugin/ServiceRegistry.h
+        include/Resource/ResourceManager.h
+        include/Resource/ResourcePool.h
+        include/Resource/Resource.h
+        include/Scene/ICamera.h
+        include/Types/CMap.h
 )
 
 set(Core_source
-	source/Asset/AssetManager.cpp
-	source/Core/Updatable.cpp
-	source/Graphics/Viewport.cpp
-	source/Input/InputState.cpp
-	source/Input/InputSystem.cpp
-	source/Meta/TypeRegistry.cpp
-	source/Plugin/PluginRegistry.cpp
-	source/Plugin/ServiceLocator.cpp
-	source/Resource/ResourceManager.cpp
-	source/Scene/ICamera.cpp
+        source/Asset/AssetManager.cpp
+        source/Core/Updatable.cpp
+        source/Graphics/Viewport.cpp
+        source/Input/InputState.cpp
+        source/Input/InputSystem.cpp
+        source/Meta/TypeRegistry.cpp
+        source/Plugin/PluginRegistry.cpp
+        source/Plugin/ServiceLocator.cpp
+        source/Resource/ResourceManager.cpp
+        source/Scene/ICamera.cpp
 )
 
-add_library(Core SHARED 
-	${Core_headers} 
-	${Core_source}
+add_library(Core SHARED
+        ${Core_headers}
+        ${Core_source}
 )
 
 target_include_directories(Core PUBLIC ${CMAKE_BINARY_DIR}/exports/Core include)

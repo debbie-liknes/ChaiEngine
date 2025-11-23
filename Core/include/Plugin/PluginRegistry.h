@@ -14,7 +14,7 @@
 
 namespace chai::kettle
 {
-    using FactoryFn = std::function<void* ()>;
+    using FactoryFn = std::function<void*()>;
 
 #ifdef _WIN32
     using PluginHandle = HMODULE;
@@ -22,13 +22,13 @@ namespace chai::kettle
     using PluginHandle = void*;
 #endif
 
-    struct LoadedPlugin 
+    struct LoadedPlugin
     {
         PluginHandle handle;
         std::string path;
     };
 
-    class PluginRegistry 
+    class PluginRegistry
     {
     public:
         PluginRegistry() = default;
@@ -39,26 +39,32 @@ namespace chai::kettle
         std::shared_ptr<IPlugin> loadPlugin(const std::string& pluginName);
         bool loadPluginsInDirectory(const std::string& directory);
 
-        std::shared_ptr<IPlugin> getLoadedPlugin(const std::string& pluginName) {
+        std::shared_ptr<IPlugin> getLoadedPlugin(const std::string& pluginName)
+        {
             auto it = loadedPlugins_.find(pluginName);
             return (it != loadedPlugins_.end()) ? it->second : nullptr;
         }
 
-        CMap<std::string, std::shared_ptr<IPlugin>> getLoadedPlugins() const {
+        CMap<std::string, std::shared_ptr<IPlugin>> getLoadedPlugins() const
+        {
             return loadedPlugins_;
-		}
+        }
 
-        template<typename T>
-        std::shared_ptr<T> getService(const std::string& pluginName, const std::string& serviceName) {
+        template <typename T>
+        std::shared_ptr<T> getService(const std::string& pluginName, const std::string& serviceName)
+        {
             auto plugin = getLoadedPlugin(pluginName);
-            if (plugin) {
+            if (plugin)
+            {
                 return plugin->getServices().getService<T>(serviceName);
             }
             return nullptr;
         }
 
     private:
-        CMap<std::string, std::function<std::shared_ptr<IPlugin>()>> plugins_;
+        CMap<std::string, std::function < std::shared_ptr<IPlugin>()>
+        >
+        plugins_;
         CMap<std::string, std::shared_ptr<IPlugin>> loadedPlugins_;
 
         std::vector<LoadedPlugin> m_plugins;

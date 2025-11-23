@@ -12,7 +12,7 @@
 
 namespace chai
 {
-    class AssetManager 
+    class AssetManager
     {
     public:
         static AssetManager& instance();
@@ -20,14 +20,14 @@ namespace chai
         void registerLoader(std::shared_ptr<IAssetLoader> loader);
 
         // Load or get existing asset by path
-        template<typename T>
+        template <typename T>
         std::optional<AssetHandle> load(const std::string& path)
         {
-			//Read lock to check cache
+            //Read lock to check cache
             {
                 std::shared_lock cache_lock(cache_mutex_);
                 auto it = path_cache_.find(path);
-                if (it != path_cache_.end()) 
+                if (it != path_cache_.end())
                 {
                     return it->second;
                 }
@@ -38,9 +38,9 @@ namespace chai
             const auto ext = getExtension(searchPath);
 
             std::unique_ptr<IAsset> asset_result;
-            for (auto& loader : m_loaders) 
+            for (auto& loader : m_loaders)
             {
-                if (loader->canLoad(ext)) 
+                if (loader->canLoad(ext))
                 {
                     asset_result = loader->load(searchPath);
                     if (asset_result) break;
@@ -65,8 +65,8 @@ namespace chai
             return handle;
         }
 
-        template<class U>
-        requires std::derived_from<U, IAsset>
+        template <class U>
+            requires std::derived_from<U, IAsset>
         std::optional<AssetHandle> add(std::unique_ptr<U> asset)
         {
             AssetHandle handle;
@@ -78,8 +78,8 @@ namespace chai
             return handle;
         }
 
-		//DO NOT store the returned pointer, it may be invalidated
-        template<typename T>
+        //DO NOT store the returned pointer, it may be invalidated
+        template <typename T>
         const T* get(AssetHandle handle) const
         {
             return dynamic_cast<const T*>(pool_.get(handle));

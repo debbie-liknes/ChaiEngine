@@ -3,69 +3,77 @@
 
 namespace chai
 {
-    // ============================================================================
-    // RESOURCE MANAGER (Manages GPU objects)
-    // ============================================================================
-    template<typename T>
-    class ResourcePool 
+// ============================================================================
+// RESOURCE MANAGER (Manages GPU objects)
+// ============================================================================
+template <typename T>
+class ResourcePool
+{
+public:
+    ~ResourcePool()
     {
-    public:
-        ~ResourcePool() {
-            for (auto& res : m_resources) {
-            }
-        }
-        // Add resource, get stable handle
-        Handle add(std::unique_ptr<T> resource) {
-            uint32_t index;
-            auto type = std::type_index(typeid(T));
+        for (auto& res : m_resources) {}
+    }
 
-            if (!m_freeList.empty()) {
-                // Reuse slot
-                index = m_freeList.back();
-                m_freeList.pop_back();
-                m_resources[index] = std::move(resource);
-                m_generations[index]++;  // Increment generation
-            }
-            else {
-                // New slot
-                index = static_cast<uint32_t>(m_resources.size());
-                m_resources.push_back(std::move(resource));
-                m_generations.push_back(0);
-            }
+    // Add resource, get stable handle
+    Handle add(std::unique_ptr<T> resource)
+    {
+        uint32_t index;
+        auto type = std::type_index(typeid(T));
 
-            return Handle{ index, m_generations[index], type };
+        if (!m_freeList.empty()) {
+            // Reuse slot
+            index = m_freeList.back();
+            m_freeList.pop_back();
+            m_resources[index] = std::move(resource);
+            m_generations[index]++; // Increment generation
+        } else {
+            // New slot
+            index = static_cast<uint32_t>(m_resources.size());
+            m_resources.push_back(std::move(resource));
+            m_generations.push_back(0);
         }
 
-        // Remove resource
-        void remove(Handle handle) {
-            if (!isValid(handle)) return;
+        return Handle{index, m_generations[index], type};
+    }
 
-            m_resources[handle.m_index].reset();  // Delete resource
-            m_freeList.push_back(handle.m_index); // Mark slot as free
-            m_generations[handle.m_index]++;      // Invalidate old handles
-        }
+    // Remove resource
+    void remove(Handle handle)
+    {
+        if (!isValid(handle))
+            return;
 
-        // Get resource (safe!)
-        T* get(Handle handle) {
-            if (!isValid(handle)) return nullptr;
-            return m_resources[handle.m_index].get();
-        }
+        m_resources[handle.m_index].reset();  // Delete resource
+        m_freeList.push_back(handle.m_index); // Mark slot as free
+        m_generations[handle.m_index]++;      // Invalidate old handles
+    }
 
-        const T* get(Handle handle) const {
-            if (!isValid(handle)) return nullptr;
-            return m_resources[handle.m_index].get();
-        }
+    // Get resource (safe!)
+    T* get(Handle handle)
+    {
+        if (!isValid(handle))
+            return nullptr;
+        return m_resources[handle.m_index].get();
+    }
 
-        // Check if handle is still valid
-        bool isValid(Handle handle) const {
-            return handle.m_index < m_resources.size() &&
-                m_generations[handle.m_index] == handle.m_generation &&
-                m_resources[handle.m_index] != nullptr;
-        }
+    const T* get(Handle handle) const
+    {
+        if (!isValid(handle))
+            return nullptr;
+        return m_resources[handle.m_index].get();
+    }
 
-    private:
-        std::vector<std::unique_ptr<T>> m_resources;
-        std::vector<uint32_t> m_generations;  // Detect stale handles
-        std::vector<uint32_t> m_freeList;     // Reusable slots
-    };
+    // Check if handle is still valid
+    bool isValid(Handle handle) const
+    {
+        return handle.m_index < m_resources.size() &&
+               m_generations[handle.m_index] == handle.m_generation &&
+               m_resources[handle.m_index] != nullptr;
+    }
+
+private:
+    std::vector<std::unique_ptr<T>> m_resources;
+    std::vector<uint32_t> m_generations; // Detect stale handles
+    std::vector<uint32_t> m_freeList;    // Reusable slots
+};
 }

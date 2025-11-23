@@ -26,6 +26,6 @@ void main()
     v_FragPos = worldPos.xyz;
     v_Normal = mat3(u_normalMatrix) * a_Normal;
     v_TexCoord = a_TexCoord;
-    
+
     gl_Position = u_projection * u_view * worldPos;
 }
