@@ -1,58 +1,157 @@
-# Generated from CLion C/C++ Code Style settings
 ---
+# .clang-format configuration for OpenGL Renderer
 Language: Cpp
 BasedOnStyle: LLVM
+
+# ============================================================================
+# BRACE STYLES
+# ============================================================================
+
+BreakBeforeBraces: Linux
+
+# ============================================================================
+# INDENTATION
+# ============================================================================
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+NamespaceIndentation: None
+
+# Indent case labels in switch
+IndentCaseLabels: true
+
+# Indent access modifiers (public:, private:)
 AccessModifierOffset: -4
+
+# Continue line indentation
+ContinuationIndentWidth: 4
+
+# Constructor initializer list
+ConstructorInitializerIndentWidth: 4
+
+# ============================================================================
+# LINE LENGTH
+# ============================================================================
+
+ColumnLimit: 100
+
+# Allow going over limit for comments
+CommentPragmas: '^ NOLINT'
+
+# ============================================================================
+# SPACING
+# ============================================================================
+
+# Space after cast: (int) x vs (int)x
+SpaceAfterCStyleCast: false
+
+# Space after template keyword: template <typename T> vs template<typename T>
+SpaceAfterTemplateKeyword: true
+
+# Space before parentheses
+SpaceBeforeParens: ControlStatements  # if (...), for (...), but not func(...)
+
+# Space in angle brackets: vector< int > vs vector<int>
+SpaceInEmptyParentheses: false
+
+# Spaces around binary operators
+SpaceBeforeAssignmentOperators: true
+
+# Spaces in parentheses: ( x ) vs (x)
+SpacesInParentheses: false
+
+# Spaces in square brackets: [ i ] vs [i]
+SpacesInSquareBrackets: false
+
+# Space after !: ! x vs !x
+SpaceAfterLogicalNot: false
+
+# ============================================================================
+# POINTER AND REFERENCE ALIGNMENT
+# ============================================================================
+
+# Choose one:
+PointerAlignment: Left    # int* ptr   (recommended for C++)
+# PointerAlignment: Right   # int *ptr
+# PointerAlignment: Middle  # int * ptr
+
+DerivePointerAlignment: false
+
+# ============================================================================
+# FUNCTION DECLARATIONS
+# ============================================================================
+
+# Allow all parameters on next line or one per line
+BinPackParameters: false
+BinPackArguments: false
+
+# Allow short functions on single line
+AllowShortFunctionsOnASingleLine: Inline  # Only inline functions
+# AllowShortFunctionsOnASingleLine: Empty   # Only empty functions
+# AllowShortFunctionsOnASingleLine: All     # Any short function
+# AllowShortFunctionsOnASingleLine: None    # Never
+
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty
+
+# ============================================================================
+# INCLUDES
+# ============================================================================
+
+SortIncludes: true
+IncludeBlocks: Regroup
+
+# Group includes
+IncludeCategories:
+  # Main module header (same name as .cpp file)
+  - Regex:           '^".*\.h"$'
+    Priority:        1
+  # Project headers
+  - Regex:           '^<(OpenGLRenderer|ChaiEngine|Graphics|Resource|Types|Meta)/.*\.h>$'
+    Priority:        2
+  # Third-party libraries
+  - Regex:           '^<(glad|GLFW|glm)/.*>$'
+    Priority:        3
+  # Standard library
+  - Regex:           '^<.*>$'
+    Priority:        4
+
+# ============================================================================
+# MISC
+# ============================================================================
+
+# Always break before multiline strings
+AlwaysBreakBeforeMultilineStrings: true
+
+# Break constructor initializers before colon
+BreakConstructorInitializersBeforeComma: false
+BreakConstructorInitializers: BeforeColon
+
+# Align consecutive assignments
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
-AlignOperands: true
-AlignTrailingComments: false
+
+# Align trailing comments
+AlignTrailingComments: true
+
+# Allow short case labels on single line
+AllowShortCaseLabelsOnASingleLine: false
+
+# Always break template declarations
 AlwaysBreakTemplateDeclarations: Yes
-BraceWrapping: 
-  AfterCaseLabel: false
-  AfterClass: false
-  AfterControlStatement: false
-  AfterEnum: false
-  AfterFunction: false
-  AfterNamespace: false
-  AfterStruct: false
-  AfterUnion: false
-  AfterExternBlock: false
-  BeforeCatch: false
-  BeforeElse: false
-  BeforeLambdaBody: false
-  BeforeWhile: false
-  SplitEmptyFunction: true
-  SplitEmptyRecord: true
-  SplitEmptyNamespace: true
-BreakBeforeBraces: Custom
-BreakConstructorInitializers: AfterColon
-BreakConstructorInitializersBeforeComma: false
-ColumnLimit: 120
-ConstructorInitializerAllOnOneLineOrOnePerLine: false
-ContinuationIndentWidth: 8
-IncludeCategories: 
-  - Regex: '^<.*'
-    Priority: 1
-  - Regex: '^".*'
-    Priority: 2
-  - Regex: '.*'
-    Priority: 3
-IncludeIsMainRegex: '([-_](test|unittest))?$'
-IndentCaseLabels: true
-IndentWidth: 4
-InsertNewlineAtEOF: true
-MacroBlockBegin: ''
-MacroBlockEnd: ''
-MaxEmptyLinesToKeep: 2
-NamespaceIndentation: All
-SpaceAfterCStyleCast: true
-SpaceAfterTemplateKeyword: false
-SpaceBeforeRangeBasedForLoopColon: false
-SpaceInEmptyParentheses: false
-SpacesInAngles: false
-SpacesInConditionalStatement: false
-SpacesInCStyleCastParentheses: false
-SpacesInParentheses: false
-TabWidth: 4
-...
+
+# Maximum empty lines to keep
+MaxEmptyLinesToKeep: 1
+
+# Remove empty lines at start of block
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+# Penalties (for when lines are too long)
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 1000
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 60
