@@ -23,7 +23,7 @@ namespace chai::brew
         bool isTransparent = false;
 
         // Material properties
-        CMap<std::string, Handle> textures;
+        CMap<std::string, ResourceHandle> textures;
         CMap<std::string, std::unique_ptr<UniformBufferBase>> uniforms;
 
         // Cached uniform locations (per material instance)
@@ -121,6 +121,14 @@ namespace chai::brew
                 if (location != -1)
                 {
                     glMaterialData->uniformLocations[paramName] = location;
+
+                    /*if (std::holds_alternative<Handle>(paramValue)) {
+                        Handle texHandle = std::get<Handle>(paramValue);
+                        if (texHandle.isValid()) {
+                            glMaterialData->textures[paramName] = texHandle;
+                        }
+                    }*/
+
                     if (materialInstance && materialInstance->hasOverride(paramName))
                     {
                         auto& overrides = materialInstance->getParameterOverrides();

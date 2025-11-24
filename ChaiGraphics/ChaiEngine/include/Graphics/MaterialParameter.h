@@ -29,6 +29,7 @@ namespace chai
         int,
         Mat3,
         Mat4,
+        ResourceHandle,
         bool>;
 
     struct MaterialParameter

@@ -17,6 +17,7 @@ set(OpenGLRenderer_source
         source/OpenGLRenderer/OpenGLMaterial.cpp
         source/OpenGLRenderer/OpenGLShader.cpp
         source/OpenGLRenderer/Uploads.cpp
+        source/OpenGLRenderer/OpenGLTexture.cpp
 )
 
 add_library(OpenGLRenderer SHARED ${OpenGLRenderer_headers} ${OpenGLRenderer_source})

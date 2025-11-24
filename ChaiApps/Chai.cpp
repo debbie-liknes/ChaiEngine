@@ -1,4 +1,8 @@
 ﻿#include "Chai.h"
+
+#include "ChaiEngine/TextureAsset.h"
+#include "ChaiEngine/TextureAsset.h"
+
 #include <Window/WindowManager.h>
 #include <Window/WindowSystem.h>
 #include <Window/Window.h>
@@ -66,6 +70,7 @@ int main()
     //make an object for the scene
     auto gameObject = std::make_unique<chai::cup::GameObject>();
     auto* meshComp = gameObject->addComponent<chai::cup::MeshComponent>(gameObject.get());
+    auto textureResource = chai::loadTexture("assets/tardis.png");
     auto meshAsset = chai::AssetManager::instance().load<chai::MeshAsset>("assets/plane.obj");
     meshComp->setMesh(meshAsset.value());
 
@@ -76,7 +81,8 @@ int main()
     auto materialInstance = std::make_unique<chai::MaterialInstance>(resourceHandle);
 
     // Customize instance
-    materialInstance->setParameter("u_DiffuseColor", chai::Vec3(1.0f, 1.0f, 0.0f));
+    //materialInstance->setParameter("u_DiffuseColor", chai::Vec3(1.0f, 1.0f, 0.0f));
+    materialInstance->setParameter("albedoMap", textureResource.value());
     meshComp->setMaterial(
         chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance)));
 

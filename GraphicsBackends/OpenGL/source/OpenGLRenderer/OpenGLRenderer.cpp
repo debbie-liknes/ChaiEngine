@@ -429,9 +429,46 @@ namespace chai::brew
         if (!matData || !shaderData)
             return;
 
-        // Bind textures later
+        // Bind textures
+        GLuint textureUnit = 0;
 
-        // Set material uniforms (color, roughness, metallic, etc.)
+        for (const auto& [name, texHandle] : matData->textures) {
+            if (!texHandle.isValid()) continue;
+
+            // Get or create texture data
+            OpenGLTextureData* texData = m_texManager.getOrCreateTextureData(texHandle);
+            if (!texData) continue;
+
+            // Schedule upload if not ready
+            if (!texData->isUploaded) {
+                if (!m_uploadQueue.isQueued(texHandle)) {
+                    m_uploadQueue.requestUpload(texHandle,
+                                               (void*)texData,
+                                               UploadType::TEXTURE,
+                                               (void*)&m_texManager);
+                }
+                continue;
+            }
+
+            // Activate texture unit
+            glActiveTexture(GL_TEXTURE0 + textureUnit);
+            glBindTexture(texData->target, texData->texture);
+
+            // Set sampler uniform
+            auto it = shaderData->uniformLocations.find(name);
+            if (it != shaderData->uniformLocations.end()) {
+                glUniform1i(it->second, textureUnit);
+            }
+
+            textureUnit++;
+
+            // Limit to 16 texture units (common minimum)
+            if (textureUnit >= 16) {
+                std::cerr << "Warning: Material uses more than 16 textures!" << std::endl;
+                break;
+            }
+        }
+
         for (const auto& [name, uniform] : matData->uniforms) {
             auto it = shaderData->uniformLocations.find(name);
             if (it != shaderData->uniformLocations.end()) {

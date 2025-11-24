@@ -3,14 +3,14 @@
 #include <OpenGLRenderer/OpenGLMesh.h>
 #include <Resource/ResourceManager.h>
 #include <Graphics/VertexAttribute.h>
-
-#include "OpenGLRenderer/GLHelpers.h"
+#include <OpenGLRenderer/GLHelpers.h>
+#include <OpenGLRenderer/OpenGLTexture.h>
 
 namespace chai::brew
 {
-    void UploadQueue::requestUpload(ResourceHandle handle, void* userData, UploadType type)
+    void UploadQueue::requestUpload(ResourceHandle handle, void* userData, UploadType type, void* extraData)
     {
-        m_pendingUploads.emplace(type, handle, userData);
+        m_pendingUploads.emplace(type, handle, userData, extraData);
     }
 
     void UploadQueue::processUploads(float timeBudgetMs)
@@ -40,10 +40,9 @@ namespace chai::brew
         }
     }
 
-    void UploadQueue::performUpload(const UploadRequest& request)
+    void UploadQueue::uploadMesh(const UploadRequest& request)
     {
-        if (request.type == UploadType::MESH) {
-            checkGLError("mesh upload start");
+                    checkGLError("mesh upload start");
             auto* meshData = static_cast<OpenGLMeshData*>(request.userData);
 
             const auto* meshResource = ResourceManager::instance().getResource<MeshResource>(
@@ -99,6 +98,36 @@ namespace chai::brew
 
             std::cout << "Uploaded mesh: " << meshData->vertexCount << " vertices, "
                 << meshData->indexCount << " indices" << std::endl;
+    }
+
+    void UploadQueue::uploadTexture(const UploadRequest& request)
+    {
+        checkGLError("texture upload start");
+
+        auto* texData = static_cast<OpenGLTextureData*>(request.userData);
+        auto* texManager = static_cast<OpenGLTextureManager*>(request.extraData);
+
+        if (!texManager) {
+            std::cerr << "UploadQueue: No texture manager provided!" << std::endl;
+            return;
+        }
+
+        // Upload texture via manager
+        if (texManager->uploadTexture(request.handle, texData)) {
+            checkGLError("texture upload complete");
+            std::cout << "Texture upload completed successfully" << std::endl;
+        } else {
+            std::cerr << "Texture upload failed!" << std::endl;
+        }
+    }
+
+    void UploadQueue::performUpload(const UploadRequest& request)
+    {
+        if (request.type == UploadType::MESH) {
+            uploadMesh(request);
+        }
+        else if (request.type == UploadType::TEXTURE) {
+            uploadTexture(request);
         }
     }
 

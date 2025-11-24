@@ -17,12 +17,14 @@ namespace chai::brew
         UploadType type;
         ResourceHandle handle;
         void* userData;
+        void* extraData;
     };
 
     class UploadQueue
     {
     public:
-        void requestUpload(ResourceHandle handle, void* userData, UploadType type = UploadType::MESH);
+        void requestUpload(ResourceHandle handle, void* userData, UploadType type = UploadType::MESH,
+            void* extraData = nullptr);
         void processUploads(float timeBudgetMs);
 
         bool isQueued(ResourceHandle handle) const;
@@ -30,6 +32,8 @@ namespace chai::brew
 
     private:
         void performUpload(const UploadRequest& request);
+        void uploadMesh(const UploadRequest& request);
+        void uploadTexture(const UploadRequest& request);
 
         std::queue<UploadRequest> m_pendingUploads;
         std::unordered_set<uint32_t> m_uploading; // Currently processing

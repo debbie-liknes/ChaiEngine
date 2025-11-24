@@ -18,6 +18,6 @@ namespace chai
 
 CHAI_PLUGIN_CLASS (ImageLoaderPlugin)
 {
-    CHAI_SERVICE(chai::PngLoader, "PNG loader")
+    CHAI_LOADER(chai::PngLoader, "PNG loader")
 }
 CHAI_REGISTER_PLUGIN(ImageLoaderPlugin, "TextureLoader", "1.0.0")
