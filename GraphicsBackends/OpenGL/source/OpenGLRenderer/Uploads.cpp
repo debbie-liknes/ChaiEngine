@@ -10,7 +10,12 @@ namespace chai::brew
 {
     void UploadQueue::requestUpload(ResourceHandle handle, void* userData, UploadType type, void* extraData)
     {
+        if (m_uploading.contains(handle.index) || m_ready.contains(handle.index)) {
+            return;
+        }
+
         m_pendingUploads.emplace(type, handle, userData, extraData);
+        m_uploading.insert(handle.index);
     }
 
     void UploadQueue::processUploads(float timeBudgetMs)
@@ -30,12 +35,12 @@ namespace chai::brew
             // Pop next upload request
             UploadRequest request = m_pendingUploads.front();
             m_pendingUploads.pop();
-            m_uploading.erase(request.handle.index);
 
             // Perform the actual GPU upload
             performUpload(request);
 
             // Mark as ready
+            m_uploading.erase(request.handle.index);
             m_ready.insert(request.handle.index);
         }
     }
@@ -133,8 +138,16 @@ namespace chai::brew
 
     bool UploadQueue::isQueued(ResourceHandle handle) const
     {
-        return m_uploading.contains(handle.index) ||
-               !m_pendingUploads.empty();
+        if (m_uploading.contains((handle.index))) return true;
+
+        std::queue<UploadRequest> temp = m_pendingUploads;
+        while (!temp.empty()) {
+            if (temp.front().handle.index == handle.index) {
+                return true;
+            }
+            temp.pop();
+        }
+        return false;
     }
 
     bool UploadQueue::isReady(ResourceHandle handle) const

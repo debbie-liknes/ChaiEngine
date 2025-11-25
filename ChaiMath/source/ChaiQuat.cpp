@@ -142,12 +142,13 @@ namespace chai
     Quaternion<T> Quaternion<T>::quatFromMat4(const Mat<T, 4, 4>& M) noexcept
     {
         // take the upper-left 3x3 block as rotation
-        Mat<T, 3, 3> R
-        {
-            M(0, 0), M(0, 1), M(0, 2),
-            M(1, 0), M(1, 1), M(1, 2),
-            M(2, 0), M(2, 1), M(2, 2)
-        };
+        Mat<T, 3, 3> R{};
+
+        // Copy logical rows/cols, independent of storage layout
+        R(0, 0) = M(0, 0);  R(0, 1) = M(0, 1);  R(0, 2) = M(0, 2);
+        R(1, 0) = M(1, 0);  R(1, 1) = M(1, 1);  R(1, 2) = M(1, 2);
+        R(2, 0) = M(2, 0);  R(2, 1) = M(2, 1);  R(2, 2) = M(2, 2);
+
         return quatFromMat3(R);
     }
 

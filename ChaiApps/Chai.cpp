@@ -31,6 +31,11 @@ using namespace std;
 
 const chai::Vec3 WORLD_UP{0.0f, 1.0f, 0.0f};
 
+void addGroundPlane()
+{
+
+}
+
 int main()
 {
     //load common plugins
@@ -95,7 +100,7 @@ int main()
     groundPlane->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3{100, 100, 100});
 
     auto model = std::make_unique<chai::cup::GameObject>();
-    auto* modelMesh = groundPlane->addComponent<chai::cup::MeshComponent>(model.get());
+    auto* modelMesh = model->addComponent<chai::cup::MeshComponent>(model.get());
     auto modelMeshAsset = chai::AssetManager::instance().load<chai::MeshAsset>("assets/suzanne.obj");
     modelMesh->setMesh(modelMeshAsset.value());
 
@@ -119,8 +124,8 @@ int main()
     auto cameraObject = std::make_unique<chai::cup::GameObject>();
     auto* camComponent = cameraObject->addComponent<chai::cup::CameraComponent>(cameraObject.get());
     auto camTransform = cameraObject->getComponent<chai::cup::TransformComponent>();
-    camTransform->setPosition(chai::Vec3{0.0, 0.0, 5.0});
-    camTransform->lookAt(chai::Vec3{0.f, 0.f, 0.f}, WORLD_UP);
+    camTransform->setPosition(chai::Vec3{0.0, 10.0, 15.0});
+    camTransform->lookAt(chai::Vec3{0.0, 0.0, 0.0}, WORLD_UP);
     cameraObject->addController<chai::cup::CameraController>();
 
     //add some lighting so we can see

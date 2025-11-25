@@ -2,7 +2,7 @@
 #include <MathIncludes.h>
 
 #ifndef CHAI_ROW_MAJOR
-#define CHAI_ROW_MAJOR 1
+#define CHAI_ROW_MAJOR 0
 #endif
 
 namespace chai
@@ -171,18 +171,17 @@ namespace chai
             };
 #else
             // Column-major layout (values transposed in memory)
-            return Mat<T, 3, 3>
-            {
-                T(1) - T(2) * (yy + zz), T(2) * (xy + wz), T(2) * (xz - wy),
-                T(2) * (xy - wz), T(1) - T(2) * (xx + zz), T(2) * (yz + wx),
-                T(2) * (xz + wy), T(2) * (yz - wx), T(1) - T(2) * (xx + yy)
+            return Mat<T,3,3>{
+                1 - 2*(yy+zz),  2*(xy+ wz),    2*(xz - wy),
+                2*(xy - wz),    1 - 2*(xx+zz), 2*(yz + wx),
+                2*(xz + wy),    2*(yz - wx),   1 - 2*(xx+yy)
             };
 #endif
         }
 
         auto toMat4() const noexcept
         {
-            auto R3 = toMat3<>();
+            auto R = toMat3<>();
             // Promote to 4x4 with last row/col (0,0,0,1)
 #if CHAI_ROW_MAJOR
             return Mat<T, 4, 4>{
@@ -192,11 +191,11 @@ namespace chai
                 T(0), T(0), T(0), T(1)
             };
 #else
-            return Mat<T, 4, 4>{
-                R3(0, 0), R3(1, 0), R3(2, 0), T(0),
-                R3(0, 1), R3(1, 1), R3(2, 1), T(0),
-                R3(0, 2), R3(1, 2), R3(2, 2), T(0),
-                T(0), T(0), T(0), T(1)
+            return Mat<T,4,4>{
+                R(0,0), R(1,0), R(2,0), 0,
+                R(0,1), R(1,1), R(2,1), 0,
+                R(0,2), R(1,2), R(2,2), 0,
+                0,      0,      0,      1
             };
 #endif
         }
