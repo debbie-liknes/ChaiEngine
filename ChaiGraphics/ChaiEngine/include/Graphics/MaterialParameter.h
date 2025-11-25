@@ -2,25 +2,10 @@
 #include <ChaiMath.h>
 #include <variant>
 #include <vector>
+#include <Graphics/GraphicsTypes.h>
 
 namespace chai
 {
-    enum class MaterialParameterType
-    {
-        Float,
-        Float2,
-        Float3,
-        Float4,
-        Int,
-        Mat3,
-        Mat4,
-        Bool,
-
-        //eventually
-        //Sampler2D,
-        //SamplerCube
-    };
-
     using MaterialParameterValue = std::variant<
         float,
         Vec2,
@@ -35,33 +20,17 @@ namespace chai
     struct MaterialParameter
     {
         std::string name;
-        MaterialParameterType type;
+        DataType type;
         MaterialParameterValue defaultValue;
-
-        static uint32_t getSize(MaterialParameterType type)
-        {
-            switch (type)
-            {
-            case MaterialParameterType::Float: return 4;
-            case MaterialParameterType::Float2: return 8;
-            case MaterialParameterType::Float3: return 12;
-            case MaterialParameterType::Float4: return 16;
-            case MaterialParameterType::Int: return 4;
-            case MaterialParameterType::Mat3: return 36;
-            case MaterialParameterType::Mat4: return 64;
-            case MaterialParameterType::Bool: return 4;
-            default: return 0;
-            }
-        }
 
         uint32_t getSize() const
         {
-            return getSize(type);
+            return getDataTypeSize(type);
         }
 
         bool isSampler() const
         {
-            return false;
+            return isTextureType(type);
         }
     };
 
@@ -70,7 +39,7 @@ namespace chai
     public:
         MaterialLayout() = default;
 
-        void addParameter(const std::string& name, MaterialParameterType type, MaterialParameterValue defaultValue = {})
+        void addParameter(const std::string& name, DataType type, MaterialParameterValue defaultValue = {})
         {
             MaterialParameter param;
             param.name = name;

@@ -31,22 +31,22 @@ namespace chai::brew
         }
     }
 
-    static GLenum toGLType(const AttributeType type)
+    static GLenum toGLType(const DataType type)
     {
         switch (type)
         {
-        case AttributeType::Float:
-        case AttributeType::Float2:
-        case AttributeType::Float3:
-        case AttributeType::Float4:
+        case DataType::Float:
+        case DataType::Float2:
+        case DataType::Float3:
+        case DataType::Float4:
             return GL_FLOAT;
-        case AttributeType::Int:
-        case AttributeType::Int2:
-        case AttributeType::Int3:
-        case AttributeType::Int4:
+        case DataType::Int:
+        case DataType::Int2:
+        case DataType::Int3:
+        case DataType::Int4:
             return GL_INT;
-        case AttributeType::UnsignedByte:
-        case AttributeType::UnsignedByte4:
+        case DataType::UnsignedByte:
+        case DataType::UnsignedByte4:
             return GL_UNSIGNED_BYTE;
         default:
             return GL_FLOAT;

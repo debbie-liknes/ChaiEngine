@@ -3,7 +3,7 @@
 #include <cassert>
 
 #ifndef CHAI_ROW_MAJOR
-#define CHAI_ROW_MAJOR 1
+#define CHAI_ROW_MAJOR 0
 #endif
 
 namespace chai
@@ -108,9 +108,7 @@ namespace chai
         {
             if (ilist.size() == 1 && (*ilist.begin()) == T(1))
             {
-                for (int r = 0; r < R; ++r)
-                    for (int c = 0; c < C; ++c)
-                        m[r * C + c] = (r == c ? T(1) : T(0));
+                *this = Mat::identity();
                 return;
             }
 
@@ -156,12 +154,24 @@ namespace chai
         constexpr T& operator()(int r, int c) noexcept { return m[index(r, c)]; }
         constexpr const T& operator()(int r, int c) const noexcept { return m[index(r, c)]; }
 
-        constexpr RowProxy operator[](int r) noexcept { return RowProxy(&m[index(r, 0)]); }
-
-        constexpr ConstRowProxy operator[](int r) const noexcept
-        {
-            return ConstRowProxy(&m[index(r, 0)]);
+        constexpr RowProxy operator[](int i) noexcept {
+#if CHAI_ROW_MAJOR
+            // row-major: i = row index
+            return RowProxy(&m[index(i, 0)]);
+#else
+            // column-major: i = column index
+            return RowProxy(&m[index(0, i)]); // start of column i
+#endif
         }
+
+        constexpr ConstRowProxy operator[](int i) const noexcept {
+#if CHAI_ROW_MAJOR
+            return ConstRowProxy(&m[index(i, 0)]);
+#else
+            return ConstRowProxy(&m[index(0, i)]);
+#endif
+        }
+
 
         constexpr T* data() noexcept { return m; }
         constexpr const T* data() const noexcept { return m; }

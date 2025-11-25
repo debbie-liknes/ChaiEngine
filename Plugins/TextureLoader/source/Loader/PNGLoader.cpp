@@ -1,6 +1,6 @@
 #include <Loader/PNGLoader.h>
 #define STB_IMAGE_IMPLEMENTATION
-#include "ChaiEngine/TextureAsset.h"
+#include "Graphics/TextureAsset.h"
 
 #include <stb_image.h>
 

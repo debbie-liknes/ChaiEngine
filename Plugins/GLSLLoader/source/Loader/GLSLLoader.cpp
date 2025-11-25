@@ -3,6 +3,8 @@
 #include <fstream>
 #include <Graphics/ShaderAsset.h>
 
+#include <regex>
+
 namespace chai
 {
     bool GLSLLoader::canLoad(const std::string& ext) const

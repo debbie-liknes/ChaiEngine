@@ -91,13 +91,10 @@ namespace chai
     };
 
     //GPU resource representation
-    //PSO etc
     struct CHAIGRAPHICS_EXPORT MaterialResource : public Resource
     {
         AssetHandle sourceAsset;
         AssetHandle shaderAsset;
-
-        MaterialLayout materialLayout;
 
         std::unordered_map<std::string, MaterialParameterValue> defaultParameters;
 

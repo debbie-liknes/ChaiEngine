@@ -102,7 +102,7 @@ namespace chai::brew
                 return false;
             }
 
-            std::cout << "Compiling material with shader: " << shaderAsset->getName() << std::endl;
+            //std::cout << "Compiling material with shader: " << shaderAsset->getName() << std::endl;
 
             GLuint shaderProgram = m_shaderManager->compileShaderFromAsset(shaderAssetHandle);
             if (shaderProgram == 0)
@@ -143,7 +143,7 @@ namespace chai::brew
             }
 
             glMaterialData->isCompiled = true;
-            std::cout << "Created material shader: " << shaderAsset->getName() << std::endl;
+            //std::cout << "Created material shader: " << shaderAsset->getName() << std::endl;
             return true;
         }
 

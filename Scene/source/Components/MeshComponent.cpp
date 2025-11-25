@@ -32,15 +32,15 @@ namespace chai::cup
         VertexLayout vertexLayout;
 
         if (!asset->getPositions().empty()) {
-            vertexLayout.addAttribute("a_Position", AttributeType::Float3);
+            vertexLayout.addAttribute("a_Position", DataType::Float3);
         }
 
         if (!asset->getNormals().empty()) {
-            vertexLayout.addAttribute("a_Normal", AttributeType::Float3);
+            vertexLayout.addAttribute("a_Normal", DataType::Float3);
         }
 
         if (!asset->getUVs().empty()) {
-            vertexLayout.addAttribute("a_TexCoord", AttributeType::Float2);
+            vertexLayout.addAttribute("a_TexCoord", DataType::Float2);
         }
 
         resource->vertexLayout = vertexLayout;

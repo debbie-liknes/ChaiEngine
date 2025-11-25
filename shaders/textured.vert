@@ -1,8 +1,8 @@
 #version 430 core
 
-layout(location = 0) in vec3 aPosition;
-layout(location = 1) in vec3 aNormal;
-layout(location = 2) in vec2 aTexCoord;
+layout(location = 0) in vec3 a_Position;
+layout(location = 1) in vec3 a_Normal;
+layout(location = 2) in vec2 a_TexCoord;
 
 // Per-frame uniforms (UBO binding 0)
 layout(std140, binding = 0) uniform PerFrame

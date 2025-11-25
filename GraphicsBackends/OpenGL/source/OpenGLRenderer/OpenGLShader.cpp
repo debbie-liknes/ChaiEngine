@@ -29,13 +29,13 @@ namespace chai::brew
 
         for (const auto& stage : shaderAsset->getStages())
         {
-            if (stage.stage == ShaderStage::Vertex)
+            if (stage.source.stage == ShaderStage::Vertex)
             {
-                vertexSource = stage.sourceCode.c_str();
+                vertexSource = stage.source.sourceCode.c_str();
             }
-            else if (stage.stage == ShaderStage::Fragment)
+            else if (stage.source.stage == ShaderStage::Fragment)
             {
-                fragmentSource = stage.sourceCode.c_str();
+                fragmentSource = stage.source.sourceCode.c_str();
             }
         }
 

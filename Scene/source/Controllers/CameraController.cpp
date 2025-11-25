@@ -129,6 +129,6 @@ namespace chai::cup
         auto pos = transformComponent->getWorldPosition();
         transformComponent->lookAt(
             {pos.x + static_cast<float>(x), pos.y + static_cast<float>(y), pos.z + static_cast<float>(z)},
-            {0.0f, -1.0f, 0.0f});
+            {0.0f, 1.0f, 0.0f});
     }
 }

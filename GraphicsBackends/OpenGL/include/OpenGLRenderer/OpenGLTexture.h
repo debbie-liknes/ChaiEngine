@@ -1,5 +1,5 @@
 #pragma once
-#include <ChaiEngine/TextureAsset.h>
+#include <Graphics/TextureAsset.h>
 #include <OpenGLRendererExport.h>
 #include <glad/gl.h>
 #include <Types/CMap.h>

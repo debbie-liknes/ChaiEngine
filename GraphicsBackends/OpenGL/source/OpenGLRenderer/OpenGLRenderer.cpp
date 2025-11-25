@@ -286,6 +286,11 @@ namespace chai::brew
                 shaderAsset
                 );
 
+            if (vao == 0) {
+                std::cerr << "ERROR: Failed to create VAO for mesh!" << std::endl;
+                continue;  // Skip this draw
+            }
+
             if (currentVAO != vao) {
                 glBindVertexArray(vao);
                 currentVAO = vao;
@@ -357,6 +362,7 @@ namespace chai::brew
             }
             m_lightsDirty = false;
 
+            auto lightingsize = sizeof(lightingData);
             m_lightingUBO->setValue(lightingData);
             m_uniManager.updateUniform(*m_lightingUBO);
         }

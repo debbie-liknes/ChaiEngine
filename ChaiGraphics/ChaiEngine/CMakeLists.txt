@@ -31,7 +31,8 @@ set(ChaiGraphics_source
         source/ChaiEngine/Renderer.cpp
         source/ChaiEngine/RenderCommandCollector.cpp
         source/ChaiEngine/UniformBuffer.cpp
-        include/ChaiEngine/TextureAsset.h
+        include/Graphics/TextureAsset.h
+        include/Graphics/GraphicsTypes.h
 )
 
 add_library(ChaiGraphics SHARED

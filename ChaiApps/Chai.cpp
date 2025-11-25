@@ -1,7 +1,7 @@
 ﻿#include "Chai.h"
 
-#include "ChaiEngine/TextureAsset.h"
-#include "ChaiEngine/TextureAsset.h"
+#include "Graphics/TextureAsset.h"
+#include "Graphics/TextureAsset.h"
 
 #include <Window/WindowManager.h>
 #include <Window/WindowSystem.h>
@@ -28,6 +28,8 @@
 #include "Graphics/ShaderAsset.h"
 
 using namespace std;
+
+const chai::Vec3 WORLD_UP{0.0f, 1.0f, 0.0f};
 
 int main()
 {
@@ -67,34 +69,58 @@ int main()
     sceneManager.addScene("TestScene", std::make_unique<chai::cup::Scene>());
     chai::cup::Scene* testScene = sceneManager.setActiveScene("TestScene");
 
-    //make an object for the scene
-    auto gameObject = std::make_unique<chai::cup::GameObject>();
-    auto* meshComp = gameObject->addComponent<chai::cup::MeshComponent>(gameObject.get());
-    auto textureResource = chai::loadTexture("assets/tardis.png");
+    //make a ground plane
+    auto groundPlane = std::make_unique<chai::cup::GameObject>();
+    auto* meshComp = groundPlane->addComponent<chai::cup::MeshComponent>(groundPlane.get());
     auto meshAsset = chai::AssetManager::instance().load<chai::MeshAsset>("assets/plane.obj");
     meshComp->setMesh(meshAsset.value());
 
-    chai::MaterialSystem matSystem;
+    auto phong = chai::MaterialSystem::instance().getPhongShader();
 
-    auto resourceHandle = matSystem.createMaterialResourceFromAsset(matSystem.getDefaultAsset());
+    auto material = chai::MaterialSystem::Builder(phong)
+    .setVec3("u_DiffuseColor", chai::Vec3(0.5, 0.5, 0.5))
+    .setVec3("u_SpecularColor", chai::Vec3(0.5, 0.5, 0.5))
+    .setFloat("u_Shininess", 0.5f)
+    .build();
 
-    auto materialInstance = std::make_unique<chai::MaterialInstance>(resourceHandle);
+    //auto textureResource = chai::loadTexture("assets/tardis.png");
+
+    auto materialInstance = std::make_unique<chai::MaterialInstance>(material);
 
     // Customize instance
-    //materialInstance->setParameter("u_DiffuseColor", chai::Vec3(1.0f, 1.0f, 0.0f));
-    materialInstance->setParameter("albedoMap", textureResource.value());
     meshComp->setMaterial(
         chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance)));
 
-    gameObject->getComponent<chai::cup::TransformComponent>()->setPosition(
-        chai::Vec3{0.0, 0.0, 0.0});
+    groundPlane->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{0.0, -15.0, 0.0});
+    groundPlane->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3{100, 100, 100});
+
+    auto model = std::make_unique<chai::cup::GameObject>();
+    auto* modelMesh = groundPlane->addComponent<chai::cup::MeshComponent>(model.get());
+    auto modelMeshAsset = chai::AssetManager::instance().load<chai::MeshAsset>("assets/suzanne.obj");
+    modelMesh->setMesh(modelMeshAsset.value());
+
+    auto mat2 = chai::MaterialSystem::Builder(phong)
+    .setVec3("u_DiffuseColor", chai::Vec3(1.0, 1.0, 0.0))
+    .setVec3("u_SpecularColor", chai::Vec3(0.5, 0.5, 0.5))
+    .setFloat("u_Shininess", 0.5f)
+    .build();
+
+    //auto textureResource = chai::loadTexture("assets/tardis.png");
+
+    auto materialInstance2 = std::make_unique<chai::MaterialInstance>(mat2);
+
+    // Customize instance
+    modelMesh->setMaterial(
+        chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance2)));
+
+    model->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{0.0, 0.0, 0.0});
 
     //add a camera to look through
     auto cameraObject = std::make_unique<chai::cup::GameObject>();
     auto* camComponent = cameraObject->addComponent<chai::cup::CameraComponent>(cameraObject.get());
     auto camTransform = cameraObject->getComponent<chai::cup::TransformComponent>();
-    camTransform->setPosition(chai::Vec3{-5.0, 0.0, -10.0});
-    camTransform->lookAt(chai::Vec3{0.f, 0.f, 0.f}, chai::Vec3{0.0, -1.0, 0.0});
+    camTransform->setPosition(chai::Vec3{0.0, 0.0, 5.0});
+    camTransform->lookAt(chai::Vec3{0.f, 0.f, 0.f}, WORLD_UP);
     cameraObject->addController<chai::cup::CameraController>();
 
     //add some lighting so we can see
@@ -102,14 +128,15 @@ int main()
     lightObject->getComponent<chai::cup::TransformComponent>()->setPosition(
         chai::Vec3{-5.0, 5.0, -5.0});
     lightObject->getComponent<chai::cup::TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0},
-        chai::Vec3{0.0, -1.0, 0.0});
+        WORLD_UP);
     lightObject->addComponent<chai::cup::LightComponent>(lightObject.get());
 
     //set up viewport camera association
     vp->setCamera(camComponent->getCamera());
 
     //add the objects to the scene
-    testScene->addGameObject(std::move(gameObject));
+    testScene->addGameObject(std::move(groundPlane));
+    testScene->addGameObject(std::move(model));
     testScene->addGameObject(std::move(cameraObject));
     testScene->addGameObject(std::move(lightObject));
 

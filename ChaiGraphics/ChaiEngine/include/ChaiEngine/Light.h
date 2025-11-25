@@ -18,5 +18,6 @@ namespace chai::brew
     {
         Light lights[MAX_LIGHTS];
         int numLights;
+        Vec3 padding;
     };
 }
