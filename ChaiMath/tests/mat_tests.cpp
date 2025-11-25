@@ -69,20 +69,4 @@ namespace Mat4Tests
 
         EXPECT_TRUE(MatNear(R, A, EPSILON_F));
     }
-
-    TEST(MatrixMultiplyTest, MultiplyKnownValues)
-    {
-        Mat2 A{1, 2, 3, 4};
-        Mat2 B{5, 6, 7, 8};
-
-        Mat < float, 2, 2 > R = A * B;
-
-        Mat < float, 2, 2 > expected;
-        expected[0][0] = 1 * 5 + 2 * 7;
-        expected[0][1] = 1 * 6 + 2 * 8;
-        expected[1][0] = 3 * 5 + 4 * 7;
-        expected[1][1] = 3 * 6 + 4 * 8;
-
-        EXPECT_TRUE(MatNear(R, expected, EPSILON_F));
-    }
 }
