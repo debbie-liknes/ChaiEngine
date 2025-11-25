@@ -1,70 +1,68 @@
 #pragma once
 #include <ChaiGraphicsExport.h>
 #include <vector>
-#include <memory>
 #include <string>
 #include <Asset/AssetLoader.h>
 #include <Asset/AssetHandle.h>
 #include <ChaiEngine/Vertex.h>
-#include <Meta/ChaiMacros.h>
 #include <Resource/Resource.h>
+
+#include "Graphics/VertexAttribute.h"
 
 namespace chai
 {
-    class IMesh 
+    class CHAIGRAPHICS_EXPORT MeshAsset : public IAsset
     {
     public:
-        virtual ~IMesh() = default;
+        struct MeshData
+        {
+            std::vector<Vec3> positons;
+            std::vector<Vec3> normals;
+            std::vector<uint32_t> indices;
+            std::vector<Vec2> uvs;
+        };
 
-        virtual size_t getVertexCount() const = 0;
-        virtual size_t getIndexCount() const = 0;
+        explicit MeshAsset(const MeshData& mesh) : m_meshData(std::move(mesh)) {}
 
-        // Data access (for engine systems that need it)
-        virtual const std::vector<Vertex>& getVertices() const = 0;
-        virtual const std::vector<uint32_t>& getIndices() const = 0;
-    };
+        ~MeshAsset() override
+        {
+            m_defaultMaterials.clear();
+        }
 
-	class MeshResource : public Resource
-    {
-    public:
-        explicit MeshResource(Handle assetHandle)
-            : Resource(assetHandle) 
-		{
-		}
-    };
+        const std::vector<Vec3>& getPositions() const { return m_meshData.positons; }
+        const std::vector<Vec3>& getNormals() const { return m_meshData.normals; }
+        const std::vector<uint32_t>& getIndices() const { return m_meshData.indices; }
+        const std::vector<Vec2>& getUVs() const { return m_meshData.uvs; }
 
-	class Mesh : public IMesh, public IAsset
-    {
-    public:
-        Mesh(const std::vector<Vertex>& verts, const std::vector<uint32_t>& inds)
-            : vertices(verts), indices(inds) 
-        {}
+        const std::vector<AssetHandle>& getMaterials() const { return m_defaultMaterials; }
 
-		virtual ~Mesh() = default;
-
-        const std::vector<Vertex>& getVertices() const override { return vertices; }
-        const std::vector<uint32_t>& getIndices() const override { return indices; }
-        const std::vector<Handle>& getMaterials() const { return m_materials; }
-
-        size_t getVertexCount() const override { return vertices.size(); }
-        size_t getIndexCount() const override { return indices.size(); }
-
-        void addMaterial(const Handle mat) { m_materials.push_back(mat); }
+        void addMaterial(const AssetHandle mat) { m_defaultMaterials.push_back(mat); }
 
         bool isValid() const override { return m_valid; }
         const std::string& getAssetId() const override { return m_assetId; }
 
     private:
-        std::vector<Vertex> vertices;
-        std::vector<uint32_t> indices;
+        MeshData m_meshData;
+        std::vector<AssetHandle> m_defaultMaterials;
         //want this
         //AABB boundingBox;
 
-        std::shared_ptr<IMesh> m_mesh;
-        std::string m_assetId;
         int m_refCount = 0;
         bool m_valid = false;
-        //std::vector<std::string> m_materialLibraries;
-        std::vector<Handle> m_materials;
+    };
+
+    struct CHAIGRAPHICS_EXPORT MeshResource : public Resource
+    {
+        AssetHandle sourceAsset;
+        VertexLayout vertexLayout;
+        std::vector<uint8_t> vertexData;
+        uint32_t vertexCapacity = 0;
+        uint32_t vertexCount = 0;
+        std::vector<uint32_t> indexData;
+
+        explicit MeshResource(AssetHandle source)
+            : Resource(source), sourceAsset(source) {}
+
+        MeshResource() = default;
     };
 }

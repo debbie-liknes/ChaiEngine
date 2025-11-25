@@ -10,10 +10,10 @@ namespace chai
         ORTHOGRAPHIC
     };
 
-    class CORE_EXPORT ICamera 
+    class CORE_EXPORT ICamera
     {
     public:
-		ICamera() = default;
+        ICamera() = default;
         virtual ~ICamera() = default;
 
         ICamera(const ICamera&) = delete;

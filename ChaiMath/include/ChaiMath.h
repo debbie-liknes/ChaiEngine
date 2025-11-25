@@ -12,6 +12,6 @@
 
 namespace chai
 {
-	constexpr float  EPSILON_F = 1e-5f;
-	constexpr double EPSILON_D = 1e-12;
+    constexpr float EPSILON_F = 1e-5f;
+    constexpr double EPSILON_D = 1e-12;
 }

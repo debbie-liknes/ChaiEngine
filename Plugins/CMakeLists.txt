@@ -1,3 +1,4 @@
 add_subdirectory(TextureLoader)
 add_subdirectory(GLFWWindow)
 add_subdirectory(ModelLoader)
+add_subdirectory(GLSLLoader)

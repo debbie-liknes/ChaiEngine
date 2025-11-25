@@ -2,9 +2,6 @@
 #include <ChaiEngine/Material.h>
 #include <glad/gl.h>
 #include <Types/CMap.h>
-#include <iostream>
-#include <set>
-#include <sstream>
 
 
 namespace chai::brew
@@ -12,6 +9,7 @@ namespace chai::brew
     struct OpenGLShaderData
     {
         GLuint program = 0;
+        AssetHandle shaderAssetHandle;
 
         // Material uniform locations
         CMap<std::string, GLint> uniformLocations;
@@ -25,8 +23,18 @@ namespace chai::brew
     class GLShaderManager
     {
     public:
+        GLShaderManager() = default;
+        virtual ~GLShaderManager();
+
+        GLShaderManager(const GLShaderManager&) = delete;
+        GLShaderManager& operator=(const GLShaderManager&) = delete;
+
+        GLShaderManager(GLShaderManager&&) = default;
+        GLShaderManager& operator=(GLShaderManager&&) = default;
+
         GLuint createDefaultShaderProgram();
-        GLuint getOrCreatePhongShader();  // NEW: Get shared Phong shader
+        GLuint compileShaderFromAsset(AssetHandle shaderAssetHandle);
+
         GLuint compileShader(const char* source, GLenum type);
         GLuint compileShaderProgram(const char* vertexSource, const char* fragmentSource);
 
@@ -41,7 +49,7 @@ namespace chai::brew
         }
 
     private:
-        CMap<GLuint, std::unique_ptr<OpenGLShaderData>> m_programToShaderData;
+        std::unordered_map<GLuint, std::unique_ptr<OpenGLShaderData>> m_programToShaderData;
         GLuint m_phongShaderProgram = 0;
     };
 }

@@ -4,6 +4,10 @@
 #include <Resource/ResourceManager.h>
 #include <Asset/AssetManager.h>
 
+#include "Graphics/ShaderAsset.h"
+
+#include <iostream>
+
 namespace chai
 {
     class CHAIGRAPHICS_EXPORT MaterialSystem
@@ -11,119 +15,220 @@ namespace chai
     public:
         static MaterialSystem& instance();
 
-        Handle getDefaultMaterialAsset() const 
+        MaterialSystem(const MaterialSystem&) = delete;
+        MaterialSystem& operator=(const MaterialSystem&) = delete;
+
+        static ResourceHandle createFromAsset(AssetHandle assetHandle)
         {
-            return m_defaultMaterialAsset;
+            auto* asset = AssetManager::instance().get<MaterialAsset>(assetHandle);
+            if (!asset) {
+                std::cerr << "Invalid material asset!" << std::endl;
+                return ResourceHandle{};
+            }
+
+            return createFromAsset(asset);
         }
 
-        std::unique_ptr<MaterialInstance> createInstance(Handle materialAssetHandle) {
-            return std::make_unique<MaterialInstance>(materialAssetHandle);
+        static ResourceHandle createFromAsset(const MaterialAsset* asset)
+        {
+            if (!asset)
+                return ResourceHandle{};
+
+            // Get shader for validation
+            auto* shader = AssetManager::instance().get<ShaderAsset>(asset->getShaderHandle());
+            if (!shader) {
+                std::cerr << "Material references invalid shader!" << std::endl;
+                return ResourceHandle{};
+            }
+
+            // Validate
+            if (!validateParameters(asset->getParameters(), shader)) {
+                std::cerr << "Material '" << asset->getName()
+                    << "' is not compatible with shader!" << std::endl;
+                return ResourceHandle{};
+            }
+
+            // Create resource
+            auto resource = std::make_unique<MaterialResource>();
+            resource->shaderAsset = asset->getShaderHandle();
+            resource->defaultParameters = asset->getParameters();
+
+            return ResourceManager::instance().add(std::move(resource));
         }
 
-        //      static Handle getPhongHandle()
-        //      {
-        //          static std::optional<Handle> phongHandle;
-              //	if (phongHandle.has_value())
-        //              return phongHandle.value();
+        static ResourceHandle create(AssetHandle shaderHandle)
+        {
+            auto* shader = AssetManager::instance().get<ShaderAsset>(shaderHandle);
+            if (!shader) {
+                std::cerr << "Invalid shader handle!" << std::endl;
+                return ResourceHandle{};
+            }
 
-              //	phongHandle = chai::AssetManager::instance().add(createPhong());
-              //	return phongHandle.value();
-              //}
+            auto resource = std::make_unique<MaterialResource>();
+            resource->shaderAsset = shaderHandle;
 
-              //// PBR materials
-              //static std::shared_ptr<Material> createPBR() 
-              //{
-              //    auto shaderDesc = std::make_shared<ShaderDescription>();
-              //    shaderDesc->name = "pbr_standard";
-              //    shaderDesc->stages = {
-              //        {ShaderStage::Vertex, "shaders/pbr.vert"},
-              //        {ShaderStage::Fragment, "shaders/pbr.frag"}
-              //    };
+            // Initialize with shader defaults
+            for (const auto& uniform : shader->getUniforms()) {
+                if (uniform.defaultValue.index() != 0) {
+                    resource->defaultParameters[uniform.name] = uniform.defaultValue;
+                }
+            }
 
-              //    auto material = std::make_shared<Material>(shaderDesc);
+            return ResourceManager::instance().add(std::move(resource));
+        }
 
-              //    // Set default PBR values
-              //    material->setBaseColor(Vec3(0.8f, 0.8f, 0.8f));
-              //    material->setMetallic(0.0f);
-              //    material->setRoughness(0.8f);
+        class Builder
+        {
+        public:
+            explicit Builder(AssetHandle shaderHandle)
+                : m_shaderHandle(shaderHandle)
+            {
+                m_shader = AssetManager::instance().get<ShaderAsset>(shaderHandle);
+                if (!m_shader) {
+                    std::cerr << "Invalid shader handle!" << std::endl;
+                }
+            }
 
-              //    return material;
-              //}
+            Builder& set(const std::string& name, const MaterialParameterValue& value)
+            {
+                if (!m_shader)
+                    return *this;
 
-              //// Legacy Phong for OBJ compatibility
-              //static std::unique_ptr<Material> createPhong() 
-              //{
-              //    auto shaderDesc = std::make_shared<ShaderDescription>();
-              //    shaderDesc->name = "phong_standard";
-              //    shaderDesc->stages = {
-              //        {.type = ShaderStage::Vertex, .path = "shaders/phong.vert"},
-              //        {.type = ShaderStage::Fragment, .path = "shaders/phong.frag"}
-              //    };
+                // Validate parameter exists in shader
+                bool found = false;
+                for (const auto& uniform : m_shader->getUniforms()) {
+                    if (uniform.name == name) {
+                        found = true;
+                        // Could also validate type here
+                        break;
+                    }
+                }
 
-              //    auto material = std::make_unique<Material>(shaderDesc);
+                if (!found) {
+                    std::cerr << "WARNING: Parameter '" << name
+                        << "' not used by shader" << std::endl;
+                }
 
-              //    // Set default Phong values
-              //    material->setDiffuse(Vec3(0.8f, 0.8f, 0.8f));
-              //    material->setSpecular(Vec3(0.2f, 0.2f, 0.2f));
-              //    material->setAmbient(Vec3(0.1f, 0.1f, 0.1f));
-              //    material->setShininess(32.0f);
+                m_parameters[name] = value;
+                return *this;
+            }
 
-              //    return std::move(material);
-              //}
+            // Convenience overloads
+            Builder& setFloat(const std::string& name, float value)
+            {
+                return set(name, value);
+            }
 
-              //// Factory method that creates appropriate material based on features
-              //static std::shared_ptr<Material> createFromFeatures(const std::set<MaterialFeature>& features) 
-              //{
-              //    bool needsPBR = features.count(MaterialFeature::Metallic) ||
-              //        features.count(MaterialFeature::MetallicTexture) ||
-              //        features.count(MaterialFeature::Roughness) ||
-              //        features.count(MaterialFeature::RoughnessTexture);
+            Builder& setVec3(const std::string& name, const Vec3& value)
+            {
+                return set(name, value);
+            }
 
-              //    auto material = needsPBR ? createPBR() : createPhong();
+            Builder& setTexture(const std::string& name, ResourceHandle texHandle)
+            {
+                return set(name, texHandle);
+            }
 
-              //    for (auto feature : features) {
-              //        material->setFeature(feature, true);
-              //    }
+            ResourceHandle build()
+            {
+                if (!m_shader) {
+                    return ResourceHandle{};
+                }
 
-              //    return material;
-              //}
+                // Validate all required parameters are provided
+                if (!MaterialSystem::validateParameters(m_parameters, m_shader)) {
+                    std::cerr << "Material missing required parameters!" << std::endl;
+                    return ResourceHandle{};
+                }
 
-              //static std::shared_ptr<Material> createCustom(const std::string& vertexPath,
-              //    const std::string& fragmentPath) 
-              //{
-              //    auto shaderDesc = std::make_shared<ShaderDescription>();
-              //    shaderDesc->name = "custom_" + std::to_string(generateUniqueId());
-              //    shaderDesc->stages = {
-              //        {ShaderStage::Vertex, vertexPath},
-              //        {ShaderStage::Fragment, fragmentPath}
-              //    };
-              //    return std::make_shared<Material>(shaderDesc);
-              //}
+                auto resource = std::make_unique<MaterialResource>();
+                resource->shaderAsset = m_shaderHandle;
+                resource->defaultParameters = m_parameters;
+
+                return ResourceManager::instance().add(std::move(resource));
+            }
+
+        private:
+            AssetHandle m_shaderHandle;
+            const ShaderAsset* m_shader;
+            std::unordered_map<std::string, MaterialParameterValue> m_parameters;
+        };
+
+        /*static ResourceHandle createMaterialResourceFromAsset(AssetHandle handle);*/
+
+        AssetHandle getPhongShader()
+        {
+            return m_phongShader;
+        }
+
+        AssetHandle getPhongMaterial()
+        {
+            return m_phongMaterial;
+        }
 
     private:
-        MaterialSystem()
-        {
-            init();
-        }
-        void init();
-        Handle m_defaultMaterialAsset;
+        MaterialSystem();
 
-        void createDefaultMaterial()
+        static bool validateParameters(
+            const std::unordered_map<std::string, MaterialParameterValue>& params,
+            const ShaderAsset* shader)
         {
-            auto asset = std::make_unique<MaterialAsset>();
-            //asset->name = "default_phong";
-            asset->shaderName = "phong_standard";
-            asset->properties.diffuseColor = Vec3(0.8f, 0.8f, 0.8f);
-            asset->properties.specularColor = Vec3(0.2f, 0.2f, 0.2f);
-            asset->properties.ambientColor = Vec3(0.1f, 0.1f, 0.1f);
-            asset->properties.shininess = 32.0f;
+            // Check all required uniforms are provided
+            for (const auto& uniform : shader->getUniforms()) {
+                if (!uniform.isRequired)
+                    continue;
 
-            m_defaultMaterialAsset = AssetManager::instance().add(std::move(asset)).value();
+                auto it = params.find(uniform.name);
+                if (it == params.end()) {
+                    std::cerr << "ERROR: Missing required parameter: "
+                        << uniform.name << std::endl;
+                    return false;
+                }
+            }
+            return true;
         }
-        //static int generateUniqueId()
-        //{
-        //    static int idCounter = 0;
-        //    return idCounter++;
-        //}
+
+        //static bool validateMaterialAgainstShader(const MaterialAsset* material, const ShaderAsset* shader);
+        //static bool isTypeCompatible(const MaterialParameterValue& value, DataType expectedType);
+
+        /*void createPhongMaterial()
+        {
+            auto matAsset = std::make_unique<chai::MaterialAsset>();
+            matAsset->setParameter("albedoMap", {});
+            matAsset->setParameter("normalMap", {});
+            matAsset->setParameter("roughnessMap", {});
+            matAsset->setParameter("albedoTint", {});
+
+            //matAsset->sh
+
+            m_phongMaterial = AssetManager::instance().add<MaterialAsset>(std::move(matAsset)).value();
+        }*/
+
+        void loadPhongShaderDefault()
+        {
+            auto vertAssetHandle = AssetManager::instance().load<ShaderStageAsset>("shaders/phong.vert").value();
+            auto fragAssetHandle = AssetManager::instance().load<ShaderStageAsset>("shaders/phong.frag").value();
+
+            // Get the loaded stage assets
+            auto vertAsset = AssetManager::instance().get<ShaderStageAsset>(vertAssetHandle);
+            auto fragAsset = AssetManager::instance().get<ShaderStageAsset>(fragAssetHandle);
+
+            auto shaderAsset = std::make_unique<ShaderAsset>("phong_shader");
+            shaderAsset->addStage(*vertAsset);
+            shaderAsset->addStage(*fragAsset);
+
+            shaderAsset->addVertexInput("a_Position", 0, DataType::Float3);
+            shaderAsset->addVertexInput("a_Normal", 1, DataType::Float3);
+            shaderAsset->addVertexInput("a_TexCoord", 2, DataType::Float2);
+
+            shaderAsset->addUniform("u_DiffuseColor", DataType::Float3);
+            shaderAsset->addUniform("u_SpecularColor", DataType::Float3);
+            shaderAsset->addUniform("u_Shininess", DataType::Float);
+
+            m_phongShader = AssetManager::instance().add(std::move(shaderAsset)).value();
+        }
+
+        AssetHandle m_phongShader;
+        AssetHandle m_phongMaterial;
     };
 }

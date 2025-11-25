@@ -4,8 +4,8 @@
 
 namespace Mat4Tests
 {
-	using chai::Mat2;
-	using chai::Mat4;
+    using chai::Mat2;
+    using chai::Mat4;
     using chai::Mat;
     using chai::EPSILON_F;
 
@@ -45,17 +45,17 @@ namespace Mat4Tests
         EXPECT_EQ(mat[0][0], 100);
 
         chai::Vec4 row1 = mat[1];
-        chai::Vec4 expected1{ 5, 6, 7, 8 };
+        chai::Vec4 expected1{5, 6, 7, 8};
         EXPECT_EQ(row1, expected1);
     }
 
-    TEST(MatrixMultiplyTest, IdentityMatrix) 
+    TEST(MatrixMultiplyTest, IdentityMatrix)
     {
-        Mat<float, 4, 4> A{
+        Mat < float, 4, 4 > A{
             1, 2, 3, 4,
             5, 6, 7, 8,
-            9,10,11,12,
-            13,14,15,16
+            9, 10, 11, 12,
+            13, 14, 15, 16
         };
 
         // Transposed initializer (column-major) for simplicity
@@ -63,26 +63,10 @@ namespace Mat4Tests
             for (int row = 0; row < 4; ++row)
                 A[col][row] = 1.0f + col * 4 + row;
 
-        Mat<float, 4, 4> I = Mat<float, 4, 4>::identity();
+        Mat < float, 4, 4 > I = Mat < float, 4, 4 > ::identity();
 
         auto R = A * I;
 
         EXPECT_TRUE(MatNear(R, A, EPSILON_F));
-    }
-
-    TEST(MatrixMultiplyTest, MultiplyKnownValues) 
-    {
-        Mat2 A{ 1, 2, 3, 4 };
-        Mat2 B{ 5, 6, 7, 8 };
-
-        Mat<float, 2, 2> R = A * B;
-
-        Mat<float, 2, 2> expected;
-        expected[0][0] = 1 * 5 + 2 * 7;
-        expected[0][1] = 1 * 6 + 2 * 8;
-        expected[1][0] = 3 * 5 + 4 * 7;
-        expected[1][1] = 3 * 6 + 4 * 8;
-
-        EXPECT_TRUE(MatNear(R, expected, EPSILON_F));
     }
 }

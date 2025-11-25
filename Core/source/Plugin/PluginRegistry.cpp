@@ -5,7 +5,8 @@
 
 namespace chai::kettle
 {
-    std::filesystem::path get_executable_directory() {
+    std::filesystem::path get_executable_directory()
+    {
 #ifdef _WIN32
         char path[MAX_PATH];
         GetModuleFileNameA(NULL, path, MAX_PATH);
@@ -17,7 +18,7 @@ namespace chai::kettle
 #endif
     }
 
-    PluginRegistry& PluginRegistry::instance() 
+    PluginRegistry& PluginRegistry::instance()
     {
         static PluginRegistry reg;
         return reg;
@@ -34,7 +35,8 @@ namespace chai::kettle
     }
 
     // Register a factory under a category and name
-    void PluginRegistry::registerPlugin(const std::string& pluginName, std::function<std::unique_ptr<IPlugin>()> factory)
+    void PluginRegistry::registerPlugin(const std::string& pluginName,
+                                        std::function<std::unique_ptr<IPlugin>()> factory)
     {
         plugins_[pluginName] = factory;
     }
@@ -47,7 +49,8 @@ namespace chai::kettle
         PluginHandle handle = dlopen(path.c_str(), RTLD_LAZY);
 #endif
 
-        if (!handle) {
+        if (!handle)
+        {
             std::cerr << "Failed to load plugin: " << path << "\n";
             return false;
         }
@@ -61,7 +64,7 @@ namespace chai::kettle
         auto getPlugin = (RegisterPluginFn)dlsym(handle, "GetPluginModule");
 #endif
 
-        if (!registerHandle) 
+        if (registerHandle == nullptr)
         {
             std::cerr << "Plugin " << path << " does not expose RegisterPlugin()\n";
             return false;
@@ -75,9 +78,9 @@ namespace chai::kettle
 
     std::shared_ptr<IPlugin> PluginRegistry::loadPlugin(const std::string& pluginPath)
     {
-		std::string pluginName = std::filesystem::path(pluginPath).filename().stem().string();
+        std::string pluginName = std::filesystem::path(pluginPath).filename().stem().string();
         auto it = plugins_.find(pluginName);
-        if (it != plugins_.end()) 
+        if (it != plugins_.end())
         {
             return loadedPlugins_[pluginName];
         }
@@ -86,7 +89,7 @@ namespace chai::kettle
         if (loadLibrary(pluginPath))
         {
             it = plugins_.find(pluginName);
-            if (it != plugins_.end()) 
+            if (it != plugins_.end())
             {
                 auto plugin = it->second();
                 plugin->initialize();
@@ -103,15 +106,16 @@ namespace chai::kettle
     {
         auto exePath = get_executable_directory();
         std::filesystem::path pluginsPath = exePath.append(directory);
-        if (!std::filesystem::exists(pluginsPath)) {
+        if (!std::filesystem::exists(pluginsPath))
+        {
             std::cerr << "Plugin directory does not exist: " << pluginsPath << "\n";
             return false;
         }
-        for (const auto& entry : std::filesystem::directory_iterator(pluginsPath)) 
+        for (const auto& entry : std::filesystem::directory_iterator(pluginsPath))
         {
-            if (entry.is_regular_file() && entry.path().extension() == ".dll") 
+            if (entry.is_regular_file() && entry.path().extension() == ".dll")
             {
-                if (!loadPlugin(entry.path().string())) 
+                if (!loadPlugin(entry.path().string()))
                 {
                     std::cerr << "Failed to load plugin: " << entry.path() << "\n";
                 }

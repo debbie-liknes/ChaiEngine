@@ -1,12 +1,16 @@
 #pragma once
+#include <CoreExport.h>
 #include <Asset/AssetHandle.h>
 
 namespace chai
 {
-	class Resource
-	{
-	public:
-		explicit Resource(Handle assetHandle) {}
-		virtual ~Resource() = default;
-	};
+    struct CORE_EXPORT Resource
+    {
+        explicit Resource(AssetHandle sourceAsset)
+        {
+        }
+
+        Resource() = default;
+        virtual ~Resource() = default;
+    };
 }

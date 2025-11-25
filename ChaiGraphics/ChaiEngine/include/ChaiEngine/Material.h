@@ -1,17 +1,15 @@
 #pragma once
 #include <ChaiGraphicsExport.h>
-#include <ChaiEngine/IMaterial.h>
 #include <Types/CMap.h>
-#include <set>
-#include <ChaiMath.h>
 #include <Asset/AssetLoader.h>
-#include <Asset/AssetManager.h>
-#include <ChaiEngine/PipelineState.h>
+#include <Asset/AssetHandle.h>
 #include <Resource/Resource.h>
+#include <Graphics/MaterialParameter.h>
+#include <Resource/ResourceManager.h>
 
 namespace chai
 {
-    enum class MaterialFeature 
+    enum class MaterialFeature
     {
         BaseColor,
         BaseColorTexture,
@@ -27,122 +25,124 @@ namespace chai
         DoubleSided
     };
 
-    struct MaterialPass
-    {
-        std::string name;  // "main", "shadow", "depth_prepass", "outline"
-        PipelineDesc pipeline;
-
-        std::unordered_map<std::string, UniformBufferBase> uniformOverrides;
-
-        bool enabled = true;
-    };
-
     //shared by multiple instances
-    struct MaterialAsset : public IAsset 
+    struct CHAIGRAPHICS_EXPORT MaterialAsset : public IAsset
     {
-        std::string shaderName;
+    public:
+        MaterialAsset() = default;
+
+        MaterialAsset(const std::string& name)
+            : m_name(name) {}
+
+        MaterialAsset(const std::string& name, Handle shader)
+            : m_name(name), m_shaderHandle(shader) {}
+
+        // Getters
+        const std::string& getName() const { return m_name; }
+        AssetHandle getShaderHandle() const { return m_shaderHandle; }
 
         bool isValid() const override { return m_valid; }
         const std::string& getAssetId() const override { return m_assetId; }
 
-        // Default properties (from file)
-        struct Properties {
-            Vec3 diffuseColor = Vec3(0.8f, 0.8f, 0.8f);
-            Vec3 specularColor = Vec3(0.2f, 0.2f, 0.2f);
-            Vec3 ambientColor = Vec3(0.1f, 0.1f, 0.1f);
-            float shininess = 32.0f;
-        } properties;
-
-        // Texture paths (not handles!)
-        struct TexturePaths {
-            std::string diffuseMap;
-            std::string specularMap;
-            std::string normalMap;
-        } texturePaths;
-
-
-        PipelineState pso;
-    };
-
-	//GPU resource representation
-	//PSO etc
-    struct MaterialResource : public Resource
-    {
-        std::string shaderName;
-
-        MaterialResource(Handle assetHandle)
-            : Resource(assetHandle) 
+        void setParameter(const std::string& name, const MaterialParameterValue& value)
         {
-		}
+            m_parameters[name] = value;
+        }
 
-        // Properties (serialized to disk)
-        std::unordered_map<std::string, Vec3> vec3Properties;
-        std::unordered_map<std::string, float> floatProperties;
-
-        // Texture paths (not handles!)
-        std::unordered_map<std::string, std::string> texturePaths;
-    };
-
-	//Runtime material instance (parameters unique per instance)
-    class MaterialInstance : public Resource
-    {
-    public:
-        MaterialInstance(Handle assetHandle)
-            : Resource(assetHandle),
-              m_diffuseColor(0.8f, 0.8f, 0.8f),
-              m_specularColor(0.2f, 0.2f, 0.2f),
-              m_ambientColor(0.1f, 0.1f, 0.1f),
-              m_shininess(32.0f)
+        // Convenience overloads for specific types
+        void setFloat(const std::string& name, float value)
         {
-		}
+            m_parameters[name] = value;
+        }
 
-        void setDiffuseColor(const Vec3& color) { m_diffuseColor = color; }
-        void setSpecularColor(const Vec3& color) { m_specularColor = color; }
-        void setAmbientColor(const Vec3& color) { m_ambientColor = color; }
-        void setShininess(float shininess) { m_shininess = shininess; }
+        void setVec3(const std::string& name, const Vec3& value)
+        {
+            m_parameters[name] = value;
+        }
 
-		const Vec3& getDiffuseColor() const { return m_diffuseColor; }
-		const Vec3& getSpecularColor() const { return m_specularColor; }
-		const Vec3& getAmbientColor() const { return m_ambientColor; }
-		float getShininess() const { return m_shininess; }
+        const std::unordered_map<std::string, MaterialParameterValue>& getParameters() const
+        {
+            return m_parameters;
+        }
+
+        // Get specific parameter
+        const MaterialParameterValue* getParameter(const std::string& name) const
+        {
+            auto it = m_parameters.find(name);
+            return it != m_parameters.end() ? &it->second : nullptr;
+        }
+
+        //this needs to go somewhere else
+        struct RenderState
+        {
+            bool depthTest = true;
+            bool depthWrite = true;
+            bool blend = false;
+        };
+
+        const RenderState& getRenderState() const { return m_renderState; }
+        void setRenderState(const RenderState& state) { m_renderState = state; }
 
     private:
-        Vec3 m_diffuseColor;
-        Vec3 m_specularColor;
-        Vec3 m_ambientColor;
-        float m_shininess;
+        std::string m_name;
+        AssetHandle m_shaderHandle;
+        std::unordered_map<std::string, MaterialParameterValue> m_parameters;
+        RenderState m_renderState;
     };
 
-  //  class Material : public IMaterial, public IAsset
-  //  {
-  //  public:
-  //      void setShader(const std::string& shaderName) 
-  //      {
-  //          m_shaderName = shaderName;
-  //          m_dirty = true;
-  //      }
+    //GPU resource representation
+    struct CHAIGRAPHICS_EXPORT MaterialResource : public Resource
+    {
+        AssetHandle sourceAsset;
+        AssetHandle shaderAsset;
 
-		////Mat parameters
-  //      void setProperty(const std::string& name, const Vec3& value);
-  //      void setTexture(const std::string& name, Handle textureHandle);
+        std::unordered_map<std::string, MaterialParameterValue> defaultParameters;
 
-  //      // Get compiled GPU resources (lazy, cached)
-  //      Handle getShaderHandle(const std::string& passName) const;
-  //      Handle getPipelineHandle(const std::string& passName, const RenderPassInfo& rpInfo) const;
+        explicit MaterialResource(AssetHandle source) : Resource(source), sourceAsset(source) {}
+        MaterialResource() = default;
+    };
 
-  //  private:
-  //      std::string m_name;
-  //      std::string m_shaderName;  // "pbr_standard", NOT the actual shader!
+    //Runtime material instance (parameters unique per instance)
+    class CHAIGRAPHICS_EXPORT MaterialInstance : public Resource
+    {
+    public:
+        explicit MaterialInstance(AssetHandle source) {}
+        explicit MaterialInstance(ResourceHandle resource) : m_resourceHandle(resource) {}
 
-  //      // Material instance data (this is what makes each material unique)
-  //      CMap<std::string, UniformValue> m_properties;
-  //      CMap<std::string, Handle> m_textureHandles;
-  //      std::set<MaterialFeature> m_enabledFeatures;
+        ResourceHandle getResource() const
+        {
+            return m_resourceHandle;
+        }
 
-  //      // Render state overrides (optional)
-  //      std::optional<BlendState> m_blendOverride;
-  //      std::optional<RasterizerState> m_rasterizerOverride;
+        // Set parameter override
+        void setParameter(const std::string& name, const MaterialParameterValue& value)
+        {
+            m_parameterOverrides[name] = value;
+        }
 
-  //      mutable bool m_dirty = true;
-  //  };
+        // Convenience overloads
+        void setFloat(const std::string& name, float value)
+        {
+            m_parameterOverrides[name] = value;
+        }
+
+        void setVec3(const std::string& name, const Vec3& value)
+        {
+            m_parameterOverrides[name] = value;
+        }
+
+        const std::unordered_map<std::string, MaterialParameterValue>& getParameterOverrides() const
+        {
+            return m_parameterOverrides;
+        }
+
+        bool hasOverride(const std::string& name) const
+        {
+            return m_parameterOverrides.contains(name);
+        }
+
+    private:
+        ResourceHandle m_resourceHandle;
+        std::unordered_map<std::string, MaterialParameterValue> m_parameterOverrides;
+    };
 }

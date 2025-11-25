@@ -1,36 +1,92 @@
 #pragma once
+#include <Graphics/TextureAsset.h>
+#include <OpenGLRendererExport.h>
 #include <glad/gl.h>
 #include <Types/CMap.h>
+#include <Resource/ResourceManager.h>
+#include <memory>
+#include <iostream>
 
 namespace chai::brew
 {
-    struct OpenGLTextureData 
+    /**
+     * OpenGL-specific texture data.
+     * Stores GPU texture handle and upload state.
+     */
+    struct OPENGLRENDERER_EXPORT OpenGLTextureData
     {
-        GLuint textureID = 0;
-        bool isUploaded = false;
-        GLenum format = GL_RGBA;
-        GLenum internalFormat = GL_RGBA8;
-        int width = 0;
-        int height = 0;
+        GLuint texture = 0;              ///< OpenGL texture handle
+        GLenum target = GL_TEXTURE_2D;   ///< Texture target (2D, Cube, etc.)
+        GLint internalFormat = GL_RGBA8; ///< Internal GPU format
+        GLenum format = GL_RGBA;         ///< Source data format
+        GLenum type = GL_UNSIGNED_BYTE;  ///< Source data type
+
+        uint32_t width = 0;     ///< Texture width in pixels
+        uint32_t height = 0;    ///< Texture height in pixels
+        uint32_t mipLevels = 1; ///< Number of mipmap levels
+
+        bool isUploaded = false; ///< True when GPU upload complete
+        bool hasMipmaps = false; ///< True if mipmaps generated
     };
 
-    class OpenGLTextureManager
+    /**
+     * Manages OpenGL texture resources.
+     *
+     * Responsibilities:
+     * - Create and cache texture data structures
+     * - Upload texture data to GPU (via UploadQueue)
+     * - Generate mipmaps
+     * - Configure texture parameters (filtering, wrapping)
+     * - Clean up GPU resources on destruction
+     *
+     * Thread safety: Not thread-safe. Use from render thread only.
+     */
+    class OPENGLRENDERER_EXPORT OpenGLTextureManager
     {
     public:
-        OpenGLTextureData* getOrCreateTextureData(Handle textureHandle)
-        {
-            auto it = m_textureCache.find(textureHandle.index);
-            if (it == m_textureCache.end())
-            {
-                auto glTextureData = std::make_unique<OpenGLTextureData>();
-                auto* ptr = glTextureData.get();
-                m_textureCache[textureHandle.index] = std::move(glTextureData);
-                return ptr;
-            }
-            return it->second.get();
-		}
+        OpenGLTextureManager() = default;
+        virtual ~OpenGLTextureManager();
+
+        OpenGLTextureManager(const OpenGLTextureManager&) = delete;
+        OpenGLTextureManager& operator=(const OpenGLTextureManager&) = delete;
+
+        OpenGLTextureManager(OpenGLTextureManager&&) = default;
+        OpenGLTextureManager& operator=(OpenGLTextureManager&&) = default;
+
+        /**
+         * Get or create texture data for the given handle.
+         * Creates a new entry if it doesn't exist.
+         *
+         * @param texHandle Texture resource handle
+         * @return Pointer to texture data (never null)
+         */
+        OpenGLTextureData* getOrCreateTextureData(Handle texHandle);
+
+        /**
+         * Upload texture data to GPU.
+         * Called from UploadQueue during texture upload.
+         *
+         * @param texHandle Texture resource handle
+         * @param texData OpenGL texture data to populate
+         * @return True if upload successful
+         */
+        bool uploadTexture(Handle texHandle, OpenGLTextureData* texData);
 
     private:
-		CMap<size_t, std::unique_ptr<OpenGLTextureData>> m_textureCache;
+        /**
+         * Determine OpenGL format from resource data.
+         * Maps source data (RGB, RGBA, etc.) to OpenGL enums.
+         */
+        void determineFormats(const TextureAsset* texResource,
+                              OpenGLTextureData* texData);
+
+        /**
+         * Configure texture parameters (filtering, wrapping).
+         * Sets up sampler state based on texture type and quality settings.
+         */
+        void configureTextureParameters(OpenGLTextureData* texData,
+                                        const TextureAsset* texResource);
+
+        CMap<size_t, std::unique_ptr<OpenGLTextureData>> m_textureCache;
     };
-}
+} // namespace chai::brew

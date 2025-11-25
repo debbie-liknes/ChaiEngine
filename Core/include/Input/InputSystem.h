@@ -1,16 +1,16 @@
 #pragma once
 #include <functional>
 #include <memory>
-#include <Input/InputState.h>
 #include <queue>
 #include <array>
+#include <Input/EventHandler.h>
 
 namespace chai
 {
     class InputSystem
     {
     public:
-        using InputHandler = std::function<void(const InputEvent&)>;
+        using InputHandler = std::function<void(const InputEvent &)>;
 
         static InputSystem& instance();
 
@@ -37,16 +37,14 @@ namespace chai
         void updateState(const InputEvent& event);
 
     private:
-
         std::queue<std::unique_ptr<const InputEvent>> eventQueue;
         std::vector<std::pair<uint32_t, InputHandler>> handlers;
         uint32_t nextHandlerId = 1;
 
         // Current state for polling
-        std::array<bool, 512> keyStates = { false };
-        std::array<bool, 8> mouseStates = { false };
+        std::array<bool, 512> keyStates = {false};
+        std::array<bool, 8> mouseStates = {false};
         double mouseX = 0.0f, mouseY = 0.0f;
         double mouseDeltaX = 0.0f, mouseDeltaY = 0.0f;
-
     };
 }

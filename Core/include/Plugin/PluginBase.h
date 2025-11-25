@@ -5,7 +5,7 @@
 
 namespace chai
 {
-    class CORE_EXPORT IPlugin 
+    class CORE_EXPORT IPlugin
     {
     public:
         virtual ~IPlugin() = default;

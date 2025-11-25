@@ -2,8 +2,7 @@
 
 namespace chai
 {
-	IViewport::~IViewport()
-	{
-
-	}
-} 
+    IViewport::~IViewport()
+    {
+    }
+}

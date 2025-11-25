@@ -3,18 +3,21 @@
 
 namespace chai::brew
 {
-    struct Light 
+    constexpr int MAX_LIGHTS = 8;
+
+    //intended for caching by the renderer
+    struct Light
     {
-        int type; // 0=directional, 1=point, 2=spot
-        Vec3 position;
-        Vec3 direction;
-        Vec3 color;
-        float intensity;
-        float range;
-        Vec3 attenuation;
-        float innerCone;
-        float outerCone;
-        int enabled;
-        float _padding[2]; // For 16-byte alignment in UBO
+        Vec4 positionAndType;   // xyz = pos/dir, w = type
+        Vec4 color;             // rgb = color, a = intensity
+        Vec4 directionAndRange; // xyz = direction, w = range
+        Vec4 spotParams;        // x = inner cone, y = outer cone
+    };
+
+    struct LightingData
+    {
+        Light lights[MAX_LIGHTS];
+        int numLights;
+        Vec3 padding;
     };
 }

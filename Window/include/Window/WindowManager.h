@@ -1,15 +1,13 @@
 #pragma once
 #include <WindowModuleExport.h>
 #include <Window/Window.h>
-#include <string>
 #include <memory>
 #include <vector>
-#include <map>
-#include <Input/EventHandler.h>
 
 namespace chai
 {
-	class WindowSystem;
+    class WindowSystem;
+
     // Window manager - high-level interface for the engine
     class WINDOWMODULE_EXPORT WindowManager
     {
@@ -25,16 +23,16 @@ namespace chai
         WindowManager& operator=(WindowManager&&) = default;
 
         WindowId createWindow(const WindowDesc& desc);
-		void requestClose(WindowId id);
-		bool isDone() const;
+        void requestClose(WindowId id);
+        bool isDone() const;
 
         void update();
 
     private:
         std::shared_ptr<WindowSystem> m_windowSystem;
-		std::vector<std::unique_ptr<Window>> m_windows;
+        std::vector<std::unique_ptr<Window>> m_windows;
 
-		Window* findWindowById(WindowId id);
+        Window* findWindowById(WindowId id);
         //std::vector<std::unique_ptr<WindowEventHandler>> m_globalHandlers;
     };
 }

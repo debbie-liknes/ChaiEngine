@@ -1,6 +1,5 @@
 #include <ChaiPhysics/Core/dbvh.h>
 
-#include <array>
 #include <vector>
 #include <queue>
 #include <stack>
@@ -32,7 +31,7 @@ namespace chai
                 {
                     // priority_queue is a max-heap (greater = higher priority)
                     // compare inherited costs
-                    return lhs.second > lhs.second;
+                    return lhs.second > rhs.second;
                 }
             };
             std::priority_queue<SurfaceAreaPair, std::vector<SurfaceAreaPair>, SurfaceAreaComparator> m_saPriQueue;
@@ -41,7 +40,7 @@ namespace chai
             dbvh::Node* bestNode = nullptr;
 
             // Root has no inherited cost
-            m_saPriQueue.push({ root, 0 });
+            m_saPriQueue.push({root, 0});
 
             // Process nodes until the priority queue is empty.
             // We regulate insertions into the queue based on lower bound of cost.
@@ -70,8 +69,8 @@ namespace chai
                 auto lowerBoundCost = inheritedCost + sa_node + sa_newNode;
                 if (lowerBoundCost < bestCost)
                 {
-                    m_saPriQueue.push({ currNode->left, inheritedCost + sa_node });
-                    m_saPriQueue.push({ currNode->right, inheritedCost + sa_node });
+                    m_saPriQueue.push({currNode->left, inheritedCost + sa_node});
+                    m_saPriQueue.push({currNode->right, inheritedCost + sa_node});
                 }
             }
 
@@ -84,8 +83,8 @@ namespace chai
     public:
         explicit impl(std::unique_ptr<ICostHeuristic> heuristic)
             : //m_nodePool(std::pmr::monotonic_buffer_resource(m_buffer.data(),
-              //  m_buffer.size())),
-              m_heuristic(std::move(heuristic))
+            //  m_buffer.size())),
+            m_heuristic(std::move(heuristic))
         {
         }
 
@@ -226,7 +225,6 @@ namespace chai
 
     dbvh::dbvh() : m_p(std::make_unique<impl>(std::make_unique<SurfaceAreaHeuristic>()))
     {
-
     }
 
     dbvh::~dbvh() = default;

@@ -9,7 +9,7 @@ namespace chai
             this->width == rhs.width &&
             this->length == rhs.length &&
             this->height == rhs.height
-            );
+        );
     }
 
     float aabb::getSurfaceArea() const
@@ -19,24 +19,24 @@ namespace chai
 
     aabb aabb::expand(const aabb& box) const
     {
-        float min_x = std::min(this->center.x - this->width / 2.f,
-            box.center.x - box.width / 2.f);
-        float min_y = std::min(this->center.y - this->width / 2.f,
-            box.center.y - box.width / 2.f);
-        float min_z = std::min(this->center.z - this->width / 2.f,
-            box.center.z - box.width / 2.f);
-        float max_x = std::max(this->center.x + this->width / 2.f,
-            box.center.x + box.width / 2.f);
-        float max_y = std::max(this->center.y + this->width / 2.f,
-            box.center.y + box.width / 2.f);
-        float max_z = std::max(this->center.z + this->width / 2.f,
-            box.center.z + box.width / 2.f);
+        const float minX = std::min(this->center.x - (this->width / 2.f),
+                                    box.center.x - (box.width / 2.f));
+        const float minY = std::min(this->center.y - (this->width / 2.f),
+                                    box.center.y - (box.width / 2.f));
+        const float minZ = std::min(this->center.z - (this->width / 2.f),
+                                    box.center.z - (box.width / 2.f));
+        const float maxX = std::max(this->center.x + (this->width / 2.f),
+                                    box.center.x + (box.width / 2.f));
+        const float maxY = std::max(this->center.y + (this->width / 2.f),
+                                    box.center.y + (box.width / 2.f));
+        const float maxZ = std::max(this->center.z + (this->width / 2.f),
+                                    box.center.z + (box.width / 2.f));
 
         return aabb{
-            Vec3((max_x + min_x) / 2.f, (max_y + min_y) / 2.f, (max_z + min_z) / 2.f),
-            max_x - min_x,
-            max_y - min_y,
-            max_z - min_z
+            Vec3((maxX + minX) / 2.f, (maxY + minY) / 2.f, (maxZ + minZ) / 2.f),
+            maxX - minX,
+            maxY - minY,
+            maxZ - minZ
         };
     }
 

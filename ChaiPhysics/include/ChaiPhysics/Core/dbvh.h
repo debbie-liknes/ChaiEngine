@@ -1,8 +1,6 @@
 #pragma once
 
-#include <ChaiMath.h>
 #include <span>
-#include <array>
 #include <memory>
 
 #include "../colliders/BoxCollider.h"

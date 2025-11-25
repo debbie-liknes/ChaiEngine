@@ -4,7 +4,7 @@
 
 namespace chai::cup
 {
-    enum class LightType 
+    enum class LightType
     {
         DIRECTIONAL,
         POINT,
@@ -12,6 +12,7 @@ namespace chai::cup
     };
 
     class GameObject;
+
     class LightComponent : public Component
     {
     public:
@@ -19,8 +20,6 @@ namespace chai::cup
         LightType type = LightType::DIRECTIONAL;
         Vec3 color = Vec3(1.0f, 1.0f, 1.0f);
         float intensity = 0.7f;
-
-		//Vec3 direction = Vec3(-1.0f, -1.0f, -1.0f);
 
         // For point/spot lights
         float range = 10.0f;
@@ -31,5 +30,6 @@ namespace chai::cup
         float outerCone = 17.5f; // degrees
 
         bool enabled = true;
+        bool shadowsEnabled = true;
     };
 }

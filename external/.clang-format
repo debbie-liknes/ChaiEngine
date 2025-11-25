@@ -1,0 +1,4 @@
+---
+# Disable formatting for external dependencies
+DisableFormat: true
+SortIncludes: false

@@ -6,7 +6,7 @@
 
 namespace chai
 {
-    enum class UniformType 
+    enum class UniformType
     {
         FLOAT,
         VEC2,
@@ -20,7 +20,7 @@ namespace chai
         UNKNOWN
     };
 
-    class UniformBufferBase
+    class CHAIGRAPHICS_EXPORT UniformBufferBase
     {
     public:
         UniformBufferBase() = default;
@@ -39,71 +39,84 @@ namespace chai
         bool isMat4() const { return getType() == UniformType::MAT4; }
         bool isInt() const { return getType() == UniformType::INT; }
         bool isBool() const { return getType() == UniformType::BOOL; }
+
+    protected:
+        static uint64_t getNextId();
     };
 
-    template<typename T>
-    struct UniformTypeTraits 
+    template <typename T>
+    struct UniformTypeTraits
     {
         static constexpr UniformType value = UniformType::UNKNOWN;
     };
 
     // Specializations for supported types
-    template<> struct UniformTypeTraits<float> 
+    template <>
+    struct UniformTypeTraits<float>
     {
         static constexpr UniformType value = UniformType::FLOAT;
     };
-    template<> struct UniformTypeTraits<Vec2> 
+
+    template <>
+    struct UniformTypeTraits<Vec2>
     {
         static constexpr UniformType value = UniformType::VEC2;
     };
-    template<> struct UniformTypeTraits<Vec3> 
+
+    template <>
+    struct UniformTypeTraits<Vec3>
     {
         static constexpr UniformType value = UniformType::VEC3;
     };
-    template<> struct UniformTypeTraits<Vec4> 
+
+    template <>
+    struct UniformTypeTraits<Vec4>
     {
         static constexpr UniformType value = UniformType::VEC4;
     };
-    template<> struct UniformTypeTraits<Mat3> 
+
+    template <>
+    struct UniformTypeTraits<Mat3>
     {
         static constexpr UniformType value = UniformType::MAT3;
     };
-    template<> struct UniformTypeTraits<Mat4> 
+
+    template <>
+    struct UniformTypeTraits<Mat4>
     {
         static constexpr UniformType value = UniformType::MAT4;
     };
-    template<> struct UniformTypeTraits<int> 
+
+    template <>
+    struct UniformTypeTraits<int>
     {
         static constexpr UniformType value = UniformType::INT;
     };
-    template<> struct UniformTypeTraits<bool> 
+
+    template <>
+    struct UniformTypeTraits<bool>
     {
         static constexpr UniformType value = UniformType::BOOL;
     };
 
-    static uint64_t getNextId()
-    {
-        static uint64_t currentId = 0;
-        return ++currentId;
-    }
-
-    template<typename T>
+    template <typename T>
     class UniformBuffer : public UniformBufferBase
     {
     public:
-		UniformBuffer() : m_value{}
+        UniformBuffer() : m_value{}
         {
-			m_id = getNextId();
+            m_id = getNextId();
         }
-        explicit UniformBuffer(const T& value) : m_value(value) 
+
+        explicit UniformBuffer(const T& value) : m_value(value)
         {
-			m_id = getNextId();
+            m_id = getNextId();
         }
 
         uint64_t getId() const override
         {
             return m_id;
-		}
+        }
 
         UniformType getType() const override
         {
@@ -117,7 +130,7 @@ namespace chai
 
         void getData(void* dest, size_t maxSize) const override
         {
-            if (maxSize >= sizeof(T)) 
+            if (maxSize >= sizeof(T))
             {
                 std::memcpy(dest, &m_value, sizeof(T));
             }
@@ -137,42 +150,42 @@ namespace chai
         uint64_t m_id;
     };
 
-    inline std::shared_ptr<UniformBufferBase> createUniform(float value) 
+    inline std::shared_ptr<UniformBufferBase> createUniform(float value)
     {
         return std::make_shared<UniformBuffer<float>>(value);
     }
 
-    inline std::shared_ptr<UniformBufferBase> createUniform(const Vec2& value) 
+    inline std::shared_ptr<UniformBufferBase> createUniform(const Vec2& value)
     {
         return std::make_shared<UniformBuffer<Vec2>>(value);
     }
 
-    inline std::shared_ptr<UniformBufferBase> createUniform(const Vec3& value) 
+    inline std::shared_ptr<UniformBufferBase> createUniform(const Vec3& value)
     {
         return std::make_shared<UniformBuffer<Vec3>>(value);
     }
 
-    inline std::shared_ptr<UniformBufferBase> createUniform(const Vec4& value) 
+    inline std::shared_ptr<UniformBufferBase> createUniform(const Vec4& value)
     {
         return std::make_shared<UniformBuffer<Vec4>>(value);
     }
 
-    inline std::shared_ptr<UniformBufferBase> createUniform(const Mat4& value) 
+    inline std::shared_ptr<UniformBufferBase> createUniform(const Mat4& value)
     {
         return std::make_shared<UniformBuffer<Mat4>>(value);
     }
 
-    inline std::shared_ptr<UniformBufferBase> createUniform(int value) 
+    inline std::shared_ptr<UniformBufferBase> createUniform(int value)
     {
         return std::make_shared<UniformBuffer<int>>(value);
     }
 
-    inline std::shared_ptr<UniformBufferBase> createUniform(bool value) 
+    inline std::shared_ptr<UniformBufferBase> createUniform(bool value)
     {
         return std::make_shared<UniformBuffer<bool>>(value);
     }
 
-    template<typename T>
+    template <typename T>
     inline std::shared_ptr<UniformBuffer<T>> createUniform()
     {
         return std::make_shared<UniformBuffer<T>>();

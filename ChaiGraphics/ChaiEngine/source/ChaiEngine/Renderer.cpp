@@ -2,8 +2,7 @@
 
 namespace chai::brew
 {
-	Renderer::Renderer()
-	{
-
-	}
+    Renderer::Renderer()
+    {
+    }
 }

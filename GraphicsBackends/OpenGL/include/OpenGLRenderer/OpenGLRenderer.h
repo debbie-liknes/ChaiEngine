@@ -6,9 +6,6 @@
 #include <Types/CMap.h>
 #include <Meta/ChaiMacros.h>
 #include <ChaiEngine/Renderer.h>
-#include <ChaiEngine/IMesh.h>
-#include <ChaiEngine/IMaterial.h>
-#include <ChaiEngine/Material.h>
 #include <OpenGLRenderer/RenderKey.h>
 #include <OpenGLRenderer/Uploads.h>
 #include <OpenGLRenderer/OpenGLMesh.h>
@@ -20,23 +17,21 @@
 
 namespace chai::brew
 {
-    struct CommonUniforms 
+    struct CommonUniforms
     {
-        chai::Mat4 view;                  // 64 bytes
-        Mat4 projection;            // 64 bytes
+        chai::Mat4 view; // 64 bytes
+        Mat4 projection; // 64 bytes
     };
 
-    struct DrawUniforms 
+    struct DrawUniforms
     {
-        Mat4 model;                 // 64 bytes
-        Mat4 normalMatrix;          // 64 bytes
+        Mat4 model;        // 64 bytes
+        Mat4 normalMatrix; // 64 bytes
     };
 
-	class OPENGLRENDERER_EXPORT OpenGLBackend : public Renderer
+    class OPENGLRENDERER_EXPORT OpenGLBackend : public Renderer
     {
     public:
-        //OpenGLBackend() = default;
-
         bool initialize(void* winProcAddress) override;
         void shutdown() override;
 
@@ -52,59 +47,30 @@ namespace chai::brew
         //void printPerformanceStats();
 
     private:
-        // Initialization
-        GLuint createDefaultShaderProgram();
-        GLuint compileShader(const char* source, GLenum type);
-        //void setupVertexAttributes();
-
         // Command execution
         RenderKey createSortKey(const RenderCommand& cmd, OpenGLMeshData* meshData);
         void drawBatchedCommands(const std::vector<SortedDrawCommand>& sortedDraws);
-
-        // Drawing
-        //void drawInstanced(const InstanceBatch& batch);
-        //void setupInstancing(OpenGLMeshData* meshData, uint32_t maxInstances);
-
-        // State management
         void bindShaderProgram(GLuint program);
-        void bindVertexArray(GLuint vao);
-        void clear(float r, float g, float b, float a);
+
+        static void clear(float r, float g, float b, float a);
 
         // Uniform management
         void updatePerFrameUniforms();
-        void updatePerDrawUniforms(const RenderCommand& cmd, OpenGLShaderData* shaderData);
-        void setLightsUniforms(OpenGLShaderData* shaderData);
+        void updatePerDrawUniforms(const RenderCommand& cmd, const OpenGLShaderData* shaderData);
+        void updateLightUniforms(const OpenGLShaderData* shaderData);
         void setUniformValue(GLint location, const std::unique_ptr<UniformBufferBase>& uniform);
 
         // Material handling
         void applyMaterialState(OpenGLMaterialData* matData, OpenGLShaderData* shaderData);
-        //void compileMaterial(Handle materialHandle, OpenGLMaterialData* glMaterialData);
-        //GLuint compileShaderFromDescription(std::shared_ptr<ShaderDescription> shaderDesc,
-        //    const std::set<MaterialFeature>& features);
 
-        // Resource management
-        //OpenGLShaderData* getShaderData(GLuint program);
-
-        //void uploadMeshToGPU(Handle meshHandle, OpenGLMeshData* glMeshData);
-        //void cacheBuiltinUniformLocations(GLuint program, OpenGLShaderData* shaderData);
-        //void cacheUniformLocations(GLuint program, OpenGLMaterialData* matData);
-
-        // Utility
-        //std::string loadShaderFile(const std::string& filePath);
-        //std::string injectFeatureDefines(const std::string& source,
-        //    const std::set<MaterialFeature>& features);
-        //std::string generateShaderHash(std::shared_ptr<ShaderDescription> desc,
-        //    const std::set<MaterialFeature>& features);
+        void setLights(const std::vector<Light>& lights);
 
     private:
-        
         UniformManager m_uniManager;
-		OpenGLMeshManager m_meshManager;
-		OpenGLMaterialManager m_matManager;
-		OpenGLTextureManager m_texManager;
-		GLShaderManager m_shaderManager;
-
-        void updateShader(OpenGLShaderData* program, uint32_t& stateChanges);
+        OpenGLMeshManager m_meshManager;
+        OpenGLMaterialManager m_matManager;
+        OpenGLTextureManager m_texManager;
+        GLShaderManager m_shaderManager;
 
         // Upload system
         UploadQueue m_uploadQueue;
@@ -113,9 +79,9 @@ namespace chai::brew
         GLuint defaultShaderProgram = 0;
 
         // Uniform Buffer Objects
-		std::shared_ptr<UniformBuffer<CommonUniforms>> m_perFrameUBOData;
-		std::shared_ptr<UniformBuffer<DrawUniforms>> m_perDrawUBOData;
-        GLuint m_lightingUBO = 0;
+        std::shared_ptr<UniformBuffer<CommonUniforms>> m_perFrameUBOData;
+        std::shared_ptr<UniformBuffer<DrawUniforms>> m_perDrawUBOData;
+        std::shared_ptr<UniformBuffer<LightingData>> m_lightingUBO;
 
         // State tracking (minimize redundant state changes)
         GLuint currentShaderProgram = 0;
@@ -137,8 +103,9 @@ namespace chai::brew
     };
 }
 
-CHAI_PLUGIN_CLASS(OpenGLPlugin) 
+CHAI_PLUGIN_CLASS(OpenGLPlugin)
 {
-	CHAI_SERVICE_AS(chai::brew::Renderer, chai::brew::OpenGLBackend, "Renderer")
+    CHAI_SERVICE_AS(chai::brew::Renderer, chai::brew::OpenGLBackend, "Renderer")
 }
+
 CHAI_REGISTER_PLUGIN(OpenGLPlugin, "OpenGLRenderer", "1.0.0")

@@ -46,8 +46,8 @@ namespace vec2_tests
 
     TEST(Vec2Tests, InitializerList)
     {
-        Vec2 v = { 4.0f, 5.0f };
-        Vec2 v1{ 4.0f, 5.0f };
+        Vec2 v = {4.0f, 5.0f};
+        Vec2 v1{4.0f, 5.0f};
         EXPECT_EQ(v, Vec2(4.0f, 5.0f));
         EXPECT_EQ(v1, Vec2(4.0f, 5.0f));
     }
@@ -130,7 +130,7 @@ namespace vec3_tests
 
     TEST(Vec3Tests, InitializerList)
     {
-        Vec3 v = { 4.0f, 5.0f, 6.0f };
+        Vec3 v = {4.0f, 5.0f, 6.0f};
         EXPECT_EQ(v, Vec3(4.0f, 5.0f, 6.0f));
     }
 
@@ -214,7 +214,7 @@ namespace vec4_tests
 
     TEST(Vec4Tests, InitializerList)
     {
-        Vec4 v = { 4.0f, 5.0f, 6.0f, 7.0f };
+        Vec4 v = {4.0f, 5.0f, 6.0f, 7.0f};
         EXPECT_EQ(v, Vec4(4.0f, 5.0f, 6.0f, 7.0));
     }
 

@@ -2,31 +2,30 @@
 
 namespace chai
 {
-	ChaiPhysics::ChaiPhysics() {}
-	void ChaiPhysics::init()
-	{
-		m_thread = std::thread(&ChaiPhysics::run, this);
-	}
+    ChaiPhysics::ChaiPhysics() {}
 
-	ChaiPhysics::~ChaiPhysics()
-	{
-		if (m_thread.joinable())
-		{
-			m_done = true;
-			m_thread.join();
-		}
-	}
+    void ChaiPhysics::init()
+    {
+        m_thread = std::thread(&ChaiPhysics::run, this);
+    }
 
-	bool ChaiPhysics::isDone() const
-	{
-		return m_done;
-	}
+    ChaiPhysics::~ChaiPhysics()
+    {
+        if (m_thread.joinable()) {
+            m_done = true;
+            m_thread.join();
+        }
+    }
 
-	void ChaiPhysics::run()
-	{
-		while (!isDone())
-		{
-			_sleep(1000.0 / 30.0);
-		}
-	}
+    bool ChaiPhysics::isDone() const
+    {
+        return m_done;
+    }
+
+    void ChaiPhysics::run()
+    {
+        while (!isDone()) {
+            _sleep(1000.0 / 30.0);
+        }
+    }
 }

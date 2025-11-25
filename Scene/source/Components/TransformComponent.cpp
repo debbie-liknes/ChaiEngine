@@ -3,13 +3,13 @@
 
 namespace chai::cup
 {
-	TransformComponent::TransformComponent(GameObject* owner) : Component(owner)
+    TransformComponent::TransformComponent(GameObject* owner) : Component(owner)
     {
-        if(owner)
-		    m_parent = owner->getComponent<TransformComponent>();
+        if (owner)
+            m_parent = owner->getComponent<TransformComponent>();
     }
 
-    Mat4 TransformComponent::getLocalMatrix() const 
+    Mat4 TransformComponent::getLocalMatrix() const
     {
         Mat4 t = translate(Mat4::identity(), m_position);
         Mat4 r = m_rotation.toMat4();
@@ -17,13 +17,13 @@ namespace chai::cup
         return t * r * s;
     }
 
-    Mat4 TransformComponent::getWorldMatrix() const 
+    Mat4 TransformComponent::getWorldMatrix() const
     {
-        if (m_parent) 
+        if (m_parent)
         {
             return m_parent->getWorldMatrix() * getLocalMatrix();
         }
-        else 
+        else
         {
             return getLocalMatrix();
         }
@@ -34,33 +34,44 @@ namespace chai::cup
         m_position = newPos;
     }
 
-    Vec3 TransformComponent::forward() const 
+    void TransformComponent::setRotationEuler(chai::Vec3 newRot)
     {
-        return getWorldRotation() * Vec3{ 0, 0, -1 };
+        /*rotate()
+        m_rotation = Quatf(newRot);*/
     }
 
-    Vec3 TransformComponent::right() const 
+    void TransformComponent::setScale(chai::Vec3 newScale)
     {
-        return getWorldRotation() * Vec3{ 1, 0, 0 };
+        m_scale = newScale;
     }
 
-    Vec3 TransformComponent::up() const 
+    Vec3 TransformComponent::forward() const
     {
-        return getWorldRotation() * Vec3{ 0, 1, 0 };
+        return getWorldRotation() * Vec3{0, 0, -1};
     }
 
-    Vec3 TransformComponent::getWorldPosition() const 
+    Vec3 TransformComponent::right() const
+    {
+        return getWorldRotation() * Vec3{1, 0, 0};
+    }
+
+    Vec3 TransformComponent::up() const
+    {
+        return getWorldRotation() * Vec3{0, 1, 0};
+    }
+
+    Vec3 TransformComponent::getWorldPosition() const
     {
         return m_position;
     }
 
-    Quat TransformComponent::getWorldRotation() const 
+    Quat TransformComponent::getWorldRotation() const
     {
-        if (m_parent) 
+        if (m_parent)
         {
             return m_parent->getWorldRotation() * m_rotation;
         }
-        else 
+        else
         {
             return m_rotation;
         }
@@ -69,22 +80,38 @@ namespace chai::cup
     void TransformComponent::lookAt(const Vec3& target, const Vec3& worldUp)
     {
         Vec3 worldPos = getWorldPosition();
+
         Vec3 forward = normalize(target - worldPos);
-        cross(forward, worldUp);
-        Vec3 right = normalize(cross(forward, worldUp));
-        Vec3 up = cross(right, forward);
+        if (length(forward) < 1e-6f)
+            return;
+
+        Vec3 up = normalize(worldUp);
+
+        // Handle the case where forward is almost parallel to up
+        if (std::abs(dot(forward, up)) > 0.999f)
+        {
+            // pick a different up vector
+            up = std::abs(forward.y) < 0.999f ? Vec3{0.0f, 1.0f, 0.0f}
+            : Vec3{1.0f, 0.0f, 0.0f};
+        }
+
+        Vec3 right = normalize(cross(forward, up));
+        up = cross(right, forward); // re-orthogonalize
 
         Mat4 rotMatrix = Mat4::identity();
-        rotMatrix[0] = Vec4( right, 1.f );
-        rotMatrix[1] = Vec4( up, 1.f );
-        rotMatrix[2] = Vec4( -forward, 1.f );
 
-        m_rotation = Quat::quatFromMat4(rotMatrix);
+        rotMatrix[0] = Vec4(right,   0.0f);
+        rotMatrix[1] = Vec4(up,      0.0f);
+        rotMatrix[2] = Vec4(-forward,0.0f);
+        rotMatrix[3] = Vec4(0.0f,    0.0f, 0.0f, 1.0f);
 
-        if (m_parent) 
-        {
-            // Convert world rotation to local
-            m_rotation = m_parent->getWorldRotation().inverse() * m_rotation;
-        }
+        Quat worldRot = Quat::quatFromMat4(rotMatrix);
+
+        if (m_parent)
+            m_rotation = m_parent->getWorldRotation().inverse() * worldRot;
+        else
+            m_rotation = worldRot;
     }
+
+
 }

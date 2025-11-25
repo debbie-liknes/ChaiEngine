@@ -5,34 +5,38 @@
 
 namespace chai::brew
 {
-    enum class UploadType 
+    enum class UploadType
     {
         MESH,
         TEXTURE,
         SHADER
     };
 
-    struct UploadRequest 
+    struct UploadRequest
     {
         UploadType type;
-        Handle handle;
+        ResourceHandle handle;
         void* userData;
+        void* extraData;
     };
 
-    class UploadQueue 
+    class UploadQueue
     {
     public:
-        void requestUpload(Handle handle, void* userData, UploadType type = UploadType::MESH);
+        void requestUpload(ResourceHandle handle, void* userData, UploadType type = UploadType::MESH,
+            void* extraData = nullptr);
         void processUploads(float timeBudgetMs);
 
-        bool isQueued(Handle handle) const;
-        bool isReady(Handle handle) const;
+        bool isQueued(ResourceHandle handle) const;
+        bool isReady(ResourceHandle handle) const;
 
     private:
         void performUpload(const UploadRequest& request);
+        void uploadMesh(const UploadRequest& request);
+        void uploadTexture(const UploadRequest& request);
 
         std::queue<UploadRequest> m_pendingUploads;
-        std::unordered_set<uint32_t> m_uploading;  // Currently processing
-        std::unordered_set<uint32_t> m_ready;      // Completed uploads
+        std::unordered_set<uint32_t> m_uploading; // Currently processing
+        std::unordered_set<uint32_t> m_ready; // Completed uploads
     };
 }

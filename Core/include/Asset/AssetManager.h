@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include <iostream>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -13,21 +12,22 @@
 
 namespace chai
 {
-    class AssetManager 
+    class AssetManager
     {
     public:
         static AssetManager& instance();
+        ~AssetManager();
         void registerLoader(std::shared_ptr<IAssetLoader> loader);
 
         // Load or get existing asset by path
-        template<typename T>
-        std::optional<Handle> load(const std::string& path)
+        template <typename T>
+        std::optional<AssetHandle> load(const std::string& path)
         {
-			//Read lock to check cache
+            //Read lock to check cache
             {
                 std::shared_lock cache_lock(cache_mutex_);
                 auto it = path_cache_.find(path);
-                if (it != path_cache_.end()) 
+                if (it != path_cache_.end())
                 {
                     return it->second;
                 }
@@ -38,9 +38,9 @@ namespace chai
             const auto ext = getExtension(searchPath);
 
             std::unique_ptr<IAsset> asset_result;
-            for (auto& loader : m_loaders) 
+            for (auto& loader : m_loaders)
             {
-                if (loader->canLoad(ext)) 
+                if (loader->canLoad(ext))
                 {
                     asset_result = loader->load(searchPath);
                     if (asset_result) break;
@@ -49,46 +49,46 @@ namespace chai
             if (!asset_result) return std::nullopt;
 
             // Insert into pool
-            Handle handle;
+            AssetHandle handle;
             {
                 std::unique_lock<std::shared_mutex> pool_lock(pool_mutex_);
-                handle = pool_.add(std::move(asset_result));
+                handle = AssetHandle(pool_.add(std::move(asset_result)));
             }
 
             // Update caches
             {
                 std::unique_lock<std::shared_mutex> cache_lock(cache_mutex_);
                 path_cache_[path] = handle;
-                type_handles_[std::type_index(typeid(Handle))].push_back(handle);
+                type_handles_[std::type_index(typeid(AssetHandle))].push_back(handle);
             }
 
             return handle;
         }
 
-        template<class U>
-        requires std::derived_from<U, IAsset>
-        std::optional<Handle> add(std::unique_ptr<U> asset)
+        template <class U>
+            requires std::derived_from<U, IAsset>
+        std::optional<AssetHandle> add(std::unique_ptr<U> asset)
         {
-            Handle handle;
+            AssetHandle handle;
             {
                 std::unique_lock<std::shared_mutex> pool_lock(pool_mutex_);
-                handle = pool_.add(std::move(asset));
+                handle = AssetHandle(pool_.add(std::move(asset)));
             }
 
             return handle;
         }
 
-		//DO NOT store the returned pointer, it may be invalidated
-        template<typename T>
-        const T* get(Handle handle) const
+        //DO NOT store the returned pointer, it may be invalidated
+        template <typename T>
+        const T* get(AssetHandle handle) const
         {
             return dynamic_cast<const T*>(pool_.get(handle));
         }
 
     private:
         ResourcePool<IAsset> pool_;
-        std::unordered_map<std::string, Handle> path_cache_;
-        std::unordered_map<std::type_index, std::vector<Handle>> type_handles_;
+        CMap<std::string, AssetHandle> path_cache_;
+        CMap<std::type_index, std::vector<AssetHandle>> type_handles_;
 
         mutable std::shared_mutex pool_mutex_;
         mutable std::shared_mutex cache_mutex_;

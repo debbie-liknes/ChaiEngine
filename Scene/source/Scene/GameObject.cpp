@@ -5,41 +5,41 @@
 
 namespace chai::cup
 {
-	GameObject::GameObject()
-	{
-		addComponent<TransformComponent>(this);
-	}
+    GameObject::GameObject()
+    {
+        addComponent<TransformComponent>(this);
+    }
 
-	void GameObject::collectRenderables(brew::RenderCommandCollector& collector)
-	{
-		for (const auto& component : m_components)
-		{
-			if (auto renderable = dynamic_cast<MeshComponent*>(component.get()))
-			{
-				brew::RenderCommand cmd;
-				cmd.type = brew::RenderCommand::DRAW_MESH;
-				cmd.mesh = renderable->getMesh();
-				cmd.material = renderable->getMaterial();
-				cmd.transform = getComponent<TransformComponent>()->getWorldMatrix();
+    void GameObject::collectRenderables(brew::RenderCommandCollector& collector)
+    {
+        for (const auto& component : m_components)
+        {
+            if (auto renderable = dynamic_cast<MeshComponent*>(component.get()))
+            {
+                brew::RenderCommand cmd;
+                cmd.type = brew::RenderCommand::DRAW_MESH;
+                cmd.mesh = renderable->getMesh();
+                cmd.material = renderable->getMaterialInstance();
+                cmd.transform = getComponent<TransformComponent>()->getWorldMatrix();
 
-				collector.submit(cmd);
-			}
-		}
-	}
+                collector.submit(cmd);
+            }
+        }
+    }
 
-	void GameObject::update(double deltaTime)
-	{
-		for (const auto& component : m_components)
-		{
-			if (auto updatable = dynamic_cast<IUpdatable*>(component.get()))
-			{
-				updatable->update(deltaTime);
-			}
-		}
+    void GameObject::update(double deltaTime)
+    {
+        for (const auto& component : m_components)
+        {
+            if (auto updatable = dynamic_cast<IUpdatable*>(component.get()))
+            {
+                updatable->update(deltaTime);
+            }
+        }
 
-		if(controllerComponent)
-		{
-			controllerComponent->update(deltaTime);
-		}
-	}
+        if (controllerComponent)
+        {
+            controllerComponent->update(deltaTime);
+        }
+    }
 }

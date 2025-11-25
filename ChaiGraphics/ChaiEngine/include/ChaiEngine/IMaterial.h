@@ -1,27 +1,18 @@
 #pragma once
 #include <ChaiGraphicsExport.h>
 #include <string>
-#include <variant>
-#include <unordered_map>
 #include <memory>
-#include <ChaiEngine/UniformBuffer.h>
 
 namespace chai
 {
-    class UniformBufferBase;
-    struct TextureSlot 
-    {
-        uint32_t id;
-        int slot;
-        std::string samplerName;
-    };
-
-    class IMaterial 
+    class CHAIGRAPHICS_EXPORT IMaterial
     {
     public:
         virtual ~IMaterial() = default;
 
-        virtual void setTexture(const std::string& samplerName, uint32_t textureId, int slot = 0) = 0;
+        virtual void setTexture(const std::string& samplerName,
+                                uint32_t textureId,
+                                int slot = 0) = 0;
         virtual bool isTransparent() const = 0;
     };
 }

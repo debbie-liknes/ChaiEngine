@@ -4,9 +4,6 @@
 #include <Plugin/PluginBase.h>
 #include <string>
 #include <memory>
-#include <unordered_map>
-#include <vector>
-#include <typeindex>
 
 namespace chai
 {
@@ -18,8 +15,8 @@ namespace chai
         virtual const std::string& getAssetId() const = 0;
 
     protected:
-        bool m_valid{ false };
-		std::string m_assetId;
+        bool m_valid{false};
+        std::string m_assetId;
     };
 
     class CORE_EXPORT IAssetLoader

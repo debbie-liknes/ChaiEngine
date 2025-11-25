@@ -2,7 +2,7 @@
 
 namespace chai
 {
-    struct DepthStencilState
+    /*struct DepthStencilState
     {
         bool depthTestEnable = true;
         bool depthWriteEnable = true;
@@ -98,22 +98,6 @@ namespace chai
         }
     };
 
-    struct ShaderStage
-    {
-        enum class Type { Vertex, Fragment, Geometry, Compute, TessControl, TessEval };
-
-        Type type;
-        std::string path;  //File path to shader
-        std::string sourceCode;  //inline source
-        std::string entryPoint = "main";
-        std::vector<std::string> defines;
-
-        bool isValid() const 
-        {
-            return !path.empty() || !sourceCode.empty();
-        }
-    };
-
     struct VertexInputBinding
     {
         enum class InputRate { PerVertex, PerInstance };
@@ -138,26 +122,6 @@ namespace chai
         uint32_t offset;
     };
 
-    struct VertexLayout
-    {
-        std::vector<VertexInputBinding> bindings;
-        std::vector<VertexInputAttribute> attributes;
-
-        // Helper for common layouts
-        static VertexLayout positionNormalUV() 
-        {
-            VertexLayout layout;
-            layout.bindings = { {0, sizeof(float) * 8, VertexInputBinding::InputRate::PerVertex} };
-            layout.attributes = 
-            {
-                {0, 0, VertexInputAttribute::Format::Float3, 0},   // position
-                {1, 0, VertexInputAttribute::Format::Float3, 12},  // normal
-                {2, 0, VertexInputAttribute::Format::Float2, 24}   // uv
-            };
-            return layout;
-        }
-    };
-
     struct PipelineDesc
     {
         enum class PrimitiveTopology 
@@ -172,7 +136,6 @@ namespace chai
         std::vector<std::string> globalDefines;  // Applied to all stages
 
         // Pipeline state
-        VertexLayout vertexLayout;
         PrimitiveTopology topology = PrimitiveTopology::TriangleList;
         RasterizerState rasterizer;
         DepthStencilState depthStencil;
@@ -206,5 +169,5 @@ namespace chai
         PipelineDesc m_desc;
 
         friend class PipelineCache;
-    };
+    };*/
 }

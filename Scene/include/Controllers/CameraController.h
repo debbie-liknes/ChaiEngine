@@ -1,17 +1,13 @@
 #pragma once
 #include <SceneExport.h>
 #include <Controllers/Controller.h>
-#include <Scene/GameObject.h>
 #include <Components/CameraComponent.h>
-#include <Components/TransformComponent.h>
 #include <Input/InputSystem.h>
-#include <typeindex>
-#include <string>
 
 namespace chai::cup
 {
     // Camera controller class
-    class CameraController : public IController
+    class SCENE_EXPORT CameraController : public IController
     {
     public:
         explicit CameraController(chai::cup::GameObject* obj);
@@ -23,7 +19,9 @@ namespace chai::cup
 
         // IController interface
         void update(double deltaTime) override;
+
         void setEnabled(bool enabled) override {}
+
         bool isEnabled() const override { return enabled; }
         const char* getControllerType() const override { return "CameraController"; }
 
@@ -38,9 +36,9 @@ namespace chai::cup
         chai::cup::TransformComponent* transformComponent;
         float moveSpeed = 5.0f;
         float mouseSensitivity = 0.1f;
-        double yaw = -90.0f;   // Start looking towards negative Z
+        double yaw = -90.0f; // Start looking towards negative Z
         double pitch = 0.0f;
-		uint32_t inputHandlerId;
-		bool m_mouseCaptured = false;
+        uint32_t inputHandlerId;
+        bool m_mouseCaptured = false;
     };
 }
