@@ -21,17 +21,6 @@ namespace chai::brew
         const auto* version = (const char*)glGetString(GL_VERSION);
         std::cout << "OpenGL Version: " << version << '\n';
 
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS); // or GL_LEQUAL
-
-        // Enable back-face culling (optional but recommended)
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
-        glFrontFace(GL_CCW); // Counter-clockwise is front
-
-        // Disable blending by default (we enable it only for transparent pass)
-        glDisable(GL_BLEND);
-
         m_matManager.setShaderManager(&m_shaderManager);
 
         std::cout << "Creating common uniforms..." << '\n';
@@ -48,6 +37,8 @@ namespace chai::brew
                                     m_lightingUBO.get()});
 
         std::cout << "=========================\n" << '\n';
+
+        m_currentState.init();
 
         // Create default shader
         defaultShaderProgram = m_shaderManager.createDefaultShaderProgram();
@@ -305,6 +296,9 @@ namespace chai::brew
 
             // Apply material uniforms
             applyMaterialState(matData, shaderData);
+
+            m_currentState.updateDepthState(draw.command.pipelineState.depthStencilState);
+            m_currentState.updateRasterizerState(draw.command.pipelineState.rasterState);
 
             // Draw
             if (meshData->indexCount > 0) {

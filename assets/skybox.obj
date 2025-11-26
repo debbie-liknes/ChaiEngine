@@ -1,0 +1,40 @@
+# Skybox cube
+# Centered at origin, size 2x2x2
+# Use only positions (v)
+
+o SkyboxCube
+
+v -1.0 -1.0 -1.0
+v  1.0 -1.0 -1.0
+v  1.0  1.0 -1.0
+v -1.0  1.0 -1.0
+v -1.0 -1.0  1.0
+v  1.0 -1.0  1.0
+v  1.0  1.0  1.0
+v -1.0  1.0  1.0
+
+# Faces (triangulated), CCW when viewed from outside
+
+# -Z (back)
+f 1 2 3
+f 1 3 4
+
+# +Z (front)
+f 5 6 7
+f 5 7 8
+
+# -X (left)
+f 1 5 8
+f 1 8 4
+
+# +X (right)
+f 2 6 7
+f 2 7 3
+
+# +Y (top)
+f 4 3 7
+f 4 7 8
+
+# -Y (bottom)
+f 1 2 6
+f 1 6 5

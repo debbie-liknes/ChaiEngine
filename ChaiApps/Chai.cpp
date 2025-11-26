@@ -26,6 +26,7 @@
 #include <ChaiEngine/MaterialSystem.h>
 
 #include "Graphics/ShaderAsset.h"
+#include "Scene/Skybox.h"
 
 using namespace std;
 
@@ -141,6 +142,7 @@ int main()
     vp->setCamera(camComponent->getCamera());
 
     //add the objects to the scene
+    testScene->addGameObject(std::make_unique<chai::cup::Skybox>());
     testScene->addGameObject(std::move(groundPlane));
     testScene->addGameObject(std::move(model));
     testScene->addGameObject(std::move(cameraObject));

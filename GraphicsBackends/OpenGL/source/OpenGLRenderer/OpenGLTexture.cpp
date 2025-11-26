@@ -40,12 +40,14 @@ namespace chai::brew
             return false;
         }
 
+        if (texResource->getType() == TextureType::TexCube) {
+            texData->target = GL_TEXTURE_CUBE_MAP;
+        } else {
+            texData->target = GL_TEXTURE_2D;
+        }
+
         // Determine formats from resource
         determineFormats(texResource, texData);
-
-        // Store dimensions
-        texData->width = texResource->getWidth();
-        texData->height = texResource->getHeight();
 
         // Generate texture handle
         if (texData->texture == 0) {
@@ -57,24 +59,57 @@ namespace chai::brew
         glBindTexture(texData->target, texData->texture);
         checkGLError("glBindTexture");
 
-        // Upload texture data
-        glTexImage2D(
-            texData->target,
-            0,
-            // Mip level 0 (base)
-            texData->internalFormat,
-            // GPU internal format
-            texData->width,
-            texData->height,
-            0,
-            // Border (must be 0)
-            texData->format,
-            // Source data format
-            texData->type,
-            // Source data type
-            texResource->getPixels() // Pixel data
-            );
-        checkGLError("glTexImage2D");
+        if (texResource->getType() == TextureType::Tex2D) {
+            // Store dimensions
+            texData->width = texResource->getWidth();
+            texData->height = texResource->getHeight();
+
+            // Upload texture data
+            glTexImage2D(
+                texData->target,
+                0,
+                // Mip level 0 (base)
+                texData->internalFormat,
+                // GPU internal format
+                texData->width,
+                texData->height,
+                0,
+                // Border (must be 0)
+                texData->format,
+                // Source data format
+                texData->type,
+                // Source data type
+                texResource->getPixels() // Pixel data
+                );
+            checkGLError("glTexImage2D");
+        }
+        else if (texResource->getType() == TextureType::TexCube) {
+            texData->width = texResource->getWidth();
+            texData->height = texResource->getHeight();
+
+            const size_t faceCount = texResource->getFaceCount();
+            if (faceCount != 6) {
+                std::cerr << "Cubemap texture must have 6 faces, got " << faceCount << "\n";
+                return false;
+            }
+
+            for (int i = 0; i < 6; i++) {
+                const auto& face = texResource->getFace(i);
+
+                glTexImage2D(
+                    GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                    0,
+                    texData->internalFormat,
+                    face.width,
+                    face.height,
+                    0,
+                    texData->format,
+                    texData->type,
+                    face.pixels.data()
+                );
+                checkGLError("glTexImage2D (cube face)");
+            }
+        }
 
         // Generate mipmaps if requested
         /*if (texResource->generateMipmaps) {
@@ -155,17 +190,29 @@ namespace chai::brew
         // Wrapping mode
         GLenum wrapS = GL_REPEAT;
         GLenum wrapT = GL_REPEAT;
+        GLenum wrapR = GL_REPEAT;
 
-        // Map from resource wrap mode to OpenGL
-        /*if (texResource->wrapMode == TextureWrapMode::Clamp) {
-            wrapS = wrapT = GL_CLAMP_TO_EDGE;
-        } else if (texResource->wrapMode == TextureWrapMode::Mirror) {
-            wrapS = wrapT = GL_MIRRORED_REPEAT;
-        }*/
-        // Default is GL_REPEAT (already set)
+        if (target == GL_TEXTURE_CUBE_MAP) {
+            // Cubemaps should basically always clamp
+            wrapS = GL_CLAMP_TO_EDGE;
+            wrapT = GL_CLAMP_TO_EDGE;
+            wrapR = GL_CLAMP_TO_EDGE;
+        }
+        else {
+            // Map from resource wrap mode to OpenGL
+            if (texResource->getWrapMode() == TextureWrapMode::Clamp) {
+                wrapS = wrapT = GL_CLAMP_TO_EDGE;
+            } else if (texResource->getWrapMode() == TextureWrapMode::Mirror) {
+                wrapS = wrapT = GL_MIRRORED_REPEAT;
+            }
+        }
+
 
         glTexParameteri(target, GL_TEXTURE_WRAP_S, wrapS);
         glTexParameteri(target, GL_TEXTURE_WRAP_T, wrapT);
+        if (target == GL_TEXTURE_CUBE_MAP) {
+            glTexParameteri(target, GL_TEXTURE_WRAP_R, wrapR);
+        }
         checkGLError("texture wrapping");
 
         // Anisotropic filtering (if supported and requested)

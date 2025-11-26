@@ -1,4 +1,6 @@
 #pragma once
+#include "ChaiEngine/PipelineState.h"
+
 #include <OpenGLRendererExport.h>
 #include <glad/gl.h>
 #include <memory>
@@ -13,6 +15,7 @@
 #include <OpenGLRenderer/OpenGLShader.h>
 #include <OpenGLRenderer/OpenGLTexture.h>
 #include <OpenGLRenderer/UniformManager.h>
+#include <OpenGLRenderer/GLPipelineState.h>
 #include <ChaiEngine/UniformBuffer.h>
 
 namespace chai::brew
@@ -100,6 +103,9 @@ namespace chai::brew
 
         // Statistics
         //RenderStats m_stats;
+
+        //pipeline state
+        GLPipelineState m_currentState;
     };
 }
 

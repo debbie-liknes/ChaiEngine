@@ -18,6 +18,7 @@ set(OpenGLRenderer_source
         source/OpenGLRenderer/OpenGLShader.cpp
         source/OpenGLRenderer/Uploads.cpp
         source/OpenGLRenderer/OpenGLTexture.cpp
+        include/OpenGLRenderer/GLPipelineState.h
 )
 
 add_library(OpenGLRenderer SHARED ${OpenGLRenderer_headers} ${OpenGLRenderer_source})

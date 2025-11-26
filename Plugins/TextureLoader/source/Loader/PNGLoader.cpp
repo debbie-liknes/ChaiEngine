@@ -19,7 +19,15 @@ namespace chai
         if (!pixels) {
             throw std::runtime_error(std::string("Failed to load image: ") + stbi_failure_reason());
         }
+        TextureFace face;
+        face.width = width;
+        face.height = height;
+        face.channels = channels;
+        face.pixels.resize(width * height * channels);
+        memcpy(face.pixels.data(), pixels, width * height * channels);
 
-        return std::make_unique<TextureAsset>(width, height, channels, pixels);
+        stbi_image_free(pixels);
+
+        return std::make_unique<TextureAsset>(std::vector<TextureFace>{face});
     }
 }

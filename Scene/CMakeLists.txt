@@ -27,6 +27,8 @@ set(ChaiScene_source
         source/Scene/GameObject.cpp
         source/Scene/Scene.cpp
         source/Scene/SceneManager.cpp
+        include/Scene/Skybox.h
+        source/Scene/Skybox.cpp
 )
 
 add_library(Scene SHARED ${ChaiScene_headers} ${ChaiScene_source})

@@ -1,4 +1,6 @@
 #pragma once
+#include "PipelineState.h"
+
 #include <ChaiGraphicsExport.h>
 #include <ChaiEngine/IMesh.h>
 #include <ChaiEngine/Material.h>
@@ -28,5 +30,6 @@ namespace chai::brew
         Mat4 viewMatrix{1.f};
         Mat4 projectionMatrix{1.f};
         std::vector<Light> lights;
+        PipelineState pipelineState;
     };
 }

@@ -21,6 +21,7 @@ namespace chai::cup
                 cmd.mesh = renderable->getMesh();
                 cmd.material = renderable->getMaterialInstance();
                 cmd.transform = getComponent<TransformComponent>()->getWorldMatrix();
+                cmd.pipelineState = renderable->getPipelineState();
 
                 collector.submit(cmd);
             }
