@@ -50,6 +50,7 @@ namespace chai
         int getFaceCount() const { return m_faces.size(); }
         const TextureFace& getFace(size_t i) const { return m_faces[i]; }
         TextureFace&       getFace(size_t i)       { return m_faces[i]; }
+        const std::vector<TextureFace>& getFaces() const { return m_faces; }
 
         int getWidth() const { return m_faces.front().width; }
         int getHeight() const { return m_faces.front().height; }
@@ -74,6 +75,12 @@ namespace chai
         {
             init();
         }
+        explicit TextureResource(std::vector<TextureFace> faces, ColorSpace space = ColorSpace::SRGB,
+            TextureType type = TextureType::Tex2D, TextureWrapMode mode = TextureWrapMode::Clamp)
+                : m_space(space), m_type(type), m_wrapMode(mode)
+        {
+            initFromFaces(faces);
+        }
 
         int getFaceCount() const { return m_faces.size(); }
         const TextureFace& getFace(size_t i) const { return m_faces[i]; }
@@ -94,19 +101,24 @@ namespace chai
         TextureWrapMode getWrapMode() { return m_wrapMode; }
 
     private:
+
+        void initFromFaces(const std::vector<TextureFace>& faces)
+        {
+            for (int i = 0; i < faces.size(); i++) {
+                auto& face = m_faces.emplace_back();
+                face.width = faces[i].width;
+                face.height = faces[i].height;
+                face.channels = faces[i].channels;
+                face.pixels.resize(face.width * face.height * face.channels);
+                face.pixels = faces[i].pixels;
+            }
+        }
+
         void init()
         {
             if (m_assetHandle.isValid()) {
                 auto textureAsset = AssetManager::instance().get<TextureAsset>(m_assetHandle);
-
-                for (int i = 0; i < textureAsset->getFaceCount(); i++) {
-                    auto& face = m_faces.emplace_back();
-                    face.width = textureAsset->getWidth();
-                    face.height = textureAsset->getHeight();
-                    face.channels = textureAsset->getChannels();
-                    face.pixels.resize(face.width * face.height * face.channels);
-                    face.pixels = textureAsset->getFace(i).pixels;
-                }
+                initFromFaces(textureAsset->getFaces());
                 m_space = textureAsset->getColorSpace();
                 m_type = textureAsset->getType();
                 m_wrapMode = textureAsset->getWrapMode();
@@ -120,6 +132,24 @@ namespace chai
         TextureType m_type = TextureType::Tex2D;
         TextureWrapMode m_wrapMode = TextureWrapMode::Clamp;
     };
+
+    static ResourceHandle getDefaultWhiteTexture()
+    {
+        static ResourceHandle whitTexHandle;
+        if (whitTexHandle.isValid()) return whitTexHandle;
+
+        TextureFace face;
+        face.width = 1;
+        face.height = 1;
+        face.channels = 4;
+        face.pixels.resize(4);
+        for (auto& pix : face.pixels)
+            pix = 255.0f;
+        auto textureResource = std::make_unique<TextureResource>(std::vector<TextureFace>{face});
+
+        whitTexHandle = ResourceManager::instance().add<TextureResource>(std::move(textureResource));
+        return whitTexHandle;
+    }
 
     static std::optional<ResourceHandle> loadTexture(const std::string& path)
     {

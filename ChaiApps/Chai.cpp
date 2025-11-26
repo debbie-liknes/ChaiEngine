@@ -99,7 +99,7 @@ int main()
         chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance)));
 
     groundPlane->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{0.0, -15.0, 0.0});
-    groundPlane->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3{50, 50, 50});
+    groundPlane->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3{20, 20, 20});
 
     auto model = std::make_unique<chai::cup::GameObject>();
     auto* modelMesh = model->addComponent<chai::cup::MeshComponent>(model.get());
@@ -107,10 +107,10 @@ int main()
     modelMesh->setMesh(modelMeshAsset.value());
 
     auto mat2 = chai::MaterialSystem::Builder(phong)
-    .setVec3("u_DiffuseColor", chai::Vec3(1.0, 1.0, 1.0))
+    .setVec3("u_DiffuseColor", chai::Vec3(0.0, 1.0, 1.0))
     .setVec3("u_SpecularColor", chai::Vec3(1.0, 1.0, 1.0))
     .setFloat("u_Shininess", 16.f)
-    .setTexture("u_DiffuseMap", textureResource.value())
+    .setTexture("u_DiffuseMap", chai::getDefaultWhiteTexture())
     .build();
 
 
