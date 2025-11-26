@@ -60,7 +60,7 @@ namespace chai::brew
          * @param texHandle Texture resource handle
          * @return Pointer to texture data (never null)
          */
-        OpenGLTextureData* getOrCreateTextureData(Handle texHandle);
+        OpenGLTextureData* getOrCreateTextureData(ResourceHandle texHandle);
 
         /**
          * Upload texture data to GPU.
@@ -70,14 +70,14 @@ namespace chai::brew
          * @param texData OpenGL texture data to populate
          * @return True if upload successful
          */
-        bool uploadTexture(Handle texHandle, OpenGLTextureData* texData);
+        bool uploadTexture(ResourceHandle texHandle, OpenGLTextureData* texData);
 
     private:
         /**
          * Determine OpenGL format from resource data.
          * Maps source data (RGB, RGBA, etc.) to OpenGL enums.
          */
-        void determineFormats(const TextureAsset* texResource,
+        void determineFormats(const TextureResource* texResource,
                               OpenGLTextureData* texData);
 
         /**
@@ -85,7 +85,7 @@ namespace chai::brew
          * Sets up sampler state based on texture type and quality settings.
          */
         void configureTextureParameters(OpenGLTextureData* texData,
-                                        const TextureAsset* texResource);
+                                        const TextureResource* texResource);
 
         CMap<size_t, std::unique_ptr<OpenGLTextureData>> m_textureCache;
     };

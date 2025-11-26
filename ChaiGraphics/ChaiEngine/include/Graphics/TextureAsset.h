@@ -6,11 +6,18 @@
 
 namespace chai
 {
+    enum class ColorSpace
+    {
+        Linear,
+        SRGB
+    };
+
     class TextureAsset : public IAsset
     {
     public:
-        explicit TextureAsset(const int width, const int height, const int channels, uint8_t* pixels) :
-            m_width(width), m_height(height), m_channels(channels), m_pixels(pixels)
+        explicit TextureAsset(const int width, const int height, const int channels,
+            uint8_t* pixels, ColorSpace space = ColorSpace::SRGB) :
+            m_width(width), m_height(height), m_channels(channels), m_pixels(pixels), m_space(space)
         {}
 
         bool isValid() const override { return true; }
@@ -20,6 +27,7 @@ namespace chai
         int getHeight() const { return m_height; }
         int getChannels() const { return m_channels; }
         uint8_t* getPixels() const { return m_pixels; }
+        ColorSpace getColorSpace() const { return m_space; }
 
 
     private:
@@ -27,6 +35,7 @@ namespace chai
         int m_height = 0;
         int m_channels = 0;
         uint8_t* m_pixels = nullptr;
+        ColorSpace m_space = ColorSpace::SRGB;
     };
 
     class TextureResource : public Resource
@@ -38,9 +47,15 @@ namespace chai
         }
 
         int getWidth() { return m_width; }
+        int getWidth() const { return m_width; }
         int getHeight() { return m_height; }
+        int getHeight() const { return m_height; }
         int getChannels() { return m_channels; }
+        int getChannels() const { return m_channels; }
+        ColorSpace getColorSpace() { return m_space; }
+        ColorSpace getColorSpace() const { return m_space; }
         uint8_t* getPixels() { return m_pixels.data(); }
+
 
     private:
         void init()
@@ -50,6 +65,7 @@ namespace chai
                 m_width = textureAsset->getWidth();
                 m_height = textureAsset->getHeight();
                 m_channels = textureAsset->getChannels();
+                m_space = textureAsset->getColorSpace();
                 m_pixels.resize(m_width * m_height * m_channels);
                 memcpy(m_pixels.data(), textureAsset->getPixels(), m_width * m_height * m_channels);
             }
@@ -61,6 +77,7 @@ namespace chai
         int m_height = 0;
         int m_channels = 0;
         std::vector<uint8_t> m_pixels;
+        ColorSpace m_space = ColorSpace::SRGB;
     };
 
     static std::optional<ResourceHandle> loadTexture(const std::string& path)

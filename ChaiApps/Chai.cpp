@@ -82,13 +82,14 @@ int main()
 
     auto phong = chai::MaterialSystem::instance().getPhongShader();
 
-    auto material = chai::MaterialSystem::Builder(phong)
-    .setVec3("u_DiffuseColor", chai::Vec3(0.5, 0.5, 0.5))
-    .setVec3("u_SpecularColor", chai::Vec3(0.5, 0.5, 0.5))
-    .setFloat("u_Shininess", 0.5f)
-    .build();
+    auto textureResource = chai::loadTexture("assets/tardis.png");
 
-    //auto textureResource = chai::loadTexture("assets/tardis.png");
+    auto material = chai::MaterialSystem::Builder(phong)
+    .setVec3("u_DiffuseColor", chai::Vec3(1.0, 1.0, 1.0))
+    .setVec3("u_SpecularColor", chai::Vec3(1.0, 1.0, 1.0))
+    .setFloat("u_Shininess", 64.f)
+    .setTexture("u_DiffuseMap", textureResource.value())
+    .build();
 
     auto materialInstance = std::make_unique<chai::MaterialInstance>(material);
 
@@ -97,7 +98,7 @@ int main()
         chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance)));
 
     groundPlane->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{0.0, -15.0, 0.0});
-    groundPlane->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3{100, 100, 100});
+    groundPlane->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3{50, 50, 50});
 
     auto model = std::make_unique<chai::cup::GameObject>();
     auto* modelMesh = model->addComponent<chai::cup::MeshComponent>(model.get());
@@ -105,12 +106,12 @@ int main()
     modelMesh->setMesh(modelMeshAsset.value());
 
     auto mat2 = chai::MaterialSystem::Builder(phong)
-    .setVec3("u_DiffuseColor", chai::Vec3(1.0, 1.0, 0.0))
-    .setVec3("u_SpecularColor", chai::Vec3(0.5, 0.5, 0.5))
-    .setFloat("u_Shininess", 0.5f)
+    .setVec3("u_DiffuseColor", chai::Vec3(1.0, 1.0, 1.0))
+    .setVec3("u_SpecularColor", chai::Vec3(1.0, 1.0, 1.0))
+    .setFloat("u_Shininess", 16.f)
+    .setTexture("u_DiffuseMap", textureResource.value())
     .build();
 
-    //auto textureResource = chai::loadTexture("assets/tardis.png");
 
     auto materialInstance2 = std::make_unique<chai::MaterialInstance>(mat2);
 

@@ -1,5 +1,6 @@
 #include <OpenGLRenderer/OpenGLTexture.h>
 #include <OpenGLRenderer/GLHelpers.h>
+#include <Graphics/TextureAsset.h>
 
 namespace chai::brew
 {
@@ -13,7 +14,7 @@ namespace chai::brew
         }
     }
 
-    OpenGLTextureData* OpenGLTextureManager::getOrCreateTextureData(Handle texHandle)
+    OpenGLTextureData* OpenGLTextureManager::getOrCreateTextureData(ResourceHandle texHandle)
     {
         auto it = m_textureCache.find(texHandle.index);
         if (it == m_textureCache.end()) {
@@ -25,14 +26,14 @@ namespace chai::brew
         return it->second.get();
     }
 
-    bool OpenGLTextureManager::uploadTexture(Handle texHandle, OpenGLTextureData* texData)
+    bool OpenGLTextureManager::uploadTexture(ResourceHandle texHandle, OpenGLTextureData* texData)
     {
-        /*if (!texData) {
+        if (!texData) {
             std::cerr << "OpenGLTextureManager::uploadTexture: null texture data" << std::endl;
             return false;
         }
 
-        const auto* texResource = ResourceManager::instance().getResource<TextureResource>(
+        auto* texResource = ResourceManager::instance().getResource<TextureResource>(
             texHandle);
         if (!texResource) {
             std::cerr << "OpenGLTextureManager::uploadTexture: invalid texture handle" << std::endl;
@@ -43,8 +44,8 @@ namespace chai::brew
         determineFormats(texResource, texData);
 
         // Store dimensions
-        texData->width = texResource->width;
-        texData->height = texResource->height;
+        texData->width = texResource->getWidth();
+        texData->height = texResource->getHeight();
 
         // Generate texture handle
         if (texData->texture == 0) {
@@ -71,12 +72,12 @@ namespace chai::brew
             // Source data format
             texData->type,
             // Source data type
-            texResource->data.data() // Pixel data
+            texResource->getPixels() // Pixel data
             );
         checkGLError("glTexImage2D");
 
         // Generate mipmaps if requested
-        if (texResource->generateMipmaps) {
+        /*if (texResource->generateMipmaps) {
             glGenerateMipmap(texData->target);
             checkGLError("glGenerateMipmap");
             texData->hasMipmaps = true;
@@ -86,7 +87,7 @@ namespace chai::brew
                                      std::floor(
                                          std::log2(std::max(texData->width, texData->height)))
                                  );
-        }
+        }*/
 
         // Configure texture parameters
         configureTextureParameters(texData, texResource);
@@ -100,15 +101,14 @@ namespace chai::brew
             << " (" << (texData->hasMipmaps ? "with mipmaps" : "no mipmaps") << ")"
             << std::endl;
 
-        return true;*/
         return true;
     }
 
-    void OpenGLTextureManager::determineFormats(const TextureAsset* texResource,
+    void OpenGLTextureManager::determineFormats(const TextureResource* texResource,
                                                 OpenGLTextureData* texData)
     {
-        /*// Determine format based on channel count
-        switch (texResource->channels) {
+        // Determine format based on channel count
+        switch (texResource->getChannels()) {
             case 1: // Grayscale
                 texData->format = GL_RED;
                 texData->internalFormat = GL_R8;
@@ -119,26 +119,26 @@ namespace chai::brew
                 break;
             case 3: // RGB
                 texData->format = GL_RGB;
-                texData->internalFormat = texResource->isSRGB ? GL_SRGB8 : GL_RGB8;
+                texData->internalFormat = texResource->getColorSpace() == ColorSpace::SRGB ? GL_SRGB8 : GL_RGB8;
                 break;
             case 4: // RGBA
                 texData->format = GL_RGBA;
-                texData->internalFormat = texResource->isSRGB ? GL_SRGB8_ALPHA8 : GL_RGBA8;
+                texData->internalFormat = texResource->getColorSpace() == ColorSpace::SRGB ? GL_SRGB8_ALPHA8 : GL_RGBA8;
                 break;
             default:
-                std::cerr << "Unsupported channel count: " << texResource->channels << std::endl;
+                std::cerr << "Unsupported channel count: " << texResource->getChannels() << std::endl;
                 texData->format = GL_RGBA;
                 texData->internalFormat = GL_RGBA8;
         }
 
         // Data type (could be extended for HDR, etc.)
-        texData->type = GL_UNSIGNED_BYTE;*/
+        texData->type = GL_UNSIGNED_BYTE;
     }
 
     void OpenGLTextureManager::configureTextureParameters(OpenGLTextureData* texData,
-                                                          const TextureAsset* texResource)
+                                                          const TextureResource* texResource)
     {
-        /*GLenum target = texData->target;
+        GLenum target = texData->target;
 
         // Filtering
         if (texData->hasMipmaps) {
@@ -157,11 +157,11 @@ namespace chai::brew
         GLenum wrapT = GL_REPEAT;
 
         // Map from resource wrap mode to OpenGL
-        if (texResource->wrapMode == TextureWrapMode::Clamp) {
+        /*if (texResource->wrapMode == TextureWrapMode::Clamp) {
             wrapS = wrapT = GL_CLAMP_TO_EDGE;
         } else if (texResource->wrapMode == TextureWrapMode::Mirror) {
             wrapS = wrapT = GL_MIRRORED_REPEAT;
-        }
+        }*/
         // Default is GL_REPEAT (already set)
 
         glTexParameteri(target, GL_TEXTURE_WRAP_S, wrapS);
@@ -169,7 +169,7 @@ namespace chai::brew
         checkGLError("texture wrapping");
 
         // Anisotropic filtering (if supported and requested)
-        if (texResource->useAnisotropicFiltering) {
+        /*if (texResource->useAnisotropicFiltering) {
             GLfloat maxAnisotropy = 0.0f;
             glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
             if (maxAnisotropy > 1.0f) {
