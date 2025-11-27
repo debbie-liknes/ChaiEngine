@@ -5,6 +5,18 @@
 #include <Window/WindowManager.h>
 #include <Input/InputSystem.h>
 
+#ifdef _WIN32
+#define GLFW_EXPOSE_NATIVE_WIN32
+#define GLFW_EXPOSE_NATIVE_WGL
+#include <GLFW/glfw3native.h>
+#elif defined(__linux__)
+#define GLFW_EXPOSE_NATIVE_X11
+#elif defined(__APPLE__)
+#define GLFW_EXPOSE_NATIVE_COCOA
+#endif
+
+#include <GLFW/glfw3native.h>
+
 namespace chai
 {
     void glfwCloseCallback(GLFWwindow* window)
@@ -97,24 +109,25 @@ namespace chai
     std::unique_ptr<Window> GLFWSystem::createWindow(const WindowDesc& desc, WindowManager* manager)
     {
         auto window = std::make_unique<Window>(desc);
-        auto nativeWindow = glfwCreateWindow(desc.width, desc.height, desc.title.c_str(), NULL, NULL);
-        if (!nativeWindow)
+        auto glfwWindow = glfwCreateWindow(desc.width, desc.height, desc.title.c_str(), NULL, NULL);
+        if (!glfwWindow)
         {
             std::cerr << "Failed to create GLFW Window!" << std::endl;
         }
 
-        glfwSetWindowCloseCallback(nativeWindow, glfwCloseCallback);
-        glfwSetKeyCallback(nativeWindow, key_callback);
-        glfwSetMouseButtonCallback(nativeWindow, mouse_button_callback);
-        glfwSetCursorPosCallback(nativeWindow, cursor_position_callback);
-        glfwSetFramebufferSizeCallback(nativeWindow, framebuffer_size_callback);
+        glfwSetWindowCloseCallback(glfwWindow, glfwCloseCallback);
+        glfwSetKeyCallback(glfwWindow, key_callback);
+        glfwSetMouseButtonCallback(glfwWindow, mouse_button_callback);
+        glfwSetCursorPosCallback(glfwWindow, cursor_position_callback);
+        glfwSetFramebufferSizeCallback(glfwWindow, framebuffer_size_callback);
 
         window->setWindowData(WindowData{window.get(), manager});
-        window->setNativeWindow(nativeWindow);
-        glfwSetWindowUserPointer(nativeWindow, &window->getWindowData());
+        window->setSystemWindow(glfwWindow);
+        glfwSetWindowUserPointer(glfwWindow, &window->getWindowData());
 
         //is this opengl specific?
-        glfwMakeContextCurrent(nativeWindow);
+        //glfwMakeContextCurrent(glfwWindow);
+        //glfwMakeContextCurrent(NULL);
 
         return std::move(window);
     }
@@ -149,5 +162,40 @@ namespace chai
 
     void GLFWSystem::destroyAllWindows()
     {
+    }
+
+    std::unique_ptr<RenderSurface> GLFWSystem::createRenderSurface(void* window)
+    {
+        return std::make_unique<GlfwRenderSurface>(convertToGLFWWindow(window));
+    }
+
+
+    void GlfwRenderSurface::makeCurrent()
+    {
+        glfwMakeContextCurrent(m_window);
+    }
+
+    void GlfwRenderSurface::doneCurrent()
+    {
+        glfwMakeContextCurrent(nullptr);
+    }
+
+    void GlfwRenderSurface::swapBuffers()
+    {
+        glfwSwapBuffers(m_window);
+    }
+
+    int GlfwRenderSurface::getWidth() const
+    {
+        int w, h;
+        glfwGetFramebufferSize(m_window, &w, &h);
+        return w;
+    }
+
+    int GlfwRenderSurface::getHeight() const
+    {
+        int w, h;
+        glfwGetFramebufferSize(m_window, &w, &h);
+        return h;
     }
 }

@@ -35,7 +35,9 @@ namespace chai::brew
                 else if (m_currentRasterState.cullMode == RasterizerState::CullMode::None) {
                     glEnable(GL_CULL_FACE);
                 }
-                glCullFace(convertCullMode(newState.cullMode));
+
+                if (newState.cullMode != RasterizerState::CullMode::None)
+                    glCullFace(convertCullMode(newState.cullMode));
             }
 
             if (newState.frontFace != m_currentRasterState.frontFace) {

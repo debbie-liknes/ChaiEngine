@@ -7,19 +7,138 @@
 
 namespace chai::brew
 {
-    bool OpenGLBackend::initialize(void* winProcAddress)
+    bool OpenGLBackend::initialize(std::unique_ptr<RenderSurface> surface, void* winProcAddress)
     {
-        if (gladLoadGL(static_cast<GLADloadfunc>(winProcAddress)) == 0) {
-            std::cerr << "Failed to initialize GLAD" << std::endl;
-            checkGLError("setProcAddress");
+        m_winProcAddress = winProcAddress;
+        m_surface = std::move(surface);
+
+        // Start the render thread
+        if (!startRenderThread()) {
+            std::cerr << "Failed to start render thread" << std::endl;
             return false;
+        }
+
+        // Wait for render thread to complete initialization
+        while (!m_initialized.load()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+
+        std::cout << "OpenGL Backend initialized successfully (threaded)" << std::endl;
+        return true;
+    }
+
+    void OpenGLBackend::shutdown()
+    {
+        m_surface->doneCurrent();
+
+        std::cout << "Shutting down OpenGL Backend..." << '\n';
+
+        // Wait for all frames to complete
+        waitForIdle();
+
+        // Stop render thread
+        stopRenderThread();
+
+        std::cout << "OpenGL Backend shutdown complete" << '\n';
+    }
+
+    // ============================================================================
+    // RENDER THREAD MANAGEMENT
+    // ============================================================================
+    bool OpenGLBackend::startRenderThread()
+    {
+        if (m_running.load()) {
+            std::cerr << "Render thread already running" << std::endl;
+            return false;
+        }
+
+        m_running.store(true);
+        m_renderThread = std::thread(&OpenGLBackend::renderThreadMain, this);
+
+        return true;
+    }
+
+    void OpenGLBackend::stopRenderThread()
+    {
+        if (!m_running.load()) {
+            return;
+        }
+
+        // Signal thread to stop
+        m_running.store(false);
+        m_queueCV.notify_one();
+
+        // Wait for thread to finish
+        if (m_renderThread.joinable()) {
+            m_renderThread.join();
+        }
+    }
+
+    void OpenGLBackend::waitForIdle()
+    {
+        std::unique_lock<std::mutex> lock(m_frameMutex);
+        m_frameCompleteCV.wait(lock,
+                               [this] { return m_lastCompletedFrame >= m_currentFrameNumber; });
+    }
+
+    void OpenGLBackend::renderThreadMain()
+    {
+        // Initialize OpenGL context on the render thread
+        initializeRenderThread();
+
+        while (m_running.load()) {
+            RenderFrame frame;
+
+            // Wait for frame to render
+            {
+                std::unique_lock<std::mutex> lock(m_queueMutex);
+                m_queueCV.wait(lock, [this] { return !m_frameQueue.empty() || !m_running.load(); });
+
+                if (!m_running.load() && m_frameQueue.empty()) {
+                    break; // Exit thread
+                }
+
+                if (!m_frameQueue.empty()) {
+                    frame = std::move(m_frameQueue.front());
+                    m_frameQueue.pop();
+
+                    m_queueCV.notify_one();
+                }
+            }
+
+            // Execute frame
+            if (!frame.commands.empty()) {
+                executeFrame(frame);
+
+                // Notify completion
+                {
+                    std::lock_guard<std::mutex> lock(m_frameMutex);
+                    m_lastCompletedFrame = frame.frameNumber;
+                }
+                m_frameCompleteCV.notify_all();
+            }
+        }
+
+        // Cleanup
+        shutdownRenderThread();
+    }
+
+    void OpenGLBackend::initializeRenderThread()
+    {
+        m_surface->makeCurrent();
+
+        auto loader = reinterpret_cast<GLADloadfunc>(m_winProcAddress);
+        int v = gladLoadGL(loader);
+        if (v == 0) {
+            std::cerr << "Failed to initialize GLAD" << std::endl;
+            return;
         }
 
         checkGLError("setProcAddress");
 
         // Check OpenGL version
-        const auto* version = (const char*)glGetString(GL_VERSION);
-        std::cout << "OpenGL Version: " << version << '\n';
+        const auto* glVersion = (const char*)glGetString(GL_VERSION);
+        std::cout << "OpenGL Version (Render Thread): " << glVersion << '\n';
 
         m_matManager.setShaderManager(&m_shaderManager);
 
@@ -33,8 +152,8 @@ namespace chai::brew
 
         m_lightingUBO = createUniform<LightingData>();
 
-        m_uniManager.buildUniforms({m_perFrameUBOData.get(), m_perDrawUBOData.get(),
-                                    m_lightingUBO.get()});
+        m_uniManager.buildUniforms(
+            {m_perFrameUBOData.get(), m_perDrawUBOData.get(), m_lightingUBO.get()});
 
         std::cout << "=========================\n" << '\n';
 
@@ -44,24 +163,20 @@ namespace chai::brew
         defaultShaderProgram = m_shaderManager.createDefaultShaderProgram();
         if (defaultShaderProgram == 0) {
             std::cerr << "Failed to create default shader program" << '\n';
-            return false;
+            m_initialized.store(false);
+            return;
         }
 
-        std::cout << "OpenGL Backend initialized successfully" << '\n';
-        return true;
+        m_initialized.store(true);
     }
 
-    void OpenGLBackend::shutdown()
+    void OpenGLBackend::shutdownRenderThread()
     {
-        std::cout << "Shutting down OpenGL Backend..." << '\n';
-
         // Delete default shader
         if (defaultShaderProgram != 0) {
             glDeleteProgram(defaultShaderProgram);
             defaultShaderProgram = 0;
         }
-
-        std::cout << "OpenGL Backend shutdown complete" << '\n';
     }
 
     // ============================================================================
@@ -73,23 +188,50 @@ namespace chai::brew
         if (commands.empty())
             return;
 
+        uint64_t frameNum = ++m_currentFrameNumber;
+        RenderFrame frame(std::vector<RenderCommand>(commands), frameNum);
+
+        // Submit to render thread
+        {
+            std::unique_lock<std::mutex> lock(m_queueMutex);
+
+            // Wait if queue is full (backpressure)
+            m_queueCV.wait(lock, [this] {
+                return m_frameQueue.size() < MAX_QUEUED_FRAMES || !m_running.load();
+            });
+
+            if (!m_running.load()) {
+                return; // Shutting down
+            }
+
+            m_frameQueue.push(std::move(frame));
+        }
+
+        // Notify render thread
+        m_queueCV.notify_one();
+    }
+
+    void OpenGLBackend::executeFrame(const RenderFrame& frame)
+    {
+
+        // Process uploads
+        m_uploadQueue.processUploads(2.0f);
+
         // Separate commands by type
         std::vector<SortedDrawCommand> opaqueDraws;
         std::vector<SortedDrawCommand> transparentDraws;
 
-        // Process Uploads
-        for (const auto& cmd : commands) {
+        // Process commands
+        for (const auto& cmd : frame.commands) {
             switch (cmd.type) {
                 case RenderCommand::SET_VIEWPORT: {
                     int x, y, width, height;
                     cmd.viewport->getViewport(x, y, width, height);
                     glViewport(x, y, width, height);
                     m_perFrameUBOData->setValue({cmd.viewMatrix, cmd.projectionMatrix});
-                }
-                break;
+                } break;
 
                 case RenderCommand::CLEAR:
-                    // Clear before sorting/drawing
                     clear(0.0f, 0.0f, 0.0f, 1.0f);
                     break;
 
@@ -101,69 +243,60 @@ namespace chai::brew
                     if (!cmd.mesh.isValid())
                         continue;
 
-                    // Get or create mesh data
                     OpenGLMeshData* meshData = m_meshManager.getOrCreateMeshData(cmd.mesh);
                     if (!meshData)
                         continue;
 
-                    //Schedule upload if needed (non-blocking)
                     if (!meshData->isUploaded) {
                         if (!m_uploadQueue.isQueued(cmd.mesh)) {
                             m_uploadQueue.requestUpload(cmd.mesh, (void*)meshData);
                         }
-                        continue; // Skip this frame, will render when ready
+                        continue;
                     }
 
-                    //Create sort key
                     SortedDrawCommand sorted;
                     sorted.command = cmd;
                     sorted.sortKey = createSortKey(cmd, meshData);
 
-                    // Categorize by transparency
                     if (sorted.sortKey.transparency) {
                         transparentDraws.push_back(sorted);
                     } else {
                         opaqueDraws.push_back(sorted);
                     }
-                }
-                break;
-                default: ;
+                } break;
+                default:;
             }
         }
 
-        // Sort opaque front-to-back (minimize overdraw, maximize early-Z)
-        // Sort by: shader -> material -> mesh -> depth
-        std::ranges::sort(opaqueDraws,
-                          [](const SortedDrawCommand& a, const SortedDrawCommand& b) {
-                              return a.sortKey < b.sortKey;
-                          });
+        // Sort draws
+        std::ranges::sort(opaqueDraws, [](const SortedDrawCommand& a, const SortedDrawCommand& b) {
+            return a.sortKey < b.sortKey;
+        });
 
-        // Sort transparent back-to-front (correct alpha blending)
-        // Depth is most significant for transparents
         std::ranges::sort(transparentDraws,
                           [](const SortedDrawCommand& a, const SortedDrawCommand& b) {
                               return a.sortKey.depth > b.sortKey.depth;
                           });
 
-        // Update per-frame uniforms once
+        // Update per-frame uniforms
         updatePerFrameUniforms();
 
         // Execute render passes
         if (!opaqueDraws.empty()) {
-            // Opaque pass
             glDisable(GL_BLEND);
             glDepthMask(GL_TRUE);
             drawBatchedCommands(opaqueDraws);
         }
 
         if (!transparentDraws.empty()) {
-            // Transparent pass
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glDepthMask(GL_FALSE); // Don't write to depth buffer
+            glDepthMask(GL_FALSE);
             drawBatchedCommands(transparentDraws);
             glDepthMask(GL_TRUE);
         }
+
+        m_surface->swapBuffers();
     }
 
     // ============================================================================
@@ -247,6 +380,8 @@ namespace chai::brew
 
     void OpenGLBackend::drawBatchedCommands(const std::vector<SortedDrawCommand>& sortedDraws)
     {
+        //currentVAO = 0;
+
         for (const auto& draw : sortedDraws) {
             const auto& cmd = draw.command;
 
@@ -261,6 +396,19 @@ namespace chai::brew
             if (!m_matManager.compileMaterial(cmd.material, matData)) {
                 continue;
             }
+
+            bool waitingOnTextures = false;
+            for (auto const& tex : matData->textures)
+            {
+                if (m_uploadQueue.isQueued(tex.second))
+                {
+                    // Texture upload is pending, skip this draw
+                    waitingOnTextures = true;
+                    break;
+                }
+            }
+            if (waitingOnTextures)
+                continue;
 
             // Get shader data
             OpenGLShaderData* shaderData = m_shaderManager.getShaderData(matData->shaderProgram);
@@ -279,7 +427,7 @@ namespace chai::brew
 
             if (vao == 0) {
                 std::cerr << "ERROR: Failed to create VAO for mesh!" << std::endl;
-                continue;  // Skip this draw
+                continue; // Skip this draw
             }
 
             if (currentVAO != vao) {
@@ -307,6 +455,7 @@ namespace chai::brew
                 glDrawArrays(GL_TRIANGLES, 0, meshData->vertexCount);
             }
         }
+        glBindVertexArray(0);
     }
 
     // ============================================================================
@@ -475,18 +624,5 @@ namespace chai::brew
                 setUniformValue(it->second, uniform);
             }
         }
-    }
-
-    // ============================================================================
-    // ASYNC UPLOAD SYSTEM
-    // ============================================================================
-
-    void OpenGLBackend::beginFrame()
-    {
-        // Process pending uploads with time budget (2ms)
-        m_uploadQueue.processUploads(2.0f);
-
-        // Reset per-frame stats
-        //m_stats.reset();
     }
 }

@@ -50,12 +50,35 @@ namespace chai
 
         void setWindowData(WindowData data) { m_data = data; }
         WindowData& getWindowData() { return m_data; }
+        void setSystemWindow(void* handle) { systemWindow = handle; }
         void setNativeWindow(void* handle) { nativeWindow = handle; }
+        void setNativeContext(void* ctx) { nativeContext = ctx; }
 
     private:
         WindowId m_id{0};
         WindowDesc m_desc;
         WindowData m_data;
+        void* systemWindow{nullptr};
         void* nativeWindow{nullptr};
+        void* nativeContext{nullptr};
+    };
+
+    class RenderSurface
+    {
+    public:
+        virtual ~RenderSurface() = default;
+
+        // Must be called from the render thread before any GL calls.
+        virtual void makeCurrent() = 0;
+
+        // Optional; can be a no-op for GL.
+        virtual void doneCurrent() = 0;
+
+        // Called once per frame on the render thread after drawing.
+        virtual void swapBuffers() = 0;
+
+        // For viewport / camera setup.
+        virtual int getWidth() const = 0;
+        virtual int getHeight() const = 0;
     };
 }

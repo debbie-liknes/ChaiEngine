@@ -27,7 +27,7 @@ namespace chai
         auto win = findWindowById(id);
         if (win)
         {
-            m_windowSystem->destroyWindow(win->nativeWindow);
+            m_windowSystem->destroyWindow(win->systemWindow);
         }
         auto it = std::ranges::remove_if(m_windows,
                                          [id](const std::unique_ptr<Window>& window) { return window->getId() == id; });
@@ -42,10 +42,10 @@ namespace chai
     void WindowManager::update()
     {
         m_windowSystem->pollEvents();
-        for (auto& window : m_windows)
-        {
-            m_windowSystem->swapBuffers(window->nativeWindow);
-        }
+        //for (auto& window : m_windows)
+        //{
+        //    m_windowSystem->swapBuffers(window->systemWindow);
+        //}
     }
 
     Window* WindowManager::findWindowById(WindowId id)
@@ -53,6 +53,15 @@ namespace chai
         auto windowItr = std::ranges::find(m_windows, id, [](const auto& window) { return window->getId(); });
         if (windowItr != m_windows.end())
             return windowItr->get();
+        return nullptr;
+    }
+
+    void* WindowManager::getSystemWindow(WindowId id)
+    {
+        auto win = findWindowById(id);
+        if (win) {
+            return win->systemWindow;
+        }
         return nullptr;
     }
 }

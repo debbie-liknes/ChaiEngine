@@ -15,6 +15,7 @@ set(ChaiGraphics_headers
         include/ChaiEngine/UniformBuffer.h
         include/ChaiEngine/RenderCommandList.h
         include/ChaiEngine/RenderCommandCollector.h
+        include/ChaiEngine/RenderFrame.h
         include/ChaiEngine/Vertex.h
         include/Graphics/VertexAttribute.h
         include/Graphics/MaterialParameter.h

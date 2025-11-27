@@ -60,7 +60,9 @@ int main()
 
     //this is the renderer
     auto renderer = chai::ServiceLocator::instance().get<chai::brew::Renderer>();
-    renderer->initialize(windowSystem->getProcAddress());
+    auto surface = windowSystem->createRenderSurface(windowManager->getSystemWindow(mainWindow));
+
+    renderer->initialize(std::move(surface), windowSystem->getProcAddress());
 
     //create viewports to go inside the window
     uint64_t mainVpId = viewportManager.createViewport(mainWindow, {"MainView", 0, 0, 1080, 720});
@@ -193,7 +195,6 @@ int main()
             }
 
             renderer->executeCommands(collector.getCommands());
-            renderer->beginFrame();
         }
 
         //updates and buffer swap

@@ -1,6 +1,7 @@
 #pragma once
 #include <GLFWWindowPluginExport.h>
 #include <Window/WindowSystem.h>
+#include <Window/Window.h>
 #include <Meta/ChaiMacros.h>
 
 struct GLFWwindow;
@@ -23,10 +24,32 @@ namespace chai
         void swapBuffers(void* nativeWindow) override;
 
         void* getProcAddress() override;
+        std::unique_ptr<RenderSurface> createRenderSurface(void* window) override;
+
 
     private:
         GLFWwindow* convertToGLFWWindow(void* nativeWindow);
     };
+
+    class GlfwRenderSurface : public RenderSurface
+    {
+    public:
+        explicit GlfwRenderSurface(GLFWwindow* window) : m_window(window) {}
+
+        void makeCurrent() override;
+
+        void doneCurrent() override;
+
+        void swapBuffers() override;
+
+        int getWidth() const override;
+
+        int getHeight() const override;
+
+    private:
+        GLFWwindow* m_window;
+    };
+
 }
 
 CHAI_PLUGIN_CLASS (GLFWWindowPlugin)

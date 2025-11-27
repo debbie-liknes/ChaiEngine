@@ -1,18 +1,18 @@
-#include <OpenGLRenderer/OpenGLMesh.h>
 #include <OpenGLRenderer/GLHelpers.h>
+#include <OpenGLRenderer/OpenGLMesh.h>
 
 namespace chai
 {
     brew::OpenGLMeshManager::~OpenGLMeshManager()
     {
-        for (auto& [id, meshData] : m_meshCache)
-        {
-            for (auto& [shader, vao] : meshData->vaosPerShader)
-            {
+        for (auto& [id, meshData] : m_meshCache) {
+            for (auto& [shader, vao] : meshData->vaosPerShader) {
                 glDeleteVertexArrays(1, &vao);
             }
-            if (meshData->VBO != 0) glDeleteBuffers(1, &meshData->VBO);
-            if (meshData->EBO != 0) glDeleteBuffers(1, &meshData->EBO);
+            if (meshData->VBO != 0)
+                glDeleteBuffers(1, &meshData->VBO);
+            if (meshData->EBO != 0)
+                glDeleteBuffers(1, &meshData->EBO);
         }
     }
 
@@ -20,33 +20,44 @@ namespace chai
                                                    GLuint shaderProgram,
                                                    const ShaderAsset* shaderAsset)
     {
-        // Check if we already have a VAO for this shader
+        // Check if we already have a VAO
         auto it = meshData->vaosPerShader.find(shaderProgram);
-        if (it != meshData->vaosPerShader.end())
-        {
-            return it->second; // Already exists!
+        if (it != meshData->vaosPerShader.end()) {
+            return it->second;
         }
 
-        // Create new VAO for this mesh+shader pair
         GLuint vao;
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
 
-        // Bind the mesh's VBO and EBO
+        GLint capturedEBO;
+        glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &capturedEBO);
+        std::cout << "After binding VAO " << vao << ", captured EBO is: " << capturedEBO
+                  << std::endl;
+
         glBindBuffer(GL_ARRAY_BUFFER, meshData->VBO);
-        if (meshData->EBO != 0)
-        {
+        if (meshData->EBO != 0) {
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData->EBO);
         }
 
-        // Configure vertex attributes for THIS shader
-        for (const auto& input : shaderAsset->getVertexInputs())
-        {
-            const VertexAttribute* meshAttr =
-                meshData->layout.findAttribute(input.name);
+        // Save current VAO to restore later
+        //GLint previousVAO = 0;
+        //glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &previousVAO);
 
-            if (meshAttr)
-            {
+        // Configure vertex attributes
+        for (const auto& input : shaderAsset->getVertexInputs()) {
+            const VertexAttribute* meshAttr = meshData->layout.findAttribute(input.name);
+            if (!meshAttr) {
+                std::cout << "VAO: no mesh attribute for shader input '" << input.name
+                          << "' (location " << input.location << ")\n";
+                continue;
+            }
+
+            std::cout << "VAO: binding '" << input.name << "' at location " << input.location
+                      << " offset " << meshAttr->offset << " comps "
+                      << meshAttr->getComponentCount() << " stride " << meshData->layout.getStride()
+                      << "\n";
+            if (meshAttr) {
                 glEnableVertexAttribArray(input.location);
                 glVertexAttribPointer(
                     input.location,
@@ -54,15 +65,16 @@ namespace chai
                     toGLType(meshAttr->type),
                     meshAttr->normalized ? GL_TRUE : GL_FALSE,
                     meshData->layout.getStride(),
-                    reinterpret_cast<void*>(static_cast<uintptr_t>(meshAttr->offset))
-                );
+                    reinterpret_cast<void*>(static_cast<uintptr_t>(meshAttr->offset)));
             }
         }
 
+        //glBindVertexArray(previousVAO);
         glBindVertexArray(0);
 
         // Cache this VAO
         meshData->vaosPerShader[shaderProgram] = vao;
+
         return vao;
     }
-}
+} // namespace chai
