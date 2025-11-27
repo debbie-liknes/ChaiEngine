@@ -32,11 +32,6 @@ using namespace std;
 
 const chai::Vec3 WORLD_UP{0.0f, 1.0f, 0.0f};
 
-void addGroundPlane()
-{
-
-}
-
 int main()
 {
     //load common plugins

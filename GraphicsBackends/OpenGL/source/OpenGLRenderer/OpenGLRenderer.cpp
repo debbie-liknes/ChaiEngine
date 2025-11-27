@@ -7,6 +7,9 @@
 
 namespace chai::brew
 {
+    OpenGLBackend::OpenGLBackend(){}
+    OpenGLBackend::~OpenGLBackend() {}
+
     bool OpenGLBackend::initialize(std::unique_ptr<RenderSurface> surface, void* winProcAddress)
     {
         m_winProcAddress = winProcAddress;
@@ -29,17 +32,9 @@ namespace chai::brew
 
     void OpenGLBackend::shutdown()
     {
-        m_surface->doneCurrent();
-
-        std::cout << "Shutting down OpenGL Backend..." << '\n';
-
-        // Wait for all frames to complete
         waitForIdle();
 
-        // Stop render thread
         stopRenderThread();
-
-        std::cout << "OpenGL Backend shutdown complete" << '\n';
     }
 
     // ============================================================================
@@ -60,15 +55,18 @@ namespace chai::brew
 
     void OpenGLBackend::stopRenderThread()
     {
-        if (!m_running.load()) {
+        if (!m_running.load())
             return;
-        }
 
-        // Signal thread to stop
         m_running.store(false);
         m_queueCV.notify_one();
 
-        // Wait for thread to finish
+        // Wait for thread to signal it's done
+        while (!m_threadExited.load()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+
+        // Now safe to detach
         if (m_renderThread.joinable()) {
             m_renderThread.join();
         }
@@ -83,34 +81,28 @@ namespace chai::brew
 
     void OpenGLBackend::renderThreadMain()
     {
-        // Initialize OpenGL context on the render thread
         initializeRenderThread();
 
         while (m_running.load()) {
             RenderFrame frame;
-
-            // Wait for frame to render
             {
                 std::unique_lock<std::mutex> lock(m_queueMutex);
                 m_queueCV.wait(lock, [this] { return !m_frameQueue.empty() || !m_running.load(); });
 
                 if (!m_running.load() && m_frameQueue.empty()) {
-                    break; // Exit thread
+                    std::cout << "Render thread: exiting loop" << std::endl;
+                    break;
                 }
 
                 if (!m_frameQueue.empty()) {
                     frame = std::move(m_frameQueue.front());
                     m_frameQueue.pop();
-
                     m_queueCV.notify_one();
                 }
             }
 
-            // Execute frame
             if (!frame.commands.empty()) {
                 executeFrame(frame);
-
-                // Notify completion
                 {
                     std::lock_guard<std::mutex> lock(m_frameMutex);
                     m_lastCompletedFrame = frame.frameNumber;
@@ -119,8 +111,9 @@ namespace chai::brew
             }
         }
 
-        // Cleanup
         shutdownRenderThread();
+        m_threadExited.store(true);
+        std::cout.flush();
     }
 
     void OpenGLBackend::initializeRenderThread()
@@ -172,11 +165,14 @@ namespace chai::brew
 
     void OpenGLBackend::shutdownRenderThread()
     {
+
         // Delete default shader
         if (defaultShaderProgram != 0) {
             glDeleteProgram(defaultShaderProgram);
             defaultShaderProgram = 0;
         }
+
+        m_surface->doneCurrent();
     }
 
     // ============================================================================

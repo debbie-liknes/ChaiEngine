@@ -30,19 +30,10 @@ namespace chai
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
 
-        GLint capturedEBO;
-        glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &capturedEBO);
-        std::cout << "After binding VAO " << vao << ", captured EBO is: " << capturedEBO
-                  << std::endl;
-
         glBindBuffer(GL_ARRAY_BUFFER, meshData->VBO);
         if (meshData->EBO != 0) {
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData->EBO);
         }
-
-        // Save current VAO to restore later
-        //GLint previousVAO = 0;
-        //glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &previousVAO);
 
         // Configure vertex attributes
         for (const auto& input : shaderAsset->getVertexInputs()) {
@@ -53,10 +44,6 @@ namespace chai
                 continue;
             }
 
-            std::cout << "VAO: binding '" << input.name << "' at location " << input.location
-                      << " offset " << meshAttr->offset << " comps "
-                      << meshAttr->getComponentCount() << " stride " << meshData->layout.getStride()
-                      << "\n";
             if (meshAttr) {
                 glEnableVertexAttribArray(input.location);
                 glVertexAttribPointer(

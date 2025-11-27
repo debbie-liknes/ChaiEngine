@@ -37,6 +37,9 @@ namespace chai::brew
     class OPENGLRENDERER_EXPORT OpenGLBackend : public Renderer
     {
     public:
+        OpenGLBackend();
+        ~OpenGLBackend() override;
+
         bool initialize(std::unique_ptr<RenderSurface> surface, void* winProcAddress) override;
         void shutdown() override;
 
@@ -141,6 +144,8 @@ namespace chai::brew
 
         void* m_winProcAddress = nullptr;
         std::unique_ptr<RenderSurface> m_surface;
+
+        std::atomic<bool> m_threadExited{false};
     };
 }
 

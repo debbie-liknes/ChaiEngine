@@ -14,5 +14,8 @@ add_library(GLFWWindowPlugin SHARED
 )
 
 target_link_libraries(GLFWWindowPlugin PUBLIC WindowModule glfw)
+if(WIN32)
+    target_link_libraries(GLFWWindowPlugin PRIVATE opengl32 gdi32)
+endif()
 
 ChaiPluginDefaults(GLFWWindowPlugin "Window/Plugins")

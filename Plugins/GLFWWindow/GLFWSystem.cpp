@@ -177,7 +177,14 @@ namespace chai
 
     void GlfwRenderSurface::doneCurrent()
     {
-        glfwMakeContextCurrent(nullptr);
+        //This doesnt work the way I expect
+        //glfwMakeContextCurrent(nullptr);
+
+#ifdef _WIN32
+        wglMakeCurrent(NULL, NULL);
+#elif defined(__linux__)
+        glXMakeCurrent(glXGetCurrentDisplay(), None, NULL);
+#endif
     }
 
     void GlfwRenderSurface::swapBuffers()
