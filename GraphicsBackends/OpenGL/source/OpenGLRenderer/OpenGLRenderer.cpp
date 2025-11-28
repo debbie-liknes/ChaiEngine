@@ -426,10 +426,7 @@ namespace chai::brew
                 continue; // Skip this draw
             }
 
-            if (currentVAO != vao) {
-                glBindVertexArray(vao);
-                currentVAO = vao;
-            }
+             glBindVertexArray(vao);
 
             // Bind shader program
             bindShaderProgram(matData->shaderProgram);

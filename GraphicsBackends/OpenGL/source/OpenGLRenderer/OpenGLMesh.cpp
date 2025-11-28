@@ -21,8 +21,8 @@ namespace chai
                                                    const ShaderAsset* shaderAsset)
     {
         // Check if we already have a VAO
-        auto it = meshData->vaosPerShader.find(shaderProgram);
-        if (it != meshData->vaosPerShader.end()) {
+        if (auto it = meshData->vaosPerShader.find(shaderProgram);
+            it != meshData->vaosPerShader.end()) {
             return it->second;
         }
 
@@ -44,16 +44,18 @@ namespace chai
                 continue;
             }
 
-            if (meshAttr) {
-                glEnableVertexAttribArray(input.location);
-                glVertexAttribPointer(
-                    input.location,
-                    meshAttr->getComponentCount(),
-                    toGLType(meshAttr->type),
-                    meshAttr->normalized ? GL_TRUE : GL_FALSE,
-                    meshData->layout.getStride(),
-                    reinterpret_cast<void*>(static_cast<uintptr_t>(meshAttr->offset)));
-            }
+            glEnableVertexAttribArray(input.location);
+            glVertexAttribPointer(
+                input.location,
+                meshAttr->getComponentCount(),
+                toGLType(meshAttr->type),
+                meshAttr->normalized ? GL_TRUE : GL_FALSE,
+                meshData->layout.getStride(),
+                reinterpret_cast<void*>(static_cast<uintptr_t>(meshAttr->offset)));
+
+            // Verify it was enabled
+            GLint enabled = 0;
+            glGetVertexAttribiv(input.location, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &enabled);
         }
 
         //glBindVertexArray(previousVAO);
