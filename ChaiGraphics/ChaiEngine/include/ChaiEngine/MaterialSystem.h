@@ -188,22 +188,6 @@ namespace chai
             return true;
         }
 
-        //static bool validateMaterialAgainstShader(const MaterialAsset* material, const ShaderAsset* shader);
-        //static bool isTypeCompatible(const MaterialParameterValue& value, DataType expectedType);
-
-        /*void createPhongMaterial()
-        {
-            auto matAsset = std::make_unique<chai::MaterialAsset>();
-            matAsset->setParameter("albedoMap", {});
-            matAsset->setParameter("normalMap", {});
-            matAsset->setParameter("roughnessMap", {});
-            matAsset->setParameter("albedoTint", {});
-
-            //matAsset->sh
-
-            m_phongMaterial = AssetManager::instance().add<MaterialAsset>(std::move(matAsset)).value();
-        }*/
-
         void loadPhongShaderDefault()
         {
             auto vertAssetHandle = AssetManager::instance().load<ShaderStageAsset>("shaders/phong.vert").value();
@@ -224,6 +208,7 @@ namespace chai
             shaderAsset->addUniform("u_DiffuseColor", DataType::Float3);
             shaderAsset->addUniform("u_SpecularColor", DataType::Float3);
             shaderAsset->addUniform("u_Shininess", DataType::Float);
+            shaderAsset->addUniform("u_DiffuseMap", DataType::Sampler2D);
 
             m_phongShader = AssetManager::instance().add(std::move(shaderAsset)).value();
         }

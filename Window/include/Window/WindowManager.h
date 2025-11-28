@@ -23,6 +23,7 @@ namespace chai
         WindowManager& operator=(WindowManager&&) = default;
 
         WindowId createWindow(const WindowDesc& desc);
+        void* getSystemWindow(WindowId id);
         void requestClose(WindowId id);
         bool isDone() const;
 
@@ -33,6 +34,5 @@ namespace chai
         std::vector<std::unique_ptr<Window>> m_windows;
 
         Window* findWindowById(WindowId id);
-        //std::vector<std::unique_ptr<WindowEventHandler>> m_globalHandlers;
     };
 }

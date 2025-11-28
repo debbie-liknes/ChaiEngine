@@ -7,6 +7,7 @@ namespace chai
     class Window;
     struct WindowDesc;
     class WindowManager;
+    class RenderSurface;
 
     // Main window system
     class WINDOWMODULE_EXPORT WindowSystem
@@ -33,5 +34,7 @@ namespace chai
         0;
         virtual void destroyWindow(void* nativeWindow) = 0;
         virtual void destroyAllWindows() = 0;
+
+        virtual std::unique_ptr<RenderSurface> createRenderSurface(void* window) = 0;
     };
 }

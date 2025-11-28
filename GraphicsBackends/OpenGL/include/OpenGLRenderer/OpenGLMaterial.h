@@ -122,12 +122,13 @@ namespace chai::brew
                 {
                     glMaterialData->uniformLocations[paramName] = location;
 
-                    /*if (std::holds_alternative<Handle>(paramValue)) {
-                        Handle texHandle = std::get<Handle>(paramValue);
+                    if (std::holds_alternative<ResourceHandle>(paramValue)) {
+                        ResourceHandle texHandle = std::get<ResourceHandle>(paramValue);
                         if (texHandle.isValid()) {
                             glMaterialData->textures[paramName] = texHandle;
+                            continue;
                         }
-                    }*/
+                    }
 
                     if (materialInstance && materialInstance->hasOverride(paramName))
                     {

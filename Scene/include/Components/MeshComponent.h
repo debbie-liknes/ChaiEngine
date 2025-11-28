@@ -3,6 +3,7 @@
 #include <Components/RenderableComponent.h>
 #include <ChaiEngine/IMesh.h>
 #include <Asset/AssetHandle.h>
+#include <ChaiEngine/PipelineState.h>
 
 namespace chai::cup
 {
@@ -23,8 +24,9 @@ namespace chai::cup
             return m_materialInstance;
         }
 
+        PipelineState& getPipelineState() { return m_pipelineState; }
+
         //private:
-        // Somewhere in your material system
         static ResourceHandle createMeshResourceFromAsset(const MeshAsset* asset);
         //static ResourceHandle createMaterialResourceFromAsset(const MaterialAsset* asset);
 
@@ -33,5 +35,7 @@ namespace chai::cup
         ResourceHandle m_meshResource;
         ResourceHandle m_materialResource;
         ResourceHandle m_materialInstance;
+
+        PipelineState m_pipelineState;
     };
 }

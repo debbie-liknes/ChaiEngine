@@ -12,6 +12,8 @@ layout(std140, binding = 0) uniform PerFrameUniforms
     mat4 u_projection;
 };
 
+layout(binding = 1) uniform sampler2D u_DiffuseMap;
+
 struct ShaderLightData {
     vec4 positionAndType;// xyz = pos/dir, w = type
     vec4 color;// rgb = color, a = intensity
@@ -96,17 +98,17 @@ vec3 CalculateLight(ShaderLightData light, vec3 worldPos, vec3 normal, vec3 view
 
 void main()
 {
-    // Use your diffuse color as albedo for now
     vec3 albedo = u_DiffuseColor;
+    vec3 texColor = texture(u_DiffuseMap, v_TexCoord).rgb;
+    albedo *= texColor;
 
-    // Normalize normal
+    // Normalize
     vec3 normal = normalize(v_Normal);
 
-    // Get camera position from view matrix inverse
     vec3 viewPos = vec3(inverse(u_view)[3]);
     vec3 viewDir = normalize(viewPos - v_FragPos);
 
-    // Ambient lighting (simple constant for now)
+    // Ambient lighting
     vec3 ambient = albedo * 0.03;
 
     // Accumulate light contributions
@@ -124,4 +126,5 @@ void main()
 
     // Final color
     FragColor = vec4(lighting, 1.0);
+    //FragColor = vec4(v_TexCoord, 0.0, 1.0);
 }

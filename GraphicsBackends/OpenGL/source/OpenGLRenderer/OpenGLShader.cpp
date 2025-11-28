@@ -57,14 +57,9 @@ namespace chai::brew
         shaderData->program = program;
         shaderData->shaderAssetHandle = shaderAssetHandle;
 
-        /*for (auto& un : shaderAsset->getVertexInputs()) {
-			shaderData->uniformLocations[un->name] = glGetUniformLocation(program, un->name.c_str());
-		}*/
-
-        // For now, hardcode common ones
-        shaderData->uniformLocations["u_DiffuseColor"] = glGetUniformLocation(program, "u_DiffuseColor");
-        shaderData->uniformLocations["u_SpecularColor"] = glGetUniformLocation(program, "u_SpecularColor");
-        shaderData->uniformLocations["u_Shininess"] = glGetUniformLocation(program, "u_Shininess");
+        for (auto& un : shaderAsset->getUniforms()) {
+            shaderData->uniformLocations[un.name] = glGetUniformLocation(program, un.name.c_str());
+        }
 
         m_programToShaderData[program] = std::move(shaderData);
 

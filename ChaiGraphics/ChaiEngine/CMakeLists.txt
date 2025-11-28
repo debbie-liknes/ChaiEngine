@@ -12,11 +12,10 @@ set(ChaiGraphics_headers
         include/ChaiEngine/Renderer.h
         include/ChaiEngine/PipelineState.h
         include/ChaiEngine/PipelineCache.h
-        include/ChaiEngine/ShaderProgram.h
-        include/ChaiEngine/ShaderCache.h
         include/ChaiEngine/UniformBuffer.h
         include/ChaiEngine/RenderCommandList.h
         include/ChaiEngine/RenderCommandCollector.h
+        include/ChaiEngine/RenderFrame.h
         include/ChaiEngine/Vertex.h
         include/Graphics/VertexAttribute.h
         include/Graphics/MaterialParameter.h

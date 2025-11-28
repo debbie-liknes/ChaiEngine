@@ -26,15 +26,11 @@
 #include <ChaiEngine/MaterialSystem.h>
 
 #include "Graphics/ShaderAsset.h"
+#include "Scene/Skybox.h"
 
 using namespace std;
 
 const chai::Vec3 WORLD_UP{0.0f, 1.0f, 0.0f};
-
-void addGroundPlane()
-{
-
-}
 
 int main()
 {
@@ -59,7 +55,9 @@ int main()
 
     //this is the renderer
     auto renderer = chai::ServiceLocator::instance().get<chai::brew::Renderer>();
-    renderer->initialize(windowSystem->getProcAddress());
+    auto surface = windowSystem->createRenderSurface(windowManager->getSystemWindow(mainWindow));
+
+    renderer->initialize(std::move(surface), windowSystem->getProcAddress());
 
     //create viewports to go inside the window
     uint64_t mainVpId = viewportManager.createViewport(mainWindow, {"MainView", 0, 0, 1080, 720});
@@ -82,13 +80,14 @@ int main()
 
     auto phong = chai::MaterialSystem::instance().getPhongShader();
 
-    auto material = chai::MaterialSystem::Builder(phong)
-    .setVec3("u_DiffuseColor", chai::Vec3(0.5, 0.5, 0.5))
-    .setVec3("u_SpecularColor", chai::Vec3(0.5, 0.5, 0.5))
-    .setFloat("u_Shininess", 0.5f)
-    .build();
+    auto textureResource = chai::loadTexture("assets/tardis.png");
 
-    //auto textureResource = chai::loadTexture("assets/tardis.png");
+    auto material = chai::MaterialSystem::Builder(phong)
+    .setVec3("u_DiffuseColor", chai::Vec3(1.0, 1.0, 1.0))
+    .setVec3("u_SpecularColor", chai::Vec3(1.0, 1.0, 1.0))
+    .setFloat("u_Shininess", 64.f)
+    .setTexture("u_DiffuseMap", textureResource.value())
+    .build();
 
     auto materialInstance = std::make_unique<chai::MaterialInstance>(material);
 
@@ -97,7 +96,7 @@ int main()
         chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance)));
 
     groundPlane->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{0.0, -15.0, 0.0});
-    groundPlane->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3{100, 100, 100});
+    groundPlane->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3{20, 20, 20});
 
     auto model = std::make_unique<chai::cup::GameObject>();
     auto* modelMesh = model->addComponent<chai::cup::MeshComponent>(model.get());
@@ -105,12 +104,12 @@ int main()
     modelMesh->setMesh(modelMeshAsset.value());
 
     auto mat2 = chai::MaterialSystem::Builder(phong)
-    .setVec3("u_DiffuseColor", chai::Vec3(1.0, 1.0, 0.0))
-    .setVec3("u_SpecularColor", chai::Vec3(0.5, 0.5, 0.5))
-    .setFloat("u_Shininess", 0.5f)
+    .setVec3("u_DiffuseColor", chai::Vec3(0.0, 1.0, 1.0))
+    .setVec3("u_SpecularColor", chai::Vec3(1.0, 1.0, 1.0))
+    .setFloat("u_Shininess", 16.f)
+    .setTexture("u_DiffuseMap", chai::getDefaultWhiteTexture())
     .build();
 
-    //auto textureResource = chai::loadTexture("assets/tardis.png");
 
     auto materialInstance2 = std::make_unique<chai::MaterialInstance>(mat2);
 
@@ -140,6 +139,7 @@ int main()
     vp->setCamera(camComponent->getCamera());
 
     //add the objects to the scene
+    testScene->addGameObject(std::make_unique<chai::cup::Skybox>());
     testScene->addGameObject(std::move(groundPlane));
     testScene->addGameObject(std::move(model));
     testScene->addGameObject(std::move(cameraObject));
@@ -190,7 +190,6 @@ int main()
             }
 
             renderer->executeCommands(collector.getCommands());
-            renderer->beginFrame();
         }
 
         //updates and buffer swap

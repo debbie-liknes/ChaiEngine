@@ -19,7 +19,7 @@ namespace chai::cup
         explicit LightComponent(GameObject* owner = nullptr);
         LightType type = LightType::DIRECTIONAL;
         Vec3 color = Vec3(1.0f, 1.0f, 1.0f);
-        float intensity = 0.7f;
+        float intensity = 3.f;
 
         // For point/spot lights
         float range = 10.0f;

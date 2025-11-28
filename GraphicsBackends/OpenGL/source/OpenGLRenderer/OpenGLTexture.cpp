@@ -1,5 +1,6 @@
 #include <OpenGLRenderer/OpenGLTexture.h>
 #include <OpenGLRenderer/GLHelpers.h>
+#include <Graphics/TextureAsset.h>
 
 namespace chai::brew
 {
@@ -13,7 +14,7 @@ namespace chai::brew
         }
     }
 
-    OpenGLTextureData* OpenGLTextureManager::getOrCreateTextureData(Handle texHandle)
+    OpenGLTextureData* OpenGLTextureManager::getOrCreateTextureData(ResourceHandle texHandle)
     {
         auto it = m_textureCache.find(texHandle.index);
         if (it == m_textureCache.end()) {
@@ -25,26 +26,28 @@ namespace chai::brew
         return it->second.get();
     }
 
-    bool OpenGLTextureManager::uploadTexture(Handle texHandle, OpenGLTextureData* texData)
+    bool OpenGLTextureManager::uploadTexture(ResourceHandle texHandle, OpenGLTextureData* texData)
     {
-        /*if (!texData) {
+        if (!texData) {
             std::cerr << "OpenGLTextureManager::uploadTexture: null texture data" << std::endl;
             return false;
         }
 
-        const auto* texResource = ResourceManager::instance().getResource<TextureResource>(
+        auto* texResource = ResourceManager::instance().getResource<TextureResource>(
             texHandle);
         if (!texResource) {
             std::cerr << "OpenGLTextureManager::uploadTexture: invalid texture handle" << std::endl;
             return false;
         }
 
+        if (texResource->getType() == TextureType::TexCube) {
+            texData->target = GL_TEXTURE_CUBE_MAP;
+        } else {
+            texData->target = GL_TEXTURE_2D;
+        }
+
         // Determine formats from resource
         determineFormats(texResource, texData);
-
-        // Store dimensions
-        texData->width = texResource->width;
-        texData->height = texResource->height;
 
         // Generate texture handle
         if (texData->texture == 0) {
@@ -56,27 +59,60 @@ namespace chai::brew
         glBindTexture(texData->target, texData->texture);
         checkGLError("glBindTexture");
 
-        // Upload texture data
-        glTexImage2D(
-            texData->target,
-            0,
-            // Mip level 0 (base)
-            texData->internalFormat,
-            // GPU internal format
-            texData->width,
-            texData->height,
-            0,
-            // Border (must be 0)
-            texData->format,
-            // Source data format
-            texData->type,
-            // Source data type
-            texResource->data.data() // Pixel data
-            );
-        checkGLError("glTexImage2D");
+        if (texResource->getType() == TextureType::Tex2D) {
+            // Store dimensions
+            texData->width = texResource->getWidth();
+            texData->height = texResource->getHeight();
+
+            // Upload texture data
+            glTexImage2D(
+                texData->target,
+                0,
+                // Mip level 0 (base)
+                texData->internalFormat,
+                // GPU internal format
+                texData->width,
+                texData->height,
+                0,
+                // Border (must be 0)
+                texData->format,
+                // Source data format
+                texData->type,
+                // Source data type
+                texResource->getPixels() // Pixel data
+                );
+            checkGLError("glTexImage2D");
+        }
+        else if (texResource->getType() == TextureType::TexCube) {
+            texData->width = texResource->getWidth();
+            texData->height = texResource->getHeight();
+
+            const size_t faceCount = texResource->getFaceCount();
+            if (faceCount != 6) {
+                std::cerr << "Cubemap texture must have 6 faces, got " << faceCount << "\n";
+                return false;
+            }
+
+            for (int i = 0; i < 6; i++) {
+                const auto& face = texResource->getFace(i);
+
+                glTexImage2D(
+                    GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                    0,
+                    texData->internalFormat,
+                    face.width,
+                    face.height,
+                    0,
+                    texData->format,
+                    texData->type,
+                    face.pixels.data()
+                );
+                checkGLError("glTexImage2D (cube face)");
+            }
+        }
 
         // Generate mipmaps if requested
-        if (texResource->generateMipmaps) {
+        /*if (texResource->generateMipmaps) {
             glGenerateMipmap(texData->target);
             checkGLError("glGenerateMipmap");
             texData->hasMipmaps = true;
@@ -86,7 +122,7 @@ namespace chai::brew
                                      std::floor(
                                          std::log2(std::max(texData->width, texData->height)))
                                  );
-        }
+        }*/
 
         // Configure texture parameters
         configureTextureParameters(texData, texResource);
@@ -100,15 +136,14 @@ namespace chai::brew
             << " (" << (texData->hasMipmaps ? "with mipmaps" : "no mipmaps") << ")"
             << std::endl;
 
-        return true;*/
         return true;
     }
 
-    void OpenGLTextureManager::determineFormats(const TextureAsset* texResource,
+    void OpenGLTextureManager::determineFormats(const TextureResource* texResource,
                                                 OpenGLTextureData* texData)
     {
-        /*// Determine format based on channel count
-        switch (texResource->channels) {
+        // Determine format based on channel count
+        switch (texResource->getChannels()) {
             case 1: // Grayscale
                 texData->format = GL_RED;
                 texData->internalFormat = GL_R8;
@@ -119,26 +154,26 @@ namespace chai::brew
                 break;
             case 3: // RGB
                 texData->format = GL_RGB;
-                texData->internalFormat = texResource->isSRGB ? GL_SRGB8 : GL_RGB8;
+                texData->internalFormat = texResource->getColorSpace() == ColorSpace::SRGB ? GL_SRGB8 : GL_RGB8;
                 break;
             case 4: // RGBA
                 texData->format = GL_RGBA;
-                texData->internalFormat = texResource->isSRGB ? GL_SRGB8_ALPHA8 : GL_RGBA8;
+                texData->internalFormat = texResource->getColorSpace() == ColorSpace::SRGB ? GL_SRGB8_ALPHA8 : GL_RGBA8;
                 break;
             default:
-                std::cerr << "Unsupported channel count: " << texResource->channels << std::endl;
+                std::cerr << "Unsupported channel count: " << texResource->getChannels() << std::endl;
                 texData->format = GL_RGBA;
                 texData->internalFormat = GL_RGBA8;
         }
 
         // Data type (could be extended for HDR, etc.)
-        texData->type = GL_UNSIGNED_BYTE;*/
+        texData->type = GL_UNSIGNED_BYTE;
     }
 
     void OpenGLTextureManager::configureTextureParameters(OpenGLTextureData* texData,
-                                                          const TextureAsset* texResource)
+                                                          const TextureResource* texResource)
     {
-        /*GLenum target = texData->target;
+        GLenum target = texData->target;
 
         // Filtering
         if (texData->hasMipmaps) {
@@ -155,21 +190,33 @@ namespace chai::brew
         // Wrapping mode
         GLenum wrapS = GL_REPEAT;
         GLenum wrapT = GL_REPEAT;
+        GLenum wrapR = GL_REPEAT;
 
-        // Map from resource wrap mode to OpenGL
-        if (texResource->wrapMode == TextureWrapMode::Clamp) {
-            wrapS = wrapT = GL_CLAMP_TO_EDGE;
-        } else if (texResource->wrapMode == TextureWrapMode::Mirror) {
-            wrapS = wrapT = GL_MIRRORED_REPEAT;
+        if (target == GL_TEXTURE_CUBE_MAP) {
+            // Cubemaps should basically always clamp
+            wrapS = GL_CLAMP_TO_EDGE;
+            wrapT = GL_CLAMP_TO_EDGE;
+            wrapR = GL_CLAMP_TO_EDGE;
         }
-        // Default is GL_REPEAT (already set)
+        else {
+            // Map from resource wrap mode to OpenGL
+            if (texResource->getWrapMode() == TextureWrapMode::Clamp) {
+                wrapS = wrapT = GL_CLAMP_TO_EDGE;
+            } else if (texResource->getWrapMode() == TextureWrapMode::Mirror) {
+                wrapS = wrapT = GL_MIRRORED_REPEAT;
+            }
+        }
+
 
         glTexParameteri(target, GL_TEXTURE_WRAP_S, wrapS);
         glTexParameteri(target, GL_TEXTURE_WRAP_T, wrapT);
+        if (target == GL_TEXTURE_CUBE_MAP) {
+            glTexParameteri(target, GL_TEXTURE_WRAP_R, wrapR);
+        }
         checkGLError("texture wrapping");
 
         // Anisotropic filtering (if supported and requested)
-        if (texResource->useAnisotropicFiltering) {
+        /*if (texResource->useAnisotropicFiltering) {
             GLfloat maxAnisotropy = 0.0f;
             glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
             if (maxAnisotropy > 1.0f) {
