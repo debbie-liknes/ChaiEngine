@@ -138,7 +138,7 @@ namespace chai::brew
         std::cout << "Creating common uniforms..." << '\n';
 
         m_perFrameUBOData = createUniform<CommonUniforms>();
-        m_perFrameUBOData->setValue({Mat4::identity(), Mat4::identity()});
+        m_perFrameUBOData->setValue({Mat4::identity(), Mat4::identity(), Mat4::identity()});
 
         m_perDrawUBOData = createUniform<DrawUniforms>();
         m_perDrawUBOData->setValue(DrawUniforms{Mat4::identity(), Mat4::identity()});
@@ -224,7 +224,8 @@ namespace chai::brew
                     int x, y, width, height;
                     cmd.viewport->getViewport(x, y, width, height);
                     glViewport(x, y, width, height);
-                    m_perFrameUBOData->setValue({cmd.viewMatrix, cmd.projectionMatrix});
+                    m_perFrameUBOData->setValue(
+                        {cmd.viewMatrix, cmd.projectionMatrix, cmd.viewMatrix.inverse()});
                 } break;
 
                 case RenderCommand::CLEAR:

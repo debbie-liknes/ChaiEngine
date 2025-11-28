@@ -78,16 +78,18 @@ int main()
     auto meshAsset = chai::AssetManager::instance().load<chai::MeshAsset>("assets/plane.obj");
     meshComp->setMesh(meshAsset.value());
 
-    auto phong = chai::MaterialSystem::instance().getPhongShader();
+    auto pbr = chai::MaterialSystem::instance().getPBRShader();
 
     auto textureResource = chai::loadTexture("assets/tardis.png");
 
-    auto material = chai::MaterialSystem::Builder(phong)
-    .setVec3("u_DiffuseColor", chai::Vec3(1.0, 1.0, 1.0))
-    .setVec3("u_SpecularColor", chai::Vec3(1.0, 1.0, 1.0))
-    .setFloat("u_Shininess", 64.f)
-    .setTexture("u_DiffuseMap", textureResource.value())
-    .build();
+    auto material = chai::MaterialSystem::Builder(pbr)
+        .setVec3("u_albedo", chai::Vec3(1.0, 1.0, 1.0))
+        .setTexture("u_albedoMap", textureResource.value())
+        .setFloat("u_metallic", 1.f)
+        .setTexture("u_metallicMap", chai::getDefaultWhiteTexture())
+        .setFloat("u_roughness", 1.f)
+        .setTexture("u_roughnessMap", chai::getDefaultWhiteTexture())
+        .build();
 
     auto materialInstance = std::make_unique<chai::MaterialInstance>(material);
 
@@ -103,12 +105,14 @@ int main()
     auto modelMeshAsset = chai::AssetManager::instance().load<chai::MeshAsset>("assets/suzanne.obj");
     modelMesh->setMesh(modelMeshAsset.value());
 
-    auto mat2 = chai::MaterialSystem::Builder(phong)
-    .setVec3("u_DiffuseColor", chai::Vec3(0.0, 1.0, 1.0))
-    .setVec3("u_SpecularColor", chai::Vec3(1.0, 1.0, 1.0))
-    .setFloat("u_Shininess", 16.f)
-    .setTexture("u_DiffuseMap", chai::getDefaultWhiteTexture())
-    .build();
+    auto mat2 = chai::MaterialSystem::Builder(pbr)
+        .setVec3("u_albedo", chai::Vec3(0.0, 1.0, 1.0))
+        .setTexture("u_albedoMap", chai::getDefaultWhiteTexture())
+        .setFloat("u_metallic", 1.f)
+        .setTexture("u_metallicMap", chai::getDefaultWhiteTexture())
+        .setFloat("u_roughness", 1.f)
+        .setTexture("u_roughnessMap", chai::getDefaultWhiteTexture())
+        .build();
 
 
     auto materialInstance2 = std::make_unique<chai::MaterialInstance>(mat2);
@@ -130,10 +134,11 @@ int main()
     //add some lighting so we can see
     auto lightObject = std::make_unique<chai::cup::GameObject>();
     lightObject->getComponent<chai::cup::TransformComponent>()->setPosition(
-        chai::Vec3{-5.0, 5.0, -5.0});
+        chai::Vec3{-5.0, 5.0, 5.0});
     lightObject->getComponent<chai::cup::TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0},
         WORLD_UP);
-    lightObject->addComponent<chai::cup::LightComponent>(lightObject.get());
+    auto lightComp = lightObject->addComponent<chai::cup::LightComponent>(lightObject.get());
+    lightComp->intensity = 10.f;
 
     //set up viewport camera association
     vp->setCamera(camComponent->getCamera());

@@ -24,8 +24,9 @@ namespace chai::brew
 {
     struct CommonUniforms
     {
-        chai::Mat4 view; // 64 bytes
+        Mat4 view; // 64 bytes
         Mat4 projection; // 64 bytes
+        Mat4 invView; // 64 bytes
     };
 
     struct DrawUniforms

@@ -161,6 +161,8 @@ namespace chai
             return m_phongShader;
         }
 
+        AssetHandle getPBRShader() { return m_pbrShader; }
+
         AssetHandle getPhongMaterial()
         {
             return m_phongMaterial;
@@ -213,7 +215,37 @@ namespace chai
             m_phongShader = AssetManager::instance().add(std::move(shaderAsset)).value();
         }
 
+        void loadPBRDefault()
+        {
+            auto vertAssetHandle =
+                AssetManager::instance().load<ShaderStageAsset>("shaders/pbr.vert").value();
+            auto fragAssetHandle =
+                AssetManager::instance().load<ShaderStageAsset>("shaders/pbr.frag").value();
+
+            // Get the loaded stage assets
+            auto vertAsset = AssetManager::instance().get<ShaderStageAsset>(vertAssetHandle);
+            auto fragAsset = AssetManager::instance().get<ShaderStageAsset>(fragAssetHandle);
+
+            auto shaderAsset = std::make_unique<ShaderAsset>("pbr_shader");
+            shaderAsset->addStage(*vertAsset);
+            shaderAsset->addStage(*fragAsset);
+
+            shaderAsset->addVertexInput("a_Position", 0, DataType::Float3);
+            shaderAsset->addVertexInput("a_Normal", 1, DataType::Float3);
+            shaderAsset->addVertexInput("a_TexCoord", 2, DataType::Float2);
+
+            shaderAsset->addUniform("u_albedo", DataType::Float3);
+            shaderAsset->addUniform("u_albedoMap", DataType::Sampler2D);
+            shaderAsset->addUniform("u_metallic", DataType::Float);
+            shaderAsset->addUniform("u_metallicMap", DataType::Sampler2D);
+            shaderAsset->addUniform("u_roughness", DataType::Float);
+            shaderAsset->addUniform("u_roughnessMap", DataType::Sampler2D);
+
+            m_pbrShader = AssetManager::instance().add(std::move(shaderAsset)).value();
+        }
+
         AssetHandle m_phongShader;
+        AssetHandle m_pbrShader;
         AssetHandle m_phongMaterial;
     };
 }
