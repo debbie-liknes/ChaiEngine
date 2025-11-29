@@ -444,7 +444,10 @@ namespace chai::brew
 
             // Draw
             if (meshData->indexCount > 0) {
-                glDrawElements(GL_TRIANGLES, meshData->indexCount, GL_UNSIGNED_INT, nullptr);
+                glDrawElements(GL_TRIANGLES,
+                               cmd.indexCount,
+                               GL_UNSIGNED_INT,
+                               (void*)(cmd.indexOffset * sizeof(uint32_t)));
             } else {
                 glDrawArrays(GL_TRIANGLES, 0, meshData->vertexCount);
             }

@@ -14,9 +14,10 @@ namespace chai::brew
             // Disable blending by default
             glDisable(GL_BLEND);
 
-            m_currentRasterState.cullMode = RasterizerState::CullMode::Back;
-            glEnable(GL_CULL_FACE);
-            glCullFace(GL_BACK);
+            m_currentRasterState.cullMode = RasterizerState::CullMode::None;
+            glDisable(GL_CULL_FACE);
+            //glEnable(GL_CULL_FACE);
+            glCullFace(GL_NONE);
             m_currentRasterState.frontFace = RasterizerState::FrontFace::CounterClockwise;
             glFrontFace(GL_CCW);
 

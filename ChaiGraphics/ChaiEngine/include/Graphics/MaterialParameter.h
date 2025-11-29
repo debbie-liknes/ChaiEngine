@@ -3,6 +3,7 @@
 #include <variant>
 #include <vector>
 #include <Graphics/GraphicsTypes.h>
+#include <Asset/AssetHandle.h>
 
 namespace chai
 {

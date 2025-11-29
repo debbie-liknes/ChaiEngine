@@ -11,7 +11,13 @@ namespace chai::cup
     {
     public:
         GameObject();
+        GameObject(const std::string& name);
         ~GameObject() = default;
+
+        void setParent(GameObject* parent);
+        GameObject* getParent() const;
+        void addChild(std::unique_ptr<GameObject> child);
+        const std::vector<GameObject*>& getChildren() const;
 
         //TODO: make sure its a Component base child
         template <typename T>
@@ -81,5 +87,10 @@ namespace chai::cup
     private:
         std::vector<std::unique_ptr<Component>> m_components;
         std::unique_ptr<ControllerComponent> controllerComponent;
+        std::string m_name;
+
+        //hierarchy
+        GameObject* m_parent = nullptr;
+        std::vector<GameObject*> m_children;
     };
 }

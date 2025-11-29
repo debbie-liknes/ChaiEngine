@@ -111,14 +111,14 @@ namespace chai
         }
 
         MeshAsset::MeshData meshData{};
-        meshData.positons.reserve(vertices.size());
+        meshData.positions.reserve(vertices.size());
         meshData.normals.reserve(vertices.size());
         meshData.uvs.reserve(vertices.size());
         meshData.indices.reserve(indices.size());
 
         for (auto& m : vertices)
         {
-            meshData.positons.push_back(m.position);
+            meshData.positions.push_back(m.position);
             meshData.normals.push_back(m.normal);
             meshData.uvs.push_back(m.uv);
         }

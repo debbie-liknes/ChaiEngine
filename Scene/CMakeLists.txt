@@ -14,6 +14,7 @@ set(ChaiScene_headers
         include/Scene/GameObject.h
         include/Scene/Scene.h
         include/Scene/SceneManager.h
+        include/Scene/Skybox.h
 )
 
 set(ChaiScene_source
@@ -27,7 +28,6 @@ set(ChaiScene_source
         source/Scene/GameObject.cpp
         source/Scene/Scene.cpp
         source/Scene/SceneManager.cpp
-        include/Scene/Skybox.h
         source/Scene/Skybox.cpp
 )
 

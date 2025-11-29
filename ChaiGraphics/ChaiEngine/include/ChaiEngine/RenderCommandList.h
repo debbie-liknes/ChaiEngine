@@ -31,5 +31,7 @@ namespace chai::brew
         Mat4 projectionMatrix{1.f};
         std::vector<Light> lights;
         PipelineState pipelineState;
+        uint32_t indexOffset{0};
+        uint32_t indexCount{0};
     };
 }

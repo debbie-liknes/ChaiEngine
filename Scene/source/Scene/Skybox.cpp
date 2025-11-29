@@ -31,7 +31,7 @@ namespace chai::cup
         m_meshComponent->getPipelineState().depthStencilState.depthCompareOp = DepthStencilState::CompareOp::LessEqual;
 
         // Customize instance
-        m_meshComponent->setMaterial(
+        m_meshComponent->setMaterialInstance(
             chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance)));
     }
 

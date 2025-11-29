@@ -15,8 +15,14 @@ namespace chai::cup
         Mat4 getLocalMatrix() const;
         Mat4 getWorldMatrix() const;
 
+        void setLocalMatrix(const Mat4& matrix);
+
         void setPosition(chai::Vec3 newPos);
         void setRotationEuler(chai::Vec3 newRot);
+        void setRotation(const Quat& rot)
+        {
+            m_rotation = rot;
+        }
         void setScale(chai::Vec3 newScale);
 
         Vec3 up() const;
@@ -29,7 +35,6 @@ namespace chai::cup
         void lookAt(const Vec3& target, const Vec3& worldUp);
 
     private:
-        TransformComponent* m_parent{nullptr};
         Vec3 m_position{0.0f, 0.0f, 0.0f};
         Quat m_rotation{0.0f, 0.0f, 0.0f, 0.0f}; // w, x, y, z
         Vec3 m_scale{1.0f, 1.0f, 1.0f};

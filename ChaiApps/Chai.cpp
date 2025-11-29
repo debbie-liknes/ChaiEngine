@@ -37,6 +37,12 @@ int main()
     //load common plugins
     chai::kettle::PluginRegistry::instance().loadPluginsInDirectory("plugins");
 
+    chai::AssetManager::instance().addSearchPath("./assets");
+    chai::AssetManager::instance().addSearchPath("./resources");
+    chai::AssetManager::instance().addSearchPath(RESOURCE_PATH);
+    // For development, maybe add the source directory
+    //chai::AssetManager::instance().addSearchPath(PROJECT_SOURCE_DIR "/assets");
+
     //create window system and manager
     auto windowSystem = chai::ServiceLocator::instance().get<chai::WindowSystem>();
     auto windowManager = std::make_unique<chai::WindowManager>(windowSystem);
@@ -72,56 +78,12 @@ int main()
     sceneManager.addScene("TestScene", std::make_unique<chai::cup::Scene>());
     chai::cup::Scene* testScene = sceneManager.setActiveScene("TestScene");
 
-    //make a ground plane
-    auto groundPlane = std::make_unique<chai::cup::GameObject>();
-    auto* meshComp = groundPlane->addComponent<chai::cup::MeshComponent>(groundPlane.get());
-    auto meshAsset = chai::AssetManager::instance().load<chai::MeshAsset>("assets/plane.obj");
-    meshComp->setMesh(meshAsset.value());
-
-    auto pbr = chai::MaterialSystem::instance().getPBRShader();
-
-    auto textureResource = chai::loadTexture("assets/tardis.png");
-
-    auto material = chai::MaterialSystem::Builder(pbr)
-        .setVec3("u_albedo", chai::Vec3(1.0, 1.0, 1.0))
-        .setTexture("u_albedoMap", textureResource.value())
-        .setFloat("u_metallic", 1.f)
-        .setTexture("u_metallicMap", chai::getDefaultWhiteTexture())
-        .setFloat("u_roughness", 1.f)
-        .setTexture("u_roughnessMap", chai::getDefaultWhiteTexture())
-        .build();
-
-    auto materialInstance = std::make_unique<chai::MaterialInstance>(material);
-
-    // Customize instance
-    meshComp->setMaterial(
-        chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance)));
-
-    groundPlane->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{0.0, -15.0, 0.0});
-    groundPlane->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3{20, 20, 20});
-
-    auto model = std::make_unique<chai::cup::GameObject>();
-    auto* modelMesh = model->addComponent<chai::cup::MeshComponent>(model.get());
-    auto modelMeshAsset = chai::AssetManager::instance().load<chai::MeshAsset>("assets/suzanne.obj");
-    modelMesh->setMesh(modelMeshAsset.value());
-
-    auto mat2 = chai::MaterialSystem::Builder(pbr)
-        .setVec3("u_albedo", chai::Vec3(0.0, 1.0, 1.0))
-        .setTexture("u_albedoMap", chai::getDefaultWhiteTexture())
-        .setFloat("u_metallic", 1.f)
-        .setTexture("u_metallicMap", chai::getDefaultWhiteTexture())
-        .setFloat("u_roughness", 1.f)
-        .setTexture("u_roughnessMap", chai::getDefaultWhiteTexture())
-        .build();
-
-
-    auto materialInstance2 = std::make_unique<chai::MaterialInstance>(mat2);
-
-    // Customize instance
-    modelMesh->setMaterial(
-        chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance2)));
-
-    model->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{0.0, 0.0, 0.0});
+    auto modelAsset = chai::AssetManager::instance().load<chai::ModelAsset>("assets/Sponza/glTF/Sponza.gltf");
+    auto sponza = testScene->createModelObject("SponzaRoot", modelAsset.value());
+    //chai::Mat4 correction = glm::rotate(Mat4(1.0f), glm::radians(-90.0f), Vec3(1, 0, 0));
+    sponza->getComponent<chai::cup::TransformComponent>()->setRotation(
+        chai::Quat::fromEulerZYX(45.0f, 45.0f, 0.0f));
+    sponza->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3(0.01, 0.01, 0.01));
 
     //add a camera to look through
     auto cameraObject = std::make_unique<chai::cup::GameObject>();
@@ -145,8 +107,6 @@ int main()
 
     //add the objects to the scene
     testScene->addGameObject(std::make_unique<chai::cup::Skybox>());
-    testScene->addGameObject(std::move(groundPlane));
-    testScene->addGameObject(std::move(model));
     testScene->addGameObject(std::move(cameraObject));
     testScene->addGameObject(std::move(lightObject));
 

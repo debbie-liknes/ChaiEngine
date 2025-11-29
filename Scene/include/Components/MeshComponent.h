@@ -14,28 +14,45 @@ namespace chai::cup
         ~MeshComponent() override;
 
         void setMesh(AssetHandle meshAsset);
-        void setMaterial(ResourceHandle material);
-        ResourceHandle getMeshResource();
-
+        ResourceHandle getMesh() { return m_meshResource; }
         ResourceHandle getMesh() const { return m_meshResource; }
 
-        ResourceHandle getMaterialInstance() const
+        // Override material for all submeshes
+        void setMaterial(AssetHandle material);
+        void setMaterial(ResourceHandle material);
+        void setMaterialInstance(ResourceHandle material);
+
+        void setMaterial(size_t submeshIndex, AssetHandle material);
+        void setMaterial(size_t submeshIndex, ResourceHandle material);
+
+        ResourceHandle getMaterial(int i)
         {
-            return m_materialInstance;
+            if (m_useSingleMaterial)
+            {
+                if (m_materialInstance.isValid())
+                    return m_materialInstance;
+                else
+                    return m_singleMaterial;
+            }
+
+            return m_materialOverrides[i];
         }
 
         PipelineState& getPipelineState() { return m_pipelineState; }
 
-        //private:
-        static ResourceHandle createMeshResourceFromAsset(const MeshAsset* asset);
-        //static ResourceHandle createMaterialResourceFromAsset(const MaterialAsset* asset);
-
-
     private:
+        static ResourceHandle createMeshResourceFromAsset(const MeshAsset* asset);
+        static ResourceHandle createMeshResourceFromAsset(AssetHandle asset);
+
+        static ResourceHandle createMaterialResourceFromAsset(AssetHandle asset);
+
         ResourceHandle m_meshResource;
-        ResourceHandle m_materialResource;
-        ResourceHandle m_materialInstance;
 
         PipelineState m_pipelineState;
+
+        std::unordered_map<size_t, ResourceHandle> m_materialOverrides;
+        ResourceHandle m_singleMaterial;
+        bool m_useSingleMaterial = false;
+        ResourceHandle m_materialInstance;
     };
 }

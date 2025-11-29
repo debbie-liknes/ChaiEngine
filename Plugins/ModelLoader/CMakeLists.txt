@@ -3,6 +3,8 @@
 set(ModelLoaderSource
         ObjLoader.h
         ObjLoader.cpp
+        GLTFLoader.h
+        GLTFLoader.cpp
 )
 
 add_library(ModelLoader SHARED
