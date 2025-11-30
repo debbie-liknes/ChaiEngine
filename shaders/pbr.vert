@@ -3,6 +3,7 @@
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec3 a_Normal;
 layout(location = 2) in vec2 a_TexCoord;
+layout(location = 3) in vec4 a_Tangent;
 
 layout(std140, binding = 0) uniform PerFrameUniforms
 {
@@ -20,6 +21,7 @@ layout(std140, binding = 1) uniform PerDrawUniforms
 out vec3 v_FragPos;
 out vec3 v_Normal;
 out vec2 v_TexCoord;
+out mat3 v_TBN;
 
 void main()
 {
@@ -27,6 +29,17 @@ void main()
     v_FragPos = worldPos.xyz;
     v_Normal = mat3(u_normalMatrix) * a_Normal;
     v_TexCoord = a_TexCoord;
+
+    // Build TBN matrix
+    mat3 normalMatrix = mat3(transpose(inverse(u_model)));
+    vec3 N = normalize(normalMatrix * a_Normal);
+    vec3 T = normalize(normalMatrix * a_Tangent.xyz);
+    // Re-orthogonalize T with respect to N
+    T = normalize(T - dot(T, N) * N);
+    // Bitangent - handedness stored in tangent.w
+    vec3 B = cross(N, T) * a_Tangent.w;
+    
+    v_TBN = mat3(T, B, N);
 
     gl_Position = u_projection * u_view * worldPos;
 }

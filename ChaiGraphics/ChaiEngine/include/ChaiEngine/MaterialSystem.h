@@ -236,6 +236,7 @@ namespace chai
             shaderAsset->addVertexInput("a_Position", 0, DataType::Float3);
             shaderAsset->addVertexInput("a_Normal", 1, DataType::Float3);
             shaderAsset->addVertexInput("a_TexCoord", 2, DataType::Float2);
+            shaderAsset->addVertexInput("a_Tangent", 3, DataType::Float4);
 
             shaderAsset->addUniform("u_albedo", DataType::Float3);
             shaderAsset->addUniform("u_albedoMap", DataType::Sampler2D);
@@ -243,6 +244,7 @@ namespace chai
             shaderAsset->addUniform("u_metallicMap", DataType::Sampler2D);
             shaderAsset->addUniform("u_roughness", DataType::Float);
             shaderAsset->addUniform("u_roughnessMap", DataType::Sampler2D);
+            shaderAsset->addUniform("u_normalMap", DataType::Sampler2D);
             //shaderAsset->addUniform("u_metallicRoughnessMap", DataType::Sampler2D, false);
 
             m_pbrShader = AssetManager::instance().add(std::move(shaderAsset)).value();

@@ -82,8 +82,8 @@ int main()
     auto sponza = testScene->createModelObject("SponzaRoot", modelAsset.value());
     //chai::Mat4 correction = glm::rotate(Mat4(1.0f), glm::radians(-90.0f), Vec3(1, 0, 0));
     sponza->getComponent<chai::cup::TransformComponent>()->setRotation(
-        chai::Quat::fromEulerZYX(45.0f, 45.0f, 0.0f));
-    sponza->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3(0.01, 0.01, 0.01));
+        chai::Quat::fromEulerZYX(chai::radians(50.0f), chai::radians(50.f), chai::radians(50.f)));
+    sponza->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3(0.05, 0.05, 0.05));
 
     //add a camera to look through
     auto cameraObject = std::make_unique<chai::cup::GameObject>();
@@ -96,11 +96,20 @@ int main()
     //add some lighting so we can see
     auto lightObject = std::make_unique<chai::cup::GameObject>();
     lightObject->getComponent<chai::cup::TransformComponent>()->setPosition(
-        chai::Vec3{-5.0, 5.0, 5.0});
+        chai::Vec3{-5.0, 5.0, 3.0});
     lightObject->getComponent<chai::cup::TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0},
         WORLD_UP);
     auto lightComp = lightObject->addComponent<chai::cup::LightComponent>(lightObject.get());
-    lightComp->intensity = 10.f;
+    lightComp->intensity = 6.f;
+
+    //add another
+    auto lightObject2 = std::make_unique<chai::cup::GameObject>();
+    lightObject2->getComponent<chai::cup::TransformComponent>()->setPosition(
+        chai::Vec3{-5.0, 3.0, 3.0});
+    lightObject2->getComponent<chai::cup::TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0},
+                                                                       WORLD_UP);
+    auto lightComp2 = lightObject2->addComponent<chai::cup::LightComponent>(lightObject2.get());
+    lightComp2->intensity = 10.f;
 
     //set up viewport camera association
     vp->setCamera(camComponent->getCamera());
@@ -109,6 +118,7 @@ int main()
     testScene->addGameObject(std::make_unique<chai::cup::Skybox>());
     testScene->addGameObject(std::move(cameraObject));
     testScene->addGameObject(std::move(lightObject));
+    testScene->addGameObject(std::move(lightObject2));
 
     //audio
     //std::shared_ptr<AudioEngine> m_audioEngine;

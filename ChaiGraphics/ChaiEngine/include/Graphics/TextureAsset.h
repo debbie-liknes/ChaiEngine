@@ -33,7 +33,8 @@ namespace chai
     enum class TextureWrapMode
     {
         Clamp,
-        Mirror
+        Mirror,
+        Repeat
     };
 
     class TextureAsset : public IAsset
@@ -41,7 +42,7 @@ namespace chai
     public:
         explicit TextureAsset(std::vector<TextureFace> faces, ColorSpace space = ColorSpace::SRGB,
             TextureType type = TextureType::Tex2D, TextureWrapMode mode = TextureWrapMode::Clamp) :
-            m_space(space), m_type(type), m_faces(std::move(faces)), m_wrapMode(mode)
+            m_faces(std::move(faces)), m_space(space), m_type(type), m_wrapMode(mode)
         {}
 
         bool isValid() const override { return !m_faces.empty(); }

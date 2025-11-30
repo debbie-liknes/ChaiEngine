@@ -32,27 +32,23 @@ namespace chai
         matAsset->setFloat("u_roughness", pbr.roughnessFactor);
 
         if (pbr.baseColorTexture.index >= 0) {
-            int imageIndex = gltf.textures[pbr.baseColorTexture.index].source;
-            matAsset->setParameter("u_albedoMap", textures[imageIndex]);
+            matAsset->setParameter("u_albedoMap", textures[pbr.baseColorTexture.index]);
         } else {
             matAsset->setParameter("u_albedoMap", getDefaultWhiteTexture());
         }
 
         if (pbr.metallicRoughnessTexture.index >= 0) {
-            int imageIndex = gltf.textures[pbr.metallicRoughnessTexture.index].source;
-            matAsset->setParameter("u_metallicMap", textures[imageIndex]);
+            matAsset->setParameter("u_metallicRoughnessMap",
+                                   textures[pbr.metallicRoughnessTexture.index]);
         } else {
-            matAsset->setParameter("u_metallicMap", getDefaultWhiteTexture());
-            //matAsset->setParameter("u_metallicRoughnessMap", getDefaultWhiteTexture());
+            matAsset->setParameter("u_metallicRoughnessMap", getDefaultWhiteTexture());
+
         }
 
         if (mat.normalTexture.index >= 0) {
-            int imageIndex = gltf.textures[mat.normalTexture.index].source;
-            matAsset->setParameter("u_roughnessMap", textures[imageIndex]);
-            //matAsset->setParameter("u_normalMap", textures[imageIndex]);
+            matAsset->setParameter("u_normalMap", textures[mat.normalTexture.index]);
         } else {
-            matAsset->setParameter("u_roughnessMap", getDefaultWhiteTexture());
-            //matAsset->setParameter("u_normalMap", getDefaultWhiteTexture());
+            matAsset->setParameter("u_normalMap", getDefaultWhiteTexture());
         }
 
         return AssetManager::instance().add<MaterialAsset>(std::move(matAsset)).value();
@@ -182,6 +178,20 @@ namespace chai
         return mesh;
     }
 
+    TextureWrapMode convertWrapMode(int gltfWrap)
+    {
+        switch (gltfWrap) {
+            case TINYGLTF_TEXTURE_WRAP_REPEAT:
+                return TextureWrapMode::Repeat;
+            case TINYGLTF_TEXTURE_WRAP_CLAMP_TO_EDGE:
+                return TextureWrapMode::Clamp;
+            case TINYGLTF_TEXTURE_WRAP_MIRRORED_REPEAT:
+                return TextureWrapMode::Mirror;
+            default:
+                return TextureWrapMode::Clamp;
+        }
+    }
+
     std::unique_ptr<IAsset> GLTFLoader::load(const std::string& path)
     {
         std::filesystem::path filePath(path);
@@ -205,20 +215,47 @@ namespace chai
 
         // Load textures
         std::vector<ResourceHandle> textures;
-        for (auto& image : gltf.images) {
+
+        for (size_t i = 0; i < gltf.textures.size(); i++) {
+            auto& texture = gltf.textures[i];
+            auto& image = gltf.images[texture.source];
+
             TextureFace face;
             face.width = image.width;
             face.height = image.height;
             face.channels = image.component;
             face.pixels = image.image;
-            auto tex = std::make_unique<TextureAsset>(std::vector<TextureFace>{face});
 
-            auto texHandle = AssetManager::instance().add<TextureAsset>(std::move(tex));
+            ColorSpace colorSpace = ColorSpace::SRGB;
+            TextureWrapMode wrapMode = TextureWrapMode::Clamp;
+
+            // Apply sampler settings
+            if (texture.sampler >= 0) {
+                auto& sampler = gltf.samplers[texture.sampler];
+                wrapMode = convertWrapMode(sampler.wrapS);
+            //    textureResource->wrapT = convertWrapMode(sampler.wrapT);
+                //textureResource->minFilter = convertMinFilter(sampler.minFilter);
+            //    textureResource->magFilter = convertMagFilter(sampler.magFilter);
+            } else {
+            //    // Default settings per glTF spec
+                wrapMode = TextureWrapMode::Repeat;
+            //    textureResource->wrapT = GL_REPEAT;
+            //    textureResource->minFilter = GL_LINEAR_MIPMAP_LINEAR;
+            //    textureResource->magFilter = GL_LINEAR;
+            }
+
+            auto textureAsset =
+                std::make_unique<TextureAsset>(std::vector<TextureFace>{face}, colorSpace, TextureType::Tex2D, wrapMode);
+
+            auto texHandle = AssetManager::instance().add<TextureAsset>(std::move(textureAsset));
             if (texHandle.has_value()) {
-                auto textureResource =
-                    std::make_unique<TextureResource>(std::vector<TextureFace>{face});
+                auto textureResource = std::make_unique<TextureResource>(
+                    std::vector<TextureFace>{face}, colorSpace, TextureType::Tex2D, wrapMode);
                 textures.push_back(
                     ResourceManager::instance().add<TextureResource>(std::move(textureResource)));
+            } else {
+                static int hack = 0;
+                hack++;
             }
         }
 

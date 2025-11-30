@@ -5,6 +5,7 @@ const float PI = 3.14159256;
 in vec3 v_FragPos;
 in vec3 v_Normal;
 in vec2 v_TexCoord;
+in mat3 v_TBN;
 
 out vec4 FragColor;
 
@@ -31,10 +32,10 @@ layout(std140, binding = 2) uniform LightingData {
 uniform vec3 u_albedo;
 layout(binding = 1) uniform sampler2D u_albedoMap;
 uniform float u_metallic;
-layout(binding = 2) uniform sampler2D u_metallicMap;
 uniform float u_roughness;
-layout(binding = 3) uniform sampler2D u_roughnessMap;
-//layout(binding = 4) uniform sampler2D u_normalMap;
+layout(binding = 2) uniform sampler2D u_metallicRoughnessMap;
+//layout(binding = 3) uniform sampler2D u_roughnessMap;
+layout(binding = 4) uniform sampler2D u_normalMap;
 
 float normalDistGGX(vec3 N, vec3 H, float roughness) {
     float alpha = roughness * roughness;
@@ -70,13 +71,19 @@ void main()
     vec3 cameraPos = u_invView[3].xyz;
 
     vec3 albedo = texture(u_albedoMap, v_TexCoord).rgb * u_albedo;
-    float metallic = texture(u_metallicMap, v_TexCoord).r * u_metallic;
-    float roughness = texture(u_roughnessMap, v_TexCoord).r * u_roughness;
+    vec4 mr = texture(u_metallicRoughnessMap, v_TexCoord);
+    float metallic = mr.b * u_metallic;
+    float roughness = mr.g * u_roughness;
 
-    vec3 N = normalize(v_Normal);
+    //vec3 N = normalize(v_Normal);
+    //vec3 N = normalize(v_TBN[2]);
+    vec3 normalTex = texture(u_normalMap, v_TexCoord).rgb;
+    normalTex = normalTex * 2.0 - 1.0;  // Remap from [0,1] to [-1,1]
+    vec3 N = normalize(v_TBN * normalTex);
     vec3 V = normalize(cameraPos - v_FragPos);
 
-    vec3 ambient = vec3(0.03) * albedo;
+    //vec3 ambient = vec3(0.03) * albedo;
+    vec3 ambient = albedo / PI;
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
 
     vec3 Lo = vec3(0.0);
