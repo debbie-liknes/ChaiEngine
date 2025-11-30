@@ -47,8 +47,10 @@ namespace chai
 
         if (mat.normalTexture.index >= 0) {
             matAsset->setParameter("u_normalMap", textures[mat.normalTexture.index]);
+            matAsset->setParameter("u_hasNormalMap", true);
         } else {
             matAsset->setParameter("u_normalMap", getDefaultWhiteTexture());
+            matAsset->setParameter("u_hasNormalMap", false);
         }
 
         return AssetManager::instance().add<MaterialAsset>(std::move(matAsset)).value();
