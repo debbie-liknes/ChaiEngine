@@ -1,6 +1,7 @@
 #pragma once
 #include <Meta/ChaiMacros.h>
 #include <Asset/AssetLoader.h>
+#include "GLTFLoader.h"
 
 namespace chai
 {
@@ -18,5 +19,6 @@ namespace chai
 CHAI_PLUGIN_CLASS (ModelLoader)
 {
     CHAI_LOADER(chai::ObjLoader, "obj")
+    CHAI_LOADER(chai::GLTFLoader, "gltf")
 }
 CHAI_REGISTER_PLUGIN(ModelLoader, "ModelLoader", "1.0.0")

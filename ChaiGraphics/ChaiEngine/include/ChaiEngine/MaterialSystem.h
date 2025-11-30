@@ -1,11 +1,11 @@
 #pragma once
-#include <ChaiGraphicsExport.h>
-#include <ChaiEngine/Material.h>
-#include <Resource/ResourceManager.h>
-#include <Asset/AssetManager.h>
-
 #include "Graphics/ShaderAsset.h"
 
+#include <ChaiEngine/Material.h>
+#include <Resource/ResourceManager.h>
+
+#include <Asset/AssetManager.h>
+#include <ChaiGraphicsExport.h>
 #include <iostream>
 
 namespace chai
@@ -43,45 +43,54 @@ namespace chai
 
             // Validate
             if (!validateParameters(asset->getParameters(), shader)) {
-                std::cerr << "Material '" << asset->getName()
-                    << "' is not compatible with shader!" << std::endl;
+                std::cerr << "Material '" << asset->getName() << "' is not compatible with shader!"
+                          << std::endl;
                 return ResourceHandle{};
             }
 
             // Create resource
             auto resource = std::make_unique<MaterialResource>();
             resource->shaderAsset = asset->getShaderHandle();
-            resource->defaultParameters = asset->getParameters();
+            //for (auto& [name, val] : asset->getParameters()) {
+            //    if (std::holds_alternative<ResourceHandle>(val)) {
+            //        resource->textures.emplace(name, val);
+            //    } else {
+            //        resource->uniforms.emplace(name, val);
+            //    }
+            //}
 
             return ResourceManager::instance().add(std::move(resource));
         }
 
-        static ResourceHandle create(AssetHandle shaderHandle)
-        {
-            auto* shader = AssetManager::instance().get<ShaderAsset>(shaderHandle);
-            if (!shader) {
-                std::cerr << "Invalid shader handle!" << std::endl;
-                return ResourceHandle{};
-            }
+        //static ResourceHandle create(AssetHandle shaderHandle)
+        //{
+        //    auto* shader = AssetManager::instance().get<ShaderAsset>(shaderHandle);
+        //    if (!shader) {
+        //        std::cerr << "Invalid shader handle!" << std::endl;
+        //        return ResourceHandle{};
+        //    }
 
-            auto resource = std::make_unique<MaterialResource>();
-            resource->shaderAsset = shaderHandle;
+        //    auto resource = std::make_unique<MaterialResource>();
+        //    resource->shaderAsset = shaderHandle;
 
-            // Initialize with shader defaults
-            for (const auto& uniform : shader->getUniforms()) {
-                if (uniform.defaultValue.index() != 0) {
-                    resource->defaultParameters[uniform.name] = uniform.defaultValue;
-                }
-            }
+        //    // Initialize with shader defaults
+        //    for (const auto& uniform : shader->getUniforms()) {
+        //        if (uniform.defaultValue.index() != 0) {
+        //            if (std::holds_alternative<ResourceHandle>(uniform.defaultValue)) {
+        //                resource->textures.emplace(uniform.name, uniform.defaultValue);
+        //            } else {
+        //                resource->uniforms.emplace(uniform.name, uniform.defaultValue);
+        //            }
+        //        }
+        //    }
 
-            return ResourceManager::instance().add(std::move(resource));
-        }
+        //    return ResourceManager::instance().add(std::move(resource));
+        //}
 
         class Builder
         {
         public:
-            explicit Builder(AssetHandle shaderHandle)
-                : m_shaderHandle(shaderHandle)
+            explicit Builder(AssetHandle shaderHandle) : m_shaderHandle(shaderHandle)
             {
                 m_shader = AssetManager::instance().get<ShaderAsset>(shaderHandle);
                 if (!m_shader) {
@@ -105,8 +114,8 @@ namespace chai
                 }
 
                 if (!found) {
-                    std::cerr << "WARNING: Parameter '" << name
-                        << "' not used by shader" << std::endl;
+                    std::cerr << "WARNING: Parameter '" << name << "' not used by shader"
+                              << std::endl;
                 }
 
                 m_parameters[name] = value;
@@ -114,10 +123,7 @@ namespace chai
             }
 
             // Convenience overloads
-            Builder& setFloat(const std::string& name, float value)
-            {
-                return set(name, value);
-            }
+            Builder& setFloat(const std::string& name, float value) { return set(name, value); }
 
             Builder& setVec3(const std::string& name, const Vec3& value)
             {
@@ -131,19 +137,19 @@ namespace chai
 
             ResourceHandle build()
             {
-                if (!m_shader) {
-                    return ResourceHandle{};
-                }
-
-                // Validate all required parameters are provided
-                if (!MaterialSystem::validateParameters(m_parameters, m_shader)) {
-                    std::cerr << "Material missing required parameters!" << std::endl;
-                    return ResourceHandle{};
-                }
-
                 auto resource = std::make_unique<MaterialResource>();
                 resource->shaderAsset = m_shaderHandle;
-                resource->defaultParameters = m_parameters;
+
+                int nextTextureSlot = 0;
+                for (const auto& [name, value] : m_parameters) {
+                    if (std::holds_alternative<ResourceHandle>(value)) {
+                        resource->textures[name] = {std::get<ResourceHandle>(value),
+                                                    nextTextureSlot++};
+                    } 
+                    else {
+                        resource->uniforms[name] = value;
+                    }
+                }
 
                 return ResourceManager::instance().add(std::move(resource));
             }
@@ -156,22 +162,20 @@ namespace chai
 
         /*static ResourceHandle createMaterialResourceFromAsset(AssetHandle handle);*/
 
-        AssetHandle getPhongShader()
-        {
-            return m_phongShader;
-        }
+        AssetHandle getPhongShader() { return m_phongShader; }
 
-        AssetHandle getPhongMaterial()
-        {
-            return m_phongMaterial;
-        }
+        AssetHandle getPBRShader() { return m_pbrShader; }
+
+        AssetHandle getPhongMaterial() { return m_phongMaterial; }
+
+        ResourceHandle getPBRMaterial() { return m_pbrMaterial; }
 
     private:
         MaterialSystem();
 
-        static bool validateParameters(
-            const std::unordered_map<std::string, MaterialParameterValue>& params,
-            const ShaderAsset* shader)
+        static bool
+        validateParameters(const std::unordered_map<std::string, MaterialParameterValue>& params,
+                           const ShaderAsset* shader)
         {
             // Check all required uniforms are provided
             for (const auto& uniform : shader->getUniforms()) {
@@ -180,8 +184,7 @@ namespace chai
 
                 auto it = params.find(uniform.name);
                 if (it == params.end()) {
-                    std::cerr << "ERROR: Missing required parameter: "
-                        << uniform.name << std::endl;
+                    std::cerr << "ERROR: Missing required parameter: " << uniform.name << std::endl;
                     return false;
                 }
             }
@@ -190,8 +193,10 @@ namespace chai
 
         void loadPhongShaderDefault()
         {
-            auto vertAssetHandle = AssetManager::instance().load<ShaderStageAsset>("shaders/phong.vert").value();
-            auto fragAssetHandle = AssetManager::instance().load<ShaderStageAsset>("shaders/phong.frag").value();
+            auto vertAssetHandle =
+                AssetManager::instance().load<ShaderStageAsset>("shaders/phong.vert").value();
+            auto fragAssetHandle =
+                AssetManager::instance().load<ShaderStageAsset>("shaders/phong.frag").value();
 
             // Get the loaded stage assets
             auto vertAsset = AssetManager::instance().get<ShaderStageAsset>(vertAssetHandle);
@@ -213,7 +218,50 @@ namespace chai
             m_phongShader = AssetManager::instance().add(std::move(shaderAsset)).value();
         }
 
+        void loadPBRDefault()
+        {
+            auto vertAssetHandle =
+                AssetManager::instance().load<ShaderStageAsset>("shaders/pbr.vert").value();
+            auto fragAssetHandle =
+                AssetManager::instance().load<ShaderStageAsset>("shaders/pbr.frag").value();
+
+            // Get the loaded stage assets
+            auto vertAsset = AssetManager::instance().get<ShaderStageAsset>(vertAssetHandle);
+            auto fragAsset = AssetManager::instance().get<ShaderStageAsset>(fragAssetHandle);
+
+            auto shaderAsset = std::make_unique<ShaderAsset>("pbr_shader");
+            shaderAsset->addStage(*vertAsset);
+            shaderAsset->addStage(*fragAsset);
+
+            shaderAsset->addVertexInput("a_Position", 0, DataType::Float3);
+            shaderAsset->addVertexInput("a_Normal", 1, DataType::Float3);
+            shaderAsset->addVertexInput("a_TexCoord", 2, DataType::Float2);
+            shaderAsset->addVertexInput("a_Tangent", 3, DataType::Float4);
+
+            shaderAsset->addUniform("u_albedo", DataType::Float3);
+            shaderAsset->addUniform("u_albedoMap", DataType::Sampler2D);
+            shaderAsset->addUniform("u_metallic", DataType::Float);
+            shaderAsset->addUniform("u_metallicMap", DataType::Sampler2D);
+            shaderAsset->addUniform("u_roughness", DataType::Float);
+            shaderAsset->addUniform("u_roughnessMap", DataType::Sampler2D);
+            shaderAsset->addUniform("u_normalMap", DataType::Sampler2D);
+            //shaderAsset->addUniform("u_metallicRoughnessMap", DataType::Sampler2D, false);
+
+            m_pbrShader = AssetManager::instance().add(std::move(shaderAsset)).value();
+
+            //m_pbrMaterial = chai::MaterialSystem::Builder(m_pbrShader)
+            //                    .setVec3("u_albedo", chai::Vec3(0.0, 1.0, 1.0))
+            //                    .setTexture("u_albedoMap", chai::getDefaultWhiteTexture())
+            //                    .setFloat("u_metallic", 1.f)
+            //                    .setTexture("u_metallicMap", chai::getDefaultWhiteTexture())
+            //                    .setFloat("u_roughness", 1.f)
+            //                    .setTexture("u_roughnessMap", chai::getDefaultWhiteTexture())
+            //                    .build();
+        }
+
         AssetHandle m_phongShader;
+        AssetHandle m_pbrShader;
+        ResourceHandle m_pbrMaterial;
         AssetHandle m_phongMaterial;
     };
-}
+} // namespace chai

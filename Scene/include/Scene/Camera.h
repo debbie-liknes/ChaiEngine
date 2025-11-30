@@ -24,7 +24,7 @@ namespace chai::cup
         float m_aspect = 0.0;
         float m_fov = 45.0f; // degrees
         float m_nearPlane = 0.1f;
-        float m_farPlane = 100.0f;
+        float m_farPlane = 1000.0f;
 
         Mat4 m_viewMatrix{1.f};
     };

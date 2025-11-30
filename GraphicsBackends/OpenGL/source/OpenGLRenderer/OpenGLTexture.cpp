@@ -204,6 +204,8 @@ namespace chai::brew
                 wrapS = wrapT = GL_CLAMP_TO_EDGE;
             } else if (texResource->getWrapMode() == TextureWrapMode::Mirror) {
                 wrapS = wrapT = GL_MIRRORED_REPEAT;
+            } else if (texResource->getWrapMode() == TextureWrapMode::Repeat) {
+                wrapS = wrapT = GL_REPEAT;
             }
         }
 

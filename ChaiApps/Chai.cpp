@@ -37,6 +37,12 @@ int main()
     //load common plugins
     chai::kettle::PluginRegistry::instance().loadPluginsInDirectory("plugins");
 
+    chai::AssetManager::instance().addSearchPath("./assets");
+    chai::AssetManager::instance().addSearchPath("./resources");
+    chai::AssetManager::instance().addSearchPath(RESOURCE_PATH);
+    // For development, maybe add the source directory
+    //chai::AssetManager::instance().addSearchPath(PROJECT_SOURCE_DIR "/assets");
+
     //create window system and manager
     auto windowSystem = chai::ServiceLocator::instance().get<chai::WindowSystem>();
     auto windowManager = std::make_unique<chai::WindowManager>(windowSystem);
@@ -72,52 +78,12 @@ int main()
     sceneManager.addScene("TestScene", std::make_unique<chai::cup::Scene>());
     chai::cup::Scene* testScene = sceneManager.setActiveScene("TestScene");
 
-    //make a ground plane
-    auto groundPlane = std::make_unique<chai::cup::GameObject>();
-    auto* meshComp = groundPlane->addComponent<chai::cup::MeshComponent>(groundPlane.get());
-    auto meshAsset = chai::AssetManager::instance().load<chai::MeshAsset>("assets/plane.obj");
-    meshComp->setMesh(meshAsset.value());
-
-    auto phong = chai::MaterialSystem::instance().getPhongShader();
-
-    auto textureResource = chai::loadTexture("assets/tardis.png");
-
-    auto material = chai::MaterialSystem::Builder(phong)
-    .setVec3("u_DiffuseColor", chai::Vec3(1.0, 1.0, 1.0))
-    .setVec3("u_SpecularColor", chai::Vec3(1.0, 1.0, 1.0))
-    .setFloat("u_Shininess", 64.f)
-    .setTexture("u_DiffuseMap", textureResource.value())
-    .build();
-
-    auto materialInstance = std::make_unique<chai::MaterialInstance>(material);
-
-    // Customize instance
-    meshComp->setMaterial(
-        chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance)));
-
-    groundPlane->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{0.0, -15.0, 0.0});
-    groundPlane->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3{20, 20, 20});
-
-    auto model = std::make_unique<chai::cup::GameObject>();
-    auto* modelMesh = model->addComponent<chai::cup::MeshComponent>(model.get());
-    auto modelMeshAsset = chai::AssetManager::instance().load<chai::MeshAsset>("assets/suzanne.obj");
-    modelMesh->setMesh(modelMeshAsset.value());
-
-    auto mat2 = chai::MaterialSystem::Builder(phong)
-    .setVec3("u_DiffuseColor", chai::Vec3(0.0, 1.0, 1.0))
-    .setVec3("u_SpecularColor", chai::Vec3(1.0, 1.0, 1.0))
-    .setFloat("u_Shininess", 16.f)
-    .setTexture("u_DiffuseMap", chai::getDefaultWhiteTexture())
-    .build();
-
-
-    auto materialInstance2 = std::make_unique<chai::MaterialInstance>(mat2);
-
-    // Customize instance
-    modelMesh->setMaterial(
-        chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance2)));
-
-    model->getComponent<chai::cup::TransformComponent>()->setPosition(chai::Vec3{0.0, 0.0, 0.0});
+    auto modelAsset = chai::AssetManager::instance().load<chai::ModelAsset>("assets/Sponza/glTF/Sponza.gltf");
+    auto sponza = testScene->createModelObject("SponzaRoot", modelAsset.value());
+    //chai::Mat4 correction = glm::rotate(Mat4(1.0f), glm::radians(-90.0f), Vec3(1, 0, 0));
+    sponza->getComponent<chai::cup::TransformComponent>()->setRotation(
+        chai::Quat::fromEulerZYX(chai::radians(50.0f), chai::radians(50.f), chai::radians(50.f)));
+    sponza->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3(0.05, 0.05, 0.05));
 
     //add a camera to look through
     auto cameraObject = std::make_unique<chai::cup::GameObject>();
@@ -130,20 +96,29 @@ int main()
     //add some lighting so we can see
     auto lightObject = std::make_unique<chai::cup::GameObject>();
     lightObject->getComponent<chai::cup::TransformComponent>()->setPosition(
-        chai::Vec3{-5.0, 5.0, -5.0});
+        chai::Vec3{-5.0, 5.0, 3.0});
     lightObject->getComponent<chai::cup::TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0},
         WORLD_UP);
-    lightObject->addComponent<chai::cup::LightComponent>(lightObject.get());
+    auto lightComp = lightObject->addComponent<chai::cup::LightComponent>(lightObject.get());
+    lightComp->intensity = 6.f;
+
+    //add another
+    auto lightObject2 = std::make_unique<chai::cup::GameObject>();
+    lightObject2->getComponent<chai::cup::TransformComponent>()->setPosition(
+        chai::Vec3{-5.0, 3.0, 3.0});
+    lightObject2->getComponent<chai::cup::TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0},
+                                                                       WORLD_UP);
+    auto lightComp2 = lightObject2->addComponent<chai::cup::LightComponent>(lightObject2.get());
+    lightComp2->intensity = 10.f;
 
     //set up viewport camera association
     vp->setCamera(camComponent->getCamera());
 
     //add the objects to the scene
     testScene->addGameObject(std::make_unique<chai::cup::Skybox>());
-    testScene->addGameObject(std::move(groundPlane));
-    testScene->addGameObject(std::move(model));
     testScene->addGameObject(std::move(cameraObject));
     testScene->addGameObject(std::move(lightObject));
+    testScene->addGameObject(std::move(lightObject2));
 
     //audio
     //std::shared_ptr<AudioEngine> m_audioEngine;

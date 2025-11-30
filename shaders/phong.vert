@@ -8,6 +8,7 @@ layout(std140, binding = 0) uniform PerFrameUniforms
 {
     mat4 u_view;
     mat4 u_projection;
+    mat4 u_invView;
 };
 
 layout(std140, binding = 1) uniform PerDrawUniforms

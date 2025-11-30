@@ -19,6 +19,9 @@ namespace chai::cup
         void addGameObject(std::unique_ptr<GameObject> object);
         void collectRenderables(brew::RenderCommandCollector& collector) const;
         void collectLights(brew::RenderCommandCollector& collector) const;
+        GameObject* createModelObject(const std::string& name,
+                                                      AssetHandle modelHandle);
+        GameObject* createGameObject(const std::string& name);
 
         template <typename T>
         std::vector<GameObject*> getObjectsWithComponent() const
@@ -39,4 +42,6 @@ namespace chai::cup
     private:
         std::vector<std::unique_ptr<GameObject>> m_objects;
     };
+
+
 }

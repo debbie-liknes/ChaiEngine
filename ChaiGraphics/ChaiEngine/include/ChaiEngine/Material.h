@@ -96,7 +96,14 @@ namespace chai
         AssetHandle sourceAsset;
         AssetHandle shaderAsset;
 
-        std::unordered_map<std::string, MaterialParameterValue> defaultParameters;
+        // Separate textures from scalar uniforms
+        std::unordered_map<std::string, MaterialParameterValue> uniforms;
+
+        struct TextureBinding {
+            ResourceHandle texture;
+            int slot;
+        };
+        std::unordered_map<std::string, TextureBinding> textures;
 
         explicit MaterialResource(AssetHandle source) : Resource(source), sourceAsset(source) {}
         MaterialResource() = default;

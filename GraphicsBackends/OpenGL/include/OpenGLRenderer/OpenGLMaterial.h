@@ -113,7 +113,8 @@ namespace chai::brew
 
             glMaterialData->shaderProgram = shaderProgram;
 
-            const auto& materialParams = matResource->defaultParameters;
+            const auto& materialParams = matResource->uniforms;
+            const auto& materialTex = matResource->textures;
 
             for (const auto& [paramName, paramValue] : materialParams)
             {
@@ -140,6 +141,15 @@ namespace chai::brew
                     {
                         glMaterialData->uniforms[paramName] = createUniformBuffer(paramValue);
                     }
+                }
+            }
+
+            for (const auto& [texName, texBinding] : materialTex) {
+                GLint location = glGetUniformLocation(shaderProgram, texName.c_str());
+                if (location != -1) {
+                    glMaterialData->textures[texName] = texBinding.texture;
+
+                    //override if there is an instance?
                 }
             }
 

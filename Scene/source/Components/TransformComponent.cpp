@@ -5,8 +5,6 @@ namespace chai::cup
 {
     TransformComponent::TransformComponent(GameObject* owner) : Component(owner)
     {
-        if (owner)
-            m_parent = owner->getComponent<TransformComponent>();
     }
 
     Mat4 TransformComponent::getLocalMatrix() const
@@ -17,14 +15,20 @@ namespace chai::cup
         return t * r * s;
     }
 
+    void TransformComponent::setLocalMatrix(const Mat4& matrix)
+    {
+        m_position = Vec3(matrix[3][0], matrix[3][1], matrix[3][2]);
+        m_rotation = Quat::quatFromMat4(matrix);
+        m_scale = Vec3(length(Vec3(matrix[0][0], matrix[0][1], matrix[0][2])),
+                       length(Vec3(matrix[1][0], matrix[1][1], matrix[1][2])),
+                       length(Vec3(matrix[2][0], matrix[2][1], matrix[2][2])));
+    }
+
     Mat4 TransformComponent::getWorldMatrix() const
     {
-        if (m_parent)
-        {
-            return m_parent->getWorldMatrix() * getLocalMatrix();
-        }
-        else
-        {
+        if (auto parent = getGameObject()->getParent(); parent) {
+            return parent->getComponent<TransformComponent>()->getWorldMatrix() * getLocalMatrix();
+        } else {
             return getLocalMatrix();
         }
     }
@@ -36,8 +40,9 @@ namespace chai::cup
 
     void TransformComponent::setRotationEuler(chai::Vec3 newRot)
     {
-        /*rotate()
-        m_rotation = Quatf(newRot);*/
+        //auto y = m_rotation * newRot;
+        //rotate()
+        //m_rotation = Quatf(newRot);
     }
 
     void TransformComponent::setScale(chai::Vec3 newScale)
@@ -67,12 +72,9 @@ namespace chai::cup
 
     Quat TransformComponent::getWorldRotation() const
     {
-        if (m_parent)
-        {
-            return m_parent->getWorldRotation() * m_rotation;
-        }
-        else
-        {
+        if (auto parent = getGameObject()->getParent(); parent) {
+            return parent->getComponent<TransformComponent>()->getWorldRotation() * m_rotation;
+        } else {
             return m_rotation;
         }
     }
@@ -88,11 +90,9 @@ namespace chai::cup
         Vec3 up = normalize(worldUp);
 
         // Handle the case where forward is almost parallel to up
-        if (std::abs(dot(forward, up)) > 0.999f)
-        {
+        if (std::abs(dot(forward, up)) > 0.999f) {
             // pick a different up vector
-            up = std::abs(forward.y) < 0.999f ? Vec3{0.0f, 1.0f, 0.0f}
-            : Vec3{1.0f, 0.0f, 0.0f};
+            up = std::abs(forward.y) < 0.999f ? Vec3{0.0f, 1.0f, 0.0f} : Vec3{1.0f, 0.0f, 0.0f};
         }
 
         Vec3 right = normalize(cross(forward, up));
@@ -100,18 +100,18 @@ namespace chai::cup
 
         Mat4 rotMatrix = Mat4::identity();
 
-        rotMatrix[0] = Vec4(right,   0.0f);
-        rotMatrix[1] = Vec4(up,      0.0f);
-        rotMatrix[2] = Vec4(-forward,0.0f);
-        rotMatrix[3] = Vec4(0.0f,    0.0f, 0.0f, 1.0f);
+        rotMatrix[0] = Vec4(right, 0.0f);
+        rotMatrix[1] = Vec4(up, 0.0f);
+        rotMatrix[2] = Vec4(-forward, 0.0f);
+        rotMatrix[3] = Vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
         Quat worldRot = Quat::quatFromMat4(rotMatrix);
 
-        if (m_parent)
-            m_rotation = m_parent->getWorldRotation().inverse() * worldRot;
+        if (auto parent = getGameObject()->getParent(); parent)
+            m_rotation =
+                parent->getComponent<TransformComponent>()->getWorldRotation().inverse() * worldRot;
         else
             m_rotation = worldRot;
     }
 
-
-}
+} // namespace chai::cup

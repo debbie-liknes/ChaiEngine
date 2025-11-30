@@ -13,5 +13,6 @@ namespace chai
     MaterialSystem::MaterialSystem()
     {
         loadPhongShaderDefault();
+        loadPBRDefault();
     }
 }

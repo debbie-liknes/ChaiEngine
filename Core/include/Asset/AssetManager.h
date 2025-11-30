@@ -22,43 +22,59 @@ namespace chai
         ~AssetManager();
         void registerLoader(std::shared_ptr<IAssetLoader> loader);
 
+        void addSearchPath(const std::string& path)
+        {
+            std::unique_lock lock(search_paths_mutex_);
+            search_paths_.push_back(path);
+        }
+
+        void addSearchPathFront(const std::string& path)
+        {
+            std::unique_lock lock(search_paths_mutex_);
+            search_paths_.insert(search_paths_.begin(), path);
+        }
+
         // Load or get existing asset by path
         template <typename T>
         std::optional<AssetHandle> load(const std::string& path)
         {
-            //Read lock to check cache
+            // Check cache first
             {
                 std::shared_lock cache_lock(cache_mutex_);
                 auto it = path_cache_.find(path);
-                if (it != path_cache_.end())
-                {
+                if (it != path_cache_.end()) {
                     return it->second;
                 }
             }
 
-            // Resolve path & pick loader
-            std::string searchPath = RESOURCE_PATH + path;
-            const auto ext = getExtension(searchPath);
+            // Try to resolve the path
+            std::optional<std::string> resolvedPath = resolvePath(path);
+            if (!resolvedPath) {
+                std::cerr << "Asset not found: " << path << " (searched " << search_paths_.size()
+                          << " paths)" << std::endl;
+                return std::nullopt;
+            }
 
+            const auto ext = getExtension(*resolvedPath);
             std::unique_ptr<IAsset> asset_result;
-            for (auto& loader : m_loaders)
-            {
-                if (loader->canLoad(ext))
-                {
-                    asset_result = loader->load(searchPath);
-                    if (asset_result) break;
+
+            for (auto& loader : m_loaders) {
+                if (loader->canLoad(ext)) {
+                    asset_result = loader->load(*resolvedPath);
+                    if (asset_result)
+                        break;
                 }
             }
-            if (!asset_result) return std::nullopt;
 
-            // Insert into pool
+            if (!asset_result)
+                return std::nullopt;
+
             AssetHandle handle;
             {
                 std::unique_lock<std::shared_mutex> pool_lock(pool_mutex_);
                 handle = AssetHandle(pool_.add(std::move(asset_result)));
             }
 
-            // Update caches
             {
                 std::unique_lock<std::shared_mutex> cache_lock(cache_mutex_);
                 path_cache_[path] = handle;
@@ -113,6 +129,50 @@ namespace chai
         CMap<std::string, AssetHandle> path_cache_;
         CMap<std::type_index, std::vector<AssetHandle>> type_handles_;
 
+        std::optional<std::string> resolvePath(const std::string& path)
+        {
+            // If it's an absolute path and exists, use it directly
+            if (isAbsolutePath(path) && fileExists(path)) {
+                return path;
+            }
+
+            // Search through registered paths
+            std::shared_lock lock(search_paths_mutex_);
+            for (const auto& searchPath : search_paths_) {
+                std::string fullPath = joinPath(searchPath, path);
+                if (fileExists(fullPath)) {
+                    return fullPath;
+                }
+            }
+
+            return std::nullopt;
+        }
+
+            bool isAbsolutePath(const std::string& path)
+        {
+            if (path.empty())
+                return false;
+#ifdef _WIN32
+            return path.size() >= 2 && path[1] == ':';
+#else
+            return path[0] == '/';
+#endif
+        }
+
+        std::string joinPath(const std::string& base, const std::string& relative)
+        {
+            if (base.empty())
+                return relative;
+            if (base.back() == '/' || base.back() == '\\') {
+                return base + relative;
+            }
+            return base + "/" + relative;
+        }
+
+        bool fileExists(const std::string& path) { return std::filesystem::exists(path); }
+
+        std::vector<std::string> search_paths_;
+        mutable std::shared_mutex search_paths_mutex_;
         mutable std::shared_mutex pool_mutex_;
         mutable std::shared_mutex cache_mutex_;
 
