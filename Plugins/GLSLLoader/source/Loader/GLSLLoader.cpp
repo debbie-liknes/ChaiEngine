@@ -44,3 +44,10 @@ namespace chai
         return std::move(shaderAsset);
     }
 }
+
+CHAI_PLUGIN_SERVICES(ShaderLoaderPlugin)
+{
+    CHAI_LOADER(chai::GLSLLoader, "GLSL loader")
+}
+
+CHAI_DEFINE_PLUGIN_ENTRY(ShaderLoaderPlugin, "GLSLLoader", "1.0.0", GLSLLOADER_EXPORT)

@@ -1,11 +1,12 @@
 #pragma once
+#include <ModelLoaderExport.h>
 #include <Meta/ChaiMacros.h>
 #include <Asset/AssetLoader.h>
 #include "GLTFLoader.h"
 
 namespace chai
 {
-    class ObjLoader : public IAssetLoader
+    class MODELLOADER_EXPORT ObjLoader : public IAssetLoader
     {
     public:
         ObjLoader() = default;
@@ -15,10 +16,5 @@ namespace chai
     };
 }
 
-
-CHAI_PLUGIN_CLASS (ModelLoader)
-{
-    CHAI_LOADER(chai::ObjLoader, "obj")
-    CHAI_LOADER(chai::GLTFLoader, "gltf")
-}
-CHAI_REGISTER_PLUGIN(ModelLoader, "ModelLoader", "1.0.0")
+CHAI_PLUGIN_CLASS(ModelLoader)
+CHAI_DECLARE_PLUGIN_ENTRY(MODELLOADER_EXPORT)

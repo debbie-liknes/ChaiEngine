@@ -52,9 +52,5 @@ namespace chai
 
 }
 
-CHAI_PLUGIN_CLASS (GLFWWindowPlugin)
-{
-    CHAI_SERVICE_AS(chai::WindowSystem, chai::GLFWSystem, "WindowSystem");
-}
-
-CHAI_REGISTER_PLUGIN(GLFWWindowPlugin, "GLFWWindowPlugin", "1.0.0")
+CHAI_PLUGIN_CLASS(GLFWWindowPlugin)
+CHAI_DECLARE_PLUGIN_ENTRY(GLFWWINDOWPLUGIN_EXPORT)

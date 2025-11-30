@@ -8,7 +8,7 @@
 #include <Types/CMap.h>
 #include <Meta/ChaiMacros.h>
 #include <ChaiEngine/Renderer.h>
-#include <OpenGLRenderer/RenderKey.h>
+#include <Graphics/RenderKey.h>
 #include <OpenGLRenderer/Uploads.h>
 #include <OpenGLRenderer/OpenGLMesh.h>
 #include <OpenGLRenderer/OpenGLMaterial.h>
@@ -19,6 +19,7 @@
 #include <ChaiEngine/UniformBuffer.h>
 #include <ChaiEngine/RenderFrame.h>
 #include <Window/Window.h>
+#include "RenderPipeline.h"
 
 namespace chai::brew
 {
@@ -54,11 +55,13 @@ namespace chai::brew
         // Wait for all pending frames to complete
         void waitForIdle();
 
+        void bindShaderProgram(GLuint program);
+        void drawBatchedCommands(const std::vector<SortedDrawCommand>& sortedDraws);
+
         // Statistics
         //const RenderStats& getStats() const { return m_stats; }
         //void printPerformanceStats();
 
-    private:
         //render thread
         void renderThreadMain();
         void initializeRenderThread(); // Initialize GL context on render thread
@@ -69,8 +72,6 @@ namespace chai::brew
 
         // Command execution
         RenderKey createSortKey(const RenderCommand& cmd, OpenGLMeshData* meshData);
-        void drawBatchedCommands(const std::vector<SortedDrawCommand>& sortedDraws);
-        void bindShaderProgram(GLuint program);
 
         static void clear(float r, float g, float b, float a);
 
@@ -84,6 +85,13 @@ namespace chai::brew
         void applyMaterialState(OpenGLMaterialData* matData, OpenGLShaderData* shaderData);
 
         void setLights(const std::vector<Light>& lights);
+
+        GLShaderManager& getShaderManager() { return m_shaderManager; }
+        OpenGLMeshManager& getMeshManager() { return m_meshManager; }
+        OpenGLMaterialManager& getMaterialManager() { return m_matManager; }
+        OpenGLTextureManager& getTextureManager() { return m_texManager; }
+        UploadQueue& getUploadQueue() { return m_uploadQueue; }
+        GLPipelineState& getCurrentState() { return m_currentState; }
 
     private:
         //threading
@@ -142,6 +150,7 @@ namespace chai::brew
 
         //pipeline state
         GLPipelineState m_currentState;
+        RenderPipeline m_renderPipeline;
 
         void* m_winProcAddress = nullptr;
         std::unique_ptr<RenderSurface> m_surface;
@@ -151,8 +160,4 @@ namespace chai::brew
 }
 
 CHAI_PLUGIN_CLASS(OpenGLPlugin)
-{
-    CHAI_SERVICE_AS(chai::brew::Renderer, chai::brew::OpenGLBackend, "Renderer")
-}
-
-CHAI_REGISTER_PLUGIN(OpenGLPlugin, "OpenGLRenderer", "1.0.0")
+CHAI_DECLARE_PLUGIN_ENTRY(OPENGLRENDERER_EXPORT)

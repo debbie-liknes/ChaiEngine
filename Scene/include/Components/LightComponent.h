@@ -22,7 +22,7 @@ namespace chai::cup
         float intensity = 3.f;
 
         // For point/spot lights
-        float range = 10.0f;
+        float range = 100.0f;
         Vec3 attenuation = Vec3(1.0f, 0.09f, 0.032f); // constant, linear, quadratic
 
         // For spot lights

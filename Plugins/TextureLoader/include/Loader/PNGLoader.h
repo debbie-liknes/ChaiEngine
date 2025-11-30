@@ -2,11 +2,12 @@
 #include <Asset/AssetLoader.h>
 #include <Meta/ChaiMacros.h>
 #include <ChaiEngine/Renderer.h>
+#include <TextureLoaderExport.h>
 
 
 namespace chai
 {
-    class PngLoader : public IAssetLoader
+    class TEXTURELOADER_EXPORT PngLoader : public IAssetLoader
     {
     public:
         PngLoader() = default;
@@ -16,8 +17,5 @@ namespace chai
     };
 }
 
-CHAI_PLUGIN_CLASS (ImageLoaderPlugin)
-{
-    CHAI_LOADER(chai::PngLoader, "PNG loader")
-}
-CHAI_REGISTER_PLUGIN(ImageLoaderPlugin, "TextureLoader", "1.0.0")
+CHAI_PLUGIN_CLASS(ImageLoaderPlugin)
+CHAI_DECLARE_PLUGIN_ENTRY(TEXTURELOADER_EXPORT)

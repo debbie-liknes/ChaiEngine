@@ -16,6 +16,7 @@
 
 #define CHAI_LOADER(LoaderType, LoaderName) \
     chai::AssetManager::instance().registerLoader(std::make_shared<LoaderType>());
+
 #define CHAI_SERVICE_AS(InterfaceType, ConcreteType, ServiceName) \
     services_.registerServiceAs<InterfaceType, ConcreteType>(ServiceName, []() { \
         return std::make_shared<ConcreteType>(); \
@@ -45,23 +46,44 @@
 #define CHAI_PROPERTY(ClassName, PropName) \
     typeInfo->addProperty(#PropName, &ClassName::PropName)
 
-#define CHAI_PLUGIN_CLASS(ClassName) \
-    class ClassName : public chai::IPlugin { \
-    private: \
-        chai::ServiceRegistry services_; \
-        std::string name_; \
-        std::string version_; \
-    public: \
-        ClassName(const std::string& name, const std::string& version) \
-            : name_(name), version_(version) {} \
-        const std::string& getName() const override { return name_; } \
-        const std::string& getVersion() const override { return version_; } \
-        chai::ServiceRegistry& getServices() override { return services_; } \
-        void registerServices(); \
-        void initialize() override { registerServices(); } \
-        void shutdown() override {} \
-    }; \
-    void ClassName::registerServices()
+#define CHAI_PLUGIN_CLASS(ClassName)                                                               \
+    class ClassName : public chai::IPlugin                                                         \
+    {                                                                                              \
+    private:                                                                                       \
+        chai::ServiceRegistry services_;                                                           \
+        std::string name_;                                                                         \
+        std::string version_;                                                                      \
+                                                                                                   \
+    public:                                                                                        \
+        ClassName(const std::string& name, const std::string& version)                             \
+            : name_(name), version_(version)                                                       \
+        {                                                                                          \
+        }                                                                                          \
+                                                                                                   \
+        const std::string& getName() const override                                                \
+        {                                                                                          \
+            return name_;                                                                          \
+        }                                                                                          \
+        const std::string& getVersion() const override                                             \
+        {                                                                                          \
+            return version_;                                                                       \
+        }                                                                                          \
+        chai::ServiceRegistry& getServices() override                                              \
+        {                                                                                          \
+            return services_;                                                                      \
+        }                                                                                          \
+                                                                                                   \
+        void registerServices();                                                                   \
+        void initialize() override                                                                 \
+        {                                                                                          \
+            registerServices();                                                                    \
+        }                                                                                          \
+        void shutdown() override {}                                                                \
+    };
+
+#define CHAI_DECLARE_PLUGIN_ENTRY(ApiMacro) extern "C" ApiMacro void RegisterPlugin();
+
+#define CHAI_PLUGIN_SERVICES(ClassName) void ClassName::registerServices()
 
 #define CHAI_REGISTER_PLUGIN(ClassName, PluginName, Version) \
     extern "C" { \
@@ -70,4 +92,11 @@
                 return std::make_unique<ClassName>(PluginName, Version); \
             }); \
         } \
+    }
+
+#define CHAI_DEFINE_PLUGIN_ENTRY(ClassName, PluginName, Version, ApiMacro)                         \
+    extern "C" ApiMacro void RegisterPlugin()                                                      \
+    {                                                                                              \
+        chai::kettle::PluginRegistry::instance().registerPlugin(                                   \
+            PluginName, []() { return std::make_unique<ClassName>(PluginName, Version); });        \
     }
