@@ -21,7 +21,7 @@ A modular C++ game engine focused on modern rendering techniques and clean archi
 - Event-driven input system
 
 ## Screenshots
-![sponza-deferred-shading](assets/screenshots/sponza_deferred.jpg)
+![sponza-deferred-shading](images/sponza_deferred.jpg)
 
 ## Building
 
