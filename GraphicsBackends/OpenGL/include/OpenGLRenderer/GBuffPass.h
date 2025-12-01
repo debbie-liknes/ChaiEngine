@@ -22,6 +22,7 @@ namespace chai::brew
         GLuint getAlbedoTex() const { return m_gbuffer.albedoTex; }
         GLuint getMaterialTex() const { return m_gbuffer.materialTex; }
         GLuint getDepthTex() const { return m_gbuffer.depthTex; }
+        GLuint getFramebuffer() const { return m_gbuffer.framebuffer; }
 
     private:
         void destroyGBuffer();

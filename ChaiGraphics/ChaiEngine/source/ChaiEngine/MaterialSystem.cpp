@@ -15,6 +15,7 @@ namespace chai
         loadPhongShaderDefault();
         loadPBRDefault();
         loadGBufferShader();
-        loadLightingShader(); 
+        loadLightingShader();
+        loadSkyboxShader();
     }
 }

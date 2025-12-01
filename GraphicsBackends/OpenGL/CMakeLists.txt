@@ -27,6 +27,8 @@ set(OpenGLRenderer_source
         source/OpenGLRenderer/LightingPass.cpp
         source/OpenGLRenderer/GBuffPass.cpp
         source/OpenGLRenderer/ForwardPass.cpp
+        include/OpenGLRenderer/SkyboxPass.h
+        source/OpenGLRenderer/SkyboxPass.cpp
 )
 
 add_library(OpenGLRenderer SHARED ${OpenGLRenderer_headers} ${OpenGLRenderer_source})

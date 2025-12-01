@@ -127,6 +127,26 @@ namespace chai
             m_lightingShader = AssetManager::instance().add(std::move(shaderAsset)).value();
         }
 
+        void loadSkyboxShader()
+        {
+            auto vertAssetHandle = AssetManager::instance().load<ShaderStageAsset>("shaders/skybox.vert").value();
+            auto fragAssetHandle = AssetManager::instance().load<ShaderStageAsset>("shaders/skybox.frag").value();
+
+            // Get the loaded stage assets
+            auto vertAsset = AssetManager::instance().get<ShaderStageAsset>(vertAssetHandle);
+            auto fragAsset = AssetManager::instance().get<ShaderStageAsset>(fragAssetHandle);
+
+            auto shaderAsset = std::make_unique<ShaderAsset>("skybox_shader");
+            shaderAsset->addStage(*vertAsset);
+            shaderAsset->addStage(*fragAsset);
+
+            shaderAsset->addVertexInput("a_Position", 0, DataType::Float3);
+
+            shaderAsset->addUniform("u_Skybox", DataType::SamplerCube);
+
+            m_skyboxShader = AssetManager::instance().add(std::move(shaderAsset)).value();
+        }
+
         class Builder
         {
         public:
@@ -209,6 +229,8 @@ namespace chai
         AssetHandle getPhongMaterial() { return m_phongMaterial; }
 
         ResourceHandle getPBRMaterial() { return m_pbrMaterial; }
+
+        AssetHandle getSkyboxShader() { return m_skyboxShader; }
 
     private:
         MaterialSystem();
@@ -305,5 +327,6 @@ namespace chai
         AssetHandle m_phongMaterial;
         AssetHandle m_gbufferShader;
         AssetHandle m_lightingShader;
+        AssetHandle m_skyboxShader;
     };
 } // namespace chai

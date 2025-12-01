@@ -18,8 +18,6 @@ namespace chai::brew
         void execute(void* backend, const std::vector<SortedDrawCommand>& draws) override;
 
     private:
-        //void createFullscreenQuad();
-        //void createLightingShader();
 
         GBufferPass* m_gbufferPass;
         GLuint m_lightingShader = 0;

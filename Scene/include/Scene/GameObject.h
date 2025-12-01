@@ -80,7 +80,7 @@ namespace chai::cup
             }
         }
 
-        void collectRenderables(brew::RenderCommandCollector& collector);
+        virtual void collectRenderables(brew::RenderCommandCollector& collector);
 
         void update(double deltaTime) override;
 

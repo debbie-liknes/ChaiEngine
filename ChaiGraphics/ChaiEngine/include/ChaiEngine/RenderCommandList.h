@@ -17,7 +17,8 @@ namespace chai::brew
             SET_VIEWPORT,
             CLEAR,
             SET_SCISSOR,
-            SET_LIGHTS
+            SET_LIGHTS,
+            DRAW_SKYBOX
         };
 
         Type type{Type::CLEAR};
@@ -33,5 +34,6 @@ namespace chai::brew
         PipelineState pipelineState;
         uint32_t indexOffset{0};
         uint32_t indexCount{0};
+        ResourceHandle skybox;
     };
 }

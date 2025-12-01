@@ -81,7 +81,7 @@ int main()
     auto modelAsset = chai::AssetManager::instance().load<chai::ModelAsset>("assets/Sponza/glTF/Sponza.gltf");
     auto sponza = testScene->createModelObject("SponzaRoot", modelAsset.value());
     sponza->getComponent<chai::cup::TransformComponent>()->setRotation(
-        chai::Quat::fromEulerZYX(chai::radians(50.0f), chai::radians(50.f), chai::radians(50.f)));
+        chai::Quat::fromEulerZYX(chai::radians(70.0f), chai::radians(50.f), chai::radians(50.f)));
     sponza->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3(0.05, 0.05, 0.05));
 
     //add a camera to look through
@@ -124,7 +124,7 @@ int main()
     vp->setCamera(camComponent->getCamera());
 
     //add the objects to the scene
-    //testScene->addGameObject(std::make_unique<chai::cup::Skybox>());
+    testScene->addGameObject(std::make_unique<chai::cup::Skybox>());
     testScene->addGameObject(std::move(cameraObject));
     testScene->addGameObject(std::move(lightObject));
     //testScene->addGameObject(std::move(lightObject2));
@@ -167,7 +167,7 @@ int main()
             collector.submit(clearCmd);
 
             //multiple scenes? additive scenes?
-            chai::cup::Scene const* scene = sceneManager.getPrimaryScene();
+            Scene const* scene = sceneManager.getPrimaryScene();
             scene->collectLights(collector);
             if (scene != nullptr) {
                 scene->collectRenderables(collector);

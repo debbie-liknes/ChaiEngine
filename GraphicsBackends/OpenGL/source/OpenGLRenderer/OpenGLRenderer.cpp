@@ -215,6 +215,7 @@ namespace chai::brew
 
         std::vector<SortedDrawCommand> opaqueDraws;
         std::vector<SortedDrawCommand> transparentDraws;
+        std::vector<SortedDrawCommand> skyboxDraws;
 
         for (const auto& cmd : frame.commands) {
             switch (cmd.type) {
@@ -242,14 +243,18 @@ namespace chai::brew
                         opaqueDraws.push_back(sorted);
                     //}
                 } break;
-
+                case RenderCommand::DRAW_SKYBOX: {
+                    SortedDrawCommand sorted;
+                    sorted.command = cmd;
+                    skyboxDraws.push_back(sorted);
+                } break;
                 default:
                     break;
             }
         }
 
         // Execute the deferred pipeline
-        m_renderPipeline.execute(opaqueDraws, transparentDraws);
+        m_renderPipeline.execute(opaqueDraws, transparentDraws, skyboxDraws);
 
         m_surface->swapBuffers();
     }
