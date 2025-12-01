@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <Graphics/VertexAttribute.h>
+#include <Graphics/TextureAsset.h>
 
 namespace chai::brew
 {
@@ -96,6 +97,28 @@ namespace chai::brew
                 return GL_NEVER;
             default:
                 return GL_EQUAL;
+        }
+    }
+
+    inline GLenum converFilter(Filter filter)
+    {
+        switch (filter) {
+            case Filter::Nearest:              return GL_NEAREST;
+            case Filter::Linear:               return GL_LINEAR;
+            case Filter::NearestMipmapNearest: return GL_NEAREST_MIPMAP_NEAREST;
+            case Filter::LinearMipmapNearest:  return GL_LINEAR_MIPMAP_NEAREST;
+            case Filter::NearestMipmapLinear:  return GL_NEAREST_MIPMAP_LINEAR;
+            case Filter::LinearMipmapLinear:   return GL_LINEAR_MIPMAP_LINEAR;
+            default:                                            return GL_LINEAR_MIPMAP_LINEAR;
+        }
+    }
+
+    inline GLenum toGLMag(Filter filter)
+    {
+        // Mag filter only supports Nearest or Linear
+        switch (filter) {
+            case Filter::Nearest: return GL_NEAREST;
+            default:              return GL_LINEAR;
         }
     }
 }

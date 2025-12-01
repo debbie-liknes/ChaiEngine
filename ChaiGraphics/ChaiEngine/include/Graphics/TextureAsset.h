@@ -37,12 +37,24 @@ namespace chai
         Repeat
     };
 
+    enum class Filter
+    {
+        Nearest,
+        Linear,
+        NearestMipmapNearest,
+        LinearMipmapNearest,
+        NearestMipmapLinear,
+        LinearMipmapLinear
+    };
+
     class TextureAsset : public IAsset
     {
     public:
         explicit TextureAsset(std::vector<TextureFace> faces, ColorSpace space = ColorSpace::SRGB,
-            TextureType type = TextureType::Tex2D, TextureWrapMode mode = TextureWrapMode::Clamp) :
-            m_faces(std::move(faces)), m_space(space), m_type(type), m_wrapMode(mode)
+            TextureType type = TextureType::Tex2D, TextureWrapMode mode = TextureWrapMode::Clamp,
+            Filter minFilter = Filter::LinearMipmapLinear, Filter magFilter = Filter::Linear) :
+            m_faces(std::move(faces)), m_space(space), m_type(type), m_wrapMode(mode), m_minFilter(minFilter),
+        m_magFilter(magFilter)
         {}
 
         bool isValid() const override { return !m_faces.empty(); }
@@ -60,6 +72,8 @@ namespace chai
         ColorSpace getColorSpace() const { return m_space; }
         TextureType getType() const { return m_type; }
         TextureWrapMode getWrapMode() const { return m_wrapMode; }
+        Filter getMinFilter() const { return m_minFilter; }
+        Filter getMagFilter() const { return m_magFilter; }
 
 
     private:
@@ -67,6 +81,8 @@ namespace chai
         ColorSpace m_space = ColorSpace::SRGB;
         TextureType m_type = TextureType::Tex2D;
         TextureWrapMode m_wrapMode = TextureWrapMode::Clamp;
+        Filter m_minFilter = Filter::LinearMipmapLinear;
+        Filter m_magFilter = Filter::Linear;
     };
 
     class TextureResource : public Resource
@@ -77,8 +93,10 @@ namespace chai
             init();
         }
         explicit TextureResource(std::vector<TextureFace> faces, ColorSpace space = ColorSpace::SRGB,
-            TextureType type = TextureType::Tex2D, TextureWrapMode mode = TextureWrapMode::Clamp)
-                : m_space(space), m_type(type), m_wrapMode(mode)
+            TextureType type = TextureType::Tex2D, TextureWrapMode mode = TextureWrapMode::Clamp,
+            Filter minFilter = Filter::LinearMipmapLinear, Filter magFilter = Filter::Linear)
+        : m_space(space), m_type(type), m_wrapMode(mode), m_minFilter(minFilter),
+            m_magFilter(magFilter)
         {
             initFromFaces(faces);
         }
@@ -100,6 +118,7 @@ namespace chai
         uint8_t* getPixels() { return m_faces.front().pixels.data(); }
         TextureWrapMode getWrapMode() const { return m_wrapMode; }
         TextureWrapMode getWrapMode() { return m_wrapMode; }
+        bool generateMipmaps() { return true; }
 
     private:
 
@@ -123,6 +142,8 @@ namespace chai
                 m_space = textureAsset->getColorSpace();
                 m_type = textureAsset->getType();
                 m_wrapMode = textureAsset->getWrapMode();
+                m_minFilter = textureAsset->getMinFilter();
+                m_magFilter = textureAsset->getMagFilter();
             }
         }
 
@@ -132,6 +153,9 @@ namespace chai
         ColorSpace m_space = ColorSpace::SRGB;
         TextureType m_type = TextureType::Tex2D;
         TextureWrapMode m_wrapMode = TextureWrapMode::Clamp;
+
+        Filter m_minFilter = Filter::LinearMipmapLinear;
+        Filter m_magFilter = Filter::Linear;
     };
 
     static ResourceHandle getDefaultWhiteTexture()

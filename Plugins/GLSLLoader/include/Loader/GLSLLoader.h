@@ -18,8 +18,5 @@ namespace chai
     };
 }
 
-CHAI_PLUGIN_CLASS (ShaderLoaderPlugin)
-{
-    CHAI_LOADER(chai::GLSLLoader, "GLSL loader")
-}
-CHAI_REGISTER_PLUGIN(ShaderLoaderPlugin, "GLSLLoader", "1.0.0")
+CHAI_PLUGIN_CLASS(ShaderLoaderPlugin)
+CHAI_DECLARE_PLUGIN_ENTRY(GLSLLOADER_EXPORT)

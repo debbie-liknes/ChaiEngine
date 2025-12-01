@@ -9,18 +9,17 @@ namespace chai::cup
 {
     Skybox::Skybox() : m_meshComponent(nullptr)
     {
-        setupShaders();
         init();
     }
 
     void Skybox::init()
     {
-        m_meshComponent = addComponent<chai::cup::MeshComponent>();
+        /*m_meshComponent = addComponent<chai::cup::MeshComponent>();
         auto meshAsset = chai::AssetManager::instance().load<chai::MeshAsset>("assets/skybox.obj");
-        m_meshComponent->setMesh(meshAsset.value());
+        m_meshComponent->setMesh(meshAsset.value());*/
         m_cubeTextureHandle = loadTextureCube("assets/skybox").value();
 
-        auto material = chai::MaterialSystem::Builder(m_skyboxShaderAsset)
+        /*auto material = chai::MaterialSystem::Builder(m_skyboxShaderAsset)
         .setTexture("u_Skybox", m_cubeTextureHandle)
         .build();
 
@@ -32,26 +31,16 @@ namespace chai::cup
 
         // Customize instance
         m_meshComponent->setMaterialInstance(
-            chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance)));
+            chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance)));*/
     }
 
-    void Skybox::setupShaders()
+    void Skybox::collectRenderables(brew::RenderCommandCollector& collector)
     {
-        auto vertAssetHandle = AssetManager::instance().load<ShaderStageAsset>("shaders/skybox.vert").value();
-        auto fragAssetHandle = AssetManager::instance().load<ShaderStageAsset>("shaders/skybox.frag").value();
+        if (!m_cubeTextureHandle.isValid()) return;
 
-        // Get the loaded stage assets
-        auto vertAsset = AssetManager::instance().get<ShaderStageAsset>(vertAssetHandle);
-        auto fragAsset = AssetManager::instance().get<ShaderStageAsset>(fragAssetHandle);
-
-        auto shaderAsset = std::make_unique<ShaderAsset>("skybox_shader");
-        shaderAsset->addStage(*vertAsset);
-        shaderAsset->addStage(*fragAsset);
-
-        shaderAsset->addVertexInput("a_Position", 0, DataType::Float3);
-
-        shaderAsset->addUniform("u_Skybox", DataType::SamplerCube);
-
-        m_skyboxShaderAsset = AssetManager::instance().add(std::move(shaderAsset)).value();
+        brew::RenderCommand cmd;
+        cmd.type = brew::RenderCommand::DRAW_SKYBOX;
+        cmd.skybox = m_cubeTextureHandle;
+        collector.submit(cmd);
     }
 }

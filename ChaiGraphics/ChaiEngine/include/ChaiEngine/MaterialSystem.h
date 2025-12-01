@@ -18,6 +18,9 @@ namespace chai
         MaterialSystem(const MaterialSystem&) = delete;
         MaterialSystem& operator=(const MaterialSystem&) = delete;
 
+        AssetHandle getGBufferShader() { return m_gbufferShader; }
+        AssetHandle getLightingShader() { return m_lightingShader; }
+
         static ResourceHandle createFromAsset(AssetHandle assetHandle)
         {
             auto* asset = AssetManager::instance().get<MaterialAsset>(assetHandle);
@@ -62,30 +65,87 @@ namespace chai
             return ResourceManager::instance().add(std::move(resource));
         }
 
-        //static ResourceHandle create(AssetHandle shaderHandle)
-        //{
-        //    auto* shader = AssetManager::instance().get<ShaderAsset>(shaderHandle);
-        //    if (!shader) {
-        //        std::cerr << "Invalid shader handle!" << std::endl;
-        //        return ResourceHandle{};
-        //    }
+        void loadGBufferShader()
+        {
+            auto vertHandle =
+                AssetManager::instance().load<ShaderStageAsset>("shaders/gbuffer.vert").value();
+            auto fragHandle =
+                AssetManager::instance().load<ShaderStageAsset>("shaders/gbuffer.frag").value();
 
-        //    auto resource = std::make_unique<MaterialResource>();
-        //    resource->shaderAsset = shaderHandle;
+            auto* vertAsset = AssetManager::instance().get<ShaderStageAsset>(vertHandle);
+            auto* fragAsset = AssetManager::instance().get<ShaderStageAsset>(fragHandle);
 
-        //    // Initialize with shader defaults
-        //    for (const auto& uniform : shader->getUniforms()) {
-        //        if (uniform.defaultValue.index() != 0) {
-        //            if (std::holds_alternative<ResourceHandle>(uniform.defaultValue)) {
-        //                resource->textures.emplace(uniform.name, uniform.defaultValue);
-        //            } else {
-        //                resource->uniforms.emplace(uniform.name, uniform.defaultValue);
-        //            }
-        //        }
-        //    }
+            auto shaderAsset = std::make_unique<ShaderAsset>("gbuffer_shader");
+            shaderAsset->addStage(*vertAsset);
+            shaderAsset->addStage(*fragAsset);
+            shaderAsset->setPassType(brew::RenderPassDesc::Type::GBuffer);
 
-        //    return ResourceManager::instance().add(std::move(resource));
-        //}
+            // Same vertex inputs as PBR
+            shaderAsset->addVertexInput("a_Position", 0, DataType::Float3);
+            shaderAsset->addVertexInput("a_Normal", 1, DataType::Float3);
+            shaderAsset->addVertexInput("a_TexCoord", 2, DataType::Float2);
+            shaderAsset->addVertexInput("a_Tangent", 3, DataType::Float4);
+
+            // Same uniforms as PBR - materials work with both
+            shaderAsset->addUniform("u_albedo", DataType::Float3, false);
+            shaderAsset->addUniform("u_albedoMap", DataType::Sampler2D, false);
+            shaderAsset->addUniform("u_metallic", DataType::Float, false);
+            shaderAsset->addUniform("u_roughness", DataType::Float, false);
+            shaderAsset->addUniform("u_metallicRoughnessMap", DataType::Sampler2D, false);
+            shaderAsset->addUniform("u_normalMap", DataType::Sampler2D, false);
+
+            m_gbufferShader = AssetManager::instance().add(std::move(shaderAsset)).value();
+        }
+
+        void loadLightingShader()
+        {
+            auto vertHandle = AssetManager::instance()
+                                  .load<ShaderStageAsset>("shaders/deferred_lighting.vert")
+                                  .value();
+            auto fragHandle = AssetManager::instance()
+                                  .load<ShaderStageAsset>("shaders/deferred_lighting.frag")
+                                  .value();
+
+            auto* vertAsset = AssetManager::instance().get<ShaderStageAsset>(vertHandle);
+            auto* fragAsset = AssetManager::instance().get<ShaderStageAsset>(fragHandle);
+
+            auto shaderAsset = std::make_unique<ShaderAsset>("lighting_shader");
+            shaderAsset->addStage(*vertAsset);
+            shaderAsset->addStage(*fragAsset);
+            shaderAsset->setPassType(brew::RenderPassDesc::Type::Lighting);
+
+            // Fullscreen quad inputs
+            shaderAsset->addVertexInput("a_Position", 0, DataType::Float2);
+            shaderAsset->addVertexInput("a_TexCoord", 1, DataType::Float2);
+
+            // G-Buffer samplers (these are set by the pass, not materials)
+            shaderAsset->addUniform("gPosition", DataType::Sampler2D, false);
+            shaderAsset->addUniform("gNormal", DataType::Sampler2D, false);
+            shaderAsset->addUniform("gAlbedo", DataType::Sampler2D, false);
+            shaderAsset->addUniform("gMaterial", DataType::Sampler2D, false);
+
+            m_lightingShader = AssetManager::instance().add(std::move(shaderAsset)).value();
+        }
+
+        void loadSkyboxShader()
+        {
+            auto vertAssetHandle = AssetManager::instance().load<ShaderStageAsset>("shaders/skybox.vert").value();
+            auto fragAssetHandle = AssetManager::instance().load<ShaderStageAsset>("shaders/skybox.frag").value();
+
+            // Get the loaded stage assets
+            auto vertAsset = AssetManager::instance().get<ShaderStageAsset>(vertAssetHandle);
+            auto fragAsset = AssetManager::instance().get<ShaderStageAsset>(fragAssetHandle);
+
+            auto shaderAsset = std::make_unique<ShaderAsset>("skybox_shader");
+            shaderAsset->addStage(*vertAsset);
+            shaderAsset->addStage(*fragAsset);
+
+            shaderAsset->addVertexInput("a_Position", 0, DataType::Float3);
+
+            shaderAsset->addUniform("u_Skybox", DataType::SamplerCube);
+
+            m_skyboxShader = AssetManager::instance().add(std::move(shaderAsset)).value();
+        }
 
         class Builder
         {
@@ -169,6 +229,8 @@ namespace chai
         AssetHandle getPhongMaterial() { return m_phongMaterial; }
 
         ResourceHandle getPBRMaterial() { return m_pbrMaterial; }
+
+        AssetHandle getSkyboxShader() { return m_skyboxShader; }
 
     private:
         MaterialSystem();
@@ -263,5 +325,8 @@ namespace chai
         AssetHandle m_pbrShader;
         ResourceHandle m_pbrMaterial;
         AssetHandle m_phongMaterial;
+        AssetHandle m_gbufferShader;
+        AssetHandle m_lightingShader;
+        AssetHandle m_skyboxShader;
     };
 } // namespace chai

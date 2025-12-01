@@ -31,3 +31,9 @@ namespace chai
         return std::make_unique<TextureAsset>(std::vector<TextureFace>{face});
     }
 }
+
+CHAI_PLUGIN_SERVICES(ImageLoaderPlugin)
+{
+    CHAI_LOADER(chai::PngLoader, "PNG loader")
+}
+CHAI_DEFINE_PLUGIN_ENTRY(ImageLoaderPlugin, "TextureLoader", "1.0.0", TEXTURELOADER_EXPORT)

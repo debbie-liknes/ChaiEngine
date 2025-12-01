@@ -9,22 +9,6 @@
 
 namespace chai
 {
-    enum class MaterialFeature
-    {
-        BaseColor,
-        BaseColorTexture,
-        Normal,
-        NormalTexture,
-        Metallic,
-        MetallicTexture,
-        Roughness,
-        RoughnessTexture,
-        Emission,
-        EmissionTexture,
-        Transparency,
-        DoubleSided
-    };
-
     //shared by multiple instances
     struct CHAIGRAPHICS_EXPORT MaterialAsset : public IAsset
     {

@@ -112,7 +112,7 @@ namespace chai::brew
         }
 
         // Generate mipmaps if requested
-        /*if (texResource->generateMipmaps) {
+        if (texResource->generateMipmaps()) {
             glGenerateMipmap(texData->target);
             checkGLError("glGenerateMipmap");
             texData->hasMipmaps = true;
@@ -122,7 +122,7 @@ namespace chai::brew
                                      std::floor(
                                          std::log2(std::max(texData->width, texData->height)))
                                  );
-        }*/
+        }
 
         // Configure texture parameters
         configureTextureParameters(texData, texResource);

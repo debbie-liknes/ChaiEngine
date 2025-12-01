@@ -9,13 +9,12 @@ namespace chai::cup
     public:
         Skybox();
 
+        void collectRenderables(brew::RenderCommandCollector& collector) override;
 
     private:
         void init();
-        void setupShaders();
 
         ResourceHandle m_cubeTextureHandle;
-        AssetHandle m_skyboxShaderAsset;
         MeshComponent* m_meshComponent;
     };
 }

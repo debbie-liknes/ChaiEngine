@@ -135,6 +135,8 @@ namespace chai::brew
 
         m_matManager.setShaderManager(&m_shaderManager);
 
+        m_renderPipeline.initialize(this, 0, 0);
+
         std::cout << "Creating common uniforms..." << '\n';
 
         m_perFrameUBOData = createUniform<CommonUniforms>();
@@ -209,15 +211,12 @@ namespace chai::brew
 
     void OpenGLBackend::executeFrame(const RenderFrame& frame)
     {
-
-        // Process uploads
         m_uploadQueue.processUploads(2.0f);
 
-        // Separate commands by type
         std::vector<SortedDrawCommand> opaqueDraws;
         std::vector<SortedDrawCommand> transparentDraws;
+        std::vector<SortedDrawCommand> skyboxDraws;
 
-        // Process commands
         for (const auto& cmd : frame.commands) {
             switch (cmd.type) {
                 case RenderCommand::SET_VIEWPORT: {
@@ -226,72 +225,36 @@ namespace chai::brew
                     glViewport(x, y, width, height);
                     m_perFrameUBOData->setValue(
                         {cmd.viewMatrix, cmd.projectionMatrix, cmd.viewMatrix.inverse()});
+                    m_renderPipeline.resize(width, height);
                 } break;
-
-                case RenderCommand::CLEAR:
-                    clear(0.0f, 0.0f, 0.0f, 1.0f);
-                    break;
 
                 case RenderCommand::SET_LIGHTS:
                     setLights(cmd.lights);
                     break;
 
                 case RenderCommand::DRAW_MESH: {
-                    if (!cmd.mesh.isValid())
-                        continue;
-
-                    OpenGLMeshData* meshData = m_meshManager.getOrCreateMeshData(cmd.mesh);
-                    if (!meshData)
-                        continue;
-
-                    if (!meshData->isUploaded) {
-                        if (!m_uploadQueue.isQueued(cmd.mesh)) {
-                            m_uploadQueue.requestUpload(cmd.mesh, (void*)meshData);
-                        }
-                        continue;
-                    }
-
                     SortedDrawCommand sorted;
                     sorted.command = cmd;
-                    sorted.sortKey = createSortKey(cmd, meshData);
+                    //sorted.sortKey = 0;
 
-                    if (sorted.sortKey.transparency) {
-                        transparentDraws.push_back(sorted);
-                    } else {
+                    //if (blendEnabled) {
+                        //transparentDraws.push_back(sorted);
+                    //} else {
                         opaqueDraws.push_back(sorted);
-                    }
+                    //}
                 } break;
-                default:;
+                case RenderCommand::DRAW_SKYBOX: {
+                    SortedDrawCommand sorted;
+                    sorted.command = cmd;
+                    skyboxDraws.push_back(sorted);
+                } break;
+                default:
+                    break;
             }
         }
 
-        // Sort draws
-        std::ranges::sort(opaqueDraws, [](const SortedDrawCommand& a, const SortedDrawCommand& b) {
-            return a.sortKey < b.sortKey;
-        });
-
-        std::ranges::sort(transparentDraws,
-                          [](const SortedDrawCommand& a, const SortedDrawCommand& b) {
-                              return a.sortKey.depth > b.sortKey.depth;
-                          });
-
-        // Update per-frame uniforms
-        updatePerFrameUniforms();
-
-        // Execute render passes
-        if (!opaqueDraws.empty()) {
-            glDisable(GL_BLEND);
-            glDepthMask(GL_TRUE);
-            drawBatchedCommands(opaqueDraws);
-        }
-
-        if (!transparentDraws.empty()) {
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glDepthMask(GL_FALSE);
-            drawBatchedCommands(transparentDraws);
-            glDepthMask(GL_TRUE);
-        }
+        // Execute the deferred pipeline
+        m_renderPipeline.execute(opaqueDraws, transparentDraws, skyboxDraws);
 
         m_surface->swapBuffers();
     }
@@ -377,8 +340,6 @@ namespace chai::brew
 
     void OpenGLBackend::drawBatchedCommands(const std::vector<SortedDrawCommand>& sortedDraws)
     {
-        //currentVAO = 0;
-
         for (const auto& draw : sortedDraws) {
             const auto& cmd = draw.command;
 
@@ -623,3 +584,10 @@ namespace chai::brew
         }
     }
 }
+
+CHAI_PLUGIN_SERVICES(OpenGLPlugin)
+{
+    CHAI_SERVICE_AS(chai::brew::Renderer, chai::brew::OpenGLBackend, "Renderer");
+}
+
+CHAI_DEFINE_PLUGIN_ENTRY(OpenGLPlugin, "OpenGLRenderer", "1.0.0", OPENGLRENDERER_EXPORT)

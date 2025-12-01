@@ -148,3 +148,10 @@ namespace chai
         return mesh;
     }
 }
+
+CHAI_PLUGIN_SERVICES(ModelLoader)
+{
+    CHAI_LOADER(chai::ObjLoader, "obj")
+    CHAI_LOADER(chai::GLTFLoader, "gltf")
+}
+CHAI_DEFINE_PLUGIN_ENTRY(ModelLoader, "ModelLoader", "1.0.0", MODELLOADER_EXPORT)

@@ -1,6 +1,7 @@
 #pragma once
 #include <Asset/AssetLoader.h>
 #include <Graphics/MaterialParameter.h>
+#include <Graphics/RenderPass.h>
 
 namespace chai
 {
@@ -64,6 +65,9 @@ namespace chai
         // What shader expects from meshes
         const std::vector<VertexInput>& getVertexInputs() const { return m_vertexInputs; }
 
+        void setPassType(brew::RenderPassDesc::Type type) { m_passType = type; }
+        brew::RenderPassDesc::Type getPassType() const { return m_passType; }
+
         void addUniform(const std::string& name, DataType type,
                        bool required = true, MaterialParameterValue defaultValue = {})
         {
@@ -85,5 +89,7 @@ namespace chai
         std::vector<VertexInput> m_vertexInputs;
         std::vector<ShaderStageAsset> m_shaderStages;
         std::string m_name;
+
+        brew::RenderPassDesc::Type m_passType{brew::RenderPassDesc::Type::Forward};
     };
 }
