@@ -170,7 +170,7 @@ int main()
             Scene const* scene = sceneManager.getPrimaryScene();
             scene->collectLights(collector);
             if (scene != nullptr) {
-                scene->collectRenderables(collector);
+                scene->collectRenderables(collector, camComponent->getCamera()->getFrustum());
             }
 
             renderer->executeCommands(collector.getCommands());

@@ -1,9 +1,13 @@
 #pragma once
-#include <memory>
+#include "Graphics/AABB.h"
+#include "Graphics/Frustum.h"
+
 #include <ChaiEngine/RenderCommandCollector.h>
+
 #include <Components/ComponentBase.h>
 #include <Components/ControllerComponent.h>
 #include <Core/Updatable.h>
+#include <memory>
 
 namespace chai::cup
 {
@@ -12,12 +16,14 @@ namespace chai::cup
     public:
         GameObject();
         GameObject(const std::string& name);
-        ~GameObject() = default;
+        ~GameObject() override = default;
 
         void setParent(GameObject* parent);
         GameObject* getParent() const;
-        void addChild(std::unique_ptr<GameObject> child);
+        //void addChild(std::unique_ptr<GameObject> child);
         const std::vector<GameObject*>& getChildren() const;
+
+        virtual bool isVisible(const Frustum& frustum);
 
         //TODO: make sure its a Component base child
         template <typename T>
@@ -38,6 +44,15 @@ namespace chai::cup
                 }
             }
             return nullptr;
+        }
+
+        std::vector<Component*>& getComponents() const
+        {
+            std::vector<Component*> components;
+            for (auto& component : m_components) {
+                components.push_back(component.get());
+            }
+            return components;
         }
 
         template <typename T, typename... Args>

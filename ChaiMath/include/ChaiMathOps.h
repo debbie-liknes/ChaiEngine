@@ -40,6 +40,12 @@ namespace chai
     template <typename T>
     Mat4T<T> perspective(T fov, T aspect, T near, T far);
 
+    template <typename T, int N>
+    Vec<T, N> minVec(const Vec<T, N>& a, const Vec<T, N>& b);
+
+    template <typename T, int N>
+    Vec<T, N> maxVec(const Vec<T, N>& a, const Vec<T, N>& b);
+
     template <typename T>
     Vec<T, 3> operator*(const Quaternion<T> quat, const Vec<T, 3>& v);
 }

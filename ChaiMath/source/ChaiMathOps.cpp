@@ -151,6 +151,26 @@ namespace chai
         return result;
     }
 
+    template <typename T, int N>
+    Vec<T, N> minVec(const Vec<T, N>& a, const Vec<T, N>& b)
+    {
+        Vec<T, N> result;
+        for (int i = 0; i < N; ++i) {
+            result[i] = std::min(a[i], b[i]);
+        }
+        return result;
+    }
+
+    template <typename T, int N>
+    Vec<T, N> maxVec(const Vec<T, N>& a, const Vec<T, N>& b)
+    {
+        Vec<T, N> result;
+        for (int i = 0; i < N; ++i) {
+            result[i] = std::max(a[i], b[i]);
+        }
+        return result;
+    }
+
 
     template CHAIMATH_EXPORT Mat<float, 4, 4> perspective<float>(float, float, float, float);
     template CHAIMATH_EXPORT Mat<double, 4, 4> perspective<double>(double, double, double, double);
@@ -174,6 +194,20 @@ namespace chai
 
     template CHAIMATH_EXPORT Mat4T<float> toMat4<float>(const Mat3T<float>&);
     template CHAIMATH_EXPORT Mat4T<double> toMat4<double>(const Mat3T<double>&);
+
+    template CHAIMATH_EXPORT Vec<float, 2> minVec(const Vec<float, 2>&, const Vec<float, 2>&);
+    template CHAIMATH_EXPORT Vec<double, 2> minVec(const Vec<double, 2>&, const Vec<double, 2>&);
+    template CHAIMATH_EXPORT Vec<float, 3> minVec(const Vec<float, 3>&, const Vec<float, 3>&);
+    template CHAIMATH_EXPORT Vec<double, 3> minVec(const Vec<double, 3>&, const Vec<double, 3>&);
+    template CHAIMATH_EXPORT Vec<float, 4> minVec(const Vec<float, 4>&, const Vec<float, 4>&);
+    template CHAIMATH_EXPORT Vec<double, 4> minVec(const Vec<double, 4>&, const Vec<double, 4>&);
+
+    template CHAIMATH_EXPORT Vec<float, 2> maxVec(const Vec<float, 2>&, const Vec<float, 2>&);
+    template CHAIMATH_EXPORT Vec<double, 2> maxVec(const Vec<double, 2>&, const Vec<double, 2>&);
+    template CHAIMATH_EXPORT Vec<float, 3> maxVec(const Vec<float, 3>&, const Vec<float, 3>&);
+    template CHAIMATH_EXPORT Vec<double, 3> maxVec(const Vec<double, 3>&, const Vec<double, 3>&);
+    template CHAIMATH_EXPORT Vec<float, 4> maxVec(const Vec<float, 4>&, const Vec<float, 4>&);
+    template CHAIMATH_EXPORT Vec<double, 4> maxVec(const Vec<double, 4>&, const Vec<double, 4>&);
 
     template CHAIMATH_EXPORT float radians<float>(float);
     template CHAIMATH_EXPORT double radians<double>(double);

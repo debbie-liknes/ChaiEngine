@@ -22,6 +22,7 @@ namespace chai::cup
         void setRotation(const Quat& rot)
         {
             m_rotation = rot;
+            setDirty();
         }
         void setScale(chai::Vec3 newScale);
 
