@@ -30,7 +30,8 @@ namespace chai::brew
 
         void execute(const std::vector<SortedDrawCommand>& opaqueDraws,
                      const std::vector<SortedDrawCommand>& transparentDraws,
-                     const std::vector<SortedDrawCommand>& skyboxDraws);
+                     const std::vector<SortedDrawCommand>& skyboxDraws,
+                     const std::vector<LightInfo>& lights);
 
     private:
         OpenGLBackend* m_backend = nullptr;

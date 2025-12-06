@@ -45,7 +45,7 @@ namespace chai::cup
             light.directionAndRange = Vec4(transform->forward(), lightComp->range);
             light.spotParams = Vec4(lightComp->innerCone, lightComp->outerCone, 0.0, 0.0);
 
-            cmd.lights.push_back(light);
+            cmd.lights.push_back({light, lightComp->shadowsEnabled});
         }
         if (cmd.lights.empty())
             return;

@@ -8,6 +8,7 @@
 #include <sstream>
 #include <memory>
 #include <OpenGLRenderer/OpenGLShader.h>
+#include <OpenGLRenderer/UniformManager.h>
 
 #include "Graphics/ShaderAsset.h"
 
@@ -159,54 +160,6 @@ namespace chai::brew
         }
 
     private:
-        std::unique_ptr<UniformBufferBase> createUniformBuffer(const MaterialParameterValue& value)
-        {
-            return std::visit([](auto&& arg) -> std::unique_ptr<UniformBufferBase>
-                              {
-                                  using T = std::decay_t<decltype(arg)>;
-
-                                  if constexpr (std::is_same_v<T, float>)
-                                  {
-                                      auto buf = std::make_unique<UniformBuffer<float>>();
-                                      buf->setValue(arg);
-                                      return buf;
-                                  }
-                                  else if constexpr (std::is_same_v<T, Vec3>)
-                                  {
-                                      auto buf = std::make_unique<UniformBuffer<Vec3>>();
-                                      buf->setValue(arg);
-                                      return buf;
-                                  }
-                                  else if constexpr (std::is_same_v<T, Vec4>)
-                                  {
-                                      auto buf = std::make_unique<UniformBuffer<Vec4>>();
-                                      buf->setValue(arg);
-                                      return buf;
-                                  }
-                                  else if constexpr (std::is_same_v<T, int>)
-                                  {
-                                      auto buf = std::make_unique<UniformBuffer<int>>();
-                                      buf->setValue(arg);
-                                      return buf;
-                                  }
-                                  else if constexpr (std::is_same_v<T, Mat4>)
-                                  {
-                                      auto buf = std::make_unique<UniformBuffer<Mat4>>();
-                                      buf->setValue(arg);
-                                      return buf;
-                                  }
-                                  else if constexpr (std::is_same_v<T, Handle>) // Texture handle
-                                  {
-                                      // Textures are handled separately
-                                      return nullptr;
-                                  }
-                                  else
-                                  {
-                                      return nullptr;
-                                  }
-                              },
-                              value);
-        }
 
         CMap<size_t, std::unique_ptr<OpenGLMaterialData>> m_materialCache;
         GLShaderManager* m_shaderManager = nullptr;

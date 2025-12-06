@@ -79,17 +79,17 @@ namespace chai::brew
         void updatePerFrameUniforms();
         void updatePerDrawUniforms(const RenderCommand& cmd, const OpenGLShaderData* shaderData);
         void updateLightUniforms(const OpenGLShaderData* shaderData);
-        void setUniformValue(GLint location, const std::unique_ptr<UniformBufferBase>& uniform);
 
         // Material handling
         void applyMaterialState(OpenGLMaterialData* matData, OpenGLShaderData* shaderData);
 
-        void setLights(const std::vector<Light>& lights);
+        void setLights(const std::vector<LightInfo>& lights);
 
         GLShaderManager& getShaderManager() { return m_shaderManager; }
         OpenGLMeshManager& getMeshManager() { return m_meshManager; }
         OpenGLMaterialManager& getMaterialManager() { return m_matManager; }
         OpenGLTextureManager& getTextureManager() { return m_texManager; }
+        UniformManager& getUniformManager() { return m_uniManager; }
         UploadQueue& getUploadQueue() { return m_uploadQueue; }
         GLPipelineState& getCurrentState() { return m_currentState; }
 
@@ -135,7 +135,7 @@ namespace chai::brew
         GLuint currentVAO = 0;
 
         // Cached data
-        std::vector<Light> m_cachedLights;
+        std::vector<LightInfo> m_cachedLights;
         bool m_lightsDirty = true;
 
         // Camera data (for sorting)

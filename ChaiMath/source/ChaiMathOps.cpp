@@ -109,6 +109,21 @@ namespace chai
     }
 
     template <typename T>
+    Mat4T<T> ortho(T left, T right, T bottom, T top, T near, T far)
+    {
+        Mat4T<T> o;
+        o[0][0] = 2 / (right - left);
+        o[1][1] = 2 / (top - bottom);
+        o[2][2] = -2 / (far - near);
+        o[3][0] = -(right + left) / (right - left);
+        o[3][1] = -(top + bottom) / (top - bottom);
+        o[3][2] = -(far + near) / (far - near);
+        o[3][3] = 1;
+
+        return o;
+    }
+
+    template <typename T>
     Mat4T<T> perspective(T fov, T aspect, T near, T far)
     {
         assert(aspect != T(0));
@@ -174,6 +189,9 @@ namespace chai
 
     template CHAIMATH_EXPORT Mat<float, 4, 4> perspective<float>(float, float, float, float);
     template CHAIMATH_EXPORT Mat<double, 4, 4> perspective<double>(double, double, double, double);
+
+    template CHAIMATH_EXPORT Mat<float, 4, 4> ortho<float>(float, float, float, float, float, float);
+    template CHAIMATH_EXPORT Mat<double, 4, 4> ortho<double>(double, double, double, double, double, double);
 
     template CHAIMATH_EXPORT Mat<float, 4, 4> lookAt<float>(const Vec3T<float>&, const Vec3T<float>&,
                                                             const Vec3T<float>&);

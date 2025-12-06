@@ -17,5 +17,6 @@ namespace chai
         loadGBufferShader();
         loadLightingShader();
         loadSkyboxShader();
+        loadShadowShader();
     }
 }

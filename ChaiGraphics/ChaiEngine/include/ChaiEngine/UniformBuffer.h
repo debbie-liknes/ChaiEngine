@@ -30,6 +30,7 @@ namespace chai
         virtual UniformType getType() const = 0;
         virtual size_t getSize() const = 0;
         virtual void getData(void* dest, size_t maxSize) const = 0;
+        virtual void setData(const void* data, size_t size) = 0;
         virtual std::unique_ptr<UniformBufferBase> clone() const = 0;
 
         bool isFloat() const { return getType() == UniformType::FLOAT; }
@@ -133,6 +134,14 @@ namespace chai
             if (maxSize >= sizeof(T))
             {
                 std::memcpy(dest, &m_value, sizeof(T));
+            }
+        }
+
+        void setData(const void* data, size_t size) override
+        {
+            if (size >= sizeof(T))
+            {
+                std::memcpy(&m_value, data, sizeof(T));
             }
         }
 

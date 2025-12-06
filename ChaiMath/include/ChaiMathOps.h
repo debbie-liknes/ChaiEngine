@@ -40,6 +40,9 @@ namespace chai
     template <typename T>
     Mat4T<T> perspective(T fov, T aspect, T near, T far);
 
+    template <typename T>
+    Mat4T<T> ortho(T left, T right, T bottom, T top, T near, T far);
+
     template <typename T, int N>
     Vec<T, N> minVec(const Vec<T, N>& a, const Vec<T, N>& b);
 

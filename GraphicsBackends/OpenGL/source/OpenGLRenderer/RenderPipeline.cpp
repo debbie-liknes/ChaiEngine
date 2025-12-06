@@ -22,6 +22,8 @@ namespace chai::brew
         m_skyboxPass->setup(backend);
 
         resize(width, height);
+
+        m_shadowPass->setup(backend);
     }
 
     void RenderPipeline::shutdown()
@@ -44,10 +46,11 @@ namespace chai::brew
 
     void RenderPipeline::execute(const std::vector<SortedDrawCommand>& opaqueDraws,
                  const std::vector<SortedDrawCommand>& transparentDraws,
-                 const std::vector<SortedDrawCommand>& skyboxDraws)
+                 const std::vector<SortedDrawCommand>& skyboxDraws,
+                 const std::vector<LightInfo>& lights)
     {
         // Map the shadows first
-        m_shadowPass->execute(m_backend, opaqueDraws);
+        m_shadowPass->execute(m_backend, lights, opaqueDraws);
 
         // 1. G-Buffer pass
         m_gbufferPass->execute(m_backend, opaqueDraws);

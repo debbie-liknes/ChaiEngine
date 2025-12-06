@@ -31,5 +31,7 @@ namespace chai::cup
 
         bool enabled = true;
         bool shadowsEnabled = true;
+
+
     };
 }
