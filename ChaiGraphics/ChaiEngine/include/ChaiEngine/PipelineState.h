@@ -26,14 +26,9 @@ namespace chai
     struct DepthStencilState
     {
         bool depthTestEnable = true;
-        bool depthWriteEnable = true;
+        bool depthMaskEnable = true;
         enum class CompareOp { Never, Less, Equal, LessEqual, Greater, NotEqual, GreaterEqual, Always };
         CompareOp depthCompareOp = CompareOp::Less;
-
-        //Stencil
-        bool stencilEnable = false;
-        uint8_t stencilReadMask = 0xFF;
-        uint8_t stencilWriteMask = 0xFF;
     };
 
     struct PipelineState

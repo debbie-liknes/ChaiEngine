@@ -7,7 +7,7 @@
 
 namespace chai::cup
 {
-    Skybox::Skybox() : m_meshComponent(nullptr)
+    Skybox::Skybox()
     {
         init();
     }
@@ -32,6 +32,11 @@ namespace chai::cup
         // Customize instance
         m_meshComponent->setMaterialInstance(
             chai::ResourceManager::instance().add<chai::MaterialInstance>(std::move(materialInstance)));*/
+
+        m_skyboxPipelineState.rasterState.cullMode = RasterizerState::CullMode::None;
+        m_skyboxPipelineState.depthStencilState.depthCompareOp = DepthStencilState::CompareOp::LessEqual;
+        m_skyboxPipelineState.depthStencilState.depthTestEnable = true;
+        //m_skyboxPipelineState.depthStencilState.mas
     }
 
     void Skybox::collectRenderables(brew::RenderCommandCollector& collector)
@@ -41,6 +46,7 @@ namespace chai::cup
         brew::RenderCommand cmd;
         cmd.type = brew::RenderCommand::DRAW_SKYBOX;
         cmd.skybox = m_cubeTextureHandle;
+        cmd.pipelineState = m_skyboxPipelineState;
         collector.submit(cmd);
     }
 }

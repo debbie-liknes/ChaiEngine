@@ -16,6 +16,6 @@ namespace chai::cup
         void init();
 
         ResourceHandle m_cubeTextureHandle;
-        MeshComponent* m_meshComponent;
+        PipelineState m_skyboxPipelineState;
     };
 }

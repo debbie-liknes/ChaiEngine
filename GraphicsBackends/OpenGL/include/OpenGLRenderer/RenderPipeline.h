@@ -1,4 +1,6 @@
 #pragma once
+#include "ShadowPass.h"
+
 #include <Graphics/RenderKey.h>
 #include <OpenGLRenderer/GBuffPass.h>
 #include <OpenGLRenderer/LightingPass.h>
@@ -36,5 +38,6 @@ namespace chai::brew
         std::unique_ptr<LightingPass> m_lightingPass;
         // std::unique_ptr<ForwardPass> m_forwardPass;
         std::unique_ptr<SkyboxPass> m_skyboxPass;
+        std::unique_ptr<ShadowPass> m_shadowPass;
     };
 } // namespace chai::brew

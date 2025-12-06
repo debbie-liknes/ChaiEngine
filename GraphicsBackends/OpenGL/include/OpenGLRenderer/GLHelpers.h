@@ -121,4 +121,9 @@ namespace chai::brew
             default:              return GL_LINEAR;
         }
     }
+
+    inline GLenum toGLBool(bool value)
+    {
+        return value ? GL_TRUE : GL_FALSE;
+    }
 }

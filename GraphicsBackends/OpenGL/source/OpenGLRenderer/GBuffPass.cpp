@@ -34,9 +34,12 @@ namespace chai::brew
         glClearColor(0, 0, 0, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glEnable(GL_DEPTH_TEST);
-        glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
+        DepthStencilState depthState;
+        depthState.depthMaskEnable = true;
+        depthState.depthTestEnable = true;
+
+        openGLBackend->getCurrentState().updateDepthState(depthState);
 
         glUseProgram(m_shaderProgram);
 
