@@ -108,8 +108,8 @@ int main()
     light->type = LightType::DIRECTIONAL;
     light->color = chai::Vec3(1.0f, 1.f, 0.9f);
     light->intensity = 5.0f;
+    sun->getComponent<TransformComponent>()->setPosition(chai::Vec3{10.0, 50.0, 0.0});
     sun->getComponent<TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0}, WORLD_UP);
-    sun->getComponent<TransformComponent>()->setPosition(chai::Vec3{-5.0, 15.0, 3.0});
 
     //set up viewport camera association
     vp->setCamera(camComponent->getCamera());

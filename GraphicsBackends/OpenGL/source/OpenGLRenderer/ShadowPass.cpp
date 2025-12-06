@@ -101,7 +101,7 @@ namespace chai::brew
     }
 
     void ShadowPass::updateLightingUniforms(void* backend, LightBuffer& lightBuffer,
-        const brew::LightInfo& lightInfo)
+        const LightInfo& lightInfo)
     {
         auto* openGLBackend = static_cast<brew::OpenGLBackend*>(backend);
 
@@ -148,9 +148,6 @@ namespace chai::brew
         }
 
         Mat4 lightViewProj = lightProj * lightView;
-
-        //printf("lightViewProj:\n");
-        //printf("  [0]: %f, %f, %f, %f\n", lightViewProj[0][0], lightViewProj[0][1], lightViewProj[0][2], lightViewProj[0][3]);
 
         lightBuffer.lightProj->setValue(ShadowPassUniforms{lightViewProj});
 

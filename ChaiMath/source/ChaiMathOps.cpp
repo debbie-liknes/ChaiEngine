@@ -83,7 +83,7 @@ namespace chai
         Vec3T<T> x = normalize(cross(up, z));
         Vec3T<T> y = cross(z, x);
 
-        Mat4T<T> result{};
+        Mat4T<T> result = Mat4T<T>::identity();
 
         result[0][0] = x.x;
         result[0][1] = y.x;
@@ -132,7 +132,7 @@ namespace chai
         T f = static_cast<T>(1) / std::tan(fov / static_cast<T>(2));
         T rangeInv = static_cast<T>(1) / (near - far);
 
-        Mat4T<T> result{};
+        Mat4T<T> result = Mat4T<T>::identity();
 
         result[0][0] = f / aspect;
         result[1][1] = f;
@@ -147,7 +147,7 @@ namespace chai
     template <typename T>
     Mat3T<T> toMat3(const Mat4T<T>& m)
     {
-        Mat3T<T> result{};
+        Mat3T<T> result = Mat3T<T>::identity();
 
         for (int r = 0; r < 3; ++r)
             for (int c = 0; c < 3; ++c)
