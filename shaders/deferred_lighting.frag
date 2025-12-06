@@ -11,6 +11,10 @@ layout(binding = 1) uniform sampler2D gNormal;
 layout(binding = 2) uniform sampler2D gAlbedo;
 layout(binding = 3) uniform sampler2D gMaterial;
 
+uniform sampler2D u_shadowMaps[16];
+uniform mat4 u_lightViewProjs[16];
+uniform int u_numShadowLights;
+
 layout(std140, binding = 0) uniform PerFrameUniforms
 {
     mat4 u_view;
@@ -29,6 +33,20 @@ layout(std140, binding = 2) uniform LightingData {
     ShaderLightData lights[8];
     int numLights;
 } u_Lighting;
+
+float getShadow(int lightIndex, vec3 worldPos) {
+    vec4 lightSpacePos = u_lightViewProjs[lightIndex] * vec4(worldPos, 1.0);
+    vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
+    projCoords = projCoords * 0.5 + 0.5;
+
+    if (projCoords.z > 1.0) return 1.0;
+
+    float closestDepth = texture(u_shadowMaps[lightIndex], projCoords.xy).r;
+    float currentDepth = projCoords.z;
+
+    float bias = 0.005;
+    return currentDepth - bias > closestDepth ? 0.0 : 1.0;
+}
 
 // PBR functions
 float normalDistGGX(vec3 N, vec3 H, float roughness)
@@ -101,6 +119,11 @@ void main()
         
         vec3 L;
         float attenuation = 1.0;
+
+        float shadow = 1.0;
+        if (lightType == 0.0 || lightType == 2.0) {  // directional or spot
+            shadow = getShadow(i, fragPos);
+        }
         
         if (lightType == 0.0) {
             // Directional
@@ -141,7 +164,8 @@ void main()
         vec3 diffuse = kD * albedo / PI;
         
         vec3 radiance = lightColor * lightIntensity * attenuation;
-        Lo += (diffuse + specular) * radiance * NdotL;
+        //Lo += (diffuse + specular) * radiance * NdotL;
+        Lo += shadow * (diffuse + specular) * radiance * NdotL;
     }
     
     vec3 ambient = albedo / PI;

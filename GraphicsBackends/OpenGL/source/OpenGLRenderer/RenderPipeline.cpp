@@ -1,4 +1,5 @@
 #include <OpenGLRenderer/RenderPipeline.h>
+#include <OpenGLRenderer/ShadowPass.h>
 
 namespace chai::brew
 {
@@ -10,20 +11,19 @@ namespace chai::brew
 
         // Create passes in order
         m_gbufferPass = std::make_unique<GBufferPass>();
-        m_lightingPass = std::make_unique<LightingPass>(m_gbufferPass.get());
+        m_shadowPass = std::make_unique<ShadowPass>();
+        m_lightingPass = std::make_unique<LightingPass>(m_gbufferPass.get(), m_shadowPass.get());
         // m_forwardPass = std::make_unique<ForwardPass>(m_gbufferPass.get());
         m_skyboxPass = std::make_unique<SkyboxPass>(m_gbufferPass.get());
-        m_shadowPass = std::make_unique<ShadowPass>();
 
         // Setup all passes
         m_gbufferPass->setup(backend);
         m_lightingPass->setup(backend);
         // m_forwardPass->setup(backend);
         m_skyboxPass->setup(backend);
+        m_shadowPass->setup(backend);
 
         resize(width, height);
-
-        m_shadowPass->setup(backend);
     }
 
     void RenderPipeline::shutdown()

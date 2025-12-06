@@ -111,7 +111,7 @@ namespace chai
     template <typename T>
     Mat4T<T> ortho(T left, T right, T bottom, T top, T near, T far)
     {
-        Mat4T<T> o;
+        Mat4T<T> o = Mat4T<T>::identity();
         o[0][0] = 2 / (right - left);
         o[1][1] = 2 / (top - bottom);
         o[2][2] = -2 / (far - near);

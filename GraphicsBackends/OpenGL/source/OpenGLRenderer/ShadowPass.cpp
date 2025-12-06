@@ -3,16 +3,16 @@
 #include <OpenGLRenderer/UniformManager.h>
 #include <OpenGLRenderer/ShadowPass.h>
 
-#include <corecrt_io.h>
-
-namespace chai
+namespace chai::brew
 {
-
-    ShadowPass::~ShadowPass()
-    {}
+    ShadowPass::ShadowPass() {}
+    ShadowPass::~ShadowPass() {}
 
     void ShadowPass::createShadowFBO()
     {
+        if (!m_backend)
+            return;
+
         auto* openGLBackend = static_cast<brew::OpenGLBackend*>(m_backend);
 
         for (int i = 0; i < 16; i++) {
@@ -65,6 +65,7 @@ namespace chai
 
     void ShadowPass::setup(void* backend)
     {
+        printf("ShadowPass::setup called, backend = %p\n", backend);
         m_backend = backend;
         auto* openGLBackend = static_cast<brew::OpenGLBackend*>(backend);
 
@@ -75,16 +76,24 @@ namespace chai
 
     void ShadowPass::resize(int width, int height)
     {
-        if (width == 0 || height == 0)
+        /*printf("ShadowPass::resize called: %d x %d (current: %d x %d)\n",
+       width, height, m_width, m_height);*/
+        if (width == 0 || height == 0) {
+            //printf("  -> early return: zero dimension\n");
             return;
-        if (width == m_width && height == m_height)
+        }
+        if (width == m_width && height == m_height) {
+            //printf("  -> early return: same size\n");
             return;
+        }
 
         m_width = width;
         m_height = height;
 
+        printf("  -> creating FBOs\n");
         destroyShadowFBO();
         createShadowFBO();
+        printf("  -> created %zu light buffers\n", m_lightBuffers.size());
     }
 
     void ShadowPass::execute(void* backend, const std::vector<brew::SortedDrawCommand>& draws)
@@ -134,30 +143,54 @@ namespace chai
             float outerCone = lightInfo.light.spotParams.y;
             lightProj = perspective(outerCone * 2.0f, 1.0f, 0.1f, range);
         }
+        else {
+            std::cout << "Invalid light type! Type: " << lightType << std::endl;
+        }
 
         Mat4 lightViewProj = lightProj * lightView;
 
-        //lightBuffer.lightProj->setData(&lightViewProj, sizeof(Mat4));
+        //printf("lightViewProj:\n");
+        //printf("  [0]: %f, %f, %f, %f\n", lightViewProj[0][0], lightViewProj[0][1], lightViewProj[0][2], lightViewProj[0][3]);
+
         lightBuffer.lightProj->setValue(ShadowPassUniforms{lightViewProj});
+
+        ShadowPassUniforms readBack{};
+        lightBuffer.lightProj->getData(&readBack, sizeof(ShadowPassUniforms));
+
+        auto* ub = openGLBackend->getUniformManager().getUniformBufferData(*lightBuffer.lightProj);
+
+        if (!ub) {
+            printf("ERROR: Uniform buffer not found in manager!\n");
+            return;
+        }
 
         openGLBackend->getUniformManager().updateUniform(*lightBuffer.lightProj);
 
-        // Bind it
-        auto* ub = openGLBackend->getUniformManager().getUniformBufferData(*lightBuffer.lightProj);
-        if (ub) {
-            glBindBufferBase(GL_UNIFORM_BUFFER, 2, ub->ubo);
-        }
+        glBindBufferBase(GL_UNIFORM_BUFFER, 2, ub->ubo);
     }
 
     void ShadowPass::execute(void* backend, const std::vector<brew::LightInfo>& lights,
         const std::vector<brew::SortedDrawCommand>& draws)
     {
-        if (m_shaderProgram == 0)
+        m_lights = lights;
+        if (m_shaderProgram == 0) {
+            printf("  -> early return: no shader\n");
             return;
+        }
 
         auto* openGLBackend = static_cast<brew::OpenGLBackend*>(backend);
 
         glUseProgram(m_shaderProgram);
+
+        // ADD THESE - ensure depth state is correct
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
+
+        // Also set a consistent cull mode
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
 
         auto* shadowShaderAsset = AssetManager::instance().get<ShaderAsset>(m_shaderAsset);
 
@@ -204,6 +237,8 @@ namespace chai
                 }
             }
         }
+
+        glFinish();
 
         glBindVertexArray(0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

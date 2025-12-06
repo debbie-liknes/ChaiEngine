@@ -5,6 +5,7 @@
 #include <OpenGLRenderer/GBuffPass.h>
 #include <OpenGLRenderer/LightingPass.h>
 #include <OpenGLRenderer/SkyboxPass.h>
+#include <OpenGLRenderer/ShadowPass.h>
 #include <memory>
 #include <vector>
 

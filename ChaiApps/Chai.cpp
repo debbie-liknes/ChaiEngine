@@ -92,7 +92,7 @@ int main()
     camTransform->lookAt(chai::Vec3{0.0, 0.0, 0.0}, WORLD_UP);
     cameraObject->addController<chai::cup::CameraController>();
 
-    //add some lighting so we can see
+    /*//add some lighting so we can see
     auto lightObject = std::make_unique<chai::cup::GameObject>();
     lightObject->getComponent<chai::cup::TransformComponent>()->setPosition(
         chai::Vec3{-5.0, 15.0, 3.0});
@@ -101,24 +101,15 @@ int main()
     auto lightComp = lightObject->addComponent<chai::cup::LightComponent>(lightObject.get());
     lightComp->intensity = 600.f;
     lightComp->attenuation = chai::Vec3{1.0f, 0.045f, 0.0075f};
-    lightComp->range = 500.0f;
-
-    //add another
-    auto lightObject2 = std::make_unique<chai::cup::GameObject>();
-    lightObject2->getComponent<chai::cup::TransformComponent>()->setPosition(
-        chai::Vec3{-5.0, 5.0, 3.0});
-    //lightObject2->getComponent<chai::cup::TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0},
-    //                                                                   WORLD_UP);
-    auto lightComp2 = lightObject2->addComponent<chai::cup::LightComponent>(lightObject2.get());
-    lightComp2->intensity = 60.f;
+    lightComp->range = 500.0f;*/
 
     auto sun = testScene->createGameObject("Sun");
     auto* light = sun->addComponent<LightComponent>();
     light->type = LightType::DIRECTIONAL;
-    light->color = chai::Vec3(1.0f, 0.95f, 0.9f);
-    light->intensity = 5.0f; // Bright!
-    sun->getComponent<TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0},
-                                                                       WORLD_UP);
+    light->color = chai::Vec3(1.0f, 1.f, 0.9f);
+    light->intensity = 5.0f;
+    sun->getComponent<TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0}, WORLD_UP);
+    sun->getComponent<TransformComponent>()->setPosition(chai::Vec3{-5.0, 15.0, 3.0});
 
     //set up viewport camera association
     vp->setCamera(camComponent->getCamera());
@@ -126,8 +117,7 @@ int main()
     //add the objects to the scene
     testScene->addGameObject(std::make_unique<chai::cup::Skybox>());
     testScene->addGameObject(std::move(cameraObject));
-    testScene->addGameObject(std::move(lightObject));
-    //testScene->addGameObject(std::move(lightObject2));
+    //testScene->addGameObject(std::move(lightObject));
 
     //audio
     //std::shared_ptr<AudioEngine> m_audioEngine;

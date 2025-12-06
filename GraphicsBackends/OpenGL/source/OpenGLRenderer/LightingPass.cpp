@@ -1,6 +1,7 @@
 // LightingPass.cpp
 #include <ChaiEngine/MaterialSystem.h>
 #include <OpenGLRenderer/GBuffPass.h>
+#include <OpenGLRenderer/ShadowPass.h>
 #include <OpenGLRenderer/LightingPass.h>
 #include <OpenGLRenderer/OpenGLRenderer.h>
 
@@ -18,7 +19,8 @@ namespace chai::brew
         }
     }
 
-    LightingPass::LightingPass(GBufferPass* gbufferPass) : m_gbufferPass(gbufferPass)
+    LightingPass::LightingPass(GBufferPass* gbufferPass, ShadowPass* shadowPass) :
+            m_gbufferPass(gbufferPass), m_shadowPass(shadowPass)
     {
         m_desc.type = RenderPassDesc::Type::Lighting;
         m_desc.clearColor = true;
@@ -90,6 +92,42 @@ namespace chai::brew
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, m_gbufferPass->getMaterialTex());
         glUniform1i(glGetUniformLocation(m_lightingShader, "gMaterial"), 3);
+
+        int shadowTexUnit = 4;
+
+        auto& lightBuffs = m_shadowPass->getLightBuffers();
+        auto& lights = m_shadowPass->getLights();
+        for (size_t i = 0; i < lights.size(); ++i) {
+            auto& lightBuffer = lightBuffs.at(i);
+
+            glActiveTexture(GL_TEXTURE0 + shadowTexUnit + i);
+            glBindTexture(GL_TEXTURE_2D, lightBuffer.shadowTex);
+
+            /*// Set the sampler uniform to the texture unit
+            std::string uniformName = "u_shadowMaps[" + std::to_string(i) + "]";
+            GLint loc = glGetUniformLocation(m_lightingShader, uniformName.c_str());
+            glUniform1i(loc, shadowTexUnit + i);*/
+
+            std::string uniformName = "u_shadowMaps[" + std::to_string(i) + "]";
+            GLint loc = glGetUniformLocation(m_lightingShader, uniformName.c_str());
+
+            if (loc == -1) {
+                std::cerr << "Failed to get uniform location: " << uniformName << std::endl;
+            }
+            glUniform1i(loc, shadowTexUnit + i);
+
+            // Also upload the light's view-proj matrix
+            std::string matrixName = "u_lightViewProjs[" + std::to_string(i) + "]";
+            GLint matLoc = glGetUniformLocation(m_lightingShader, matrixName.c_str());
+            if (matLoc == -1) {
+                std::cerr << "Failed to get uniform location: " << matrixName << std::endl;
+            }
+
+            ShadowPassUniforms shadowData{};
+            lightBuffer.lightProj->getData(&shadowData, sizeof(ShadowPassUniforms));
+
+            glUniformMatrix4fv(matLoc, 1, GL_FALSE, shadowData.projection.data());
+        }
 
         // Update lighting uniforms
         auto* shaderData = openGLBackend->getShaderManager().getShaderData(m_lightingShader);

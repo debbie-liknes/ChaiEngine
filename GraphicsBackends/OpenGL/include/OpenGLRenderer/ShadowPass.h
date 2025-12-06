@@ -5,25 +5,24 @@
 
 #include <glad/gl.h>
 
-namespace  chai
+namespace  chai::brew
 {
     struct ShadowPassUniforms
     {
-        Mat4 projection;
+        Mat4 projection = Mat4::identity();
     };
 
     struct LightBuffer
     {
-        GLuint shadowFBO;
-        GLuint shadowTex;
-        std::shared_ptr<UniformBuffer<ShadowPassUniforms>> lightProj;
+        GLuint shadowFBO = 0;
+        GLuint shadowTex = 0;
+        std::shared_ptr<UniformBuffer<ShadowPassUniforms>> lightProj = nullptr;
     };
 
-    class GBufferPass;
     class ShadowPass : public brew::RenderPass
     {
     public:
-        ShadowPass() = default;
+        ShadowPass();
         ~ShadowPass() override;
 
         void setup(void* backend) override;
@@ -32,17 +31,22 @@ namespace  chai
         void execute(void* backend, const std::vector<brew::LightInfo>& lights,
             const std::vector<brew::SortedDrawCommand>& draws);
 
+        std::vector<LightBuffer>& getLightBuffers() { return m_lightBuffers; }
+        std::vector<LightInfo>& getLights() { return m_lights; }
+
     private:
-        int m_width, m_height;
-        void* m_backend;
+        int m_width = 0;
+        int m_height = 0;
+        void* m_backend = nullptr;
         void createShadowFBO();
         void destroyShadowFBO();
         void updateLightingUniforms(void* backend, LightBuffer& lightBuffer,
-            const brew::LightInfo& lightInfo);
+            const LightInfo& lightInfo);
 
         AssetHandle m_shaderAsset;
         GLuint m_shaderProgram;
-        brew::OpenGLShaderData* m_shaderData;
+        OpenGLShaderData* m_shaderData;
         std::vector<LightBuffer> m_lightBuffers;
+        std::vector<LightInfo> m_lights;
     };
 }
