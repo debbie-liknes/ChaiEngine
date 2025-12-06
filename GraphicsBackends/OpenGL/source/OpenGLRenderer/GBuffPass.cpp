@@ -43,8 +43,6 @@ namespace chai::brew
 
         glUseProgram(m_shaderProgram);
 
-        openGLBackend->updatePerFrameUniforms();
-
         auto* gbufferShaderAsset = AssetManager::instance().get<ShaderAsset>(m_shaderAsset);
 
         for (const auto& draw : draws) {

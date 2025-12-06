@@ -31,14 +31,6 @@ namespace chai
         CompareOp depthCompareOp = CompareOp::Less;
     };
 
-    struct PipelineState
-    {
-        RasterizerState rasterState;
-        DepthStencilState depthStencilState;
-    };
-
-    /*
-
     struct BlendState
     {
         enum class BlendFactor 
@@ -102,76 +94,10 @@ namespace chai
         }
     };
 
-    struct VertexInputBinding
+    struct PipelineState
     {
-        enum class InputRate { PerVertex, PerInstance };
-
-        uint32_t binding;
-        uint32_t stride;
-        InputRate inputRate = InputRate::PerVertex;
+        RasterizerState rasterState;
+        DepthStencilState depthStencilState;
+        BlendState blendState;
     };
-
-    struct VertexInputAttribute
-    {
-        enum class Format 
-        {
-            Float, Float2, Float3, Float4,
-            Int, Int2, Int3, Int4,
-            UInt, UInt2, UInt3, UInt4
-        };
-
-        uint32_t location;
-        uint32_t binding;
-        Format format;
-        uint32_t offset;
-    };
-
-    struct PipelineDesc
-    {
-        enum class PrimitiveTopology 
-        {
-            PointList,
-            LineList, LineStrip,
-            TriangleList, TriangleStrip, TriangleFan
-        };
-
-        // Shader stages
-        std::vector<ShaderStage> shaderStages;
-        std::vector<std::string> globalDefines;  // Applied to all stages
-
-        // Pipeline state
-        PrimitiveTopology topology = PrimitiveTopology::TriangleList;
-        RasterizerState rasterizer;
-        DepthStencilState depthStencil;
-        BlendState blend;
-
-        // Render pass compatibility (important for Vulkan!)
-        struct RenderPassInfo 
-        {
-            uint32_t colorAttachmentCount = 1;
-            bool hasDepthAttachment = true;
-            // Could add formats here for full validation
-        } renderPassInfo;
-
-        // Generate a hash for pipeline caching
-        size_t hash() const 
-        {
-            // Hash all state - critical for deduplication
-            size_t h = 0;
-            // ... hash implementation
-            return h;
-        }
-    };
-
-    class PipelineState
-    {
-    public:
-        uint32_t getPipelineId() const { return m_pipelineId; }
-
-    private:
-        uint32_t m_pipelineId;
-        PipelineDesc m_desc;
-
-        friend class PipelineCache;
-    };*/
 }

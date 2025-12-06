@@ -13,6 +13,7 @@ namespace chai::brew
         m_lightingPass = std::make_unique<LightingPass>(m_gbufferPass.get());
         // m_forwardPass = std::make_unique<ForwardPass>(m_gbufferPass.get());
         m_skyboxPass = std::make_unique<SkyboxPass>(m_gbufferPass.get());
+        m_shadowPass = std::make_unique<ShadowPass>();
 
         // Setup all passes
         m_gbufferPass->setup(backend);
@@ -37,6 +38,7 @@ namespace chai::brew
         m_gbufferPass->resize(width, height);
         m_lightingPass->resize(width, height);
         m_skyboxPass->resize(width, height);
+        m_shadowPass->resize(width, height);
         // m_forwardPass->resize(width, height);
     }
 
@@ -44,6 +46,9 @@ namespace chai::brew
                  const std::vector<SortedDrawCommand>& transparentDraws,
                  const std::vector<SortedDrawCommand>& skyboxDraws)
     {
+        // Map the shadows first
+        m_shadowPass->execute(m_backend, opaqueDraws);
+
         // 1. G-Buffer pass
         m_gbufferPass->execute(m_backend, opaqueDraws);
 

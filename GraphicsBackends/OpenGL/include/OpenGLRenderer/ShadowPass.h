@@ -1,5 +1,6 @@
 #pragma once
 #include "Graphics/RenderPass.h"
+#include <glad/gl.h>
 
 namespace  chai
 {
@@ -9,12 +10,13 @@ namespace  chai
     public:
         ShadowPass() = default;
         ~ShadowPass() override;
-        ShadowPass(GBufferPass* gbufferPass);
 
+        void setup(void* backend) override;
+        void resize(int width, int height) override;
         void execute(void* backend, const std::vector<brew::SortedDrawCommand>& draws) override;
 
     private:
-        GBufferPass* m_gbufferPass;
         int m_width, m_height;
+        GLuint m_shadowMap;
     };
 }
