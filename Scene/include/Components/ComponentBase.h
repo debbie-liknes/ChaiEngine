@@ -21,7 +21,11 @@ namespace chai::cup
 
         GameObject* getGameObject() const { return m_owningObject; }
 
+        void setDirty(bool dirty = true){ m_dirty = dirty; }
+        bool dirty() { return m_dirty; }
+
     private:
         GameObject* m_owningObject = nullptr;
+        bool m_dirty = false;
     };
 }

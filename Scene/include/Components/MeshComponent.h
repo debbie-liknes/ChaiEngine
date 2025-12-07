@@ -1,9 +1,12 @@
 #pragma once
-#include <SceneExport.h>
-#include <Components/RenderableComponent.h>
+#include "Graphics/Frustum.h"
+
 #include <ChaiEngine/IMesh.h>
-#include <Asset/AssetHandle.h>
 #include <ChaiEngine/PipelineState.h>
+
+#include <Asset/AssetHandle.h>
+#include <Components/RenderableComponent.h>
+#include <SceneExport.h>
 
 namespace chai::cup
 {
@@ -24,6 +27,9 @@ namespace chai::cup
 
         void setMaterial(size_t submeshIndex, AssetHandle material);
         void setMaterial(size_t submeshIndex, ResourceHandle material);
+
+        bool isVisible(const Frustum& frustum);
+        void update(double deltaTime) override;
 
         ResourceHandle getMaterial(int i)
         {
@@ -46,6 +52,8 @@ namespace chai::cup
 
         static ResourceHandle createMaterialResourceFromAsset(AssetHandle asset);
 
+        void recalculateAABB();
+
         ResourceHandle m_meshResource;
 
         PipelineState m_pipelineState;
@@ -54,5 +62,7 @@ namespace chai::cup
         ResourceHandle m_singleMaterial;
         bool m_useSingleMaterial = false;
         ResourceHandle m_materialInstance;
+
+        AABB m_aabb;
     };
 }

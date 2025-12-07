@@ -22,6 +22,7 @@ namespace chai::cup
         m_scale = Vec3(length(Vec3(matrix[0][0], matrix[0][1], matrix[0][2])),
                        length(Vec3(matrix[1][0], matrix[1][1], matrix[1][2])),
                        length(Vec3(matrix[2][0], matrix[2][1], matrix[2][2])));
+        setDirty();
     }
 
     Mat4 TransformComponent::getWorldMatrix() const
@@ -36,6 +37,7 @@ namespace chai::cup
     void TransformComponent::setPosition(chai::Vec3 newPos)
     {
         m_position = newPos;
+        setDirty();
     }
 
     void TransformComponent::setRotationEuler(chai::Vec3 newRot)
@@ -43,6 +45,7 @@ namespace chai::cup
         //auto y = m_rotation * newRot;
         //rotate()
         //m_rotation = Quatf(newRot);
+        setDirty();
     }
 
     void TransformComponent::setScale(chai::Vec3 newScale)
@@ -112,6 +115,8 @@ namespace chai::cup
                 parent->getComponent<TransformComponent>()->getWorldRotation().inverse() * worldRot;
         else
             m_rotation = worldRot;
+
+        setDirty();
     }
 
 } // namespace chai::cup

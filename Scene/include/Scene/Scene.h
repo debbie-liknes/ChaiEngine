@@ -17,7 +17,7 @@ namespace chai::cup
         ~Scene() = default;
 
         void addGameObject(std::unique_ptr<GameObject> object);
-        void collectRenderables(brew::RenderCommandCollector& collector) const;
+        void collectRenderables(brew::RenderCommandCollector& collector, const Frustum& frustum) const;
         void collectLights(brew::RenderCommandCollector& collector) const;
         GameObject* createModelObject(const std::string& name,
                                                       AssetHandle modelHandle);

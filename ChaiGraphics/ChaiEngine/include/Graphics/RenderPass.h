@@ -23,7 +23,7 @@ namespace chai::brew
         virtual ~RenderPass() = default;
         virtual void setup(void* backend) = 0;
         virtual void execute(void* backend,
-                             const std::vector<SortedDrawCommand>& draws) = 0;
+                             const std::vector<SortedDrawCommand>& draws) {}
         virtual void resize(int width, int height) {}
 
         const RenderPassDesc& getDesc() const { return m_desc; }

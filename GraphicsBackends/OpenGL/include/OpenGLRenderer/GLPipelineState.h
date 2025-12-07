@@ -22,6 +22,8 @@ namespace chai::brew
 
             m_currentDepthStencilState.depthTestEnable = true;
             glEnable(GL_DEPTH_TEST);
+            m_currentDepthStencilState.depthMaskEnable = true;
+            glDepthMask(GL_TRUE);
             m_currentDepthStencilState.depthCompareOp = DepthStencilState::CompareOp::Less;
             glDepthFunc(GL_LESS);
         }
@@ -51,9 +53,20 @@ namespace chai::brew
 
         void updateDepthState(const DepthStencilState& newState)
         {
+            if (newState.depthTestEnable != m_currentDepthStencilState.depthTestEnable) {
+                if (newState.depthTestEnable)
+                    glEnable(GL_DEPTH_TEST);
+                else
+                    glDisable(GL_DEPTH_TEST);
+            }
+            if (newState.depthMaskEnable != m_currentDepthStencilState.depthMaskEnable) {
+                glDepthMask(toGLBool(newState.depthMaskEnable));
+            }
             if (newState.depthCompareOp != m_currentDepthStencilState.depthCompareOp) {
                 glDepthFunc(convertDepthOp(newState.depthCompareOp));
             }
+
+            m_currentDepthStencilState = newState;
         }
 
         RasterizerState& getRasterizerState() { return m_currentRasterState; }

@@ -304,6 +304,12 @@ namespace chai
     }
 
     template <typename T, int N>
+    Vec<T, N> operator*(const Vec<T, N>& a, const Vec<T, N>& b)
+    {
+        return Vec<T, N>(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);
+    }
+
+    template <typename T, int N>
     Vec<T, N> operator/(const Vec<T, N>& v, const T scalar)
     {
         Vec<T, N> result;

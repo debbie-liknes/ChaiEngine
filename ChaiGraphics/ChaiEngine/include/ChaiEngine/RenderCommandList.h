@@ -30,10 +30,11 @@ namespace chai::brew
         IViewport* viewport = nullptr;
         Mat4 viewMatrix{1.f};
         Mat4 projectionMatrix{1.f};
-        std::vector<Light> lights;
+        std::vector<LightInfo> lights;
         PipelineState pipelineState;
         uint32_t indexOffset{0};
         uint32_t indexCount{0};
         ResourceHandle skybox;
+        Vec2 planeBounds{0.1, 1000.f};
     };
 }

@@ -8,6 +8,12 @@ namespace chai::cup
         return perspective(m_fov, m_aspect, m_nearPlane, m_farPlane);
     }
 
+    Mat4 Camera::getProjectionMatrix() const
+    {
+        //this is a perspective camera, need to have other types
+        return perspective(m_fov, m_aspect, m_nearPlane, m_farPlane);
+    }
+
     Mat4 Camera::getViewMatrix()
     {
         return m_viewMatrix;
@@ -28,6 +34,16 @@ namespace chai::cup
         m_nearPlane = near;
     }
 
+    float Camera::getFarPlane()
+    {
+        return m_farPlane;
+    }
+
+    float Camera::getNearPlane()
+    {
+        return m_nearPlane;
+    }
+
     void Camera::setFOV(float fov)
     {
         m_fov = fov;
@@ -37,5 +53,10 @@ namespace chai::cup
     {
         //input comes from Transform component
         m_viewMatrix = viewMatrix;
+    }
+
+    Frustum Camera::getFrustum() const
+    {
+        return Frustum::fromViewProjection(getProjectionMatrix() * m_viewMatrix);
     }
 }

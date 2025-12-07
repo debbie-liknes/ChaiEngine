@@ -1,6 +1,8 @@
 #pragma once
-#include <CoreExport.h>
+#include "Graphics/Frustum.h"
+
 #include <ChaiMath.h>
+#include <CoreExport.h>
 
 namespace chai
 {
@@ -27,5 +29,9 @@ namespace chai
         virtual void setFarPlane(float far) = 0;
         virtual void setNearPlan(float near) = 0;
         virtual void setFOV(float fov) = 0;
+        virtual float getFarPlane() = 0;
+        virtual float getNearPlane() = 0;
+
+        virtual Frustum getFrustum() const = 0;
     };
 }

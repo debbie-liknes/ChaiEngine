@@ -153,6 +153,7 @@ namespace chai::brew
         std::cout << "=========================\n" << '\n';
 
         m_currentState.init();
+        m_currentState.init();
 
         // Create default shader
         defaultShaderProgram = m_shaderManager.createDefaultShaderProgram();
@@ -254,7 +255,9 @@ namespace chai::brew
         }
 
         // Execute the deferred pipeline
-        m_renderPipeline.execute(opaqueDraws, transparentDraws, skyboxDraws);
+        m_renderPipeline.execute(opaqueDraws, transparentDraws, skyboxDraws, m_cachedLights,
+            m_perFrameUBOData->getValue().view, m_perFrameUBOData->getValue().projection,
+            frame.nearPlane, frame.farPlane);
 
         m_surface->swapBuffers();
     }
@@ -323,7 +326,7 @@ namespace chai::brew
     // BATCHED DRAWING (State Change Minimization)
     // ============================================================================
 
-    void OpenGLBackend::setLights(const std::vector<Light>& lights)
+    void OpenGLBackend::setLights(const std::vector<LightInfo>& lights)
     {
         m_cachedLights = lights;
         m_lightsDirty = true;
@@ -459,7 +462,7 @@ namespace chai::brew
             lightingData.numLights = std::min<int>(static_cast<int>(m_cachedLights.size()),
                                                    MAX_LIGHTS);
             for (int i = 0; i < m_cachedLights.size(); ++i) {
-                lightingData.lights[i] = m_cachedLights[i];
+                lightingData.lights[i] = m_cachedLights[i].light;
             }
             m_lightsDirty = false;
 
@@ -470,59 +473,6 @@ namespace chai::brew
 
         if (auto* glBuffer = m_uniManager.getUniformBufferData(*m_lightingUBO)) {
             glBindBufferBase(GL_UNIFORM_BUFFER, shaderData->lightingUBOBinding, glBuffer->ubo);
-        }
-    }
-
-    void OpenGLBackend::setUniformValue(GLint location,
-                                        const std::unique_ptr<UniformBufferBase>& uniform)
-    {
-        if (location == -1 || !uniform)
-            return;
-        switch (uniform->getType()) {
-            case UniformType::FLOAT: {
-                float value;
-                uniform->getData(&value, sizeof(float));
-                glUniform1f(location, value);
-            }
-            break;
-            case UniformType::VEC2: {
-                Vec2 value;
-                uniform->getData(&value, sizeof(Vec2));
-                glUniform2fv(location, 1, &value[0]);
-            }
-            break;
-            case UniformType::VEC3: {
-                Vec3 value;
-                uniform->getData(&value, sizeof(Vec3));
-                glUniform3fv(location, 1, &value[0]);
-            }
-            break;
-            case UniformType::VEC4: {
-                Vec4 value;
-                uniform->getData(&value, sizeof(Vec4));
-                glUniform4fv(location, 1, &value[0]);
-            }
-            break;
-            case UniformType::MAT4: {
-                Mat4 value;
-                uniform->getData(&value, sizeof(Mat4));
-                glUniformMatrix4fv(location, 1, GL_FALSE, &value[0][0]);
-            }
-            break;
-            case UniformType::INT: {
-                int value;
-                uniform->getData(&value, sizeof(int));
-                glUniform1i(location, value);
-            }
-            break;
-            case UniformType::BOOL: {
-                bool value;
-                uniform->getData(&value, sizeof(bool));
-                glUniform1i(location, value ? 1 : 0);
-            }
-            break;
-            default:
-                break;
         }
     }
 

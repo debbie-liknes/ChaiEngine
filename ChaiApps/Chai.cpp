@@ -82,7 +82,7 @@ int main()
     auto sponza = testScene->createModelObject("SponzaRoot", modelAsset.value());
     sponza->getComponent<chai::cup::TransformComponent>()->setRotation(
         chai::Quat::fromEulerZYX(chai::radians(70.0f), chai::radians(50.f), chai::radians(50.f)));
-    sponza->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3(0.05, 0.05, 0.05));
+    sponza->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3(0.08, 0.08, 0.08));
 
     //add a camera to look through
     auto cameraObject = std::make_unique<chai::cup::GameObject>();
@@ -90,44 +90,22 @@ int main()
     auto camTransform = cameraObject->getComponent<chai::cup::TransformComponent>();
     camTransform->setPosition(chai::Vec3{0.0, 10.0, 15.0});
     camTransform->lookAt(chai::Vec3{0.0, 0.0, 0.0}, WORLD_UP);
-    cameraObject->addController<chai::cup::CameraController>();
-
-    //add some lighting so we can see
-    auto lightObject = std::make_unique<chai::cup::GameObject>();
-    lightObject->getComponent<chai::cup::TransformComponent>()->setPosition(
-        chai::Vec3{-5.0, 15.0, 3.0});
-    //lightObject->getComponent<chai::cup::TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0},
-     //   WORLD_UP);
-    auto lightComp = lightObject->addComponent<chai::cup::LightComponent>(lightObject.get());
-    lightComp->intensity = 600.f;
-    lightComp->attenuation = chai::Vec3{1.0f, 0.045f, 0.0075f};
-    lightComp->range = 500.0f;
-
-    //add another
-    auto lightObject2 = std::make_unique<chai::cup::GameObject>();
-    lightObject2->getComponent<chai::cup::TransformComponent>()->setPosition(
-        chai::Vec3{-5.0, 5.0, 3.0});
-    //lightObject2->getComponent<chai::cup::TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0},
-    //                                                                   WORLD_UP);
-    auto lightComp2 = lightObject2->addComponent<chai::cup::LightComponent>(lightObject2.get());
-    lightComp2->intensity = 60.f;
+    cameraObject->addController<CameraController>();
 
     auto sun = testScene->createGameObject("Sun");
     auto* light = sun->addComponent<LightComponent>();
     light->type = LightType::DIRECTIONAL;
-    light->color = chai::Vec3(1.0f, 0.95f, 0.9f);
-    light->intensity = 5.0f; // Bright!
-    sun->getComponent<TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0},
-                                                                       WORLD_UP);
+    light->color = chai::Vec3(1.0f, 1.f, 0.9f);
+    light->intensity = 5.0f;
+    sun->getComponent<TransformComponent>()->setPosition(chai::Vec3{5.0, 50.0, 0.0});
+    sun->getComponent<TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0}, WORLD_UP);
 
     //set up viewport camera association
     vp->setCamera(camComponent->getCamera());
 
     //add the objects to the scene
-    testScene->addGameObject(std::make_unique<chai::cup::Skybox>());
+    testScene->addGameObject(std::make_unique<Skybox>());
     testScene->addGameObject(std::move(cameraObject));
-    testScene->addGameObject(std::move(lightObject));
-    //testScene->addGameObject(std::move(lightObject2));
 
     //audio
     //std::shared_ptr<AudioEngine> m_audioEngine;
@@ -170,7 +148,7 @@ int main()
             Scene const* scene = sceneManager.getPrimaryScene();
             scene->collectLights(collector);
             if (scene != nullptr) {
-                scene->collectRenderables(collector);
+                scene->collectRenderables(collector, camComponent->getCamera()->getFrustum());
             }
 
             renderer->executeCommands(collector.getCommands());

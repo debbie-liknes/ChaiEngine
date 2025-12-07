@@ -10,6 +10,9 @@ namespace chai
     template <typename T>
     Vec3T<T> cross(const Vec3T<T>&, const Vec3T<T>&);
 
+    template <typename T>
+    Mat4T<T> inverse(const Mat4T<T>& m);
+
     template <typename T, int N>
     Vec<T, N> normalize(const Vec<T, N>& vec);
 
@@ -39,6 +42,15 @@ namespace chai
 
     template <typename T>
     Mat4T<T> perspective(T fov, T aspect, T near, T far);
+
+    template <typename T>
+    Mat4T<T> ortho(T left, T right, T bottom, T top, T near, T far);
+
+    template <typename T, int N>
+    Vec<T, N> minVec(const Vec<T, N>& a, const Vec<T, N>& b);
+
+    template <typename T, int N>
+    Vec<T, N> maxVec(const Vec<T, N>& a, const Vec<T, N>& b);
 
     template <typename T>
     Vec<T, 3> operator*(const Quaternion<T> quat, const Vec<T, 3>& v);

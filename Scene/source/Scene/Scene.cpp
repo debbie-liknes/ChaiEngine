@@ -10,11 +10,15 @@ namespace chai::cup
         m_objects.push_back(std::move(object));
     }
 
-    void Scene::collectRenderables(brew::RenderCommandCollector& collector) const
+    void Scene::collectRenderables(brew::RenderCommandCollector& collector, const Frustum& frustum) const
     {
         //do this in a scene graph traversal?
         for (auto& object : m_objects)
         {
+            bool visible = object->isVisible(frustum);
+            //printf("Visible: %s\n", visible ? "true" : "false");
+            if (!visible) continue;
+
             object->collectRenderables(collector);
         }
     }
@@ -41,7 +45,7 @@ namespace chai::cup
             light.directionAndRange = Vec4(transform->forward(), lightComp->range);
             light.spotParams = Vec4(lightComp->innerCone, lightComp->outerCone, 0.0, 0.0);
 
-            cmd.lights.push_back(light);
+            cmd.lights.push_back({light, lightComp->shadowsEnabled});
         }
         if (cmd.lights.empty())
             return;
@@ -80,7 +84,7 @@ namespace chai::cup
             go->getComponent<TransformComponent>()->setLocalMatrix(node.localTransform);
 
             if (node.meshIndex >= 0) {
-                auto* meshComp = go->addComponent<MeshComponent>();
+                auto* meshComp = go->addComponent<MeshComponent>(go);
                 meshComp->setMesh(model->meshes[node.meshIndex]);
             }
 

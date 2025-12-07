@@ -16,6 +16,7 @@ namespace chai::brew
 
     void ForwardPass::execute(void* backend, const std::vector<SortedDrawCommand>& draws)
     {
+        return;
         // Copy depth from G-Buffer to default framebuffer
         // glBindFramebuffer(GL_READ_FRAMEBUFFER, m_gbufferPass->getFramebuffer());
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);

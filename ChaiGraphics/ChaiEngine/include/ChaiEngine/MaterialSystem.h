@@ -19,6 +19,7 @@ namespace chai
         MaterialSystem& operator=(const MaterialSystem&) = delete;
 
         AssetHandle getGBufferShader() { return m_gbufferShader; }
+        AssetHandle getShadowShader() { return m_shadowShader; }
         AssetHandle getLightingShader() { return m_lightingShader; }
 
         static ResourceHandle createFromAsset(AssetHandle assetHandle)
@@ -95,6 +96,32 @@ namespace chai
             shaderAsset->addUniform("u_normalMap", DataType::Sampler2D, false);
 
             m_gbufferShader = AssetManager::instance().add(std::move(shaderAsset)).value();
+        }
+
+        void loadShadowShader()
+        {
+            auto vertHandle = AssetManager::instance()
+                                  .load<ShaderStageAsset>("shaders/shadow.vert")
+                                  .value();
+            auto fragHandle = AssetManager::instance()
+                                  .load<ShaderStageAsset>("shaders/shadow.frag")
+                                  .value();
+
+            auto* vertAsset = AssetManager::instance().get<ShaderStageAsset>(vertHandle);
+            auto* fragAsset = AssetManager::instance().get<ShaderStageAsset>(fragHandle);
+
+            auto shaderAsset = std::make_unique<ShaderAsset>("shadow_shader");
+            shaderAsset->addStage(*vertAsset);
+            shaderAsset->addStage(*fragAsset);
+            shaderAsset->setPassType(brew::RenderPassDesc::Type::Shadow);
+
+            // Fullscreen quad inputs
+            shaderAsset->addVertexInput("a_Position", 0, DataType::Float2);
+
+            shaderAsset->addUniform("u_lightViewProj", DataType::Mat4, true);
+            //shaderAsset->addUniform("u_model", DataType::Mat4, true);
+
+            m_shadowShader = AssetManager::instance().add(std::move(shaderAsset)).value();
         }
 
         void loadLightingShader()
@@ -328,5 +355,6 @@ namespace chai
         AssetHandle m_gbufferShader;
         AssetHandle m_lightingShader;
         AssetHandle m_skyboxShader;
+        AssetHandle m_shadowShader;
     };
 } // namespace chai

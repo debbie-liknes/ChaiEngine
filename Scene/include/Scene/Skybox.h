@@ -10,11 +10,12 @@ namespace chai::cup
         Skybox();
 
         void collectRenderables(brew::RenderCommandCollector& collector) override;
+        bool isVisible(const Frustum& frustum) override { return true; }
 
     private:
         void init();
 
         ResourceHandle m_cubeTextureHandle;
-        MeshComponent* m_meshComponent;
+        PipelineState m_skyboxPipelineState;
     };
 }

@@ -1,7 +1,11 @@
+#include "Components/TransformComponent.h"
+#include "Scene/GameObject.h"
+
+#include <ChaiEngine/Material.h>
 #include <Resource/ResourceManager.h>
 
 #include <Components/MeshComponent.h>
-#include <ChaiEngine/Material.h>
+#include <span>
 
 namespace chai::cup
 {
@@ -20,6 +24,7 @@ namespace chai::cup
                 auto matResource = createMaterialResourceFromAsset(submesh.material);
                 m_materialOverrides.try_emplace(i, matResource);
             }
+            recalculateAABB();
         }
     }
 
@@ -135,5 +140,55 @@ namespace chai::cup
         }
 
         return ResourceManager::instance().add(std::move(resource));
+    }
+
+    bool MeshComponent::isVisible(const Frustum& frustum)
+    {
+        return frustum.isVisible(m_aabb);
+    }
+    void MeshComponent::update(double deltaTime)
+    {
+        if (getGameObject()->getComponent<TransformComponent>()->dirty()) {
+            recalculateAABB();
+        }
+    }
+
+    void MeshComponent::recalculateAABB()
+    {
+        m_aabb.min = Vec3(FLT_MAX);
+        m_aabb.max = Vec3(-FLT_MAX);
+        if (m_meshResource.isValid()) {
+            auto resource = ResourceManager::instance().getResource<MeshResource>(m_meshResource);
+            if (resource) {
+                auto posAttr = resource->vertexLayout.findAttribute("a_Position");
+                size_t stride = resource->vertexLayout.getStride();
+                const uint8_t* data = resource->vertexData.data();
+
+                Mat4 worldMat = Mat4::identity();
+                auto *trans = getGameObject()->getComponent<TransformComponent>();
+                if (trans != nullptr) {
+                    worldMat = trans->getWorldMatrix();
+                }
+
+                for (size_t i = 0; i < resource->vertexCount; i++) {
+                    const Vec3* pos = reinterpret_cast<const Vec3*>(
+                        data + i * stride + posAttr->offset);
+
+                    auto worldPos = worldMat * Vec4(*pos, 1.0f);
+                    auto worldPos3 = Vec3(worldPos.x, worldPos.y, worldPos.z);
+                    m_aabb.min = minVec(m_aabb.min, worldPos3);
+                    m_aabb.max = maxVec(m_aabb.max, worldPos3);
+                }
+                printf("World matrix:\n");
+                printf("  %f %f %f %f\n", worldMat[0][0], worldMat[1][0], worldMat[2][0], worldMat[3][0]);
+                printf("  %f %f %f %f\n", worldMat[0][1], worldMat[1][1], worldMat[2][1], worldMat[3][1]);
+                printf("  %f %f %f %f\n", worldMat[0][2], worldMat[1][2], worldMat[2][2], worldMat[3][2]);
+                printf("  %f %f %f %f\n", worldMat[0][3], worldMat[1][3], worldMat[2][3], worldMat[3][3]);
+
+                printf("AABB min: %f %f %f\n", m_aabb.min.x, m_aabb.min.y, m_aabb.min.z);
+                printf("AABB max: %f %f %f\n", m_aabb.max.x, m_aabb.max.y, m_aabb.max.z);
+                printf("Stride: %zu, Position offset: %zu\n", stride, posAttr->offset);
+            }
+        }
     }
 }

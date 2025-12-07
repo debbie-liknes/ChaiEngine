@@ -37,6 +37,10 @@ set(Core_source
         source/Plugin/ServiceLocator.cpp
         source/Resource/ResourceManager.cpp
         source/Scene/ICamera.cpp
+        include/Graphics/AABB.h
+        include/Graphics/AABB.cpp
+        include/Graphics/Frustum.cpp
+        include/Graphics/Frustum.h
 )
 
 add_library(Core SHARED

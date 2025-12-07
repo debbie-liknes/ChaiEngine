@@ -74,8 +74,20 @@ namespace chai::cup
             }
         }
 
+        for (const auto& component : m_components) {
+            component->setDirty(false);
+        }
+
         if (controllerComponent) {
             controllerComponent->update(deltaTime);
         }
+    }
+
+    bool GameObject::isVisible(const Frustum& frustum)
+    {
+        if (auto *mesh = getComponent<MeshComponent>(); mesh) {
+            return mesh->isVisible(frustum);
+        }
+        return false;
     }
 } // namespace chai::cup
