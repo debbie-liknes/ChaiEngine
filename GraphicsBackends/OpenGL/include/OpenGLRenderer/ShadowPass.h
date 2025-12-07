@@ -35,8 +35,9 @@ namespace  chai::brew
         std::vector<LightInfo>& getLights() { return m_lights; }
 
     private:
-        int m_width = 0;
-        int m_height = 0;
+        static const int SHADOW_MAP_SIZE = 4096;
+        /*int m_width = 0;
+        int m_height = 0;*/
         void* m_backend = nullptr;
         void createShadowFBO();
         void destroyShadowFBO();

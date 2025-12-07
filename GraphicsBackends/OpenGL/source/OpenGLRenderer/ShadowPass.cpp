@@ -29,11 +29,11 @@ namespace chai::brew
             glGenTextures(1, &light.shadowTex);
             glBindTexture(GL_TEXTURE_2D, light.shadowTex);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24,
-                         m_width, m_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+                         SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 
-            // Filtering (use GL_NEAREST for hard shadows, or GL_LINEAR for hardware PCF)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            // Filtering
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
             // Clamp to border with max depth—samples outside the map are "lit"
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -72,13 +72,16 @@ namespace chai::brew
         m_shaderAsset = MaterialSystem::instance().getShadowShader();
         m_shaderProgram = openGLBackend->getShaderManager().compileShaderFromAsset(m_shaderAsset);
         m_shaderData = openGLBackend->getShaderManager().getShaderData(m_shaderProgram);
+
+        destroyShadowFBO();
+        createShadowFBO();
     }
 
     void ShadowPass::resize(int width, int height)
     {
         /*printf("ShadowPass::resize called: %d x %d (current: %d x %d)\n",
        width, height, m_width, m_height);*/
-        if (width == 0 || height == 0) {
+        /*if (width == 0 || height == 0) {
             //printf("  -> early return: zero dimension\n");
             return;
         }
@@ -88,12 +91,12 @@ namespace chai::brew
         }
 
         m_width = width;
-        m_height = height;
+        m_height = height;*/
 
-        printf("  -> creating FBOs\n");
-        destroyShadowFBO();
-        createShadowFBO();
-        printf("  -> created %zu light buffers\n", m_lightBuffers.size());
+        //printf("  -> creating FBOs\n");
+        /*destroyShadowFBO();
+        createShadowFBO();*/
+        //printf("  -> created %zu light buffers\n", m_lightBuffers.size());
     }
 
     void ShadowPass::execute(void* backend, const std::vector<brew::SortedDrawCommand>& draws)
@@ -199,7 +202,7 @@ namespace chai::brew
 
             // bind this light's shadow FBO
             glBindFramebuffer(GL_FRAMEBUFFER, lightBuffer.shadowFBO);
-            glViewport(0, 0, m_width, m_height);
+            glViewport(0, 0, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
             glClear(GL_DEPTH_BUFFER_BIT);
 
             updateLightingUniforms(m_backend, lightBuffer, light);

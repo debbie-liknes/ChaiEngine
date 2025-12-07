@@ -34,18 +34,28 @@ layout(std140, binding = 2) uniform LightingData {
     int numLights;
 } u_Lighting;
 
-float getShadow(int lightIndex, vec3 worldPos) {
+float getShadow(int lightIndex, vec3 worldPos, vec3 normal, vec3 lightDir) {
     vec4 lightSpacePos = u_lightViewProjs[lightIndex] * vec4(worldPos, 1.0);
     vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
     projCoords = projCoords * 0.5 + 0.5;
 
     if (projCoords.z > 1.0) return 1.0;
 
-    float closestDepth = texture(u_shadowMaps[lightIndex], projCoords.xy).r;
     float currentDepth = projCoords.z;
+    float bias = max(0.01 * (1.0 - dot(normal, lightDir)), 0.005);
 
-    float bias = 0.005;
-    return currentDepth - bias > closestDepth ? 0.0 : 1.0;
+    // PCF
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(u_shadowMaps[lightIndex], 0);
+
+    for (int x = -1; x <= 1; ++x) {
+        for (int y = -1; y <= 1; ++y) {
+            float depth = texture(u_shadowMaps[lightIndex], projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > depth ? 0.0 : 1.0;
+        }
+    }
+
+    return shadow / 9.0;
 }
 
 // PBR functions
@@ -122,7 +132,7 @@ void main()
 
         float shadow = 1.0;
         if (lightType == 0.0 || lightType == 2.0) {  // directional or spot
-            shadow = getShadow(i, fragPos);
+            shadow = getShadow(i, fragPos, N, normalize(-u_Lighting.lights[i].directionAndRange.xyz));
         }
         
         if (lightType == 0.0) {
