@@ -10,6 +10,9 @@ namespace chai
     template <typename T>
     Vec3T<T> cross(const Vec3T<T>&, const Vec3T<T>&);
 
+    template <typename T>
+    Mat4T<T> inverse(const Mat4T<T>& m);
+
     template <typename T, int N>
     Vec<T, N> normalize(const Vec<T, N>& vec);
 

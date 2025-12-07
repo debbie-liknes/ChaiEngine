@@ -22,6 +22,8 @@ namespace chai::cup
         void setFarPlane(float far) override;
         void setNearPlan(float near) override;
         void setFOV(float fov) override;
+        float getFarPlane() override;
+        float getNearPlane() override;
 
         Frustum getFrustum() const override;
 

@@ -30,9 +30,13 @@ namespace chai::brew
         void resize(int width, int height);
 
         void execute(const std::vector<SortedDrawCommand>& opaqueDraws,
-                     const std::vector<SortedDrawCommand>& transparentDraws,
-                     const std::vector<SortedDrawCommand>& skyboxDraws,
-                     const std::vector<LightInfo>& lights);
+            const std::vector<SortedDrawCommand>& transparentDraws,
+            const std::vector<SortedDrawCommand>& skyboxDraws,
+            const std::vector<LightInfo>& lights,
+            const Mat4& cameraView,
+            const Mat4& cameraProj,
+            float nearPlane,
+            float farPlane);
 
     private:
         OpenGLBackend* m_backend = nullptr;

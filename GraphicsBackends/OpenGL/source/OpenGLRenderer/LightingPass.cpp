@@ -59,7 +59,7 @@ namespace chai::brew
         glBindVertexArray(0);
     }
 
-    void LightingPass::execute(void* backend, const std::vector<SortedDrawCommand>& draws)
+    void LightingPass::execute(void* backend, const std::vector<brew::LightInfo>& lights)
     {
         if (m_lightingShader == 0 || m_quadVAO == 0)
             return;
@@ -94,40 +94,32 @@ namespace chai::brew
         glUniform1i(glGetUniformLocation(m_lightingShader, "gMaterial"), 3);
 
         int shadowTexUnit = 4;
+        auto& lightShadowData = m_shadowPass->getLightShadowData();
+        const float* cascadeSplits = m_shadowPass->getCascadeSplits();
 
-        auto& lightBuffs = m_shadowPass->getLightBuffers();
-        auto& lights = m_shadowPass->getLights();
         for (size_t i = 0; i < lights.size(); ++i) {
-            auto& lightBuffer = lightBuffs.at(i);
+            auto& lightData = lightShadowData.at(i);
 
-            glActiveTexture(GL_TEXTURE0 + shadowTexUnit + i);
-            glBindTexture(GL_TEXTURE_2D, lightBuffer.shadowTex);
+            // Bind all cascade textures for this light
+            for (int c = 0; c < NUM_CASCADES; c++) {
+                int texUnit = shadowTexUnit + i * NUM_CASCADES + c;
 
-            /*// Set the sampler uniform to the texture unit
-            std::string uniformName = "u_shadowMaps[" + std::to_string(i) + "]";
-            GLint loc = glGetUniformLocation(m_lightingShader, uniformName.c_str());
-            glUniform1i(loc, shadowTexUnit + i);*/
+                glActiveTexture(GL_TEXTURE0 + texUnit);
+                glBindTexture(GL_TEXTURE_2D, lightData.cascades[c].shadowTex);
 
-            std::string uniformName = "u_shadowMaps[" + std::to_string(i) + "]";
-            GLint loc = glGetUniformLocation(m_lightingShader, uniformName.c_str());
+                std::string samplerName = "u_shadowMaps[" + std::to_string(i * NUM_CASCADES + c) + "]";
+                GLint loc = glGetUniformLocation(m_lightingShader, samplerName.c_str());
+                glUniform1i(loc, texUnit);
 
-            if (loc == -1) {
-                std::cerr << "Failed to get uniform location: " << uniformName << std::endl;
+                std::string matrixName = "u_lightViewProjs[" + std::to_string(i * NUM_CASCADES + c) + "]";
+                GLint matLoc = glGetUniformLocation(m_lightingShader, matrixName.c_str());
+                glUniformMatrix4fv(matLoc, 1, GL_FALSE, lightData.cascades[c].lightViewProj.data());
             }
-            glUniform1i(loc, shadowTexUnit + i);
-
-            // Also upload the light's view-proj matrix
-            std::string matrixName = "u_lightViewProjs[" + std::to_string(i) + "]";
-            GLint matLoc = glGetUniformLocation(m_lightingShader, matrixName.c_str());
-            if (matLoc == -1) {
-                std::cerr << "Failed to get uniform location: " << matrixName << std::endl;
-            }
-
-            ShadowPassUniforms shadowData{};
-            lightBuffer.lightProj->getData(&shadowData, sizeof(ShadowPassUniforms));
-
-            glUniformMatrix4fv(matLoc, 1, GL_FALSE, shadowData.projection.data());
         }
+
+        // Upload cascade split depths
+        GLint splitsLoc = glGetUniformLocation(m_lightingShader, "u_cascadeSplits");
+        glUniform4fv(splitsLoc, 1, cascadeSplits + 1);  // Skip near plane, send 4 far planes
 
         // Update lighting uniforms
         auto* shaderData = openGLBackend->getShaderManager().getShaderData(m_lightingShader);

@@ -34,6 +34,16 @@ namespace chai::cup
         m_nearPlane = near;
     }
 
+    float Camera::getFarPlane()
+    {
+        return m_farPlane;
+    }
+
+    float Camera::getNearPlane()
+    {
+        return m_nearPlane;
+    }
+
     void Camera::setFOV(float fov)
     {
         m_fov = fov;

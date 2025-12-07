@@ -255,7 +255,9 @@ namespace chai::brew
         }
 
         // Execute the deferred pipeline
-        m_renderPipeline.execute(opaqueDraws, transparentDraws, skyboxDraws, m_cachedLights);
+        m_renderPipeline.execute(opaqueDraws, transparentDraws, skyboxDraws, m_cachedLights,
+            m_perFrameUBOData->getValue().view, m_perFrameUBOData->getValue().projection,
+            frame.nearPlane, frame.farPlane);
 
         m_surface->swapBuffers();
     }

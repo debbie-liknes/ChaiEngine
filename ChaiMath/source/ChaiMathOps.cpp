@@ -1,3 +1,5 @@
+#include "Vec4.h"
+
 #include <ChaiMathOps.h>
 #include <MathIncludes.h>
 
@@ -46,6 +48,79 @@ namespace chai
             a.z * b.x - a.x * b.z,
             a.x * b.y - a.y * b.x
         };
+    }
+
+    template <typename T>
+    Mat4T<T> inverse(const Mat4T<T>& m)
+    {
+        float c00 = m[2][2] * m[3][3] - m[3][2] * m[2][3];
+        float c02 = m[1][2] * m[3][3] - m[3][2] * m[1][3];
+        float c03 = m[1][2] * m[2][3] - m[2][2] * m[1][3];
+
+        float c04 = m[2][1] * m[3][3] - m[3][1] * m[2][3];
+        float c06 = m[1][1] * m[3][3] - m[3][1] * m[1][3];
+        float c07 = m[1][1] * m[2][3] - m[2][1] * m[1][3];
+
+        float c08 = m[2][1] * m[3][2] - m[3][1] * m[2][2];
+        float c10 = m[1][1] * m[3][2] - m[3][1] * m[1][2];
+        float c11 = m[1][1] * m[2][2] - m[2][1] * m[1][2];
+
+        float c12 = m[2][0] * m[3][3] - m[3][0] * m[2][3];
+        float c14 = m[1][0] * m[3][3] - m[3][0] * m[1][3];
+        float c15 = m[1][0] * m[2][3] - m[2][0] * m[1][3];
+
+        float c16 = m[2][0] * m[3][2] - m[3][0] * m[2][2];
+        float c18 = m[1][0] * m[3][2] - m[3][0] * m[1][2];
+        float c19 = m[1][0] * m[2][2] - m[2][0] * m[1][2];
+
+        float c20 = m[2][0] * m[3][1] - m[3][0] * m[2][1];
+        float c22 = m[1][0] * m[3][1] - m[3][0] * m[1][1];
+        float c23 = m[1][0] * m[2][1] - m[2][0] * m[1][1];
+
+        Vec4T<T> f0(c00, c00, c02, c03);
+        Vec4T<T> f1(c04, c04, c06, c07);
+        Vec4T<T> f2(c08, c08, c10, c11);
+        Vec4T<T> f3(c12, c12, c14, c15);
+        Vec4T<T> f4(c16, c16, c18, c19);
+        Vec4T<T> f5(c20, c20, c22, c23);
+
+        Vec4T<T> v0(m[1][0], m[0][0], m[0][0], m[0][0]);
+        Vec4T<T> v1(m[1][1], m[0][1], m[0][1], m[0][1]);
+        Vec4T<T> v2(m[1][2], m[0][2], m[0][2], m[0][2]);
+        Vec4T<T> v3(m[1][3], m[0][3], m[0][3], m[0][3]);
+
+        Vec4T<T> inv0 = v1 * f0 - v2 * f1 + v3 * f2;
+        Vec4T<T> inv1 = v0 * f0 - v2 * f3 + v3 * f4;
+        Vec4T<T> inv2 = v0 * f1 - v1 * f3 + v3 * f5;
+        Vec4T<T> inv3 = v0 * f2 - v1 * f4 + v2 * f5;
+
+        Vec4T<T> signA(+1, -1, +1, -1);
+        Vec4T<T> signB(-1, +1, -1, +1);
+
+        Mat4T<T> inv = Mat4T<T>::identity();
+        inv[0] = inv0 * signA;
+        inv[1] = inv1 * signB;
+        inv[2] = inv2 * signA;
+        inv[3] = inv3 * signB;
+
+        Vec4T<T> row0(inv[0][0], inv[1][0], inv[2][0], inv[3][0]);
+        Vec4T<T> col0(m[0][0], m[0][1], m[0][2], m[0][3]);
+
+        float det = dot(col0, row0);
+
+        if (std::abs(det) < 1e-10f) {
+            // Matrix is singular, return identity
+            return Mat4T<T>::identity();
+        }
+
+        float invDet = 1.0f / det;
+
+        /*inv[0] = inv[0] * invDet;
+        inv[1] = inv[1] * invDet;
+        inv[2] = inv[2] * invDet;
+        inv[3] = inv[3] * invDet;*/
+
+        return inv;
     }
 
     template <typename T>
@@ -209,6 +284,9 @@ namespace chai
 
     template CHAIMATH_EXPORT Mat3T<float> toMat3<float>(const Mat4T<float>&);
     template CHAIMATH_EXPORT Mat3T<double> toMat3<double>(const Mat4T<double>&);
+
+    template CHAIMATH_EXPORT Mat4T<float> inverse<float>(const Mat4T<float>&);
+    template CHAIMATH_EXPORT Mat4T<double> inverse<double>(const Mat4T<double>&);
 
     template CHAIMATH_EXPORT Mat4T<float> toMat4<float>(const Mat3T<float>&);
     template CHAIMATH_EXPORT Mat4T<double> toMat4<double>(const Mat3T<double>&);

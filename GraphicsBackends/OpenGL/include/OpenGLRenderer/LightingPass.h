@@ -16,7 +16,7 @@ namespace chai::brew
 
         void setup(void* backend) override;
 
-        void execute(void* backend, const std::vector<SortedDrawCommand>& draws) override;
+        void execute(void* backend, const std::vector<brew::LightInfo>& lights);
 
     private:
 

@@ -44,19 +44,25 @@ namespace chai::brew
         // m_forwardPass->resize(width, height);
     }
 
-    void RenderPipeline::execute(const std::vector<SortedDrawCommand>& opaqueDraws,
-                 const std::vector<SortedDrawCommand>& transparentDraws,
-                 const std::vector<SortedDrawCommand>& skyboxDraws,
-                 const std::vector<LightInfo>& lights)
+    void RenderPipeline::execute(
+        const std::vector<SortedDrawCommand>& opaqueDraws,
+        const std::vector<SortedDrawCommand>& transparentDraws,
+        const std::vector<SortedDrawCommand>& skyboxDraws,
+        const std::vector<LightInfo>& lights,
+        const Mat4& cameraView,
+        const Mat4& cameraProj,
+        float nearPlane,
+        float farPlane)
     {
         // Map the shadows first
-        m_shadowPass->execute(m_backend, lights, opaqueDraws);
+        m_shadowPass->execute(m_backend, lights, opaqueDraws,
+                      cameraView, cameraProj, nearPlane, farPlane);
 
         // 1. G-Buffer pass
         m_gbufferPass->execute(m_backend, opaqueDraws);
 
         // 2. Lighting pass
-        m_lightingPass->execute(m_backend, {});
+        m_lightingPass->execute(m_backend, lights);
 
         // 3. Skybox pass
         m_skyboxPass->execute(m_backend, skyboxDraws);
