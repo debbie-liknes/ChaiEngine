@@ -82,7 +82,7 @@ int main()
     auto sponza = testScene->createModelObject("SponzaRoot", modelAsset.value());
     sponza->getComponent<chai::cup::TransformComponent>()->setRotation(
         chai::Quat::fromEulerZYX(chai::radians(70.0f), chai::radians(50.f), chai::radians(50.f)));
-    sponza->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3(0.08, 0.08, 0.08));
+    sponza->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3(0.5, 0.5, 0.5));
 
     //add a camera to look through
     auto cameraObject = std::make_unique<chai::cup::GameObject>();
@@ -97,7 +97,7 @@ int main()
     light->type = LightType::DIRECTIONAL;
     light->color = chai::Vec3(1.0f, 1.f, 0.9f);
     light->intensity = 5.0f;
-    sun->getComponent<TransformComponent>()->setPosition(chai::Vec3{5.0, 50.0, 0.0});
+    sun->getComponent<TransformComponent>()->setPosition(chai::Vec3{8.0, 50.0, 0.0});
     sun->getComponent<TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0}, WORLD_UP);
 
     //set up viewport camera association
