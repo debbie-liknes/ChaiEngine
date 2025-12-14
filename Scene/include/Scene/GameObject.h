@@ -11,7 +11,7 @@
 
 namespace chai::cup
 {
-    class GameObject : public IUpdatable
+    class SCENE_EXPORT GameObject : public IUpdatable
     {
     public:
         GameObject();
@@ -95,7 +95,7 @@ namespace chai::cup
             }
         }
 
-        virtual void collectRenderables(brew::RenderCommandCollector& collector);
+        virtual void collectRenderables(brew::RenderCommandCollector& collector, const Frustum& frustum);
 
         void update(double deltaTime) override;
 

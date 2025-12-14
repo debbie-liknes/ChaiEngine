@@ -250,6 +250,8 @@ namespace chai::brew
             for (int c = 0; c < NUM_CASCADES; c++) {
                 CascadeData& cascade = lightData.cascades[c];
 
+                Frustum cascadeFrustum = Frustum::fromViewProjection(cascade.lightViewProj);
+
                 // Calculate light view-proj for this cascade
                 cascade.lightViewProj = calculateLightViewProjForCascade(
                     lightDir, cameraView, cameraProj, m_cascadeSplits[c], m_cascadeSplits[c + 1]);
@@ -273,6 +275,10 @@ namespace chai::brew
                 // Render scene
                 for (const auto& draw : draws) {
                     auto& cmd = draw.command;
+
+                    /*if (!cascadeFrustum.isVisible(cmd.aabb)) {
+                        continue;
+                    }*/
 
                     OpenGLMeshData* meshData =
                         openGLBackend->getMeshManager().getOrCreateMeshData(cmd.mesh);

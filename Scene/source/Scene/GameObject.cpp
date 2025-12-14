@@ -30,7 +30,7 @@ namespace chai::cup
         return m_children;
     }
 
-    void GameObject::collectRenderables(brew::RenderCommandCollector& collector)
+    void GameObject::collectRenderables(brew::RenderCommandCollector& collector, const Frustum& frustum)
     {
         for (const auto& component : m_components) {
             if (auto renderable = dynamic_cast<MeshComponent*>(component.get())) {
@@ -43,6 +43,10 @@ namespace chai::cup
 
                 for (size_t i = 0; i < meshResource->submeshes.size(); i++) {
                     const auto& submesh = meshResource->submeshes[i];
+                    const auto& aabb = renderable->getSubmeshAABBs()[i];
+
+                    if (!frustum.isVisible(aabb))
+                        continue;
 
                     brew::RenderCommand cmd;
                     cmd.type = brew::RenderCommand::DRAW_MESH;
@@ -51,6 +55,7 @@ namespace chai::cup
                     cmd.indexCount = submesh.indexCount;
                     cmd.transform = worldTransform;
                     cmd.pipelineState = renderable->getPipelineState();
+                    cmd.aabb = aabb;
 
                     // Get material - check override first, then submesh default
                     ResourceHandle mat = renderable->getMaterial(i);

@@ -45,6 +45,7 @@ namespace chai::cup
         }
 
         PipelineState& getPipelineState() { return m_pipelineState; }
+        std::vector<AABB>& getSubmeshAABBs() { return m_localAABBs; }
 
     private:
         static ResourceHandle createMeshResourceFromAsset(const MeshAsset* asset);
@@ -64,5 +65,6 @@ namespace chai::cup
         ResourceHandle m_materialInstance;
 
         AABB m_aabb;
+        std::vector<AABB> m_localAABBs;
     };
 }

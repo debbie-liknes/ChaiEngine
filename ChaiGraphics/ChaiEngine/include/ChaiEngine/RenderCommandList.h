@@ -36,5 +36,6 @@ namespace chai::brew
         uint32_t indexCount{0};
         ResourceHandle skybox;
         Vec2 planeBounds{0.1, 1000.f};
+        AABB aabb;
     };
 }

@@ -13,7 +13,6 @@
 #include <Scene/GameObject.h>
 #include <Scene/SceneManager.h>
 #include <Scene/Scene.h>
-#include <Components/MeshComponent.h>
 #include <Components/CameraComponent.h>
 #include <Components/LightComponent.h>
 #include <Components/TransformComponent.h>
@@ -21,7 +20,6 @@
 #include <chrono>
 #include <AudioEngine.h>
 #include <ChaiPhysics/ChaiPhysics.h>
-#include <Asset/AssetHandle.h>
 #include <ChaiEngine/MaterialSystem.h>
 
 #include "Graphics/ShaderAsset.h"

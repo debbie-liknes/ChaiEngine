@@ -9,7 +9,7 @@ namespace chai::cup
     public:
         Skybox();
 
-        void collectRenderables(brew::RenderCommandCollector& collector) override;
+        void collectRenderables(brew::RenderCommandCollector& collector, const Frustum& frustum) override;
         bool isVisible(const Frustum& frustum) override { return true; }
 
     private:

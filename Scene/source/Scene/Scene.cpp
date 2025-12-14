@@ -19,7 +19,7 @@ namespace chai::cup
             //printf("Visible: %s\n", visible ? "true" : "false");
             if (!visible) continue;
 
-            object->collectRenderables(collector);
+            object->collectRenderables(collector, frustum);
         }
     }
 

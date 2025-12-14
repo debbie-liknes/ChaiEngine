@@ -39,7 +39,7 @@ namespace chai::cup
         //m_skyboxPipelineState.depthStencilState.mas
     }
 
-    void Skybox::collectRenderables(brew::RenderCommandCollector& collector)
+    void Skybox::collectRenderables(brew::RenderCommandCollector& collector, const Frustum& frustum)
     {
         if (!m_cubeTextureHandle.isValid()) return;
 

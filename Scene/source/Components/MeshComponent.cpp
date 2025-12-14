@@ -161,6 +161,9 @@ namespace chai::cup
             auto resource = ResourceManager::instance().getResource<MeshResource>(m_meshResource);
             if (resource) {
                 auto posAttr = resource->vertexLayout.findAttribute("a_Position");
+                if (!posAttr)
+                    return;
+
                 size_t stride = resource->vertexLayout.getStride();
                 const uint8_t* data = resource->vertexData.data();
 
@@ -179,15 +182,30 @@ namespace chai::cup
                     m_aabb.min = minVec(m_aabb.min, worldPos3);
                     m_aabb.max = maxVec(m_aabb.max, worldPos3);
                 }
-                printf("World matrix:\n");
-                printf("  %f %f %f %f\n", worldMat[0][0], worldMat[1][0], worldMat[2][0], worldMat[3][0]);
-                printf("  %f %f %f %f\n", worldMat[0][1], worldMat[1][1], worldMat[2][1], worldMat[3][1]);
-                printf("  %f %f %f %f\n", worldMat[0][2], worldMat[1][2], worldMat[2][2], worldMat[3][2]);
-                printf("  %f %f %f %f\n", worldMat[0][3], worldMat[1][3], worldMat[2][3], worldMat[3][3]);
 
-                printf("AABB min: %f %f %f\n", m_aabb.min.x, m_aabb.min.y, m_aabb.min.z);
-                printf("AABB max: %f %f %f\n", m_aabb.max.x, m_aabb.max.y, m_aabb.max.z);
-                printf("Stride: %zu, Position offset: %zu\n", stride, posAttr->offset);
+                m_localAABBs.clear();
+                for (auto& s : resource->submeshes) {
+                    AABB localAABB;
+                    localAABB.min = Vec3(FLT_MAX);
+                    localAABB.max = Vec3(-FLT_MAX);
+
+                    for (uint32_t i = s.indexOffset; i < s.indexOffset + s.indexCount; i++) {
+                        uint32_t vertexIndex = resource->indexData[i];
+                        if (vertexIndex >= resource->vertexCount) {
+                            std::cerr << "Vertex index out of bounds!" << std::endl;
+                            continue;
+                        }
+                        const Vec3* pos = reinterpret_cast<const Vec3*>(
+                            data + vertexIndex * stride + posAttr->offset);
+
+                        auto worldPos = worldMat * Vec4(*pos, 1.0f);
+                        auto worldPos3 = Vec3(worldPos.x, worldPos.y, worldPos.z);
+                        localAABB.min = minVec(localAABB.min, worldPos3);
+                        localAABB.max = maxVec(localAABB.max, worldPos3);
+                    }
+
+                    m_localAABBs.push_back(localAABB);  // Once per submesh, not per vertex
+                }
             }
         }
     }
