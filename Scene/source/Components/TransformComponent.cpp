@@ -1,7 +1,7 @@
 #include <Components/TransformComponent.h>
 #include <Scene/GameObject.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     TransformComponent::TransformComponent(GameObject* owner) : Component(owner)
     {

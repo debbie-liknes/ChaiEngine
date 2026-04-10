@@ -5,7 +5,7 @@
 #include <Asset/AssetHandle.h>
 #include <ChaiEngine/PipelineState.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     class SCENE_EXPORT MeshComponent : public RenderableComponent
     {

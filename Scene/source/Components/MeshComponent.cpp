@@ -3,7 +3,7 @@
 #include <Components/MeshComponent.h>
 #include <ChaiEngine/Material.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     MeshComponent::MeshComponent(GameObject* owner) : RenderableComponent(owner) {}
 

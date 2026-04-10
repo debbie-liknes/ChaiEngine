@@ -4,13 +4,13 @@
 #include <Components/CameraComponent.h>
 #include <Input/InputSystem.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     // Camera controller class
     class SCENE_EXPORT CameraController : public IController
     {
     public:
-        explicit CameraController(chai::cup::GameObject* obj);
+        explicit CameraController(chai::scene::GameObject* obj);
         ~CameraController() override;
 
         void handleInput(const InputEvent& event);
@@ -32,8 +32,8 @@ namespace chai::cup
         float getMouseSensitivity() const { return mouseSensitivity; }
 
     private:
-        chai::cup::CameraComponent* cameraComponent;
-        chai::cup::TransformComponent* transformComponent;
+        chai::scene::CameraComponent* cameraComponent;
+        chai::scene::TransformComponent* transformComponent;
         float moveSpeed = 5.0f;
         float mouseSensitivity = 0.1f;
         double yaw = -90.0f; // Start looking towards negative Z

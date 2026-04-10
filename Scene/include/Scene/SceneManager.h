@@ -2,7 +2,7 @@
 #include <Scene/Scene.h>
 #include <Core/Updatable.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     class SceneManager : public IUpdatable
     {

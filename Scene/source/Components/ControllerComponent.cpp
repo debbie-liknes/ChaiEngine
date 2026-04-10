@@ -1,8 +1,8 @@
 #include <Components/ControllerComponent.h>
 
-namespace chai::cup
+namespace chai::scene
 {
-    ControllerComponent::ControllerComponent(chai::cup::GameObject* owner) : m_owner(owner)
+    ControllerComponent::ControllerComponent(chai::scene::GameObject* owner) : m_owner(owner)
     {
     }
 }

@@ -3,7 +3,7 @@
 #include <Components/TransformComponent.h>
 #include <Components/MeshComponent.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     void Scene::addGameObject(std::unique_ptr<GameObject> object)
     {

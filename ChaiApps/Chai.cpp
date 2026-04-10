@@ -26,7 +26,7 @@
 
 #include "Graphics/ShaderAsset.h"
 #include "Scene/Skybox.h"
-using namespace chai::cup;
+using namespace chai::scene;
 
 using namespace std;
 
@@ -74,42 +74,42 @@ int main()
     physicsEngine.init();
 
     //make a scene
-    chai::cup::SceneManager sceneManager;
-    sceneManager.addScene("TestScene", std::make_unique<chai::cup::Scene>());
-    chai::cup::Scene* testScene = sceneManager.setActiveScene("TestScene");
+    chai::scene::SceneManager sceneManager;
+    sceneManager.addScene("TestScene", std::make_unique<chai::scene::Scene>());
+    chai::scene::Scene* testScene = sceneManager.setActiveScene("TestScene");
 
     auto modelAsset = chai::AssetManager::instance().load<chai::ModelAsset>("assets/Sponza/glTF/Sponza.gltf");
     auto sponza = testScene->createModelObject("SponzaRoot", modelAsset.value());
-    sponza->getComponent<chai::cup::TransformComponent>()->setRotation(
+    sponza->getComponent<chai::scene::TransformComponent>()->setRotation(
         chai::Quat::fromEulerZYX(chai::radians(70.0f), chai::radians(50.f), chai::radians(50.f)));
-    sponza->getComponent<chai::cup::TransformComponent>()->setScale(chai::Vec3(0.05, 0.05, 0.05));
+    sponza->getComponent<chai::scene::TransformComponent>()->setScale(chai::Vec3(0.05, 0.05, 0.05));
 
     //add a camera to look through
-    auto cameraObject = std::make_unique<chai::cup::GameObject>();
-    auto* camComponent = cameraObject->addComponent<chai::cup::CameraComponent>(cameraObject.get());
-    auto camTransform = cameraObject->getComponent<chai::cup::TransformComponent>();
+    auto cameraObject = std::make_unique<chai::scene::GameObject>();
+    auto* camComponent = cameraObject->addComponent<chai::scene::CameraComponent>(cameraObject.get());
+    auto camTransform = cameraObject->getComponent<chai::scene::TransformComponent>();
     camTransform->setPosition(chai::Vec3{0.0, 10.0, 15.0});
     camTransform->lookAt(chai::Vec3{0.0, 0.0, 0.0}, WORLD_UP);
-    cameraObject->addController<chai::cup::CameraController>();
+    cameraObject->addController<chai::scene::CameraController>();
 
     //add some lighting so we can see
-    auto lightObject = std::make_unique<chai::cup::GameObject>();
-    lightObject->getComponent<chai::cup::TransformComponent>()->setPosition(
+    auto lightObject = std::make_unique<chai::scene::GameObject>();
+    lightObject->getComponent<chai::scene::TransformComponent>()->setPosition(
         chai::Vec3{-5.0, 15.0, 3.0});
-    //lightObject->getComponent<chai::cup::TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0},
+    //lightObject->getComponent<chai::scene::TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0},
      //   WORLD_UP);
-    auto lightComp = lightObject->addComponent<chai::cup::LightComponent>(lightObject.get());
+    auto lightComp = lightObject->addComponent<chai::scene::LightComponent>(lightObject.get());
     lightComp->intensity = 600.f;
     lightComp->attenuation = chai::Vec3{1.0f, 0.045f, 0.0075f};
     lightComp->range = 500.0f;
 
     //add another
-    auto lightObject2 = std::make_unique<chai::cup::GameObject>();
-    lightObject2->getComponent<chai::cup::TransformComponent>()->setPosition(
+    auto lightObject2 = std::make_unique<chai::scene::GameObject>();
+    lightObject2->getComponent<chai::scene::TransformComponent>()->setPosition(
         chai::Vec3{-5.0, 5.0, 3.0});
-    //lightObject2->getComponent<chai::cup::TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0},
+    //lightObject2->getComponent<chai::scene::TransformComponent>()->lookAt(chai::Vec3{0.0, 0.0, 0.0},
     //                                                                   WORLD_UP);
-    auto lightComp2 = lightObject2->addComponent<chai::cup::LightComponent>(lightObject2.get());
+    auto lightComp2 = lightObject2->addComponent<chai::scene::LightComponent>(lightObject2.get());
     lightComp2->intensity = 60.f;
 
     auto sun = testScene->createGameObject("Sun");
@@ -124,7 +124,7 @@ int main()
     vp->setCamera(camComponent->getCamera());
 
     //add the objects to the scene
-    testScene->addGameObject(std::make_unique<chai::cup::Skybox>());
+    testScene->addGameObject(std::make_unique<chai::scene::Skybox>());
     testScene->addGameObject(std::move(cameraObject));
     testScene->addGameObject(std::move(lightObject));
     //testScene->addGameObject(std::move(lightObject2));

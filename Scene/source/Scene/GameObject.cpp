@@ -3,7 +3,7 @@
 #include <Core/Updatable.h>
 #include <Scene/GameObject.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     GameObject::GameObject()
     {

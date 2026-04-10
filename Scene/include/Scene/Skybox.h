@@ -2,7 +2,7 @@
 #include <SceneExport.h>
 #include <Scene/GameObject.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     class SCENE_EXPORT Skybox : public GameObject
     {

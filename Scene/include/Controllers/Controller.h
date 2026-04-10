@@ -1,7 +1,7 @@
 #pragma once
 #include <SceneExport.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     class GameObject;
 
@@ -18,9 +18,9 @@ namespace chai::cup
         virtual const char* getControllerType() const = 0;
 
     protected:
-        chai::cup::GameObject* gameObject = nullptr;
+        chai::scene::GameObject* gameObject = nullptr;
         bool enabled = true;
 
-        explicit IController(chai::cup::GameObject* obj) : gameObject(obj) {}
+        explicit IController(chai::scene::GameObject* obj) : gameObject(obj) {}
     };
 }

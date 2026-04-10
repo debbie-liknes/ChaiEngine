@@ -2,7 +2,7 @@
 #include <Scene/GameObject.h>
 #include <Components/TransformComponent.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     CameraComponent::CameraComponent(GameObject* owner) : Component(owner)
     {

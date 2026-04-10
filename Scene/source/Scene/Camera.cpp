@@ -1,6 +1,6 @@
 #include <Scene/Camera.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     Mat4 Camera::getProjectionMatrix()
     {

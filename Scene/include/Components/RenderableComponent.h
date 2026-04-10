@@ -2,7 +2,7 @@
 #include <SceneExport.h>
 #include <Components/ComponentBase.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     class SCENE_EXPORT RenderableComponent : public Component
     {

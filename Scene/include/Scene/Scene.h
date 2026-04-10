@@ -5,7 +5,7 @@
 #include <ChaiEngine/RenderCommandCollector.h>
 #include <Core/Updatable.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     //Scene class that holds all the entities in the scene
     //Does not hold the camera, those are associated with views (probably players?)

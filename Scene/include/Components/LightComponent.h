@@ -2,7 +2,7 @@
 #include <Components/ComponentBase.h>
 #include <ChaiMath.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     enum class LightType
     {

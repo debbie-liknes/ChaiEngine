@@ -5,7 +5,7 @@
 
 #include <Scene/Skybox.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     Skybox::Skybox() : m_meshComponent(nullptr)
     {

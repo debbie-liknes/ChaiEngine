@@ -1,6 +1,6 @@
 #include <Scene/SceneManager.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     SceneManager::SceneManager()
     {

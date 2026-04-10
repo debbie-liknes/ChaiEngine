@@ -5,7 +5,7 @@
 #include <Components/ControllerComponent.h>
 #include <Core/Updatable.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     class GameObject : public IUpdatable
     {

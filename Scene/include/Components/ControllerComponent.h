@@ -7,14 +7,14 @@
 #include <Types/CMap.h>
 #include <Components/ComponentBase.h>
 
-namespace chai::cup
+namespace chai::scene
 {
     class GameObject;
 
     class ControllerComponent : public Component
     {
     public:
-        explicit ControllerComponent(chai::cup::GameObject* owner);
+        explicit ControllerComponent(chai::scene::GameObject* owner);
 
         // Add a controller
         template <typename T, typename... Args>
@@ -121,6 +121,6 @@ namespace chai::cup
         std::vector<std::unique_ptr<IController>> controllers;
         CMap<std::type_index, IController*> controllersByType;
         CMap<std::string, IController*> controllersByName;
-        chai::cup::GameObject* m_owner;
+        chai::scene::GameObject* m_owner;
     };
 }

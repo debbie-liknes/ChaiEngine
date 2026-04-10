@@ -2,15 +2,15 @@
 #include <Components/TransformComponent.h>
 #include <Scene/GameObject.h>
 
-namespace chai::cup
+namespace chai::scene
 {
-    CameraController::CameraController(chai::cup::GameObject* obj) : IController(obj),
+    CameraController::CameraController(chai::scene::GameObject* obj) : IController(obj),
                                                                      cameraComponent(
                                                                          obj->getComponent<
-                                                                             chai::cup::CameraComponent>()),
+                                                                             chai::scene::CameraComponent>()),
                                                                      transformComponent(
                                                                          obj->getComponent<
-                                                                             chai::cup::TransformComponent>())
+                                                                             chai::scene::TransformComponent>())
     {
         inputHandlerId = InputSystem::instance().subscribe(
             [this](const InputEvent& event)
