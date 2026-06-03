@@ -10,6 +10,7 @@
 #include <TypeRegistry.h>
 #include <string>
 #include <vector>
+#include <Clock.h>
 
 namespace chai
 {
@@ -20,28 +21,17 @@ namespace chai
     class Engine
     {
     public:
-        void startup()
-        {
-            for (auto& p : PluginRegistry::instance().plugins()) {
-                p->onLoad(ctx_); // plugin sees ctx_, never *this
-                active_.push_back(p.get());
-            }
-            // ... dynamically loaded plugins get onLoad'd here too
-        }
-
-        void shutdown()
-        {
-            for (auto it = active_.rbegin(); it != active_.rend(); ++it)
-                (*it)->onUnload(ctx_); // reverse order
-            active_.clear();
-        }
+        void run();
+        void startup();
+        void shutdown();
 
     private:
-         
         ServiceLocator services_;
         TypeRegistry& types_ = TypeRegistry::instance();
-        PluginContext ctx_{services_, types_}; // the narrowed view
+        PluginContext ctx_{services_, types_};
+        std::vector<IPlugin*> active_;
+        bool running_ = true;
 
-        std::vector<IPlugin*> active_; // load order, for reverse unload
+        void mainLoop();
     };
 }

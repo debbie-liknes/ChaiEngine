@@ -12,6 +12,7 @@ set(${PROJECT_NAME}_headers
 set(${PROJECT_NAME}_source
         source/Plugin/PluginRegistry.cpp
         source/Plugin/ServiceLocator.cpp
+        source/Engine.cpp
 )
 
 add_library(${PROJECT_NAME}
