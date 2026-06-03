@@ -2,6 +2,8 @@ project(TypeReflection)
 
 set(${PROJECT_NAME}_headers
         include/TypeRegistry.h
+        include/TypeInfo.h
+        include/ChaiReflect.h
 )
 
 set(${PROJECT_NAME}_source
@@ -14,5 +16,7 @@ add_library(${PROJECT_NAME}
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
+
+add_subdirectory(tests)
 
 ChaiLibDefaults(${PROJECT_NAME} "Engine")

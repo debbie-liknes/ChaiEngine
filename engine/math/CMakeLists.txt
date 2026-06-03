@@ -15,17 +15,13 @@ set(${PROJECT_NAME}_headers
         include/MathIncludes.h
 )
 
-set(${PROJECT_NAME}_source
-)
+add_library(${PROJECT_NAME} INTERFACE ${${PROJECT_NAME}_headers})
 
-add_library(${PROJECT_NAME} SHARED
-        ${${PROJECT_NAME}_headers}
-        ${${PROJECT_NAME}_source}
+target_include_directories(${PROJECT_NAME}
+    INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_BINARY_DIR}/exports/${PROJECT_NAME} include PRIVATE source/internal)
-target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 
 add_subdirectory(tests)
 
-ChaiLibDefaults(${PROJECT_NAME} "Engine")
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Engine")

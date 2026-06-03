@@ -1,3 +1,8 @@
+/**
+ * @file TypeInfo.h
+ * @brief Defines the TypeInfo class which holds metadata such as methods and
+ * properties for reflection.
+ */
 #pragma once
 #include <string>
 #include <vector>
@@ -9,6 +14,9 @@
 
 namespace chai
 {
+    /**
+     * @brief Holds metadata about a type, including its name, size, methods, and properties.
+     */
     class TypeInfo
     {
     public:
@@ -17,7 +25,10 @@ namespace chai
         size_t size = 0;
         std::function<std::shared_ptr<void>()> constructor;
 
-        // Method information
+        /**
+         * @brief Holds information about a method, including its name, invoker function, parameter
+         * types, and return type.
+         */
         struct MethodInfo
         {
             std::string name;
@@ -28,7 +39,10 @@ namespace chai
 
         std::unordered_map<std::string, MethodInfo> methods;
 
-        // Property information
+        /**
+         * @brief Holds information about a property, including its name, type, getter, and setter
+         * functions.
+         */
         struct PropertyInfo
         {
             std::string name;
@@ -39,17 +53,22 @@ namespace chai
 
         std::unordered_map<std::string, PropertyInfo> properties;
 
-        // Plugin association
-        std::string pluginName;
-
+        /**
+         * @brief Adds a method to the type information, allowing it to be invoked via reflection.
+         * @param methodName The name of the method.
+         * @param method A pointer to the member function to be added.
+         */
         template <typename T, typename R, typename... Args>
         void addMethod(const std::string& methodName, R (T::*method)(Args...))
         {
+            // For simplicity, we assume all methods are public and non-static
             MethodInfo info;
             info.name = methodName;
             info.returnType = std::type_index(typeid(R));
             info.paramTypes = {std::type_index(typeid(Args))...};
 
+            // Create an invoker that can call the method on an instance of T with the provided
+            // arguments
             info.invoker = [method](void* obj, const std::vector<std::any>& args) -> std::any
             {
                 auto* typedObj = static_cast<T*>(obj);
@@ -68,13 +87,19 @@ namespace chai
                 else
                 {
                     // Handle parameters (simplified for demonstration)
-                    return InvokeWithArgs(typedObj, method, args, std::index_sequence_for < Args...>{});
+                    return invokeWithArgs(typedObj, method, args, std::index_sequence_for < Args...>{});
                 }
             };
 
             methods[methodName] = std::move(info);
         }
 
+        /**
+         * @brief Adds a property to the type information, allowing it to be accessed and modified
+         * via reflection.
+         * @param propName The name of the property.
+         * @param member A pointer to the member variable to be added as a property.
+         */
         template <typename T, typename PropType>
         void addProperty(const std::string& propName,
                          PropType T::* member)
@@ -99,6 +124,7 @@ namespace chai
         }
 
     private:
+
         template <typename T, typename R, typename... Args, size_t... I>
         std::any invokeWithArgs(T* obj, R (T::*method)(Args...),
                                 const std::vector<std::any>& args,

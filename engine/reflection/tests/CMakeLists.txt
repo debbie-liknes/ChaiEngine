@@ -1,20 +1,15 @@
-project(ChaiMath)
+project(TypeReflection)
 
 add_executable(${PROJECT_NAME}_tests
         main.cpp
-        mat_tests.cpp
-        vec_test.cpp
-        ops_test.cpp
-        quat_tests.cpp
-        test_helpers.h
+        TypeRegistryTests.cpp
 )
 
-target_link_libraries(ChaiMath_tests
+target_link_libraries(${PROJECT_NAME}_tests
         PUBLIC
         gtest
         gmock
-        PRIVATE
-        ChaiMath
+        ${PROJECT_NAME}
 )
 
 set_target_properties(${PROJECT_NAME}_tests PROPERTIES FOLDER "Engine")

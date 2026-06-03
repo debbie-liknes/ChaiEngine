@@ -1,20 +1,16 @@
-project(ChaiMath)
+project(Core)
 
 add_executable(${PROJECT_NAME}_tests
         main.cpp
-        mat_tests.cpp
-        vec_test.cpp
-        ops_test.cpp
-        quat_tests.cpp
-        test_helpers.h
+        PluginTests.cpp
 )
 
-target_link_libraries(ChaiMath_tests
+target_link_libraries(Core_tests
         PUBLIC
         gtest
         gmock
         PRIVATE
-        ChaiMath
+        Core
 )
 
 set_target_properties(${PROJECT_NAME}_tests PROPERTIES FOLDER "Engine")

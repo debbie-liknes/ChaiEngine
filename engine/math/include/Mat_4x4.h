@@ -3,7 +3,6 @@
  * @brief 4x4 matrix specialization. Provides convenient typedefs
  */
 #pragma once
-#include <ChaiMathExport.h>
 #include <MatBase.h>
 
 namespace chai::math
