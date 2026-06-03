@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <Clock.h>
+#include <SpdLogSink.h>
 
 namespace chai
 {
@@ -26,6 +27,7 @@ namespace chai
         void shutdown();
 
     private:
+        SpdlogSink logSink_; 
         ServiceLocator services_;
         TypeRegistry& types_ = TypeRegistry::instance();
         PluginContext ctx_{services_, types_};

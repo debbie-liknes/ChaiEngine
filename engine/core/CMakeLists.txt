@@ -21,7 +21,7 @@ add_library(${PROJECT_NAME}
 )
 
 target_include_directories(Core PUBLIC ${CMAKE_BINARY_DIR}/exports/Core include)
-target_link_libraries(Core PUBLIC TypeReflection)
+target_link_libraries(Core PUBLIC TypeReflection Logger)
 
 add_subdirectory(tests)
 

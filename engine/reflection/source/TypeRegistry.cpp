@@ -1,5 +1,5 @@
 #include <TypeRegistry.h>
-#include <iostream>
+#include <Log.h>
 
 namespace chai
 {
@@ -14,9 +14,10 @@ namespace chai
                                        std::type_index incoming)
     {
         if (existing == incoming)
-            std::cerr << "[TypeRegistry] note: re-registering '" << typeName << "' (same type)\n";
-        else
-            std::cerr << "[TypeRegistry] WARNING: name collision on '" << typeName
-                      << "': " << existing.name() << " replaced by " << incoming.name() << "\n";
+        {
+            CHAI_LOG_INFO("Re-registering '{}' (same type)", typeName);
+        } else {
+            CHAI_LOG_INFO("Name collision on '{}': '{}' replaced by '{}'", typeName, existing.name(), incoming.name());
+        }
     }
 }

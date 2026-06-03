@@ -43,7 +43,7 @@ include_directories(external/include)
 # Include sub-projects.
 #add_subdirectory(Audio)
 #add_subdirectory(Core)
-#add_subdirectory(ChaiApps)
+add_subdirectory(ChaiApps)
 #add_subdirectory(ChaiGraphics)
 #add_subdirectory(ChaiPhysics)
 #add_subdirectory(GraphicsBackends)
