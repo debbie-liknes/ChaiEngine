@@ -13,7 +13,7 @@ add_library(GLFWWindowPlugin SHARED
         ${WindowGLFW_source}
 )
 
-target_link_libraries(GLFWWindowPlugin PUBLIC WindowModule glfw)
+target_link_libraries(GLFWWindowPlugin PUBLIC CoreTwo WindowModule glfw)
 if(WIN32)
     target_link_libraries(GLFWWindowPlugin PRIVATE opengl32 gdi32)
 endif()

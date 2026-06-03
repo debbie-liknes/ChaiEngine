@@ -1,6 +1,6 @@
 project(Asset)
 
-set(Asset_headers
+set(${PROJECT_NAME}_headers
         include/AssetCache.h
         include/AssetCommon.h
         include/DeferredDeleteQueue.h
@@ -9,7 +9,7 @@ set(Asset_headers
         include/SlotMap.h
 )
 
-set(Asset_source
+set(${PROJECT_NAME}_source
         source/DeferredDeleteQueue.cpp
 )
 
@@ -18,7 +18,7 @@ add_library(${PROJECT_NAME}
         ${Asset_source}
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC Include)
+target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 add_subdirectory(tests)
 

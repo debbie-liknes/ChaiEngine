@@ -11,12 +11,6 @@ set(Core_headers
         include/Input/EventHandler.h
         include/Input/InputState.h
         include/Input/InputSystem.h
-        include/Meta/ChaiMacros.h
-        include/Meta/MethodInvoker.h
-        include/Meta/TypeInfo.h
-        include/Meta/TypeRegistry.h
-        include/Plugin/PluginBase.h
-        include/Plugin/PluginRegistry.h
         include/Plugin/ServiceLocator.h
         include/Plugin/ServiceRegistry.h
         include/Resource/ResourcePool.h
@@ -31,8 +25,6 @@ set(Core_source
         source/Graphics/Viewport.cpp
         source/Input/InputState.cpp
         source/Input/InputSystem.cpp
-        source/Meta/TypeRegistry.cpp
-        source/Plugin/PluginRegistry.cpp
         source/Plugin/ServiceLocator.cpp
         source/Scene/ICamera.cpp
 )

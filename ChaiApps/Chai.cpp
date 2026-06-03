@@ -2,7 +2,7 @@
 #include <Window/WindowSystem.h>
 #include <Window/Window.h>
 #include <Window/ViewportManager.h>
-#include <Plugin/PluginRegistry.h>
+//#include <Plugin/PluginRegistry.h>
 #include <Plugin/ServiceLocator.h>
 #include <Asset/AssetManager.h>
 #include <ChaiEngine/Renderer.h>
@@ -21,11 +21,11 @@ const chai::Vec3 WORLD_UP{0.0f, 1.0f, 0.0f};
 int main()
 {
     //load common plugins
-    chai::kettle::PluginRegistry::instance().loadPluginsInDirectory("plugins");
+    //chai::kettle::PluginRegistry::instance().loadPluginsInDirectory("plugins");
 
-    chai::AssetManager::instance().addSearchPath("./resources");
-    chai::AssetManager::instance().addSearchPath(RESOURCE_PATH);
-    chai::AssetManager::instance().addSearchPath("./assets");
+    //chai::AssetManager::instance().addSearchPath("./resources");
+    //chai::AssetManager::instance().addSearchPath(RESOURCE_PATH);
+    //chai::AssetManager::instance().addSearchPath("./assets");
     //For development, maybe add the source directory
     //chai::AssetManager::instance().addSearchPath(PROJECT_SOURCE_DIR "/assets");
 
@@ -64,11 +64,11 @@ int main()
     sceneManager.addScene("TestScene", std::make_unique<chai::scene::Scene>());
     chai::scene::Scene* testScene = sceneManager.setActiveScene("TestScene");
 
-    auto modelAsset = chai::AssetManager::instance().load<chai::ModelAsset>("assets/Sponza/glTF/Sponza.gltf");
-    auto sponza = testScene->createModelObject("SponzaRoot", modelAsset.value());
-    sponza->getComponent<chai::scene::TransformComponent>()->setRotation(
-        chai::Quat::fromEulerZYX(chai::radians(70.0f), chai::radians(50.f), chai::radians(50.f)));
-    sponza->getComponent<chai::scene::TransformComponent>()->setScale(chai::Vec3(0.05, 0.05, 0.05));
+    //auto modelAsset = chai::AssetManager::instance().load<chai::ModelAsset>("assets/Sponza/glTF/Sponza.gltf");
+    //auto sponza = testScene->createModelObject("SponzaRoot", modelAsset.value());
+    //sponza->getComponent<chai::scene::TransformComponent>()->setRotation(
+    //    chai::Quat::fromEulerZYX(chai::radians(70.0f), chai::radians(50.f), chai::radians(50.f)));
+    //sponza->getComponent<chai::scene::TransformComponent>()->setScale(chai::Vec3(0.05, 0.05, 0.05));
 
     //add a camera to look through
     auto cameraObject = std::make_unique<chai::scene::GameObject>();
@@ -123,15 +123,15 @@ int main()
     ////m_audioEngine->PlaySound(/*path to wav*/, glm::vec3{0,0,0}, 3.0F);
 
     // Time tracking for delta time
-    auto lastTime = std::chrono::high_resolution_clock::now();
+    //auto lastTime = std::chrono::high_resolution_clock::now();
 
     while (!windowManager->isDone()) {
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
-        lastTime = currentTime;
+        //auto currentTime = std::chrono::high_resolution_clock::now();
+        //float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
+        //lastTime = currentTime;
 
         chai::InputSystem::instance().processEvents();
-        sceneManager.update(deltaTime);
+        //sceneManager.update(deltaTime);
 
         //render loop
         for (auto& viewport : viewportManager.getAllViewports()) {
@@ -163,7 +163,7 @@ int main()
 
         //updates and buffer swap
         windowManager->update();
-        camComponent->update(deltaTime);
+        //camComponent->update(deltaTime);
 
         //audio update
         //m_audioEngine->Set3dListenerAndOrientation(
