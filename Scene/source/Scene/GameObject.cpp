@@ -34,34 +34,34 @@ namespace chai::scene
     {
         for (const auto& component : m_components) {
             if (auto renderable = dynamic_cast<MeshComponent*>(component.get())) {
-                auto* meshResource =
-                    ResourceManager::instance().getResource<MeshResource>(renderable->getMesh());
-                if (!meshResource)
-                    continue;
+                //auto* meshResource =
+                //    ResourceManager::instance().getResource<MeshResource>(renderable->getMesh());
+                //if (!meshResource)
+                //    continue;
 
-                Mat4 worldTransform = getComponent<TransformComponent>()->getWorldMatrix();
+                //Mat4 worldTransform = getComponent<TransformComponent>()->getWorldMatrix();
 
-                for (size_t i = 0; i < meshResource->submeshes.size(); i++) {
-                    const auto& submesh = meshResource->submeshes[i];
+                //for (size_t i = 0; i < meshResource->submeshes.size(); i++) {
+                //    const auto& submesh = meshResource->submeshes[i];
 
-                    brew::RenderCommand cmd;
-                    cmd.type = brew::RenderCommand::DRAW_MESH;
-                    cmd.mesh = renderable->getMesh();
-                    cmd.indexOffset = submesh.indexOffset;
-                    cmd.indexCount = submesh.indexCount;
-                    cmd.transform = worldTransform;
-                    cmd.pipelineState = renderable->getPipelineState();
+                //    brew::RenderCommand cmd;
+                //    cmd.type = brew::RenderCommand::DRAW_MESH;
+                //    cmd.mesh = renderable->getMesh();
+                //    cmd.indexOffset = submesh.indexOffset;
+                //    cmd.indexCount = submesh.indexCount;
+                //    cmd.transform = worldTransform;
+                //    cmd.pipelineState = renderable->getPipelineState();
 
-                    // Get material - check override first, then submesh default
-                    ResourceHandle mat = renderable->getMaterial(i);
-                    if (!mat.isValid() && submesh.material.isValid()) {
-                        // submesh.material is an AssetHandle, need to get/create resource
-                        //mat = getOrCreateMaterialResource(submesh.material);
-                    }
-                    cmd.material = mat;
+                //    // Get material - check override first, then submesh default
+                //    ResourceHandle mat = renderable->getMaterial(i);
+                //    if (mat.isNull() && !submesh.material.isNull()) {
+                //        // submesh.material is an AssetHandle, need to get/create resource
+                //        //mat = getOrCreateMaterialResource(submesh.material);
+                //    }
+                //    cmd.material = mat;
 
-                    collector.submit(cmd);
-                }
+                //    collector.submit(cmd);
+                //}
             }
         }
     }

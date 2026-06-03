@@ -1,5 +1,6 @@
 #pragma once
 #include <ChaiEngine/RenderCommandList.h>
+#include <vector>
 #include <Scene/ICamera.h>
 #include <Graphics/Viewport.h>
 

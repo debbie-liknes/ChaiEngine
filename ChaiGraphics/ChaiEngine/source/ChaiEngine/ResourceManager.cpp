@@ -1,4 +1,4 @@
-#include <Resource/ResourceManager.h>
+#include <ChaiEngine/ResourceManager.h>
 
 namespace chai
 {
@@ -7,4 +7,4 @@ namespace chai
         static ResourceManager instance;
         return instance;
     }
-}
+} // namespace chai

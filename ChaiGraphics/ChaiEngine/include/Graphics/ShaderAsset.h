@@ -19,15 +19,15 @@ namespace chai
         std::string sourceCode;
     };
 
-    struct ShaderStageAsset : public IAsset
+    struct ShaderStageAsset
     {
-        bool isValid() const override { return m_valid; }
-        const std::string& getAssetId() const { return m_assetId; }
+        //bool isValid() const override { return m_valid; }
+        //const std::string& getAssetId() const { return m_assetId; }
 
         ShaderStageSource source;
     };
 
-    class ShaderAsset : public IAsset
+    class ShaderAsset
     {
         friend class MaterialSystem;
     public:
@@ -43,7 +43,7 @@ namespace chai
             std::string name;
             DataType type;
             bool isRequired = true;
-            MaterialParameterValue defaultValue;
+            //MaterialParameterValue defaultValue;
         };
 
         explicit ShaderAsset(const std::string& name) : m_name(name)
@@ -51,8 +51,8 @@ namespace chai
 
         }
 
-        bool isValid() const override { return m_valid; }
-        const std::string& getAssetId() const override { return m_assetId; }
+        //bool isValid() const override { return m_valid; }
+        //const std::string& getAssetId() const override { return m_assetId; }
 
         // What shader expects from materials
         const std::vector<UniformDescriptor>& getUniforms() const { return m_uniforms; }
@@ -71,7 +71,7 @@ namespace chai
         void addUniform(const std::string& name, DataType type,
                        bool required = true, MaterialParameterValue defaultValue = {})
         {
-            m_uniforms.push_back({name, type, required, defaultValue});
+            //m_uniforms.push_back({name, type, required, defaultValue});
         }
 
         void addVertexInput(const std::string& name, uint32_t location, DataType type)

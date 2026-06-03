@@ -2,7 +2,7 @@
 #include <Asset/AssetLoader.h>
 #include <Asset/AssetManager.h>
 #include <Resource/Resource.h>
-#include <Resource/ResourceManager.h>
+#include <ChaiEngine/ResourceManager.h>
 
 #include <filesystem>
 #include <utility>
@@ -85,10 +85,10 @@ namespace chai
         Filter m_magFilter = Filter::Linear;
     };
 
-    class TextureResource : public Resource
+    class TextureResource
     {
     public:
-        explicit TextureResource(AssetHandle asset) : m_assetHandle(asset)
+        explicit TextureResource(Handle<TextureAsset> asset) : m_assetHandle(asset)
         {
             init();
         }
@@ -136,7 +136,7 @@ namespace chai
 
         void init()
         {
-            if (m_assetHandle.isValid()) {
+            if (!m_assetHandle.isNull()) {
                 auto textureAsset = AssetManager::instance().get<TextureAsset>(m_assetHandle);
                 initFromFaces(textureAsset->getFaces());
                 m_space = textureAsset->getColorSpace();
@@ -147,7 +147,7 @@ namespace chai
             }
         }
 
-        AssetHandle m_assetHandle;
+        Handle<TextureAsset> m_assetHandle;
 
         std::vector<TextureFace> m_faces;
         ColorSpace m_space = ColorSpace::SRGB;
@@ -158,10 +158,11 @@ namespace chai
         Filter m_magFilter = Filter::Linear;
     };
 
-    static ResourceHandle getDefaultWhiteTexture()
+    static Handle<TextureResource> getDefaultWhiteTexture()
     {
-        static ResourceHandle whitTexHandle;
-        if (whitTexHandle.isValid()) return whitTexHandle;
+        static Handle<TextureResource> whiteTexHandle;
+        if (!whiteTexHandle.isNull())
+            return whiteTexHandle;
 
         TextureFace face;
         face.width = 1;
@@ -170,45 +171,45 @@ namespace chai
         face.pixels.resize(4);
         for (auto& pix : face.pixels)
             pix = 255.0f;
-        auto textureResource = std::make_unique<TextureResource>(std::vector<TextureFace>{face});
+        //auto textureResource = std::make_unique<TextureResource>(std::vector<TextureFace>{face});
 
-        whitTexHandle = ResourceManager::instance().add<TextureResource>(std::move(textureResource));
-        return whitTexHandle;
+        //whiteTexHandle = ResourceManager::instance().add<TextureResource>(std::move(textureResource));
+        return whiteTexHandle;
     }
 
-    static std::optional<ResourceHandle> loadTexture(const std::string& path)
+    static std::optional<Handle<TextureResource>> loadTexture(const std::string& path)
     {
         auto textureAsset = AssetManager::instance().load<TextureAsset>(path);
         if (textureAsset.has_value()) {
-            auto textureResource = std::make_unique<TextureResource>(textureAsset.value());
-            return ResourceManager::instance().add<TextureResource>(std::move(textureResource));
+            //auto textureResource = std::make_unique<TextureResource>(textureAsset.value());
+            //return ResourceManager::instance().add<TextureResource>(std::move(textureResource));
         }
         return std::nullopt;
     }
 
     //path to a directory
-    static std::optional<ResourceHandle> loadTextureCube(const std::string& path)
+    static std::optional<Handle<TextureResource>> loadTextureCube(const std::string& path)
     {
-        auto textures = AssetManager::instance().loadDirectory<TextureAsset>(path);
-        if (!textures.has_value()) { return std::nullopt; }
+        //auto textures = AssetManager::instance().loadDirectory<TextureAsset>(path);
+        //if (!textures.has_value()) { return std::nullopt; }
 
-        std::vector<TextureFace> faces;
-        for (auto& textureHandle : textures.value()) {
-            const auto textureAsset = AssetManager::instance().get<TextureAsset>(textureHandle);
-            auto& face = faces.emplace_back();
-            face.width = textureAsset->getWidth();
-            face.height = textureAsset->getHeight();
-            face.channels = textureAsset->getChannels();
-            face.pixels.resize(face.width * face.height * face.channels);
-            memcpy(face.pixels.data(), textureAsset->getPixels(), face.width * face.height * face.channels);
-        }
-        auto cubeTexture = std::make_unique<TextureAsset>(faces, ColorSpace::SRGB, TextureType::TexCube);
-        auto cubeAssetHandle = AssetManager::instance().add<TextureAsset>(std::move(cubeTexture));
+        //std::vector<TextureFace> faces;
+        //for (auto& textureHandle : textures.value()) {
+        //    const auto textureAsset = AssetManager::instance().get<TextureAsset>(textureHandle);
+        //    auto& face = faces.emplace_back();
+        //    face.width = textureAsset->getWidth();
+        //    face.height = textureAsset->getHeight();
+        //    face.channels = textureAsset->getChannels();
+        //    face.pixels.resize(face.width * face.height * face.channels);
+        //    memcpy(face.pixels.data(), textureAsset->getPixels(), face.width * face.height * face.channels);
+        //}
+        //auto cubeTexture = std::make_unique<TextureAsset>(faces, ColorSpace::SRGB, TextureType::TexCube);
+        //auto cubeAssetHandle = AssetManager::instance().add<TextureAsset>(std::move(cubeTexture));
 
-        if (cubeAssetHandle.has_value()) {
-            auto textureResource = std::make_unique<TextureResource>(cubeAssetHandle.value());
-            return ResourceManager::instance().add<TextureResource>(std::move(textureResource));
-        }
+        //if (cubeAssetHandle.has_value()) {
+        //    auto textureResource = std::make_unique<TextureResource>(cubeAssetHandle.value());
+        //    return ResourceManager::instance().add<TextureResource>(std::move(textureResource));
+        //}
         return std::nullopt;
     }
 }

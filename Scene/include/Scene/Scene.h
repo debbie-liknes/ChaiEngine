@@ -4,6 +4,7 @@
 #include <Scene/GameObject.h>
 #include <ChaiEngine/RenderCommandCollector.h>
 #include <Core/Updatable.h>
+#include <ChaiEngine/IMesh.h>
 
 namespace chai::scene
 {
@@ -19,8 +20,7 @@ namespace chai::scene
         void addGameObject(std::unique_ptr<GameObject> object);
         void collectRenderables(brew::RenderCommandCollector& collector) const;
         void collectLights(brew::RenderCommandCollector& collector) const;
-        GameObject* createModelObject(const std::string& name,
-                                                      AssetHandle modelHandle);
+        GameObject* createModelObject(const std::string& name, Handle<ModelAsset> modelHandle);
         GameObject* createGameObject(const std::string& name);
 
         template <typename T>

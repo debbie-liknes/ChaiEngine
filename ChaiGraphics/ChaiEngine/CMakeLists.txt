@@ -16,6 +16,8 @@ set(ChaiGraphics_headers
         include/ChaiEngine/RenderCommandList.h
         include/ChaiEngine/RenderCommandCollector.h
         include/ChaiEngine/RenderFrame.h
+        include/ChaiEngine/ResourceFactory.h
+        include/ChaiEngine/ResourceManager.h
         include/ChaiEngine/Vertex.h
         include/Graphics/VertexAttribute.h
         include/Graphics/MaterialParameter.h
@@ -31,6 +33,7 @@ set(ChaiGraphics_source
         source/ChaiEngine/MaterialSystem.cpp
         source/ChaiEngine/Renderer.cpp
         source/ChaiEngine/RenderCommandCollector.cpp
+        source/ChaiEngine/ResourceManager.cpp
         source/ChaiEngine/UniformBuffer.cpp
         include/Graphics/TextureAsset.h
         include/Graphics/GraphicsTypes.h

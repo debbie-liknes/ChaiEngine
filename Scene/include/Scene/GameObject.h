@@ -23,6 +23,7 @@ namespace chai::scene
         template <typename T>
         T* addComponent(GameObject* owner = nullptr)
         {
+            static_assert(std::is_base_of<Component, T>::value, "T must derive from Component");
             m_components.push_back(std::make_unique<T>(owner));
             return static_cast<T*>(m_components.back().get());
         }
@@ -38,6 +39,20 @@ namespace chai::scene
                 }
             }
             return nullptr;
+        }
+
+        template <typename T>
+        bool removeComponent()
+        {
+            for (auto it = m_components.begin(); it != m_components.end(); ++it) 
+            {
+                if (dynamic_cast<T*>(it->get())) 
+                {
+                    m_components.erase(it);
+                    return true;
+                }
+            }
+            return false;
         }
 
         template <typename T, typename... Args>

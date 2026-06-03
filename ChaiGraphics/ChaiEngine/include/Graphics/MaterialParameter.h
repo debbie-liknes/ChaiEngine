@@ -7,6 +7,16 @@
 
 namespace chai
 {
+    class MeshAsset;
+    class TextureAsset;
+    class MaterialAsset;
+    class ShaderAsset;
+
+    class MeshResource;
+    class TextureResource;
+    class MaterialResource;
+    class ShaderResource;
+
     using MaterialParameterValue = std::variant<
         float,
         Vec2,
@@ -15,7 +25,14 @@ namespace chai
         int,
         Mat3,
         Mat4,
-        ResourceHandle,
+        Handle<MeshAsset>,
+        Handle<TextureAsset>,
+        Handle<MaterialAsset>,
+        Handle<ShaderAsset>,
+        Handle<MeshResource>,
+        Handle<TextureResource>,
+        Handle<MaterialResource>,
+        Handle<ShaderResource>,
         bool>;
 
     struct MaterialParameter
@@ -45,7 +62,7 @@ namespace chai
             MaterialParameter param;
             param.name = name;
             param.type = type;
-            param.defaultValue = defaultValue;
+            //param.defaultValue = defaultValue;
 
             m_parameters.push_back(param);
         }

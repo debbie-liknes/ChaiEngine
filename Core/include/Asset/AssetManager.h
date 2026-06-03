@@ -1,26 +1,98 @@
 #pragma once
-#include <string>
-#include <memory>
-#include <unordered_map>
-#include <vector>
-#include <stdexcept>
-#include <optional>
-#include <shared_mutex>
-#include <Asset/AssetLoader.h>
-#include <Asset/AssetHandle.h>
 #include <Resource/ResourcePool.h>
 
+#include <Asset/AssetHandle.h>
+#include <Asset/AssetLoader.h>
 #include <filesystem>
 #include <iostream>
+#include <memory>
+#include <optional>
+#include <shared_mutex>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace chai
 {
+    struct IAssetStorage {
+        virtual ~IAssetStorage() = default;
+    };
+
+    template <typename T>
+    struct AssetStorage : IAssetStorage {
+        ResourcePool<T> pool;
+        std::unordered_map<std::string, Handle<T>> pathCache;
+        // Later: reload callbacks, debug names, whatever else.
+    };
+
     class AssetManager
     {
     public:
-        static AssetManager& instance();
         ~AssetManager();
+        static AssetManager& instance();
         void registerLoader(std::shared_ptr<IAssetLoader> loader);
+
+        template <typename T>
+        Handle<T> add(std::unique_ptr<T> asset)
+        {
+            return getPool<T>().add(std::move(asset));
+        }
+
+        template <typename T>
+        const T* get(Handle<T> handle)
+        {
+            return getPool<T>().get(handle);
+        }
+
+        template <typename T>
+        std::optional<Handle<T>> load(const std::string& path)
+        {
+            auto resolved = resolvePath(path);
+            if (!resolved)
+                return std::nullopt;
+
+            auto& storage = getStorage<T>();
+            {
+                std::shared_lock lock(m_mutex);
+                auto it = storage.pathCache.find(*resolved);
+                if (it != storage.pathCache.end() && storage.pool.isValid(it->second)) {
+                    return it->second;
+                }
+            }
+
+            const auto ext = getExtension(*resolved);
+            std::unique_ptr<T> asset_result;
+
+            for (auto& loader : m_loaders) {
+                if (!loader->canLoad(ext)) {
+                    continue;
+                }
+
+                // Type safety check: does this loader produce T?
+                if (loader->assetType() != std::type_index(typeid(T))) {
+                    // Loader handles this extension but for a different asset type.
+                    // Not an error — skip and keep looking.
+                    continue;
+                }
+
+                auto erased = loader->loadErased(*resolved);
+                if (!erased)
+                    continue;
+
+                // Safe to cast: we verified the type_index matches.
+                // Release from the erased unique_ptr, take ownership as T*.
+                T* raw = static_cast<T*>(erased.release());
+                auto typed = std::unique_ptr<T>(raw);
+
+                std::unique_lock lock(m_mutex);
+                auto handle = storage.pool.add(std::move(typed));
+                storage.pathCache[*resolved] = handle;
+                return handle;
+            }
+
+            return std::nullopt;
+        }
 
         void addSearchPath(const std::string& path)
         {
@@ -28,106 +100,21 @@ namespace chai
             search_paths_.push_back(path);
         }
 
-        void addSearchPathFront(const std::string& path)
-        {
-            std::unique_lock lock(search_paths_mutex_);
-            search_paths_.insert(search_paths_.begin(), path);
-        }
-
-        // Load or get existing asset by path
-        template <typename T>
-        std::optional<AssetHandle> load(const std::string& path)
-        {
-            // Check cache first
-            {
-                std::shared_lock cache_lock(cache_mutex_);
-                auto it = path_cache_.find(path);
-                if (it != path_cache_.end()) {
-                    return it->second;
-                }
-            }
-
-            // Try to resolve the path
-            std::optional<std::string> resolvedPath = resolvePath(path);
-            if (!resolvedPath) {
-                std::cerr << "Asset not found: " << path << " (searched " << search_paths_.size()
-                          << " paths)" << std::endl;
-                return std::nullopt;
-            }
-
-            const auto ext = getExtension(*resolvedPath);
-            std::unique_ptr<IAsset> asset_result;
-
-            for (auto& loader : m_loaders) {
-                if (loader->canLoad(ext)) {
-                    asset_result = loader->load(*resolvedPath);
-                    if (asset_result)
-                        break;
-                }
-            }
-
-            if (!asset_result)
-                return std::nullopt;
-
-            AssetHandle handle;
-            {
-                std::unique_lock<std::shared_mutex> pool_lock(pool_mutex_);
-                handle = AssetHandle(pool_.add(std::move(asset_result)));
-            }
-
-            {
-                std::unique_lock<std::shared_mutex> cache_lock(cache_mutex_);
-                path_cache_[path] = handle;
-                type_handles_[std::type_index(typeid(AssetHandle))].push_back(handle);
-            }
-
-            return handle;
-        }
-
-        template <typename T>
-        std::optional<std::vector<AssetHandle>> loadDirectory(const std::string& dirPath)
-        {
-            std::string searchPath = RESOURCE_PATH + dirPath;
-
-            if (!std::filesystem::is_directory(searchPath)) {
-                std::cerr << "Path :" << dirPath << " is not a directory. Provide a directory for loadDirectory\n";
-                return std::nullopt;
-            }
-            std::vector<AssetHandle> loadedAssets;
-            for (const auto & entry : std::filesystem::directory_iterator(searchPath)) {
-                auto assetPath = dirPath + "/" + entry.path().filename().string();
-                auto assetHandle = load<T>(assetPath);
-                if (assetHandle.has_value()) {
-                    loadedAssets.push_back(assetHandle.value());
-                }
-            }
-            return loadedAssets;
-        }
-
-        template <class U>
-            requires std::derived_from<U, IAsset>
-        std::optional<AssetHandle> add(std::unique_ptr<U> asset)
-        {
-            AssetHandle handle;
-            {
-                std::unique_lock<std::shared_mutex> pool_lock(pool_mutex_);
-                handle = AssetHandle(pool_.add(std::move(asset)));
-            }
-
-            return handle;
-        }
-
-        //DO NOT store the returned pointer, it may be invalidated
-        template <typename T>
-        const T* get(AssetHandle handle) const
-        {
-            return dynamic_cast<const T*>(pool_.get(handle));
-        }
-
     private:
-        ResourcePool<IAsset> pool_;
-        CMap<std::string, AssetHandle> path_cache_;
-        CMap<std::type_index, std::vector<AssetHandle>> type_handles_;
+
+        template <typename T>
+        AssetStorage<T>& getStorage()
+        {
+            auto key = std::type_index(typeid(T));
+            auto it = m_storage.find(key);
+            if (it == m_storage.end()) {
+                auto s = std::make_unique<AssetStorage<T>>();
+                auto* raw = s.get();
+                m_storage.emplace(key, std::move(s));
+                return *raw;
+            }
+            return static_cast<AssetStorage<T>&>(*it->second);
+        }
 
         std::optional<std::string> resolvePath(const std::string& path)
         {
@@ -148,7 +135,7 @@ namespace chai
             return std::nullopt;
         }
 
-            bool isAbsolutePath(const std::string& path)
+        bool isAbsolutePath(const std::string& path)
         {
             if (path.empty())
                 return false;
@@ -170,14 +157,17 @@ namespace chai
         }
 
         bool fileExists(const std::string& path) { return std::filesystem::exists(path); }
+        std::string getExtension(const std::string& file);
 
+        std::unordered_map<std::type_index, std::unique_ptr<IAssetStorage>> m_storage;
+        mutable std::shared_mutex m_mutex;
+
+        // Type-erased storage of typed pools.
+        // Each entry is actually a ResourcePool<SomeConcreteType>*.
+        std::vector<std::shared_ptr<IAssetLoader>> m_loaders;
         std::vector<std::string> search_paths_;
         mutable std::shared_mutex search_paths_mutex_;
         mutable std::shared_mutex pool_mutex_;
         mutable std::shared_mutex cache_mutex_;
-
-        std::vector<std::shared_ptr<IAssetLoader>> m_loaders;
-
-        std::string getExtension(const std::string& file);
     };
-}
+} // namespace chai

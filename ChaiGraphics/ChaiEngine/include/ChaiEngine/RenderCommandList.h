@@ -2,10 +2,9 @@
 #include "PipelineState.h"
 
 #include <ChaiGraphicsExport.h>
-#include <ChaiEngine/IMesh.h>
-#include <ChaiEngine/Material.h>
 #include <Graphics/Viewport.h>
 #include <ChaiEngine/Light.h>
+#include <vector>
 
 namespace chai::brew
 {
@@ -24,8 +23,8 @@ namespace chai::brew
         Type type{Type::CLEAR};
 
         // Mesh rendering data
-        ResourceHandle mesh;
-        ResourceHandle material;
+        //ResourceHandle mesh;
+        //ResourceHandle material;
         Mat4 transform{1.f};
         IViewport* viewport = nullptr;
         Mat4 viewMatrix{1.f};
@@ -34,6 +33,6 @@ namespace chai::brew
         PipelineState pipelineState;
         uint32_t indexOffset{0};
         uint32_t indexCount{0};
-        ResourceHandle skybox;
+        //ResourceHandle skybox;
     };
 }

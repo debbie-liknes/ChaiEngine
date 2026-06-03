@@ -19,7 +19,6 @@ set(Core_headers
         include/Plugin/PluginRegistry.h
         include/Plugin/ServiceLocator.h
         include/Plugin/ServiceRegistry.h
-        include/Resource/ResourceManager.h
         include/Resource/ResourcePool.h
         include/Resource/Resource.h
         include/Scene/ICamera.h
@@ -35,7 +34,6 @@ set(Core_source
         source/Meta/TypeRegistry.cpp
         source/Plugin/PluginRegistry.cpp
         source/Plugin/ServiceLocator.cpp
-        source/Resource/ResourceManager.cpp
         source/Scene/ICamera.cpp
 )
 

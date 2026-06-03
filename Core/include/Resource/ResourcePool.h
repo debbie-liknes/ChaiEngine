@@ -3,22 +3,18 @@
 
 namespace chai
 {
-    // ============================================================================
-    // RESOURCE MANAGER (Manages GPU objects)
-    // ============================================================================
+    struct IPoolBase {
+        virtual ~IPoolBase() = default;
+    };
+
     template <typename T>
-    class ResourcePool
+    class ResourcePool : public IPoolBase
     {
     public:
-        ~ResourcePool()
-        {
-            for (auto& res : m_resources)
-            {
-            }
-        }
+        ~ResourcePool() {}
 
         // Add resource, get stable handle
-        Handle add(std::unique_ptr<T> resource)
+        Handle<T> add(std::unique_ptr<T> resource)
         {
             uint32_t index;
             auto type = std::type_index(typeid(T));
@@ -39,29 +35,21 @@ namespace chai
                 m_generations.push_back(0);
             }
 
-            return Handle{index, m_generations[index], type};
+            return Handle<T>{index, m_generations[index]};
         }
 
         // Remove resource
-        void remove(Handle handle)
-        {
-            if (!isValid(handle))
-                return;
+        //void remove(ResourceHandle handle)
+        //{
+        //    if (!isValid(handle))
+        //        return;
 
-            m_resources[handle.index].reset(); // Delete resource
-            m_freeList.push_back(handle.index); // Mark slot as free
-            m_generations[handle.index]++; // Invalidate old handles
-        }
+        //    m_resources[handle.index].reset(); // Delete resource
+        //    m_freeList.push_back(handle.index); // Mark slot as free
+        //    m_generations[handle.index]++; // Invalidate old handles
+        //}
 
-        // Get resource (safe!)
-        T* get(Handle handle)
-        {
-            if (!isValid(handle))
-                return nullptr;
-            return m_resources[handle.index].get();
-        }
-
-        const T* get(Handle handle) const
+        const T* get(Handle<T> handle) const
         {
             if (!isValid(handle))
                 return nullptr;
@@ -69,7 +57,7 @@ namespace chai
         }
 
         // Check if handle is still valid
-        bool isValid(Handle handle) const
+        bool isValid(Handle<T> handle) const
         {
             return handle.index < m_resources.size() &&
                 m_generations[handle.index] == handle.generation &&

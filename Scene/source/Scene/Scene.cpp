@@ -63,41 +63,42 @@ namespace chai::scene
     }
 
     GameObject* Scene::createModelObject(const std::string& name,
-                                                         AssetHandle modelHandle)
+                                                         Handle<ModelAsset> modelHandle)
     {
-        auto* model = AssetManager::instance().get<ModelAsset>(modelHandle);
-        if (!model)
-            return nullptr;
+        //auto* model = AssetManager::instance().get<ModelAsset>(modelHandle);
+        //if (!model)
+        //    return nullptr;
 
-        // Create root object for the whole model
-        auto root = createGameObject(name);
+        //// Create root object for the whole model
+        //auto root = createGameObject(name);
 
-        std::vector<GameObject*> nodeObjects;
+        //std::vector<GameObject*> nodeObjects;
 
-        // Create GameObjects for each node
-        for (auto& node : model->nodes) {
-            auto go = createGameObject(node.name);
-            go->getComponent<TransformComponent>()->setLocalMatrix(node.localTransform);
+        //// Create GameObjects for each node
+        //for (auto& node : model->nodes) {
+        //    auto go = createGameObject(node.name);
+        //    go->getComponent<TransformComponent>()->setLocalMatrix(node.localTransform);
 
-            if (node.meshIndex >= 0) {
-                auto* meshComp = go->addComponent<MeshComponent>();
-                meshComp->setMesh(model->meshes[node.meshIndex]);
-            }
+        //    if (node.meshIndex >= 0) {
+        //        auto* meshComp = go->addComponent<MeshComponent>();
+        //        meshComp->setMesh(model->meshes[node.meshIndex]);
+        //    }
 
-            nodeObjects.push_back(go);
-        }
+        //    nodeObjects.push_back(go);
+        //}
 
-        // Setup hierarchy from model
-        for (size_t i = 0; i < model->nodes.size(); i++) {
-            if (model->nodes[i].parentIndex >= 0) {
+        //// Setup hierarchy from model
+        //for (size_t i = 0; i < model->nodes.size(); i++) {
+        //    if (model->nodes[i].parentIndex >= 0) {
 
-                nodeObjects[i]->setParent(nodeObjects[model->nodes[i].parentIndex]);
-            } else {
-                // Root nodes in the model become children of our root object
-                nodeObjects[i]->setParent(root);
-            }
-        }
+        //        nodeObjects[i]->setParent(nodeObjects[model->nodes[i].parentIndex]);
+        //    } else {
+        //        // Root nodes in the model become children of our root object
+        //        nodeObjects[i]->setParent(root);
+        //    }
+        //}
 
-        return root;
+        //return root;
+        return nullptr;
     }
 }

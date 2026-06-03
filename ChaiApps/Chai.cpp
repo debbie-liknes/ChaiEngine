@@ -1,34 +1,20 @@
-﻿#include "Chai.h"
-
-#include "Graphics/TextureAsset.h"
-
-#include <Window/WindowManager.h>
+﻿#include <Window/WindowManager.h>
 #include <Window/WindowSystem.h>
 #include <Window/Window.h>
 #include <Window/ViewportManager.h>
 #include <Plugin/PluginRegistry.h>
 #include <Plugin/ServiceLocator.h>
+#include <Asset/AssetManager.h>
 #include <ChaiEngine/Renderer.h>
-#include <ChaiEngine/RenderCommandCollector.h>
-#include <Scene/GameObject.h>
 #include <Scene/SceneManager.h>
-#include <Scene/Scene.h>
-#include <Components/MeshComponent.h>
 #include <Components/CameraComponent.h>
 #include <Components/LightComponent.h>
 #include <Components/TransformComponent.h>
 #include <Controllers/CameraController.h>
-#include <chrono>
-#include <AudioEngine.h>
+//#include <chrono>
+//#include <AudioEngine.h>
 #include <ChaiPhysics/ChaiPhysics.h>
-#include <Asset/AssetHandle.h>
-#include <ChaiEngine/MaterialSystem.h>
-
-#include "Graphics/ShaderAsset.h"
-#include "Scene/Skybox.h"
 using namespace chai::scene;
-
-using namespace std;
 
 const chai::Vec3 WORLD_UP{0.0f, 1.0f, 0.0f};
 
@@ -37,10 +23,10 @@ int main()
     //load common plugins
     chai::kettle::PluginRegistry::instance().loadPluginsInDirectory("plugins");
 
-    chai::AssetManager::instance().addSearchPath("./assets");
     chai::AssetManager::instance().addSearchPath("./resources");
     chai::AssetManager::instance().addSearchPath(RESOURCE_PATH);
-    // For development, maybe add the source directory
+    chai::AssetManager::instance().addSearchPath("./assets");
+    //For development, maybe add the source directory
     //chai::AssetManager::instance().addSearchPath(PROJECT_SOURCE_DIR "/assets");
 
     //create window system and manager
@@ -92,7 +78,7 @@ int main()
     camTransform->lookAt(chai::Vec3{0.0, 0.0, 0.0}, WORLD_UP);
     cameraObject->addController<chai::scene::CameraController>();
 
-    //add some lighting so we can see
+    ////add some lighting so we can see
     auto lightObject = std::make_unique<chai::scene::GameObject>();
     lightObject->getComponent<chai::scene::TransformComponent>()->setPosition(
         chai::Vec3{-5.0, 15.0, 3.0});
@@ -124,18 +110,17 @@ int main()
     vp->setCamera(camComponent->getCamera());
 
     //add the objects to the scene
-    testScene->addGameObject(std::make_unique<chai::scene::Skybox>());
+    //testScene->addGameObject(std::make_unique<chai::scene::Skybox>());
     testScene->addGameObject(std::move(cameraObject));
     testScene->addGameObject(std::move(lightObject));
-    //testScene->addGameObject(std::move(lightObject2));
 
     //audio
     //std::shared_ptr<AudioEngine> m_audioEngine;
     //m_audioEngine->Init();
 
-    //uncomment for sound at location of cube
-    //m_audioEngine->LoadSound(/*path to wav*/, true, true, true);
-    //m_audioEngine->PlaySound(/*path to wav*/, glm::vec3{0,0,0}, 3.0F);
+    ////uncomment for sound at location of cube
+    ////m_audioEngine->LoadSound(/*path to wav*/, true, true, true);
+    ////m_audioEngine->PlaySound(/*path to wav*/, glm::vec3{0,0,0}, 3.0F);
 
     // Time tracking for delta time
     auto lastTime = std::chrono::high_resolution_clock::now();

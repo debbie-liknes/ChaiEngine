@@ -13,7 +13,6 @@ namespace chai
         m_loaders.clear();
     }
 
-
     void AssetManager::registerLoader(std::shared_ptr<IAssetLoader> loader)
     {
         m_loaders.push_back(loader);

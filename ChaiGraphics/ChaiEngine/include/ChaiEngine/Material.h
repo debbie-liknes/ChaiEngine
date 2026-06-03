@@ -3,14 +3,13 @@
 #include <Types/CMap.h>
 #include <Asset/AssetLoader.h>
 #include <Asset/AssetHandle.h>
-#include <Resource/Resource.h>
 #include <Graphics/MaterialParameter.h>
-#include <Resource/ResourceManager.h>
+#include <Graphics/ShaderAsset.h>
 
 namespace chai
 {
     //shared by multiple instances
-    struct CHAIGRAPHICS_EXPORT MaterialAsset : public IAsset
+    struct CHAIGRAPHICS_EXPORT MaterialAsset
     {
     public:
         MaterialAsset() = default;
@@ -18,20 +17,17 @@ namespace chai
         MaterialAsset(const std::string& name)
             : m_name(name) {}
 
-        MaterialAsset(const std::string& name, Handle shader)
+        MaterialAsset(const std::string& name, Handle<ShaderAsset> shader)
             : m_name(name), m_shaderHandle(shader) {}
 
         // Getters
         const std::string& getName() const { return m_name; }
-        AssetHandle getShaderHandle() const { return m_shaderHandle; }
+        Handle<ShaderAsset> getShaderHandle() const { return m_shaderHandle; }
 
-        bool isValid() const override { return m_valid; }
-        const std::string& getAssetId() const override { return m_assetId; }
-
-        void setParameter(const std::string& name, const MaterialParameterValue& value)
-        {
-            m_parameters[name] = value;
-        }
+        //void setParameter(const std::string& name, const MaterialParameterValue& value)
+        //{
+        //    m_parameters[name] = value;
+        //}
 
         // Convenience overloads for specific types
         void setFloat(const std::string& name, float value)
@@ -69,38 +65,38 @@ namespace chai
 
     private:
         std::string m_name;
-        AssetHandle m_shaderHandle;
+        Handle<ShaderAsset> m_shaderHandle{};
         std::unordered_map<std::string, MaterialParameterValue> m_parameters;
         RenderState m_renderState;
     };
 
     //GPU resource representation
-    struct CHAIGRAPHICS_EXPORT MaterialResource : public Resource
+    struct CHAIGRAPHICS_EXPORT MaterialResource
     {
-        AssetHandle sourceAsset;
-        AssetHandle shaderAsset;
+        Handle<MaterialAsset> sourceAsset{};
+        Handle<ShaderAsset> shaderAsset{};
 
         // Separate textures from scalar uniforms
         std::unordered_map<std::string, MaterialParameterValue> uniforms;
 
         struct TextureBinding {
-            ResourceHandle texture;
+            Handle<TextureResource> texture;
             int slot;
         };
         std::unordered_map<std::string, TextureBinding> textures;
 
-        explicit MaterialResource(AssetHandle source) : Resource(source), sourceAsset(source) {}
+        explicit MaterialResource(Handle<MaterialAsset> source) : sourceAsset(source) {}
         MaterialResource() = default;
     };
 
     //Runtime material instance (parameters unique per instance)
-    class CHAIGRAPHICS_EXPORT MaterialInstance : public Resource
+    class CHAIGRAPHICS_EXPORT MaterialInstance
     {
     public:
-        explicit MaterialInstance(AssetHandle source) {}
-        explicit MaterialInstance(ResourceHandle resource) : m_resourceHandle(resource) {}
+        explicit MaterialInstance(Handle<MaterialAsset> source) {}
+        explicit MaterialInstance(Handle<MaterialResource> resource) : m_resourceHandle(resource) {}
 
-        ResourceHandle getResource() const
+        Handle<MaterialResource> getResource() const
         {
             return m_resourceHandle;
         }
@@ -108,7 +104,7 @@ namespace chai
         // Set parameter override
         void setParameter(const std::string& name, const MaterialParameterValue& value)
         {
-            m_parameterOverrides[name] = value;
+            //m_parameterOverrides[name] = value;
         }
 
         // Convenience overloads
@@ -133,7 +129,7 @@ namespace chai
         }
 
     private:
-        ResourceHandle m_resourceHandle;
+        Handle<MaterialResource> m_resourceHandle;
         std::unordered_map<std::string, MaterialParameterValue> m_parameterOverrides;
     };
 }
