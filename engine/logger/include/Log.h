@@ -28,7 +28,6 @@ namespace chai
     void logRecord(const LogRecord& record);
 } // namespace chai
 
-// Compile-time floor
 #ifndef CHAI_COMPILE_LOG_LEVEL
 #define CHAI_COMPILE_LOG_LEVEL ::chai::LogLevel::Trace
 #endif
@@ -38,14 +37,12 @@ namespace chai
  * level
  */
 #define CHAI_LOG_AT(level, ...)                                                                    \
-    do {                                                                                           \
-        if constexpr ((level) >= CHAI_COMPILE_LOG_LEVEL) {                                         \
-            if (::chai::logEnabled(level)) {                                                       \
-                ::chai::logRecord(                                                                 \
-                    ::chai::LogRecord{(level), ::std::format(__VA_ARGS__), __FILE__, __LINE__});   \
-            }                                                                                      \
+    if constexpr ((level) >= CHAI_COMPILE_LOG_LEVEL) {                                             \
+        if (::chai::logEnabled(level)) {                                                           \
+            ::chai::logRecord(                                                                     \
+                ::chai::LogRecord{(level), ::std::format(__VA_ARGS__), __FILE__, __LINE__});       \
         }                                                                                          \
-    } while (0)
+    }  
 
 #define CHAI_LOG_TRACE(...) CHAI_LOG_AT(::chai::LogLevel::Trace, __VA_ARGS__)
 #define CHAI_LOG_DEBUG(...) CHAI_LOG_AT(::chai::LogLevel::Debug, __VA_ARGS__)

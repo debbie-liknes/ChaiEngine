@@ -21,9 +21,11 @@ namespace chai
     class Engine
     {
     public:
-        void run();
+        //lifecycle methods
         void startup();
+        bool tick();
         void shutdown();
+        void requestStop();
 
     private:
         ServiceLocator services_;
@@ -31,6 +33,7 @@ namespace chai
         PluginContext ctx_{services_, types_};
         std::vector<IPlugin*> active_;
         bool running_ = true;
+        Clock clock_;
 
         void mainLoop();
     };

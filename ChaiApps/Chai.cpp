@@ -10,5 +10,6 @@ int main()
 
     chai::Engine engine;
     engine.startup();
+    engine.tick();
     engine.shutdown();
 }
