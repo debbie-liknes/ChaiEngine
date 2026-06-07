@@ -20,10 +20,7 @@ namespace chai
 
     void Engine::startup()
     {
-        setLogSink(&logSink_);
-        setLogLevel(LogLevel::Info);
         CHAI_LOG_INFO("Engine starting");
-        // (logger installed before this point — see below)
         for (auto& p : PluginRegistry::instance().plugins()) {
             p->onLoad(ctx_);
             active_.push_back(p.get());
