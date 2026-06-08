@@ -1,4 +1,5 @@
 #add_subdirectory(TextureLoader)
 add_subdirectory(glfwWindow)
+add_subdirectory(vulkan)
 #add_subdirectory(ModelLoader)
 #add_subdirectory(GLSLLoader)

@@ -3,6 +3,19 @@
 
 namespace chai
 {
+    void onFramebufferSize(GLFWwindow* window, int width, int height)
+    {
+    }
+
+    void onClose(GLFWwindow* window)
+    {
+    }
+
+    void onFocus(GLFWwindow* window, int focused)
+    {
+
+    }
+
     WindowGLFW::WindowGLFW(const WindowDesc& desc)
     {
         // There might be a more graphics api agnostic way to do this
@@ -16,18 +29,17 @@ namespace chai
             return;
         }
 
-        // Stash `this` so the static callbacks below can find us.
-        //glfwSetWindowUserPointer(window_, this);
-        //glfwSetFramebufferSizeCallback(window_, &WindowGLFW::onFramebufferSize);
-        //glfwSetWindowCloseCallback(window_, &WindowGLFW::onClose);
-        //glfwSetWindowFocusCallback(window_, &WindowGLFW::onFocus);
+        glfwSetWindowUserPointer(window_, this);
+        glfwSetFramebufferSizeCallback(window_, onFramebufferSize);
+        glfwSetWindowCloseCallback(window_, onClose);
+        glfwSetWindowFocusCallback(window_, onFocus);
 
-        //events_.reserve(16);
+        events_.reserve(16);
 
-        //int fbw = 0, fbh = 0;
-        //glfwGetFramebufferSize(window_, &fbw, &fbh);
-        //CHAI_LOG_INFO(
-        //    "Window created: {}x{} screen, {}x{} framebuffer", desc.width, desc.height, fbw, fbh);
+        int fbw = 0, fbh = 0;
+        glfwGetFramebufferSize(window_, &fbw, &fbh);
+        CHAI_LOG_INFO(
+            "Window created: {}x{} screen, {}x{} framebuffer", desc.width, desc.height, fbw, fbh);
 
     }
 
@@ -84,7 +96,7 @@ namespace chai
 
     void* WindowGLFW::nativeHandle() const
     {
-        //so we can create a surface
+        //so we can create a surface for vulkan
         return window_;
     }
 }

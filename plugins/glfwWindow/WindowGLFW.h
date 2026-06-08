@@ -1,7 +1,7 @@
 /**
  * @file WindowGLFW.h
  * @brief Concrete implementation of an IWindow
- */                                                                                                \
+ */
 #pragma once
 #include <Window/Window.h>
 #include <Window/WindowTypes.h>
@@ -56,5 +56,7 @@ namespace chai
     private:
         GLFWwindow* window_;
         std::vector<WindowEvent> events_;
+
+        //void onFramebufferSize(GLFWwindow* window, int width, int height);
     };
 }

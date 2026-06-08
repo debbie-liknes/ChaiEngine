@@ -24,6 +24,7 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(spdlog)
+set_target_properties(spdlog PROPERTIES FOLDER "external")
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_link_libraries(${PROJECT_NAME} PUBLIC Logger PRIVATE spdlog::spdlog)

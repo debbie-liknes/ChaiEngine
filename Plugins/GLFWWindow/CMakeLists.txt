@@ -6,7 +6,7 @@ set(${PROJECT_NAME}_headers
 
 set(${PROJECT_NAME}_source
         WindowGLFW.cpp
-	WindowPlugin.cpp
+	    WindowPlugin.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED
@@ -14,9 +14,6 @@ add_library(${PROJECT_NAME} SHARED
         ${GLFWWindowPlugin_source}
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC Core glfw)
-#if(WIN32)
-#    target_link_libraries(${PROJECT_NAME} PRIVATE opengl32 gdi32)
-#endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC Core PRIVATE glfw)
 
 ChaiPluginDefaults(${PROJECT_NAME} "Plugins")
