@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <Plugin/PluginRegistry.h>
 #include <Plugin/ServiceLocator.h>
 #include <TypeRegistry.h>
 #include <Engine.h>
+#include <Plugin/PluginLoader.h>
 
 
 namespace chai
@@ -18,27 +18,6 @@ namespace chai
         MOCK_METHOD(void, onLoad, (PluginContext&), (override));
         MOCK_METHOD(void, onUnload, (PluginContext&), (override));
     };
-
-    TEST(PluginHostTest, LoadAndUnloadInOrder)
-    {
-        auto a = std::make_unique<MockPlugin>();
-        auto b = std::make_unique<MockPlugin>();
-        auto* aRaw = a.get();
-        auto* bRaw = b.get();
-        {
-            testing::InSequence seq;
-            EXPECT_CALL(*aRaw, onLoad(_));
-            EXPECT_CALL(*bRaw, onLoad(_));
-            EXPECT_CALL(*bRaw, onUnload(_));
-            EXPECT_CALL(*aRaw, onUnload(_));
-        }
-        PluginRegistry& reg = PluginRegistry::instance();
-        reg.add(std::move(a));
-        reg.add(std::move(b));
-        Engine engine;
-        engine.startup();
-        engine.shutdown();
-    }
 
     class IPhysics
     {

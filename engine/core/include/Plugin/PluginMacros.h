@@ -1,13 +1,21 @@
-#include <Plugin/PluginRegistry.h>
+#pragma once
+#include <ChaiReflect.h>
 
-template <typename T>
-struct PluginRegistrar {
-    PluginRegistrar() { PluginRegistry::instance().add(std::make_unique<T>()); }
-};
+#define CHAI_PLUGIN_ABI_VERSION 1
 
-#define CHAI_PLUGIN(Type, Name)                                                                    \
-    CHAI_REFLECT(Type)                                                                             \
+#if defined(_WIN32)
+#define CHAI_PLUGIN_API extern "C" __declspec(dllexport)
+#else
+#endif
+
+
+//Place in a .cpp, not header
+#define CHAI_PLUGIN(Type)                                                                          \
+    CHAI_PLUGIN_API int chaiPluginAbiVersion()                                                     \
     {                                                                                              \
-        type.tags["plugin"] = Name;                                                                \
+        return CHAI_PLUGIN_ABI_VERSION;                                                            \
     }                                                                                              \
-    static inline PluginRegistrar<Type> _chai_plugin_##Type {}
+    CHAI_PLUGIN_API ::chai::IPlugin* chaiCreatePlugin()                                            \
+    {                                                                                              \
+        return new Type();                                                                         \
+    }

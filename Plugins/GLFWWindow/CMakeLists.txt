@@ -1,21 +1,22 @@
-# Add source to this project's executable.
+project(GLFWWindowPlugin)
 
-set(WindowGLFW_headers
-        GLFWSystem.h
+set(${PROJECT_NAME}_headers
+        WindowGLFW.h
 )
 
-set(WindowGLFW_source
-        GLFWSystem.cpp
+set(${PROJECT_NAME}_source
+        WindowGLFW.cpp
+	WindowPlugin.cpp
 )
 
-add_library(GLFWWindowPlugin SHARED
-        ${WindowGLFW_headers}
-        ${WindowGLFW_source}
+add_library(${PROJECT_NAME} SHARED
+        ${GLFWWindowPlugin_headers}
+        ${GLFWWindowPlugin_source}
 )
 
-target_link_libraries(GLFWWindowPlugin PUBLIC CoreTwo WindowModule glfw)
-if(WIN32)
-    target_link_libraries(GLFWWindowPlugin PRIVATE opengl32 gdi32)
-endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC Core glfw)
+#if(WIN32)
+#    target_link_libraries(${PROJECT_NAME} PRIVATE opengl32 gdi32)
+#endif()
 
-ChaiPluginDefaults(GLFWWindowPlugin "Window/Plugins")
+ChaiPluginDefaults(${PROJECT_NAME} "Plugins")

@@ -5,12 +5,12 @@
 #pragma once
 #include <Plugin/ServiceLocator.h>
 #include <Plugin/PluginContext.h>
-#include <Plugin/PluginRegistry.h>
 #include <Plugin/PluginBase.h>
 #include <TypeRegistry.h>
 #include <string>
 #include <vector>
 #include <Clock.h>
+#include <span>
 
 namespace chai
 {
@@ -26,15 +26,16 @@ namespace chai
         bool tick();
         void shutdown();
         void requestStop();
+        ServiceLocator& services() { return services_; }
+        void setPlugins(std::span<IPlugin* const> p);
 
     private:
         ServiceLocator services_;
+        std::vector<IPlugin*> plugins_;
         TypeRegistry& types_ = TypeRegistry::instance();
         PluginContext ctx_{services_, types_};
         std::vector<IPlugin*> active_;
         bool running_ = true;
         Clock clock_;
-
-        void mainLoop();
     };
 }
