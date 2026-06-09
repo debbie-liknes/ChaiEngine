@@ -8,6 +8,7 @@
 #include <memory>
 #include <span>
 #include <Window/WindowTypes.h>
+#include <vector>
 
 namespace chai
 {
@@ -51,5 +52,16 @@ namespace chai
          * @brief Opaque
          */
         virtual void* nativeHandle() const = 0;
+
+        /**
+         * @brief Get the extensions required
+         */
+        virtual std::vector<const char*> getExtensions() const = 0;
+
+        /**
+         * @brief Create surface for Vulkan
+         * @param instance VkInstance object
+         */
+        virtual void* createSurface_Vulkan(void* instance) const = 0;
     };
 }

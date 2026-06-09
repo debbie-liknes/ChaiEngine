@@ -10,7 +10,7 @@ set(${PROJECT_NAME}_source
         source/Log.cpp
 )
 
-add_library(${PROJECT_NAME} STATIC
+add_library(${PROJECT_NAME} SHARED
         ${${PROJECT_NAME}_headers}
         ${${PROJECT_NAME}_source}
 )

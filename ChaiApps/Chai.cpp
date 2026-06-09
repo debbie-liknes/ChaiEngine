@@ -4,6 +4,7 @@
 #include <Window/Window.h>
 #include <Plugin/PluginLoader.h>
 #include <SystemPaths.h>
+#include <Renderer.h>
 
 int main()
 {
@@ -34,11 +35,21 @@ int main()
         return 1;
     }
 
+    auto renderer = engine.services().tryResolve<gfx::IRenderer>();
+    if (!renderer)
+    {
+        CHAI_LOG_CRITICAL("Could not locate Renderer.");
+        return 1;
+    }
+
     //main loop
     while (!win->shouldClose()) {
         auto events = win->pollEvents();
+        renderer->renderFrame();
         engine.tick();
     }
+
+    win.reset();
 
     engine.shutdown();
 }

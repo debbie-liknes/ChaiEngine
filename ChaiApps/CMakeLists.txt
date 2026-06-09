@@ -3,7 +3,11 @@
 add_executable(${PROJECT_NAME} "Chai.cpp")
 
 #just use the OpenGL Renderer for now
-target_link_libraries(${PROJECT_NAME} PUBLIC Core SpdLogger 
+target_link_libraries(${PROJECT_NAME} 
+    PUBLIC 
+    Core 
+    SpdLogger 
+    Graphics
     PRIVATE
     $<LINK_LIBRARY:WHOLE_ARCHIVE>)
 

@@ -6,8 +6,10 @@
 #include <Window/Window.h>
 #include <Window/WindowTypes.h>
 #include <Plugin/PluginBase.h>
-#include <GLFW/glfw3.h>
 #include <vector>
+
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 
 namespace chai
 {
@@ -53,10 +55,15 @@ namespace chai
          */
         virtual void* nativeHandle() const override;
 
+        std::vector<const char*> getExtensions() const override;
+
+        /**
+         * @brief Create surface for Vulkan
+         */
+        void* createSurface_Vulkan(void* instance) const override;
+
     private:
         GLFWwindow* window_;
         std::vector<WindowEvent> events_;
-
-        //void onFramebufferSize(GLFWwindow* window, int width, int height);
     };
 }

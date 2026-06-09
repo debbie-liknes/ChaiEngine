@@ -14,6 +14,8 @@ add_library(${PROJECT_NAME} SHARED
         ${GLFWWindowPlugin_source}
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC Core PRIVATE glfw)
+find_package(Vulkan REQUIRED)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC Core PRIVATE glfw Vulkan::Vulkan)
 
 ChaiPluginDefaults(${PROJECT_NAME} "Plugins")

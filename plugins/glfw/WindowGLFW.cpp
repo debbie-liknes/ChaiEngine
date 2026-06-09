@@ -99,4 +99,31 @@ namespace chai
         //so we can create a surface for vulkan
         return window_;
     }
+
+    std::vector<const char*> WindowGLFW::getExtensions() const
+    {
+        uint32_t extensionCount = 0;
+        const char** extensions = glfwGetRequiredInstanceExtensions(&extensionCount);
+
+        return std::vector<const char*>(extensions, extensions + extensionCount);
+    }
+
+    void* WindowGLFW::createSurface_Vulkan(void* instance) const
+    {
+        VkSurfaceKHR surface;
+
+        auto vkInstance = static_cast<VkInstance*>(instance);
+
+        if (!vkInstance)
+        {
+            CHAI_LOG_CRITICAL("Could not get VkInstance, surface creation failed.");
+        }
+
+        if (glfwCreateWindowSurface(*vkInstance, window_, nullptr, &surface) !=
+            VK_SUCCESS) {
+            CHAI_LOG_CRITICAL("Failed to create window surface.");
+        }
+
+        return surface;
+    }
 }

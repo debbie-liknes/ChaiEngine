@@ -1,8 +1,8 @@
 #pragma once
 #include <Renderer.h>
 #include "../VulkanContext.h"
-#include "Swapchain.h"
-#include "RenderTargetView.h"
+#include "../Swapchain.h"
+#include "../RenderTargetView.h"
 #include <vulkan/vulkan.h>
  
 #include <array>
@@ -18,7 +18,7 @@ namespace chai::gfx
 	class VulkanRenderer : public IRenderer
 	{
     public:
-        explicit VulkanRenderer(IWindow& window);
+        explicit VulkanRenderer(chai::IWindow& window);
         ~VulkanRenderer() override;
 
         void renderFrame() override;
@@ -31,10 +31,11 @@ namespace chai::gfx
         struct FrameData {
             VkCommandBuffer cmd = VK_NULL_HANDLE;
             VkSemaphore imageAvailable = VK_NULL_HANDLE; // acquire -> render
-            VkSemaphore renderFinished = VK_NULL_HANDLE; // render  -> present
             VkFence inFlight = VK_NULL_HANDLE;           // CPU waits on this
         };
         static constexpr uint32_t kFramesInFlight = 2;
+
+        void init();
 
         void recreateSwapchain();
 
@@ -44,10 +45,12 @@ namespace chai::gfx
         // whether it's drawing to the swapchain or an offscreen target. That's
         // the whole payoff.
         void renderScene(VkCommandBuffer cmd, const RenderTargetView& view);
+        VkFenceCreateInfo fenceCreate(VkFenceCreateFlags flags = 0);
+        VkSemaphoreCreateInfo semaphoreCreate(VkSemaphoreCreateFlags flags = 0);
 
-        IWindow& window_;
+        chai::IWindow& window_;
         VulkanContext ctx_;   // constructed first (everything needs it)
-        //Swapchain swapchain_; // constructed from ctx_ + window extent
+        Swapchain swapchain_; // constructed from ctx_ + window extent
 
         VkCommandPool cmdPool_ = VK_NULL_HANDLE;
         std::array<FrameData, kFramesInFlight> frames_{};

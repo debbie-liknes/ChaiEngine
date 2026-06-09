@@ -3,6 +3,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 #include "RenderTargetView.h"
+#include "VkBootstrap.h"
 
 namespace chai::gfx
 {
@@ -27,7 +28,11 @@ namespace chai::gfx
 
         // Present a previously-acquired image, waiting on renderFinished.
         // Returns false if the swapchain became out of date during present.
-        bool present(uint32_t imageIndex, VkSemaphore renderFinished);
+        bool present(uint32_t imageIndex);
+        VkSemaphore renderFinished(uint32_t imageIndex) const
+        {
+            return renderFinished_[imageIndex];
+        }
 
         // Tear down and rebuild at a new size (window resize). Caller must have
         // waited for the device to be idle first.
@@ -40,11 +45,13 @@ namespace chai::gfx
         void build(VkExtent2D extent);
         void destroy();
 
+        vkb::Swapchain vkbSwapchain_;
         VulkanContext& ctx_;
         VkSwapchainKHR swapchain_ = VK_NULL_HANDLE;
         VkFormat format_{};
         VkExtent2D extent_{};
         std::vector<VkImage> images_;    // owned by the swapchain, not by us
         std::vector<VkImageView> views_; // we create/destroy these
+        std::vector<VkSemaphore> renderFinished_;
     };
 } // namespace chai
