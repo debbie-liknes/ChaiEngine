@@ -2,6 +2,9 @@
 #include <Window/Window.h>
 #include <Log.h>
 #include "../core/VkCheck.h"
+#include <SystemPaths.h>
+#include "../pipeline/ShaderModule.h"
+#include "../pipeline/PipelineBuilder.h"
 
 namespace
 {
@@ -86,6 +89,30 @@ namespace chai::gfx
                 ctx_.device(), &semaphoreCreateInfo, nullptr, &frames_[i].imageAvailable));
 
         }
+
+        //////////////////////////////////////////////////////////////////////////////////////
+        const auto shaderDir = executableDir() / "shaders";
+        VkShaderModule vert = loadShaderModule(ctx_.device(), shaderDir / "triangle.vert.spv");
+        VkShaderModule frag = loadShaderModule(ctx_.device(), shaderDir / "triangle.frag.spv");
+        if (vert == VK_NULL_HANDLE || frag == VK_NULL_HANDLE) {
+            CHAI_LOG_CRITICAL("Triangle shaders failed to load from {}", shaderDir.string());
+            return;
+        }
+
+        VkPipelineLayoutCreateInfo layoutInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+        // empty: no descriptor sets, no push constants yet
+        VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &layoutInfo, nullptr, &pipelineLayout_));
+
+        trianglePipeline_ =
+            PipelineBuilder{}
+                .setShaders(vert, frag)
+                .setColorFormat(swapchain_.format()) // MUST match the target's format
+                .disableDepthTest()
+                .disableBlending()
+                .build(ctx_.device(), pipelineLayout_);
+
+        vkDestroyShaderModule(ctx_.device(), vert, nullptr); // consumed into the pipeline
+        vkDestroyShaderModule(ctx_.device(), frag, nullptr);
     }
 
     void VulkanRenderer::renderFrame()
@@ -218,7 +245,14 @@ namespace chai::gfx
 
     void VulkanRenderer::renderScene(VkCommandBuffer cmd, const RenderTargetView& view)
     {
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, trianglePipeline_);
 
+        VkViewport vp{0, 0, float(view.extent.width), float(view.extent.height), 0.0f, 1.0f};
+        vkCmdSetViewport(cmd, 0, 1, &vp);
+        VkRect2D scissor{{0, 0}, view.extent};
+        vkCmdSetScissor(cmd, 0, 1, &scissor);
+
+        vkCmdDraw(cmd, 3, 1, 0, 0); 
     }
 
 }

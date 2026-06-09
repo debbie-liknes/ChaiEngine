@@ -56,5 +56,9 @@ namespace chai::gfx
         std::array<FrameData, kFramesInFlight> frames_{};
         uint32_t currentFrame_ = 0;
         bool needsResize_ = false;
+
+        //Porbably dont want this long term
+        VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
+        VkPipeline trianglePipeline_ = VK_NULL_HANDLE;
     };
 }
