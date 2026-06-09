@@ -10,32 +10,38 @@ namespace chai::gfx
         frag_ = frag;
         return *this;
     }
+
     PipelineBuilder& PipelineBuilder::setTopology(VkPrimitiveTopology t)
     {
         topology_ = t;
         return *this;
     }
+
     PipelineBuilder& PipelineBuilder::setPolygonMode(VkPolygonMode m)
     {
         polygonMode_ = m;
         return *this;
     }
+
     PipelineBuilder& PipelineBuilder::setCullMode(VkCullModeFlags c, VkFrontFace f)
     {
         cullMode_ = c;
         frontFace_ = f;
         return *this;
     }
+
     PipelineBuilder& PipelineBuilder::setColorFormat(VkFormat f)
     {
         colorFormat_ = f;
         return *this;
     }
+
     PipelineBuilder& PipelineBuilder::disableDepthTest()
     {
         depthTest_ = false;
         return *this;
     }
+
     PipelineBuilder& PipelineBuilder::disableBlending()
     {
         blending_ = false;
@@ -54,7 +60,7 @@ namespace chai::gfx
         stages[1].module = frag_;
         stages[1].pName = "main";
 
-        // No vertex buffer — the triangle's verts live in the shader.
+        // TODO: this is hardcoded for triangle
         VkPipelineVertexInputStateCreateInfo vertexInput{
             VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
 
@@ -91,7 +97,7 @@ namespace chai::gfx
         blendAttachment.blendEnable = blending_ ? VK_TRUE : VK_FALSE;
         blendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
                                          VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-        // (when blending_ is true, set src/dst factors here; off for the triangle)
+        // TODO: src/dst factors
 
         VkPipelineColorBlendStateCreateInfo colorBlend{
             VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO};
@@ -104,16 +110,14 @@ namespace chai::gfx
         dynamic.dynamicStateCount = 2;
         dynamic.pDynamicStates = dynamicStates;
 
-        // THE dynamic-rendering hookup: declare the color format instead of a
-        // render pass. The pipeline is then compatible with any target of this
-        // format — swapchain or offscreen.
+        // Dynamic rendering hookup
         VkPipelineRenderingCreateInfo renderingInfo{
             VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO};
         renderingInfo.colorAttachmentCount = 1;
         renderingInfo.pColorAttachmentFormats = &colorFormat_;
 
         VkGraphicsPipelineCreateInfo info{VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
-        info.pNext = &renderingInfo; // chained
+        info.pNext = &renderingInfo;
         info.stageCount = 2;
         info.pStages = stages;
         info.pVertexInputState = &vertexInput;
@@ -125,7 +129,7 @@ namespace chai::gfx
         info.pColorBlendState = &colorBlend;
         info.pDynamicState = &dynamic;
         info.layout = layout;
-        info.renderPass = VK_NULL_HANDLE; // dynamic rendering: none
+        info.renderPass = VK_NULL_HANDLE; // dynamic rendering = no render pass
 
         VkPipeline pipeline = VK_NULL_HANDLE;
         VK_CHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &info, nullptr, &pipeline));

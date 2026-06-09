@@ -16,16 +16,14 @@ namespace chai::gfx
 
         const size_t fileSize = static_cast<size_t>(file.tellg());
 
-        // SPIR-V is a stream of 32-bit words. Read into a uint32_t buffer so the
-        // pointer is correctly aligned for pCode.
         std::vector<uint32_t> code(fileSize / sizeof(uint32_t));
         file.seekg(0);
         file.read(reinterpret_cast<char*>(code.data()), static_cast<std::streamsize>(fileSize));
         file.close();
 
         VkShaderModuleCreateInfo info{VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
-        info.codeSize = fileSize; // in BYTES
-        info.pCode = code.data(); // but the pointer is uint32_t*
+        info.codeSize = fileSize; //this is in bytes btw
+        info.pCode = code.data();
 
         VkShaderModule module = VK_NULL_HANDLE;
         if (vkCreateShaderModule(device, &info, nullptr, &module) != VK_SUCCESS) {

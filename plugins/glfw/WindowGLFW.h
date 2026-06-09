@@ -55,6 +55,9 @@ namespace chai
          */
         virtual void* nativeHandle() const override;
 
+        /**
+         * @brief Get the extensions needed for the graphics api
+         */
         std::vector<const char*> getExtensions() const override;
 
         /**

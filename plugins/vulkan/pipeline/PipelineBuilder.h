@@ -1,18 +1,15 @@
+/**
+ * @file PipelineBuilder.h
+ * @brief Graphics pipeline creation helper
+ */
 #pragma once
 #include <vulkan/vulkan.h>
 
 namespace chai::gfx
 {
-    // Graphics pipeline creation is one giant nest of CreateInfo structs. This
-    // collects the decisions as readable steps, then assembles them in build().
-    //
-    // Dynamic-rendering shaped: there is NO VkRenderPass. build() chains a
-    // VkPipelineRenderingCreateInfo (carrying the color format) into pNext, so
-    // the pipeline is compatible with any target of that format — swapchain or
-    // offscreen alike. That's what keeps pipelines target-agnostic.
-    //
-    // For the triangle: hardcoded verts (empty vertex input), dynamic viewport/
-    // scissor, no depth, no blend, no culling.
+    /**
+     * @brief No VkRenderPass, with the intent to do dynamic rendering.
+     */
     class PipelineBuilder
     {
     public:
@@ -20,12 +17,13 @@ namespace chai::gfx
         PipelineBuilder& setTopology(VkPrimitiveTopology topology);
         PipelineBuilder& setPolygonMode(VkPolygonMode mode);
         PipelineBuilder& setCullMode(VkCullModeFlags cull, VkFrontFace front);
-        PipelineBuilder& setColorFormat(VkFormat format); // for dynamic rendering
+        PipelineBuilder& setColorFormat(VkFormat format);
         PipelineBuilder& disableDepthTest();
         PipelineBuilder& disableBlending();
 
-        // Assembles the create struct and returns the pipeline. The layout and
-        // shader modules are borrowed — caller owns and destroys them.
+        /**
+         * @brief Assembles the create struct and returns the pipeline.
+         */
         VkPipeline build(VkDevice device, VkPipelineLayout layout);
 
     private:

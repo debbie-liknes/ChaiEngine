@@ -1,3 +1,6 @@
+/**
+ * @file VulkanRenderer.h
+ */
 #pragma once
 #include <Renderer.h>
 #include "../VulkanContext.h"
@@ -15,6 +18,9 @@ namespace chai
 
 namespace chai::gfx
 {
+    /**
+     * @brief Concrete vulkan implementation of the Renderer interface.
+     */
 	class VulkanRenderer : public IRenderer
 	{
     public:
@@ -26,12 +32,13 @@ namespace chai::gfx
         void waitIdle() override;
 
     private:
-        // Per-frame-in-flight resources. Double-buffering these is what lets the
-        // CPU record frame N+1 while the GPU still works on frame N.
+        /**
+         * @brief Per frame resources, double buffering
+         */
         struct FrameData {
             VkCommandBuffer cmd = VK_NULL_HANDLE;
-            VkSemaphore imageAvailable = VK_NULL_HANDLE; // acquire -> render
-            VkFence inFlight = VK_NULL_HANDLE;           // CPU waits on this
+            VkSemaphore imageAvailable = VK_NULL_HANDLE;
+            VkFence inFlight = VK_NULL_HANDLE;
         };
         static constexpr uint32_t kFramesInFlight = 2;
 
@@ -39,25 +46,25 @@ namespace chai::gfx
 
         void recreateSwapchain();
 
-        // THE seam where actual drawing lives. For first light this is empty —
-        // the clear happens via loadOp=CLEAR in renderFrame. Your triangle, then
-        // meshes, go here later. Note it ONLY sees the view: it has no idea
-        // whether it's drawing to the swapchain or an offscreen target. That's
-        // the whole payoff.
+        /**
+         * @brief The actual drawing. I dont want this function to know anything about
+         * the scene objects or graph. It also only renders to the target view, NOT directly
+         * to the swapchain. This will make multiple view easier later...i think
+         */
         void renderScene(VkCommandBuffer cmd, const RenderTargetView& view);
         VkFenceCreateInfo fenceCreate(VkFenceCreateFlags flags = 0);
         VkSemaphoreCreateInfo semaphoreCreate(VkSemaphoreCreateFlags flags = 0);
 
         chai::IWindow& window_;
-        VulkanContext ctx_;   // constructed first (everything needs it)
-        Swapchain swapchain_; // constructed from ctx_ + window extent
+        VulkanContext ctx_;
+        Swapchain swapchain_;
 
         VkCommandPool cmdPool_ = VK_NULL_HANDLE;
         std::array<FrameData, kFramesInFlight> frames_{};
         uint32_t currentFrame_ = 0;
         bool needsResize_ = false;
 
-        //Porbably dont want this long term
+        //Porbably dont want this long term, just for hello triangle (vulkan edition!!)
         VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
         VkPipeline trianglePipeline_ = VK_NULL_HANDLE;
     };

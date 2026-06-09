@@ -1,3 +1,6 @@
+/**
+ * @file VulkanContext.h
+ */
 #pragma once
 #include <cstdint>
 #include <vulkan/vulkan.h>
@@ -10,13 +13,12 @@ namespace chai
 
 namespace chai::gfx
 {
-    // Owns the long-lived Vulkan handles: instance (+ validation), surface (from
-    // the window), physical/logical device, and the queues. Created once, lives
-    // for the renderer's lifetime. Everything else (swapchain, command pools)
-    // borrows these.
-    //
-    // SKELETON: bodies are where vk-bootstrap earns its keep — instance/device/
-    // queue selection is the most tedious, least instructive Vulkan boilerplate.
+    /**
+     * @brief A structure to store long lived Vulkan handles. Things created once
+     * that live for the renderer's lifetime. Instance, surface, devices, queues.
+     * Uses vk-bootstrap for the boilerplate code, but provides getters for the 
+     * Vulkan objects
+     */
     class VulkanContext
     {
     public:

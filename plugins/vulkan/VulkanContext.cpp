@@ -104,8 +104,6 @@ namespace chai::gfx
         features12.descriptorIndexing = true;
 
         // use vkbootstrap to select a gpu.
-        // We want a gpu that can write to the SDL surface and supports vulkan 1.3 with the correct
-        // features
         vkb::PhysicalDeviceSelector selector{vkbInstance_};
         vkbPhysicalDevice_ = selector.set_minimum_version(1, 3)
                                                  .set_required_features_13(features)

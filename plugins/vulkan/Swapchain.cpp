@@ -21,10 +21,8 @@ namespace chai::gfx
         format_ = VK_FORMAT_B8G8R8A8_UNORM;
 
         vkbSwapchain_ = swapchainBuilder
-                            //.use_default_format_selection()
                             .set_desired_format(VkSurfaceFormatKHR{
                                 .format = format_, .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR})
-                            // use vsync present mode
                             .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
                             .set_desired_extent(extent.width, extent.height)
                             .add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT)
@@ -33,6 +31,7 @@ namespace chai::gfx
                             .value();
 
         extent_ = vkbSwapchain_.extent;
+
         // store swapchain and its related images
         swapchain_ = vkbSwapchain_.swapchain;
         images_ = vkbSwapchain_.get_images().value();
@@ -65,17 +64,17 @@ namespace chai::gfx
         VkResult r = vkAcquireNextImageKHR(
             ctx_.device(), swapchain_, UINT64_MAX, imageAvailable, VK_NULL_HANDLE, &outImageIndex);
 
-        if (r == VK_ERROR_OUT_OF_DATE_KHR) // window resized — caller rebuilds
+        if (r == VK_ERROR_OUT_OF_DATE_KHR) // window resized
             return false;
-        if (r != VK_SUCCESS && r != VK_SUBOPTIMAL_KHR) // suboptimal is still usable
-            VK_CHECK(r);                               // genuine failure: abort
+        if (r != VK_SUCCESS && r != VK_SUBOPTIMAL_KHR) // suboptimal? TODO: can i do something about that?
+            VK_CHECK(r);
 
         outView = RenderTargetView{
             .extent = extent_,
-            .image = images_[outImageIndex], // needed for layout barriers
+            .image = images_[outImageIndex],
             .colorView = views_[outImageIndex],
             .colorFormat = format_,
-            .clearColor = {} // renderFrame sets the color
+            .clearColor = {}
         };
         return true;
     }

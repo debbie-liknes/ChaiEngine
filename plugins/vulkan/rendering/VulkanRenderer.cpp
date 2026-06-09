@@ -8,6 +8,7 @@
 
 namespace
 {
+    //from vk guide but i need to understand this better tbh
     void transitionImage(VkCommandBuffer cmd,
                          VkImage image,
                          VkImageLayout oldLayout,
@@ -53,6 +54,10 @@ namespace chai::gfx
             vkDestroySemaphore(ctx_.device(), frames_[i].imageAvailable, nullptr);
         }
 
+        vkDestroyPipelineLayout(ctx_.device(), pipelineLayout_, nullptr);
+        vkDestroyPipeline(ctx_.device(), trianglePipeline_, nullptr);
+
+        //dont need to destory the buffers individually. Command Pool is enough
         vkDestroyCommandPool(ctx_.device(), cmdPool_, nullptr);
         CHAI_LOG_INFO("VulkanRenderer destroyed");
     }
@@ -100,18 +105,17 @@ namespace chai::gfx
         }
 
         VkPipelineLayoutCreateInfo layoutInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
-        // empty: no descriptor sets, no push constants yet
         VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &layoutInfo, nullptr, &pipelineLayout_));
 
         trianglePipeline_ =
             PipelineBuilder{}
                 .setShaders(vert, frag)
-                .setColorFormat(swapchain_.format()) // MUST match the target's format
+                .setColorFormat(swapchain_.format())
                 .disableDepthTest()
                 .disableBlending()
                 .build(ctx_.device(), pipelineLayout_);
 
-        vkDestroyShaderModule(ctx_.device(), vert, nullptr); // consumed into the pipeline
+        vkDestroyShaderModule(ctx_.device(), vert, nullptr);
         vkDestroyShaderModule(ctx_.device(), frag, nullptr);
     }
 
@@ -141,11 +145,10 @@ namespace chai::gfx
         begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         VK_CHECK(vkBeginCommandBuffer(cmd, &begin));
 
-            // Swapchain image: UNDEFINED -> COLOR_ATTACHMENT_OPTIMAL
+        //??
         transitionImage(
             cmd, view.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
-        // Clear happens via loadOp = CLEAR inside dynamic rendering.
         VkRenderingAttachmentInfo color{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
         color.imageView = view.colorView;
         color.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -159,11 +162,12 @@ namespace chai::gfx
         rendering.colorAttachmentCount = 1;
         rendering.pColorAttachments = &color;
 
+        //DRAW
         vkCmdBeginRendering(cmd, &rendering);
-        renderScene(cmd, view); // empty for clear-only; the triangle goes here next
+        renderScene(cmd, view);
         vkCmdEndRendering(cmd);
 
-        // COLOR_ATTACHMENT_OPTIMAL -> PRESENT_SRC_KHR
+        //??
         transitionImage(cmd,
                         view.image,
                         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
@@ -171,8 +175,7 @@ namespace chai::gfx
 
         VK_CHECK(vkEndCommandBuffer(cmd));
 
-        // Submit (sync2): wait on imageAvailable at color output, signal renderFinished,
-        // fence inFlight.
+        // Need to understand this better
         VkCommandBufferSubmitInfo cmdInfo{VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO};
         cmdInfo.commandBuffer = cmd;
 
@@ -181,7 +184,7 @@ namespace chai::gfx
         wait.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 
         VkSemaphoreSubmitInfo signal{VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO};
-        signal.semaphore = swapchain_.renderFinished(imageIndex); // was frame.renderFinished
+        signal.semaphore = swapchain_.renderFinished(imageIndex);
         signal.stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT;
 
         VkSubmitInfo2 submit{VK_STRUCTURE_TYPE_SUBMIT_INFO_2};

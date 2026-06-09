@@ -1,3 +1,7 @@
+/**
+ * @file VkCheck.h
+ * @brief Helpers to log and abort on vulkan failures
+ */
 #pragma once
 #include <vulkan/vulkan.h>
 #include <Log.h>
