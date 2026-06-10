@@ -21,7 +21,8 @@ namespace chai::gfx
                 return;
             }
 
-            renderer_ = std::make_shared<VulkanRenderer>(*window);
+            services_ = &ctx.services;
+            renderer_ = std::make_shared<VulkanRenderer>(*window, services_);
             ctx.services.provide<IRenderer>(renderer_);
             CHAI_LOG_INFO("Renderer service provided");
 
@@ -33,12 +34,14 @@ namespace chai::gfx
                 renderer_->waitIdle(); // make sure the GPU is idle before teardown
             ctx.services.remove<IRenderer>();
             renderer_.reset();
+            services_ = nullptr;
             CHAI_LOG_INFO("Renderer removed");
 
         }
 
     private:
         std::shared_ptr<VulkanRenderer> renderer_;
+        ServiceLocator* services_;
     };
 
     CHAI_PLUGIN(VulkanPlugin);

@@ -4,6 +4,7 @@
  */
 #pragma once
 #include <vulkan/vulkan.h>
+#include <vector>
 
 namespace chai::gfx
 {
@@ -18,6 +19,8 @@ namespace chai::gfx
         PipelineBuilder& setPolygonMode(VkPolygonMode mode);
         PipelineBuilder& setCullMode(VkCullModeFlags cull, VkFrontFace front);
         PipelineBuilder& setColorFormat(VkFormat format);
+        PipelineBuilder& setVertexInput(std::vector<VkVertexInputAttributeDescription> attr,
+                                        VkVertexInputBindingDescription bind);
         PipelineBuilder& disableDepthTest();
         PipelineBuilder& disableBlending();
 
@@ -34,6 +37,8 @@ namespace chai::gfx
         VkCullModeFlags cullMode_ = VK_CULL_MODE_NONE;
         VkFrontFace frontFace_ = VK_FRONT_FACE_CLOCKWISE;
         VkFormat colorFormat_ = VK_FORMAT_UNDEFINED;
+        std::vector<VkVertexInputAttributeDescription> attrs_;
+        VkVertexInputBindingDescription bind_;
         bool depthTest_ = false;
         bool blending_ = false;
     };

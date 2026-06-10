@@ -1,6 +1,7 @@
 #include "VulkanContext.h"
 #include <Window/Window.h>
 #include <Log.h>
+#include "core/VkCheck.h"
 
 namespace chai
 {
@@ -42,10 +43,15 @@ namespace chai::gfx
         setupSurface(window);
         setupDevice();
         setupQueues();
+        setupAllocator();
+        setupImmediate();
     }
 
-    VulkanContext::~VulkanContext()
+VulkanContext::~VulkanContext()
     {
+        vkDestroyCommandPool(device_, immediatePool_, nullptr); // cmd buffer dies with it
+        vkDestroyFence(device_, immediateFence_, nullptr);
+        vmaDestroyAllocator(allocator_); // BEFORE the device allocator holds device memory
         vkDestroyDevice(device_, nullptr);
         vkDestroySurfaceKHR(instance_, surface_, nullptr);
         vkb::destroy_debug_utils_messenger(instance_, debugMessenger_);
@@ -127,5 +133,42 @@ namespace chai::gfx
         graphicsFamily_ = vkbDevice_.get_queue_index(vkb::QueueType::graphics).value();
         presentQueue_ = vkbDevice_.get_queue(vkb::QueueType::present).value();
         presentFamily_ = vkbDevice_.get_queue_index(vkb::QueueType::present).value();
+    }
+
+    void VulkanContext::setupAllocator()
+    {
+        VmaVulkanFunctions vkFuncs{};
+        vkFuncs.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+        vkFuncs.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
+
+        VmaAllocatorCreateInfo allocInfo{};
+        allocInfo.physicalDevice = physicalDevice_;
+        allocInfo.device = device_;
+        allocInfo.instance = instance_;
+        allocInfo.pVulkanFunctions = &vkFuncs;
+        allocInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+        allocInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+
+        VK_CHECK(vmaCreateAllocator(&allocInfo, &allocator_));
+    }
+
+    void VulkanContext::setupImmediate()
+    {
+        VkCommandPoolCreateInfo poolInfo{VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
+        poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        poolInfo.queueFamilyIndex =
+            graphicsFamily_; // or a dedicated transfer family if you have one
+        vkCreateCommandPool(device_, &poolInfo, nullptr, &immediatePool_);
+
+        VkCommandBufferAllocateInfo cmdInfo{VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
+        cmdInfo.commandPool = immediatePool_;
+        cmdInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        cmdInfo.commandBufferCount = 1;
+        vkAllocateCommandBuffers(device_, &cmdInfo, &immediateCmd_);
+
+        VkFenceCreateInfo fenceInfo{VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
+        // NOTE: unsignaled — no flags. immediateSubmit resets-then-waits, so it must
+        // start unsignaled or the first reset/wait pairing is off.
+        vkCreateFence(device_, &fenceInfo, nullptr, &immediateFence_);
     }
 } // namespace chai

@@ -9,6 +9,9 @@ set(${PROJECT_NAME}_headers
         VulkanContext.h
         RenderTargetView.h
         Swapchain.h
+        Buffer.h
+        Mesh.h
+        GpuResources.h
 )
 
 set(${PROJECT_NAME}_source
@@ -18,6 +21,7 @@ set(${PROJECT_NAME}_source
         rendering/VulkanRenderer.cpp
         Swapchain.cpp
         VulkanContext.cpp
+        VulkanMemoryAllocator.cpp
 )
 
 include(FetchContent)
@@ -29,6 +33,16 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(vkbootstrap)
+
+include(FetchContent)
+
+FetchContent_Declare(
+    VMA
+    GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+    GIT_TAG v3.4.0
+)
+
+FetchContent_MakeAvailable(VMA)
 
 
 add_library(${PROJECT_NAME} SHARED
@@ -80,7 +94,7 @@ add_custom_target(Shaders ALL
     DEPENDS ${SPIRV_FILES}
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC Core Graphics Vulkan::Vulkan PRIVATE vk-bootstrap::vk-bootstrap)
+target_link_libraries(${PROJECT_NAME} PUBLIC Core Graphics Vulkan::Vulkan PRIVATE vk-bootstrap::vk-bootstrap GPUOpen::VulkanMemoryAllocator)
 #set_target_properties(vkbootstrap PROPERTIES FOLDER "external")
 
 ChaiPluginDefaults(${PROJECT_NAME} "Plugins")

@@ -52,6 +52,11 @@ namespace chai
         [[nodiscard]] HandleType acquire(AssetId id);
 
         /**
+         * @brief Acquire, but the asset is supplied directly
+         */
+        [[nodiscard]] auto ingest(AssetId id, Asset asset) -> HandleType;
+
+        /**
          * @brief Add an explicit extra reference to an already-held handle
          * @return The same handle
          */
@@ -126,6 +131,7 @@ namespace chai
         };
 
         void startLoad(HandleType h);
+        void startUpload(HandleType h);
         void promoteReady(Record& rec, LoadState s);
         void destroyResourceDeferred(Resource res);
 
@@ -165,6 +171,29 @@ namespace chai
         HandleType h = slots_.insert(std::move(rec));
         byId_.emplace(id.value, h);
         startLoad(h);
+        return h;
+    }
+
+    template <typename T>
+    auto AssetCache<T>::ingest(AssetId id, Asset asset) -> HandleType
+    {
+        if (auto it = byId_.find(id.value); it != byId_.end()) {
+            if (Record* rec = slots_.get(it->second)) {
+                rec->refCount++;
+                return it->second;
+            }
+            byId_.erase(it);
+        }
+
+        Record rec{};
+        rec.id = id;
+        rec.refCount = 1;
+        rec.state = LoadState::Loading;
+        rec.asset = std::move(asset); // we already have the CPU data
+
+        HandleType h = slots_.insert(std::move(rec));
+        byId_.emplace(id.value, h);
+        startUpload(h); // skip loadAsset, go straight to createResource
         return h;
     }
 
@@ -272,11 +301,20 @@ namespace chai
             rec->state = LoadState::Failed;
             return;
         }
+        startUpload(h);
+    }
+
+    template <typename T>
+    void AssetCache<T>::startUpload(HandleType h)
+    {
+        Record* rec = slots_.get(h);
+        if (!rec)
+            return;
 
         LoadState s = factory_->createResource(rec->asset, rec->resource);
         if (s == LoadState::Uploading) {
             rec->state = LoadState::Uploading;
-            uploading_.push_back(h); // tick() will take it from here
+            uploading_.push_back(h); // tick() promotes it later
         } else {
             promoteReady(*rec, s);
         }

@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <vulkan/vulkan.h>
 #include "VkBootstrap.h"
+#include <vk_mem_alloc.h>
 
 namespace chai
 {
@@ -36,6 +37,11 @@ namespace chai::gfx
         VkQueue presentQueue() const { return presentQueue_; }
         uint32_t graphicsFamily() const { return graphicsFamily_; }
         uint32_t presentFamily() const { return presentFamily_; }
+        VmaAllocator allocator() const { return allocator_; }
+
+        VkCommandPool immediatePool() { return immediatePool_; }
+        VkCommandBuffer immediateCmd() const { return immediateCmd_; }
+        VkFence immediateFence() const { return immediateFence_; }
 
     private:
         vkb::Instance vkbInstance_;
@@ -53,9 +59,17 @@ namespace chai::gfx
         uint32_t graphicsFamily_ = 0;
         uint32_t presentFamily_ = 0;
 
+        VmaAllocator allocator_;
+
+        VkCommandPool immediatePool_ = VK_NULL_HANDLE;
+        VkCommandBuffer immediateCmd_ = VK_NULL_HANDLE;
+        VkFence immediateFence_ = VK_NULL_HANDLE;
+
         void setupInstance(IWindow& window);
         void setupSurface(IWindow& window);
         void setupDevice();
         void setupQueues();
+        void setupAllocator();
+        void setupImmediate();
     };
 } // namespace chai

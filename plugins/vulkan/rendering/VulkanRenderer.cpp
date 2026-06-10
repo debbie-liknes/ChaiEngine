@@ -5,6 +5,9 @@
 #include <SystemPaths.h>
 #include "../pipeline/ShaderModule.h"
 #include "../pipeline/PipelineBuilder.h"
+#include <MeshAsset.h>
+#include <AssetCache.h>
+#include <Primitives.h>
 
 namespace
 {
@@ -34,14 +37,18 @@ namespace
 
 namespace chai::gfx
 {
-    VulkanRenderer::VulkanRenderer(chai::IWindow& window) : 
-        window_(window), ctx_(window), 
-        swapchain_(ctx_, [&] {
+    VulkanRenderer::VulkanRenderer(chai::IWindow& window, ServiceLocator* services) : 
+        window_(window), ctx_(window), swapchain_(ctx_, [&] {
               int w, h;
               window.framebufferSize(w, h);
               return VkExtent2D{uint32_t(w), uint32_t(h)};
-          }())
+          }()),
+          services_(services), resources_(ctx_)
     {
+        //setup caches for resources first
+        services_->provide<AssetCache<Mesh>>(resources_.meshCache());
+
+        //init vulkan context
         init();
         CHAI_LOG_INFO("VulkanRenderer initialized");
     }
@@ -49,16 +56,23 @@ namespace chai::gfx
     VulkanRenderer::~VulkanRenderer()
     {
         waitIdle();
+        resources_.meshCache()->release(
+            cube_);                        // or releaseAll() — drops refcount, enqueues buffers
+        resources_.graveyard().flushAll(); // force-drain now; no frames left to gate on
+                                           // ... then the rest of teardown
         for (int i = 0; i < kFramesInFlight; i++) {
             vkDestroyFence(ctx_.device(), frames_[i].inFlight, nullptr);
             vkDestroySemaphore(ctx_.device(), frames_[i].imageAvailable, nullptr);
         }
 
         vkDestroyPipelineLayout(ctx_.device(), pipelineLayout_, nullptr);
-        vkDestroyPipeline(ctx_.device(), trianglePipeline_, nullptr);
+        vkDestroyPipeline(ctx_.device(), pipeline_, nullptr);
 
         //dont need to destory the buffers individually. Command Pool is enough
         vkDestroyCommandPool(ctx_.device(), cmdPool_, nullptr);
+
+        //clean up caches
+        services_->remove<AssetCache<Mesh>>();
         CHAI_LOG_INFO("VulkanRenderer destroyed");
     }
 
@@ -96,6 +110,9 @@ namespace chai::gfx
         }
 
         //////////////////////////////////////////////////////////////////////////////////////
+        //we love some temporary code...as long as its actually temporary
+        cube_ = resources_.meshCache()->ingest(makeAssetId("builtin:cube"), makeCube(1.0f));
+
         const auto shaderDir = executableDir() / "shaders";
         VkShaderModule vert = loadShaderModule(ctx_.device(), shaderDir / "triangle.vert.spv");
         VkShaderModule frag = loadShaderModule(ctx_.device(), shaderDir / "triangle.frag.spv");
@@ -107,9 +124,13 @@ namespace chai::gfx
         VkPipelineLayoutCreateInfo layoutInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
         VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &layoutInfo, nullptr, &pipelineLayout_));
 
-        trianglePipeline_ =
+        auto attrs = vertexAttributes();
+        auto bind = vertexBinding();
+
+        pipeline_ =
             PipelineBuilder{}
                 .setShaders(vert, frag)
+                .setVertexInput({attrs.begin(), attrs.end()}, bind)
                 .setColorFormat(swapchain_.format())
                 .disableDepthTest()
                 .disableBlending()
@@ -121,12 +142,13 @@ namespace chai::gfx
 
     void VulkanRenderer::renderFrame()
     {
+        resources_.meshCache()->tick();
         if (needsResize_)
             recreateSwapchain();
 
         FrameData& frame = frames_[currentFrame_];
 
-        // Wait until this frame slot's previous work is done.
+        // Wait until this frame slots previous work is done.
         VK_CHECK(vkWaitForFences(ctx_.device(), 1, &frame.inFlight, VK_TRUE, UINT64_MAX));
 
         RenderTargetView view{};
@@ -135,7 +157,7 @@ namespace chai::gfx
             recreateSwapchain();
             return;
         }
-        view.clearColor = {{{0.05f, 0.10f, 0.15f, 1.0f}}}; // cornflower-ish
+        view.clearColor = {{{0.05f, 0.10f, 0.15f, 1.0f}}};
 
         VK_CHECK(vkResetFences(ctx_.device(), 1, &frame.inFlight));
 
@@ -248,14 +270,30 @@ namespace chai::gfx
 
     void VulkanRenderer::renderScene(VkCommandBuffer cmd, const RenderTargetView& view)
     {
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, trianglePipeline_);
+        const GpuMesh* mesh =
+            resources_.meshCache()->resource(cube_);
+        if (mesh) {                                      // nullptr if not Ready
+            VkBuffer vb = mesh->vertexBuffer.handle;
+            VkDeviceSize offset = 0;
+            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
 
-        VkViewport vp{0, 0, float(view.extent.width), float(view.extent.height), 0.0f, 1.0f};
-        vkCmdSetViewport(cmd, 0, 1, &vp);
-        VkRect2D scissor{{0, 0}, view.extent};
-        vkCmdSetScissor(cmd, 0, 1, &scissor);
+            VkViewport viewport{};
+            viewport.x = 0.0f;
+            viewport.y = 0.0f;
+            viewport.width = static_cast<float>(view.extent.width);
+            viewport.height = static_cast<float>(view.extent.height);
+            viewport.minDepth = 0.0f;
+            viewport.maxDepth = 1.0f;
+            vkCmdSetViewport(cmd, 0, 1, &viewport);
 
-        vkCmdDraw(cmd, 3, 1, 0, 0); 
+            VkRect2D scissor{};
+            scissor.offset = {0, 0};
+            scissor.extent = view.extent;
+            vkCmdSetScissor(cmd, 0, 1, &scissor);
+
+            vkCmdBindVertexBuffers(cmd, 0, 1, &vb, &offset);
+            vkCmdBindIndexBuffer(cmd, mesh->indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
+            vkCmdDrawIndexed(cmd, mesh->indexCount, 1, 0, 0, 0);
+        }
     }
-
 }

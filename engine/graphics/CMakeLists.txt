@@ -2,18 +2,22 @@ project(Graphics)
 
 set(${PROJECT_NAME}_headers
         include/Renderer.h
+        include/Vertex.h
+        include/MeshAsset.h
+        include/Primitives.h
 )
 
 set(${PROJECT_NAME}_source
+        source/Primitives.cpp
 )
 
-add_library(${PROJECT_NAME} INTERFACE
+add_library(${PROJECT_NAME}
         ${${PROJECT_NAME}_headers}
-        #${${PROJECT_NAME}_source}
+        ${${PROJECT_NAME}_source}
 )
 
-target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-#target_link_libraries(${PROJECT_NAME} PUBLIC)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(${PROJECT_NAME} PUBLIC ChaiMath Asset)
 
 #ChaiLibDefaults(${PROJECT_NAME} "Engine")
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Engine")

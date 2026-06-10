@@ -238,7 +238,7 @@ namespace chai::math
         }
         template <class U,
                   class = std::enable_if_t<std::is_arithmetic_v<U> && std::is_convertible_v<U, T>>>
-        explicit constexpr Vec(std::initializer_list<U> ilist)
+        constexpr Vec(std::initializer_list<U> ilist)
         {
             assert(ilist.size() == static_cast<size_t>(N) && "initializer_list wrong size");
             int i = 0;

@@ -48,8 +48,18 @@ namespace chai::gfx
         return *this;
     }
 
+    PipelineBuilder&
+    PipelineBuilder::setVertexInput(std::vector<VkVertexInputAttributeDescription> attr,
+        VkVertexInputBindingDescription bind)
+    {
+        attrs_ = std::move(attr);
+        bind_ = bind;
+        return *this;
+    }
+
     VkPipeline PipelineBuilder::build(VkDevice device, VkPipelineLayout layout)
     {
+        //TODO: support adding multiple shader stages
         VkPipelineShaderStageCreateInfo stages[2]{};
         stages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         stages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -63,12 +73,15 @@ namespace chai::gfx
         // TODO: this is hardcoded for triangle
         VkPipelineVertexInputStateCreateInfo vertexInput{
             VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
+        vertexInput.vertexBindingDescriptionCount = 1;
+        vertexInput.pVertexBindingDescriptions = &bind_;
+        vertexInput.vertexAttributeDescriptionCount = static_cast<uint32_t>(attrs_.size());
+        vertexInput.pVertexAttributeDescriptions = attrs_.data();
 
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{
             VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
         inputAssembly.topology = topology_;
 
-        // Viewport/scissor are dynamic (set per-frame in renderScene) — counts only.
         VkPipelineViewportStateCreateInfo viewport{
             VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO};
         viewport.viewportCount = 1;

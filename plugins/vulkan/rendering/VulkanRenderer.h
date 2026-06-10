@@ -7,9 +7,11 @@
 #include "../Swapchain.h"
 #include "../RenderTargetView.h"
 #include <vulkan/vulkan.h>
+#include <Plugin/ServiceLocator.h>
  
 #include <array>
 #include <cstdint>
+#include "../GpuResources.h"
 
 namespace chai
 {
@@ -24,7 +26,7 @@ namespace chai::gfx
 	class VulkanRenderer : public IRenderer
 	{
     public:
-        explicit VulkanRenderer(chai::IWindow& window);
+        VulkanRenderer(chai::IWindow& window, ServiceLocator* services);
         ~VulkanRenderer() override;
 
         void renderFrame() override;
@@ -66,6 +68,11 @@ namespace chai::gfx
 
         //Porbably dont want this long term, just for hello triangle (vulkan edition!!)
         VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
-        VkPipeline trianglePipeline_ = VK_NULL_HANDLE;
+        VkPipeline pipeline_ = VK_NULL_HANDLE;
+        Handle<Mesh> cube_;
+
+        //Resources
+        ServiceLocator* services_;  //owned by the engine
+        GpuResources resources_;
     };
 }
