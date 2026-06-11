@@ -3,7 +3,9 @@
 
 namespace chai::scene
 {
-    TransformComponent::TransformComponent(GameObject* owner) : Component(owner)
+    using namespace chai::math;
+    TransformComponent::TransformComponent(GameObject* owner)
+        : Component(owner), m_rotation(math::Quat::identity())
     {
     }
 
@@ -33,19 +35,19 @@ namespace chai::scene
         }
     }
 
-    void TransformComponent::setPosition(chai::Vec3 newPos)
+    void TransformComponent::setPosition(Vec3 newPos)
     {
         m_position = newPos;
     }
 
-    void TransformComponent::setRotationEuler(chai::Vec3 newRot)
+    void TransformComponent::setRotationEuler(Vec3 newRot)
     {
         //auto y = m_rotation * newRot;
         //rotate()
         //m_rotation = Quatf(newRot);
     }
 
-    void TransformComponent::setScale(chai::Vec3 newScale)
+    void TransformComponent::setScale(Vec3 newScale)
     {
         m_scale = newScale;
     }

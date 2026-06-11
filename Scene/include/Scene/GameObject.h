@@ -1,9 +1,10 @@
 #pragma once
 #include <memory>
-#include <ChaiEngine/RenderCommandCollector.h>
 #include <Components/ComponentBase.h>
 #include <Components/ControllerComponent.h>
-#include <Core/Updatable.h>
+#include <Updatable.h>
+#include <string>
+#include <span>
 
 namespace chai::scene
 {
@@ -17,14 +18,13 @@ namespace chai::scene
         void setParent(GameObject* parent);
         GameObject* getParent() const;
         void addChild(std::unique_ptr<GameObject> child);
-        const std::vector<GameObject*>& getChildren() const;
+        //std::span<GameObject const*>& getChildren() const;
 
-        //TODO: make sure its a Component base child
         template <typename T>
-        T* addComponent(GameObject* owner = nullptr)
+        T* addComponent()
         {
             static_assert(std::is_base_of<Component, T>::value, "T must derive from Component");
-            m_components.push_back(std::make_unique<T>(owner));
+            m_components.push_back(std::make_unique<T>(this));
             return static_cast<T*>(m_components.back().get());
         }
 
@@ -95,9 +95,8 @@ namespace chai::scene
             }
         }
 
-        virtual void collectRenderables(brew::RenderCommandCollector& collector);
-
-        void update(double deltaTime) override;
+        virtual void update(double deltaTime) override;
+        virtual void extract(gfx::FrameRenderData& frameData) const override;
 
     private:
         std::vector<std::unique_ptr<Component>> m_components;

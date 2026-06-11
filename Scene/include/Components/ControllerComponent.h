@@ -4,8 +4,8 @@
 #include <typeindex>
 #include <string>
 #include <Controllers/Controller.h>
-#include <Types/CMap.h>
 #include <Components/ComponentBase.h>
+#include <unordered_map>
 
 namespace chai::scene
 {
@@ -119,8 +119,8 @@ namespace chai::scene
 
     private:
         std::vector<std::unique_ptr<IController>> controllers;
-        CMap<std::type_index, IController*> controllersByType;
-        CMap<std::string, IController*> controllersByName;
+        std::unordered_map<std::type_index, IController*> controllersByType;
+        std::unordered_map<std::string, IController*> controllersByName;
         chai::scene::GameObject* m_owner;
     };
 }

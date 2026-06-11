@@ -37,6 +37,7 @@ namespace chai::gfx
             ctx.services.provide<AssetCache<Mesh>>(meshRegistry_->cache());
             ctx.services.provide<IRenderer>(renderer_);
             ctx.services.provide<IMeshRegistry>(meshRegistry_);
+            ctx.services.provide<IRenderDevice>(vulkCtx_);
 
             CHAI_LOG_INFO("Renderer service provided");
 
@@ -51,6 +52,7 @@ namespace chai::gfx
             ctx.services.remove<IRenderer>();
             ctx.services.remove<IMeshRegistry>();
             ctx.services.remove<AssetCache<Mesh>>();
+            ctx.services.remove<IRenderDevice>();
 
             //release all our resources and pointers
             meshRegistry_->cache()->releaseAll();

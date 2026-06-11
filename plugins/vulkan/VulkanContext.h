@@ -6,6 +6,7 @@
 #include <vulkan/vulkan.h>
 #include "VkBootstrap.h"
 #include <vk_mem_alloc.h>
+#include <Renderer.h>
 
 namespace chai
 {
@@ -20,7 +21,7 @@ namespace chai::gfx
      * Uses vk-bootstrap for the boilerplate code, but provides getters for the 
      * Vulkan objects
      */
-    class VulkanContext
+    class VulkanContext : public IRenderDevice
     {
     public:
         explicit VulkanContext(IWindow& window); // creates everything below

@@ -8,6 +8,7 @@ target_link_libraries(${PROJECT_NAME}
     Core 
     SpdLogger 
     Graphics
+    Scene
     PRIVATE
     $<LINK_LIBRARY:WHOLE_ARCHIVE>)
 

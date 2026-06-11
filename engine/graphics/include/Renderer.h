@@ -38,5 +38,11 @@ namespace chai
              */
             virtual void waitIdle() = 0;
         };
+
+        class IRenderDevice
+        {
+        public:
+            virtual ~IRenderDevice() = default;
+        };
     }
 } // namespace chai

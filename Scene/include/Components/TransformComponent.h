@@ -12,31 +12,31 @@ namespace chai::scene
     public:
         explicit TransformComponent(GameObject* owner = nullptr);
         ~TransformComponent() override = default;
-        Mat4 getLocalMatrix() const;
-        Mat4 getWorldMatrix() const;
+        math::Mat4 getLocalMatrix() const;
+        math::Mat4 getWorldMatrix() const;
 
-        void setLocalMatrix(const Mat4& matrix);
+        void setLocalMatrix(const math::Mat4& matrix);
 
-        void setPosition(chai::Vec3 newPos);
-        void setRotationEuler(chai::Vec3 newRot);
-        void setRotation(const Quat& rot)
+        void setPosition(math::Vec3 newPos);
+        void setRotationEuler(math::Vec3 newRot);
+        void setRotation(const math::Quat& rot)
         {
             m_rotation = rot;
         }
-        void setScale(chai::Vec3 newScale);
+        void setScale(math::Vec3 newScale);
 
-        Vec3 up() const;
-        Vec3 forward() const;
-        Vec3 right() const;
+        math::Vec3 up() const;
+        math::Vec3 forward() const;
+        math::Vec3 right() const;
 
-        Vec3 getWorldPosition() const;
-        Quat getWorldRotation() const;
+        math::Vec3 getWorldPosition() const;
+        math::Quat getWorldRotation() const;
 
-        void lookAt(const Vec3& target, const Vec3& worldUp);
+        void lookAt(const math::Vec3& target, const math::Vec3& worldUp);
 
     private:
-        Vec3 m_position{0.0f, 0.0f, 0.0f};
-        Quat m_rotation{0.0f, 0.0f, 0.0f, 0.0f}; // w, x, y, z
-        Vec3 m_scale{1.0f, 1.0f, 1.0f};
+        math::Vec3 m_position{0.0f, 0.0f, 0.0f};
+        math::Quat m_rotation;
+        math::Vec3 m_scale{1.0f, 1.0f, 1.0f};
     };
 }

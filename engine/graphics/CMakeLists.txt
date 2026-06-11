@@ -6,6 +6,10 @@ set(${PROJECT_NAME}_headers
         include/MeshAsset.h
         include/FrameRenderData.h
         include/Primitives.h
+        include/GraphicsEnums.h
+        include/GraphicsMacros.h
+        include/CameraData.h
+        include/Descriptors.h
 )
 
 set(${PROJECT_NAME}_source

@@ -1,6 +1,6 @@
 #pragma once
 #include <SceneExport.h>
-#include <Core/Updatable.h>
+#include <Updatable.h>
 
 namespace chai::scene
 {
@@ -13,11 +13,9 @@ namespace chai::scene
         {
         }
 
-        ~Component() override = default;
+        virtual ~Component() = default;
 
-        virtual void update(double deltaTime) override
-        {
-        }
+        virtual void update(double deltaTime) override {}
 
         GameObject* getGameObject() const { return m_owningObject; }
 

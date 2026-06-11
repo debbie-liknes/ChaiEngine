@@ -11,6 +11,7 @@ set(${PROJECT_NAME}_headers
 	    include/Window/WindowTypes.h
         include/Engine.h
         include/SystemPaths.h
+        include/Updatable.h
 )
 
 set(${PROJECT_NAME}_source

@@ -1,31 +1,30 @@
 #pragma once
 #include <SceneExport.h>
-#include <Scene/ICamera.h>
 #include <ChaiMath.h>
 
 namespace chai::scene
 {
-    class SCENE_EXPORT Camera : public chai::ICamera
+    class SCENE_EXPORT Camera
     {
     public:
         Camera() = default;
-        ~Camera() override = default;
+        ~Camera() = default;
 
-        Mat4 getProjectionMatrix() override;
-        Mat4 getViewMatrix() override;
-        void setViewMatrix(const Mat4& viewMatrix) override;
+        math::Mat4 getProjectionMatrix() const;
+        math::Mat4 getViewMatrix() const;
+        void setViewMatrix(const math::Mat4& viewMatrix);
 
-        void setAspectRatio(float aspect) override;
-        void setFarPlane(float far) override;
-        void setNearPlan(float near) override;
-        void setFOV(float fov) override;
+        void setAspectRatio(float aspect);
+        void setFarPlane(float far);
+        void setNearPlane(float near);
+        void setFOV(float fov);
 
     private:
-        float m_aspect = 0.0;
-        float m_fov = 45.0f; // degrees
-        float m_nearPlane = 0.1f;
-        float m_farPlane = 1000.0f;
+        float aspect_ = 0.0;
+        float fov_ = 45.0f; // degrees
+        float nearPlane_ = 0.1f;
+        float farPlane_ = 1000.0f;
 
-        Mat4 m_viewMatrix{1.f};
+        math::Mat4 viewMatrix_{1.f};
     };
 }

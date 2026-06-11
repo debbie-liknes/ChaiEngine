@@ -9,22 +9,23 @@ namespace chai::gfx
 {
     struct Mesh;
 
-    /**
-     * @brief This is probably temporary, in its current form
-     */
-    struct RenderObject 
-    {
-        Handle<Mesh> mesh;
-        math::Mat4 model;
+    struct RenderView { // one per camera/view
+        math::Mat4 view, proj, viewProj;
+        math::Vec3 position;
     };
 
-    /**
-     * @brief Per frame data needed by the renderer
-     */
+    struct RenderItem { // one per drawable
+        Handle<Mesh> mesh;
+        math::Mat4 model;
+        //this will be material someday
+        math::Vec4 color;
+    };
+
+    //This represents ONE world view
+    //if we have separate, unrelated panes, we'll need more of these
     struct FrameRenderData 
     {
-        math::Mat4 view;
-        math::Mat4 proj;
-        std::vector<RenderObject> objects;
+        std::vector<RenderView> views;
+        std::vector<RenderItem> items;
     };
 }

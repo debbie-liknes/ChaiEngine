@@ -16,15 +16,14 @@ namespace chai::scene
         explicit CameraComponent(GameObject* owner = nullptr);
         ~CameraComponent() override = default;
 
-        Mat4 getViewMatrix() const;
-        Mat4 getProjectionMatrix() const { return m_camera->getProjectionMatrix(); }
-        ICamera* getCamera() { return m_camera.get(); }
+        void extract(gfx::FrameRenderData & frame) const override;
 
-        void update(double deltaTime) override;
+        void setAspectRatio(float aspect);
+        void setFarPlane(float far);
+        void setNearPlane(float near);
+        void setFOV(float fov);
 
     private:
-        std::unique_ptr<ICamera> m_camera;
-
-        void updateViewMatrix(TransformComponent* transform);
+        Camera cam_;
     };
 }

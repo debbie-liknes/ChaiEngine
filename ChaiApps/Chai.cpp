@@ -7,6 +7,10 @@
 #include <Renderer.h>
 #include <Primitives.h>
 #include <MeshAsset.h>
+#include <Scene/GameObject.h>
+#include <Components/MeshComponent.h>
+#include <Components/CameraComponent.h>
+#include <Components/TransformComponent.h>
 
 int main()
 {
@@ -46,9 +50,20 @@ int main()
 
     static auto start = std::chrono::high_resolution_clock::now();
 
-    // once, at startup:
     auto registry = engine.services().tryResolve<gfx::IMeshRegistry>();
+
+    //make an object
+    auto cubeObj = std::make_shared<scene::GameObject>();
+    auto meshComp = cubeObj->addComponent<scene::MeshComponent>();
     Handle<gfx::Mesh> cube = registry->ingest(makeAssetId("builtin:cube"), gfx::makeCube(1.0f));
+    meshComp->setMesh(cube);
+
+    auto cameraObj = std::make_shared<scene::GameObject>();
+    auto camComp = cameraObj->addComponent<scene::CameraComponent>();
+
+    auto camTrans = cameraObj->getComponent<scene::TransformComponent>();
+    camTrans->setPosition(math::Vec3{0, 0, 3});
+
     if (!cube.valid())
     {
         CHAI_LOG_ERROR("Cube is invalid");
@@ -65,16 +80,24 @@ int main()
 
         int w = 0, h = 0;
         win->framebufferSize(w, h);
+        float aspect = 1.f * w / h;
+        math::Quaternion q = math::Quat::fromAxisAngle(math::Vec3{0, 1, 0}, angle);
+        //keep the cube spinning
+        cubeObj->getComponent<scene::TransformComponent>()->setRotation(q);
+
+        //a scene should probably store these things, unsure how updating the camera would actually work. A controller?
+        camComp->setAspectRatio(aspect);
+        camComp->setFOV(math::radians(60.f));
+        camComp->setNearPlane(0.1f);
+        camComp->setFarPlane(100.f);
+
+
+        cameraObj->update(time);
+        cubeObj->update(time);
 
         gfx::FrameRenderData frame;
-        float aspect = 1.f * w / h;
-        frame.view = math::lookAt(math::Vec3{0, 0, 3}, math::Vec3{0, 0, 0}, math::Vec3{0, 1, 0});
-        frame.proj = math::perspectiveVK(math::radians(60.f), aspect, 0.1f, 100.f);
-
-        math::Quaternion q = math::Quat::fromAxisAngle(math::Vec3{0, 1, 0}, angle);
-        math::Mat4 model = q.toMat4();
-
-        frame.objects.emplace_back(cube, model);
+        cubeObj->extract(frame);
+        camComp->extract(frame);   
         //end temp
 
         renderer->renderFrame(frame);

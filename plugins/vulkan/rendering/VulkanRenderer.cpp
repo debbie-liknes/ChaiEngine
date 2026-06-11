@@ -312,20 +312,30 @@ namespace chai::gfx
         VkRect2D scissor{{0, 0}, view.extent};
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-        for (const RenderObject& obj : renderData.objects) {
-            const GpuMesh* mesh = meshCache_->resource(obj.mesh);
-            if (!mesh)
-                continue; // not ready, skip
+        for (const RenderView& view : renderData.views) {
+            //bindCameraUBO(view);
+            for (const RenderItem& item : renderData.items) {
+                //check frustum culling
+                {
+                    const GpuMesh* mesh = meshCache_->resource(item.mesh);
+                    if (!mesh)
+                        continue; // not ready, skip
 
-            math::Mat4 mvp = renderData.proj * renderData.view * obj.model;
-            vkCmdPushConstants(
-                cmd, pipelineLayout_, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(math::Mat4), &mvp);
+                    math::Mat4 mvp = view.proj * view.view * item.model;
+                    vkCmdPushConstants(cmd,
+                                       pipelineLayout_,
+                                       VK_SHADER_STAGE_VERTEX_BIT,
+                                       0,
+                                       sizeof(math::Mat4),
+                                       &mvp);
 
-            VkBuffer vb = mesh->vertexBuffer.handle;
-            VkDeviceSize offset = 0;
-            vkCmdBindVertexBuffers(cmd, 0, 1, &vb, &offset);
-            vkCmdBindIndexBuffer(cmd, mesh->indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
-            vkCmdDrawIndexed(cmd, mesh->indexCount, 1, 0, 0, 0);
+                    VkBuffer vb = mesh->vertexBuffer.handle;
+                    VkDeviceSize offset = 0;
+                    vkCmdBindVertexBuffers(cmd, 0, 1, &vb, &offset);
+                    vkCmdBindIndexBuffer(cmd, mesh->indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
+                    vkCmdDrawIndexed(cmd, mesh->indexCount, 1, 0, 0, 0);
+                }
+            }
         }
     }
 } // namespace chai::gfx

@@ -1,42 +1,40 @@
 #include <Components/CameraComponent.h>
 #include <Scene/GameObject.h>
 #include <Components/TransformComponent.h>
+#include <FrameRenderData.h>
 
 namespace chai::scene
 {
     CameraComponent::CameraComponent(GameObject* owner) : Component(owner)
     {
-        m_camera = std::make_unique<Camera>();
     }
 
-    Mat4 CameraComponent::getViewMatrix() const
+    void CameraComponent::setAspectRatio(float aspectRatio)
     {
-        TransformComponent const* transform = getGameObject()->getComponent<TransformComponent>();
-        if (!transform) return Mat4{1.0f};
-
-        // Build view matrix from transform
-        const Vec3 pos = transform->getWorldPosition();
-        const Vec3 forward = transform->forward();
-        const Vec3 up = transform->up();
-
-        return lookAt(pos, pos + forward, up);
+        cam_.setAspectRatio(aspectRatio);
     }
 
-    void CameraComponent::updateViewMatrix(TransformComponent* transform)
+    void CameraComponent::setFarPlane(float far)
     {
-        Vec3 position = transform->getWorldPosition();
-        Vec3 forward = transform->forward();
-        Vec3 up = transform->up();
-
-        Mat4 viewMatrix = lookAt(position, position + forward, up);
-        m_camera->setViewMatrix(viewMatrix);
+        cam_.setFarPlane(far);
     }
 
-    void CameraComponent::update(double deltaTime)
+    void CameraComponent::setNearPlane(float near)
     {
-        if (auto owner = getGameObject(); owner)
-        {
-            updateViewMatrix(owner->getComponent<TransformComponent>());
-        }
+        cam_.setNearPlane(near);
+    }
+
+    void CameraComponent::setFOV(float fov)
+    {
+        cam_.setFOV(fov);
+    }
+
+    void CameraComponent::extract(gfx::FrameRenderData& frame) const
+    {
+        auto const* t = getGameObject()->getComponent<TransformComponent>();
+        const math::Mat4 world = t ? t->getWorldMatrix() : math::Mat4::identity();
+        const math::Mat4 view = world.inverse();
+        const math::Mat4 proj = cam_.getProjectionMatrix();
+        frame.views.emplace_back(view, proj, proj * view, t->getWorldPosition());
     }
 }

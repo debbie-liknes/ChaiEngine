@@ -4,37 +4,37 @@ set(ChaiScene_headers
         include/Components/CameraComponent.h
         include/Components/ComponentBase.h
         include/Components/ControllerComponent.h
-        include/Components/LightComponent.h
+        #include/Components/LightComponent.h
         include/Components/MeshComponent.h
-        include/Components/RenderableComponent.h
+        #include/Components/RenderableComponent.h
         include/Components/TransformComponent.h
-        include/Controllers/CameraController.h
-        include/Controllers/Controller.h
+        #include/Controllers/CameraController.h
+        #include/Controllers/Controller.h
         include/Scene/Camera.h
         include/Scene/GameObject.h
-        include/Scene/Scene.h
-        include/Scene/SceneManager.h
-        include/Scene/Skybox.h
+        #include/Scene/Scene.h
+        #include/Scene/SceneManager.h
+        #include/Scene/Skybox.h
 )
 
 set(ChaiScene_source
         source/Components/CameraComponent.cpp
-        source/Components/ControllerComponent.cpp
-        source/Components/LightComponent.cpp
+        #source/Components/ControllerComponent.cpp
+        #source/Components/LightComponent.cpp
         source/Components/MeshComponent.cpp
         source/Components/TransformComponent.cpp
-        source/Controllers/CameraController.cpp
+        #source/Controllers/CameraController.cpp
         source/Scene/Camera.cpp
         source/Scene/GameObject.cpp
-        source/Scene/Scene.cpp
-        source/Scene/SceneManager.cpp
-        source/Scene/Skybox.cpp
+        #source/Scene/Scene.cpp
+        #source/Scene/SceneManager.cpp
+        #source/Scene/Skybox.cpp
 )
 
 add_library(Scene SHARED ${ChaiScene_headers} ${ChaiScene_source})
 
 target_include_directories(Scene PUBLIC include)
-target_link_libraries(Scene PUBLIC Core ChaiGraphics)
+target_link_libraries(Scene PUBLIC Core Graphics)
 
 source_group("Scene" REGULAR_EXPRESSION ".*/Scene/.*\\.(h|cpp)$")
 source_group("Components" REGULAR_EXPRESSION ".*/Components/.*")

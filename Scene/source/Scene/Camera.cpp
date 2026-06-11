@@ -2,40 +2,41 @@
 
 namespace chai::scene
 {
-    Mat4 Camera::getProjectionMatrix()
+    using namespace math;
+    Mat4 Camera::getProjectionMatrix() const
     {
         //this is a perspective camera, need to have other types
-        return perspective(m_fov, m_aspect, m_nearPlane, m_farPlane);
+        return math::perspectiveVK(fov_, aspect_, nearPlane_, farPlane_);
     }
 
-    Mat4 Camera::getViewMatrix()
+    Mat4 Camera::getViewMatrix() const
     {
-        return m_viewMatrix;
+        return viewMatrix_;
     }
 
     void Camera::setAspectRatio(float aspect)
     {
-        m_aspect = aspect;
+        aspect_ = aspect;
     }
 
     void Camera::setFarPlane(float far)
     {
-        m_farPlane = far;
+        farPlane_ = far;
     }
 
-    void Camera::setNearPlan(float near)
+    void Camera::setNearPlane(float near)
     {
-        m_nearPlane = near;
+        nearPlane_ = near;
     }
 
     void Camera::setFOV(float fov)
     {
-        m_fov = fov;
+        fov_ = fov;
     }
 
     void Camera::setViewMatrix(const Mat4& viewMatrix)
     {
         //input comes from Transform component
-        m_viewMatrix = viewMatrix;
+        viewMatrix_ = viewMatrix;
     }
 }
