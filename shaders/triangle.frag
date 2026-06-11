@@ -1,7 +1,12 @@
 #version 450
+layout(push_constant) uniform Push {
+    mat4 mvp;
+    vec4 color;
+} pc;
+
 layout(location = 0) in vec3 fragNormal;
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    outColor = vec4(fragNormal * 0.5 + 0.5, 1.0);
+    outColor = pc.color;
 }

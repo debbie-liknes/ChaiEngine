@@ -9,19 +9,19 @@ namespace chai::scene
         addComponent<TransformComponent>();
     }
 
-    GameObject::GameObject(const std::string& name) : m_name(name)
+    GameObject::GameObject(const std::string& name) : name_(name)
     {
         addComponent<TransformComponent>();
     }
 
     void GameObject::setParent(GameObject* parent)
     {
-        m_parent = parent;
+        parent_ = parent;
     }
 
     GameObject* GameObject::getParent() const
     {
-        return m_parent;
+        return parent_;
     }
 
     //std::span<GameObject const*>& GameObject::getChildren() const
@@ -31,22 +31,22 @@ namespace chai::scene
 
     void GameObject::update(double deltaTime)
     {
-        for (const auto& component : m_components) {
+        for (const auto& component : components_) {
             if (auto updatable = dynamic_cast<IUpdatable*>(component.get())) {
                 updatable->update(deltaTime);
             }
         }
 
-        if (controllerComponent) {
-            controllerComponent->update(deltaTime);
+        if (controllerComponent_) {
+            controllerComponent_->update(deltaTime);
         }
     }
 
     void GameObject::extract(gfx::FrameRenderData& frame) const
     {
-        for (const auto& c : m_components)
+        for (const auto& c : components_)
             c->extract(frame);
-        for (auto* child : m_children)
+        for (auto* child : children_)
             child->extract(frame);
     }
 } // namespace chai::cup

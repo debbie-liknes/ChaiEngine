@@ -20,8 +20,8 @@ namespace chai::scene
         void setPosition(math::Vec3 newPos);
         void setRotationEuler(math::Vec3 newRot);
         void setRotation(const math::Quat& rot)
-        {
-            m_rotation = rot;
+        { 
+            rotation_ = rot;
         }
         void setScale(math::Vec3 newScale);
 
@@ -35,8 +35,8 @@ namespace chai::scene
         void lookAt(const math::Vec3& target, const math::Vec3& worldUp);
 
     private:
-        math::Vec3 m_position{0.0f, 0.0f, 0.0f};
-        math::Quat m_rotation;
-        math::Vec3 m_scale{1.0f, 1.0f, 1.0f};
+        math::Vec3 position_{0.0f, 0.0f, 0.0f};
+        math::Quat rotation_;
+        math::Vec3 scale_{1.0f, 1.0f, 1.0f};
     };
 }

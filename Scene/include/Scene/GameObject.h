@@ -24,14 +24,14 @@ namespace chai::scene
         T* addComponent()
         {
             static_assert(std::is_base_of<Component, T>::value, "T must derive from Component");
-            m_components.push_back(std::make_unique<T>(this));
-            return static_cast<T*>(m_components.back().get());
+            components_.push_back(std::make_unique<T>(this));
+            return static_cast<T*>(components_.back().get());
         }
 
         template <typename T>
         T* getComponent()
         {
-            for (auto& component : m_components)
+            for (auto& component : components_)
             {
                 if (auto casted = dynamic_cast<T*>(component.get()))
                 {
@@ -44,11 +44,11 @@ namespace chai::scene
         template <typename T>
         bool removeComponent()
         {
-            for (auto it = m_components.begin(); it != m_components.end(); ++it) 
+            for (auto it = components_.begin(); it != components_.end(); ++it) 
             {
                 if (dynamic_cast<T*>(it->get())) 
                 {
-                    m_components.erase(it);
+                    components_.erase(it);
                     return true;
                 }
             }
@@ -58,40 +58,40 @@ namespace chai::scene
         template <typename T, typename... Args>
         T* addController(Args&&... args)
         {
-            if (!controllerComponent)
+            if (!controllerComponent_)
             {
-                controllerComponent = std::make_unique<ControllerComponent>(this);
+                controllerComponent_ = std::make_unique<ControllerComponent>(this);
             }
-            return controllerComponent->addController<T>(std::forward<Args>(args)...);
+            return controllerComponent_->addController<T>(std::forward<Args>(args)...);
         }
 
         template <typename T>
         T* getController()
         {
-            return controllerComponent ? controllerComponent->getController<T>() : nullptr;
+            return controllerComponent_ ? controllerComponent_->getController<T>() : nullptr;
         }
 
         IController* getController(const std::string& name)
         {
-            return controllerComponent ? controllerComponent->getController(name) : nullptr;
+            return controllerComponent_ ? controllerComponent_->getController(name) : nullptr;
         }
 
         template <typename T>
         bool removeController()
         {
-            return controllerComponent ? controllerComponent->removeController<T>() : false;
+            return controllerComponent_ ? controllerComponent_->removeController<T>() : false;
         }
 
         bool hasControllers() const
         {
-            return controllerComponent && controllerComponent->hasControllers();
+            return controllerComponent_ && controllerComponent_->hasControllers();
         }
 
         void setControllersEnabled(bool enabled) const
         {
-            if (controllerComponent)
+            if (controllerComponent_)
             {
-                controllerComponent->setAllEnabled(enabled);
+                controllerComponent_->setAllEnabled(enabled);
             }
         }
 
@@ -99,12 +99,12 @@ namespace chai::scene
         virtual void extract(gfx::FrameRenderData& frameData) const override;
 
     private:
-        std::vector<std::unique_ptr<Component>> m_components;
-        std::unique_ptr<ControllerComponent> controllerComponent;
-        std::string m_name;
+        std::vector<std::unique_ptr<Component>> components_;
+        std::unique_ptr<ControllerComponent> controllerComponent_;
+        std::string name_;
 
         //hierarchy
-        GameObject* m_parent = nullptr;
-        std::vector<GameObject*> m_children;
+        GameObject* parent_ = nullptr;
+        std::vector<GameObject*> children_;
     };
 }

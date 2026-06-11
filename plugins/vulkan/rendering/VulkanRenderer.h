@@ -77,4 +77,10 @@ namespace chai::gfx
         //Resources
         std::shared_ptr<AssetCache<Mesh>> meshCache_;
     };
+
+    //dont leave this here forever
+    struct PushConstants {
+        math::Mat4 mvp;
+        math::Vec4 color;
+    };
 }

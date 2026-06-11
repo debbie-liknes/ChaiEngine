@@ -19,6 +19,6 @@ namespace chai::scene
 
     private:
         Handle<gfx::Mesh> mesh_;
-        math::Vec4 color_{1, 1, 1, 1};
+        math::Vec4 color_{1, 0, 1, 1};
     };
 }

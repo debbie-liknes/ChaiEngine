@@ -26,15 +26,15 @@ namespace chai::scene
             T* ptr = controller.get();
 
             // Store by type
-            controllersByType[std::type_index(typeid(T))] = ptr;
+            controllersByType_[std::type_index(typeid(T))] = ptr;
 
             // Store by name if it has one
             if (std::string name = controller->getControllerType(); !name.empty())
             {
-                controllersByName[name] = ptr;
+                controllersByName_[name] = ptr;
             }
 
-            controllers.push_back(std::move(controller));
+            controllers_.push_back(std::move(controller));
             return ptr;
         }
 
@@ -42,7 +42,7 @@ namespace chai::scene
         template <typename T>
         T* getController()
         {
-            if (auto it = controllersByType.find(std::type_index(typeid(T))); it != controllersByType.end())
+            if (auto it = controllersByType_.find(std::type_index(typeid(T))); it != controllersByType_.end())
             {
                 return static_cast<T*>(it->second);
             }
@@ -52,34 +52,34 @@ namespace chai::scene
         // Get controller by name
         IController* getController(const std::string& name)
         {
-            auto it = controllersByName.find(name);
-            return (it != controllersByName.end()) ? it->second : nullptr;
+            auto it = controllersByName_.find(name);
+            return (it != controllersByName_.end()) ? it->second : nullptr;
         }
 
         // Remove controller
         template <typename T>
         bool removeController()
         {
-            if (auto it = controllersByType.find(std::type_index(typeid(T))); it != controllersByType.end())
+            if (auto it = controllersByType_.find(std::type_index(typeid(T))); it != controllersByType_.end())
             {
                 IController const* controller = it->second;
 
                 // Remove from all maps
-                controllersByType.erase(it);
-                for (auto mapIt = controllersByName.begin(); mapIt != controllersByName.end(); ++mapIt)
+                controllersByType_.erase(it);
+                for (auto mapIt = controllersByName_.begin(); mapIt != controllersByName_.end(); ++mapIt)
                 {
                     if (mapIt->second == controller)
                     {
-                        controllersByName.erase(mapIt);
+                        controllersByName_.erase(mapIt);
                         break;
                     }
                 }
 
                 // Remove from vector
-                controllers.erase(
-                    std::remove_if(controllers.begin(), controllers.end(),
+                controllers_.erase(
+                    std::remove_if(controllers_.begin(), controllers_.end(),
                                    [controller](const auto& ptr) { return ptr.get() == controller; }),
-                    controllers.end()
+                    controllers_.end()
                 );
 
                 return true;
@@ -90,7 +90,7 @@ namespace chai::scene
         // Update all controllers
         void update(double deltaTime) override
         {
-            for (auto const& controller : controllers)
+            for (auto const& controller : controllers_)
             {
                 if (controller->isEnabled())
                 {
@@ -102,7 +102,7 @@ namespace chai::scene
         // Enable/disable all controllers
         void setAllEnabled(bool enabled) const
         {
-            for (auto const& controller : controllers)
+            for (auto const& controller : controllers_)
             {
                 controller->setEnabled(enabled);
             }
@@ -111,16 +111,16 @@ namespace chai::scene
         // Get all controllers
         const std::vector<std::unique_ptr<IController>>& getControllers() const
         {
-            return controllers;
+            return controllers_;
         }
 
-        size_t getControllerCount() const { return controllers.size(); }
-        bool hasControllers() const { return !controllers.empty(); }
+        size_t getControllerCount() const { return controllers_.size(); }
+        bool hasControllers() const { return !controllers_.empty(); }
 
     private:
-        std::vector<std::unique_ptr<IController>> controllers;
-        std::unordered_map<std::type_index, IController*> controllersByType;
-        std::unordered_map<std::string, IController*> controllersByName;
+        std::vector<std::unique_ptr<IController>> controllers_;
+        std::unordered_map<std::type_index, IController*> controllersByType_;
+        std::unordered_map<std::string, IController*> controllersByName_;
         chai::scene::GameObject* m_owner;
     };
 }

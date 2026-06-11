@@ -9,17 +9,15 @@ namespace chai::scene
     class SCENE_EXPORT Component : public IUpdatable
     {
     public:
-        explicit Component(GameObject* owningObject = nullptr) : m_owningObject(owningObject)
+        explicit Component(GameObject* owningObject = nullptr) : owningObject_(owningObject)
         {
         }
 
         virtual ~Component() = default;
 
-        virtual void update(double deltaTime) override {}
-
-        GameObject* getGameObject() const { return m_owningObject; }
+        GameObject* getGameObject() const { return owningObject_; }
 
     private:
-        GameObject* m_owningObject = nullptr;
+        GameObject* owningObject_ = nullptr;
     };
 }

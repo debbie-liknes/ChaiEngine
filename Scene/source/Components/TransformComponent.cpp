@@ -5,23 +5,23 @@ namespace chai::scene
 {
     using namespace chai::math;
     TransformComponent::TransformComponent(GameObject* owner)
-        : Component(owner), m_rotation(math::Quat::identity())
+        : Component(owner), rotation_(math::Quat::identity())
     {
     }
 
     Mat4 TransformComponent::getLocalMatrix() const
     {
-        Mat4 t = translate(Mat4::identity(), m_position);
-        Mat4 r = m_rotation.toMat4();
-        Mat4 s = scale(Mat4::identity(), m_scale);
+        Mat4 t = translate(Mat4::identity(), position_);
+        Mat4 r = rotation_.toMat4();
+        Mat4 s = scale(Mat4::identity(), scale_);
         return t * r * s;
     }
 
     void TransformComponent::setLocalMatrix(const Mat4& matrix)
     {
-        m_position = Vec3(matrix[3][0], matrix[3][1], matrix[3][2]);
-        m_rotation = Quat::quatFromMat4(matrix);
-        m_scale = Vec3(length(Vec3(matrix[0][0], matrix[0][1], matrix[0][2])),
+        position_ = Vec3(matrix[3][0], matrix[3][1], matrix[3][2]);
+        rotation_ = Quat::quatFromMat4(matrix);
+        scale_ = Vec3(length(Vec3(matrix[0][0], matrix[0][1], matrix[0][2])),
                        length(Vec3(matrix[1][0], matrix[1][1], matrix[1][2])),
                        length(Vec3(matrix[2][0], matrix[2][1], matrix[2][2])));
     }
@@ -37,7 +37,7 @@ namespace chai::scene
 
     void TransformComponent::setPosition(Vec3 newPos)
     {
-        m_position = newPos;
+        position_ = newPos;
     }
 
     void TransformComponent::setRotationEuler(Vec3 newRot)
@@ -49,7 +49,7 @@ namespace chai::scene
 
     void TransformComponent::setScale(Vec3 newScale)
     {
-        m_scale = newScale;
+        scale_ = newScale;
     }
 
     Vec3 TransformComponent::forward() const
@@ -69,15 +69,15 @@ namespace chai::scene
 
     Vec3 TransformComponent::getWorldPosition() const
     {
-        return m_position;
+        return position_;
     }
 
     Quat TransformComponent::getWorldRotation() const
     {
         if (auto parent = getGameObject()->getParent(); parent) {
-            return parent->getComponent<TransformComponent>()->getWorldRotation() * m_rotation;
+            return parent->getComponent<TransformComponent>()->getWorldRotation() * rotation_;
         } else {
-            return m_rotation;
+            return rotation_;
         }
     }
 
@@ -110,10 +110,10 @@ namespace chai::scene
         Quat worldRot = Quat::quatFromMat4(rotMatrix);
 
         if (auto parent = getGameObject()->getParent(); parent)
-            m_rotation =
+            rotation_ =
                 parent->getComponent<TransformComponent>()->getWorldRotation().inverse() * worldRot;
         else
-            m_rotation = worldRot;
+            rotation_ = worldRot;
     }
 
 } // namespace chai::cup

@@ -127,7 +127,8 @@ namespace chai::gfx
         VkPushConstantRange pcRange{};
         pcRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         pcRange.offset = 0;
-        pcRange.size = sizeof(math::Mat4);
+        pcRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        pcRange.size = sizeof(PushConstants);
 
         VkPipelineLayoutCreateInfo layoutInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
         layoutInfo.pushConstantRangeCount = 1;
@@ -312,8 +313,8 @@ namespace chai::gfx
         VkRect2D scissor{{0, 0}, view.extent};
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-        for (const RenderView& view : renderData.views) {
-            //bindCameraUBO(view);
+        for (const RenderView& rv : renderData.views) {
+            //bindCameraUBO(rv);
             for (const RenderItem& item : renderData.items) {
                 //check frustum culling
                 {
@@ -321,13 +322,16 @@ namespace chai::gfx
                     if (!mesh)
                         continue; // not ready, skip
 
-                    math::Mat4 mvp = view.proj * view.view * item.model;
+                    math::Mat4 mvp = rv.proj * rv.view * item.model;
+                    PushConstants consts;
+                    consts.mvp = mvp;
+                    consts.color = item.color;
                     vkCmdPushConstants(cmd,
                                        pipelineLayout_,
-                                       VK_SHADER_STAGE_VERTEX_BIT,
+                                       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                                        0,
-                                       sizeof(math::Mat4),
-                                       &mvp);
+                                       sizeof(PushConstants),
+                                       &consts);
 
                     VkBuffer vb = mesh->vertexBuffer.handle;
                     VkDeviceSize offset = 0;
