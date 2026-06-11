@@ -43,6 +43,11 @@ namespace chai::gfx
             VkCommandBuffer cmd = VK_NULL_HANDLE;
             VkSemaphore imageAvailable = VK_NULL_HANDLE;
             VkFence inFlight = VK_NULL_HANDLE;
+
+            VkBuffer cameraBuffer = VK_NULL_HANDLE;
+            VmaAllocation cameraAlloc = VK_NULL_HANDLE;
+            void* cameraMapped = nullptr;
+            VkDescriptorSet cameraSet = VK_NULL_HANDLE;
         };
         static constexpr uint32_t kFramesInFlight = 2;
 
@@ -80,7 +85,7 @@ namespace chai::gfx
 
     //dont leave this here forever
     struct PushConstants {
-        math::Mat4 mvp;
+        math::Mat4 model;
         math::Vec4 color;
     };
 }

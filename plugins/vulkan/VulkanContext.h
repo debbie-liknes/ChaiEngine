@@ -44,6 +44,10 @@ namespace chai::gfx
         VkCommandBuffer immediateCmd() const { return immediateCmd_; }
         VkFence immediateFence() const { return immediateFence_; }
 
+        VkDescriptorSetLayout cameraSetLayout() const { return cameraSetLayout_; }
+        VkDescriptorSetLayout materialSetLayout() const { return materialSetLayout_; }
+        VkDescriptorPool descriptorPool() const { return descriptorPool_; }
+
     private:
         vkb::Instance vkbInstance_;
         VkInstance instance_ = VK_NULL_HANDLE;
@@ -66,11 +70,17 @@ namespace chai::gfx
         VkCommandBuffer immediateCmd_ = VK_NULL_HANDLE;
         VkFence immediateFence_ = VK_NULL_HANDLE;
 
+        //descriptor stuff - may move this later and keep this class pure
+        VkDescriptorPool descriptorPool_ = VK_NULL_HANDLE;
+        VkDescriptorSetLayout cameraSetLayout_ = VK_NULL_HANDLE;
+        VkDescriptorSetLayout materialSetLayout_ = VK_NULL_HANDLE;
+
         void setupInstance(IWindow& window);
         void setupSurface(IWindow& window);
         void setupDevice();
         void setupQueues();
         void setupAllocator();
         void setupImmediate();
+        void setupDescriptors();
     };
 } // namespace chai

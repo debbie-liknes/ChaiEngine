@@ -42,6 +42,7 @@ namespace chai::gfx
         setupInstance(window);
         setupSurface(window);
         setupDevice();
+        setupDescriptors();
         setupQueues();
         setupAllocator();
         setupImmediate();
@@ -50,6 +51,9 @@ namespace chai::gfx
     VulkanContext::~VulkanContext()
     {
         vkDestroyCommandPool(device_, immediatePool_, nullptr); // cmd buffer dies with it
+        vkDestroyDescriptorSetLayout(device_, materialSetLayout_, nullptr);
+        vkDestroyDescriptorSetLayout(device_, cameraSetLayout_, nullptr);
+        vkDestroyDescriptorPool(device_, descriptorPool_, nullptr);
         vkDestroyFence(device_, immediateFence_, nullptr);
         vmaDestroyAllocator(allocator_); // BEFORE the device allocator holds device memory
         vkDestroyDevice(device_, nullptr);
@@ -169,5 +173,45 @@ namespace chai::gfx
         VkFenceCreateInfo fenceInfo{VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
         // start this unsignaled
         vkCreateFence(device_, &fenceInfo, nullptr, &immediateFence_);
+    }
+
+    void VulkanContext::setupDescriptors()
+    {
+        //i will outgrow this budget. Will need a pool of pools
+        VkDescriptorPoolSize poolSizes[] = {
+            {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 16},    //16 ubos
+            {VK_DESCRIPTOR_TYPE_SAMPLER, 64}            //64 textures
+        };
+
+        VkDescriptorPoolCreateInfo poolInfo{VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
+        poolInfo.flags = 0;
+        poolInfo.pPoolSizes = poolSizes;
+        poolInfo.poolSizeCount = uint32_t(std::size(poolSizes));
+        poolInfo.maxSets = 128;
+        VK_CHECK(vkCreateDescriptorPool(device_, &poolInfo, nullptr, &descriptorPool_));
+
+        VkDescriptorSetLayoutBinding camBinding{};
+        camBinding.binding = 0;
+        camBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        camBinding.descriptorCount = 1;
+        camBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        VkDescriptorSetLayoutCreateInfo camLayout{
+            VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+        camLayout.bindingCount = 1;
+        camLayout.pBindings = &camBinding;
+        VK_CHECK(vkCreateDescriptorSetLayout(device_, &camLayout, nullptr, &cameraSetLayout_));
+
+        VkDescriptorSetLayoutBinding texBinding{};
+        texBinding.binding = 0;
+        texBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        texBinding.descriptorCount = 1;
+        texBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo texLayout{
+            VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+        texLayout.bindingCount = 1;
+        texLayout.pBindings = &texBinding;
+        VK_CHECK(vkCreateDescriptorSetLayout(device_, &texLayout, nullptr, &materialSetLayout_));
     }
 } // namespace chai

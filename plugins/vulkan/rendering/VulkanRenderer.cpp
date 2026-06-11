@@ -10,6 +10,7 @@
 #include <Primitives.h>
 #include <SystemPaths.h>
 #include <Window/Window.h>
+#include <CameraData.h>
 
 namespace
 {
@@ -79,6 +80,7 @@ namespace chai::gfx
         waitIdle();
 
         for (int i = 0; i < kFramesInFlight; i++) {
+            vmaDestroyBuffer(ctx_.allocator(), frames_[i].cameraBuffer, frames_[i].cameraAlloc);
             vkDestroyFence(ctx_.device(), frames_[i].inFlight, nullptr);
             vkDestroySemaphore(ctx_.device(), frames_[i].imageAvailable, nullptr);
         }
@@ -120,6 +122,45 @@ namespace chai::gfx
 
             VK_CHECK(vkCreateSemaphore(
                 ctx_.device(), &semaphoreCreateInfo, nullptr, &frames_[i].imageAvailable));
+
+            //camera
+            VkBufferCreateInfo bufInfo{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+            bufInfo.size = sizeof(CameraData);
+            bufInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+
+            VmaAllocationCreateInfo aci{};
+            aci.usage = VMA_MEMORY_USAGE_AUTO;
+            aci.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+                        VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+            VmaAllocationInfo allocInfo{};
+            VK_CHECK(vmaCreateBuffer(ctx_.allocator(),
+                                     &bufInfo,
+                                     &aci,
+                                     &frames_[i].cameraBuffer,
+                                     &frames_[i].cameraAlloc,
+                                     &allocInfo));
+            frames_[i].cameraMapped = allocInfo.pMappedData;
+
+            VkDescriptorSetLayout camLayout = ctx_.cameraSetLayout();
+            VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
+            dsai.descriptorPool = ctx_.descriptorPool();
+            dsai.descriptorSetCount = 1;
+            dsai.pSetLayouts = &camLayout;
+            VK_CHECK(vkAllocateDescriptorSets(ctx_.device(), &dsai, &frames_[i].cameraSet));
+
+            VkDescriptorBufferInfo dbi{};
+            dbi.buffer = frames_[i].cameraBuffer;
+            dbi.offset = 0;
+            dbi.range = sizeof(CameraData);
+
+            VkWriteDescriptorSet write{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+            write.dstSet = frames_[i].cameraSet;
+            write.dstBinding = 0;
+            write.descriptorCount = 1;
+            write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            write.pBufferInfo = &dbi;
+            vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);
         }
 
         //////////////////////////////////////////////////////////////////////////////////////
@@ -130,9 +171,13 @@ namespace chai::gfx
         pcRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pcRange.size = sizeof(PushConstants);
 
+        VkDescriptorSetLayout setLayouts[] = {ctx_.cameraSetLayout(), ctx_.materialSetLayout()};
         VkPipelineLayoutCreateInfo layoutInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
         layoutInfo.pushConstantRangeCount = 1;
         layoutInfo.pPushConstantRanges = &pcRange;
+        layoutInfo.setLayoutCount = 2;
+        layoutInfo.pSetLayouts = setLayouts;
+
         VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &layoutInfo, nullptr, &pipelineLayout_));
 
         const auto shaderDir = executableDir() / "shaders";
@@ -169,6 +214,13 @@ namespace chai::gfx
 
         // Wait until this frame slots previous work is done.
         VK_CHECK(vkWaitForFences(ctx_.device(), 1, &frame.inFlight, VK_TRUE, UINT64_MAX));
+
+        CameraData camUBO{};
+        camUBO.view = renderData.views[0].view;
+        camUBO.proj = renderData.views[0].proj;
+        camUBO.viewProj = renderData.views[0].proj * renderData.views[0].view;
+        camUBO.position = math::Vec3{0, 0, 0};
+        std::memcpy(frame.cameraMapped, &camUBO, sizeof(camUBO));
 
         RenderTargetView view{};
         uint32_t imageIndex = 0;
@@ -313,18 +365,27 @@ namespace chai::gfx
         VkRect2D scissor{{0, 0}, view.extent};
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
+        FrameData& frame = frames_[currentFrame_];
+        vkCmdBindDescriptorSets(cmd,
+                                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                pipelineLayout_,
+                                0,
+                                1,
+                                &frame.cameraSet,
+                                0,
+                                nullptr);
+
         for (const RenderView& rv : renderData.views) {
             //bindCameraUBO(rv);
             for (const RenderItem& item : renderData.items) {
-                //check frustum culling
+                //check frustum culling?
                 {
                     const GpuMesh* mesh = meshCache_->resource(item.mesh);
                     if (!mesh)
                         continue; // not ready, skip
 
-                    math::Mat4 mvp = rv.proj * rv.view * item.model;
                     PushConstants consts;
-                    consts.mvp = mvp;
+                    consts.model = item.model;
                     consts.color = item.color;
                     vkCmdPushConstants(cmd,
                                        pipelineLayout_,

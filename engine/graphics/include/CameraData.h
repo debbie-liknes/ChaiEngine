@@ -4,6 +4,7 @@
 
 namespace chai::gfx
 {
+    //GPU camera struct
     struct alignas(16) CameraData 
     {
         math::Mat4 view;
