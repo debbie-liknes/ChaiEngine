@@ -1,21 +1,23 @@
 #include "VulkanRenderer.h"
-#include <Window/Window.h>
-#include <Log.h>
+
 #include "../core/VkCheck.h"
-#include <SystemPaths.h>
-#include "../pipeline/ShaderModule.h"
 #include "../pipeline/PipelineBuilder.h"
-#include <MeshAsset.h>
+#include "../pipeline/ShaderModule.h"
+
 #include <AssetCache.h>
+#include <Log.h>
+#include <MeshAsset.h>
 #include <Primitives.h>
+#include <SystemPaths.h>
+#include <Window/Window.h>
 
 namespace
 {
-    //from vk guide but i need to understand this better tbh
+    // from vk guide but i need to understand this better tbh
     void transitionImage1(VkCommandBuffer cmd,
-                         VkImage image,
-                         VkImageLayout oldLayout,
-                         VkImageLayout newLayout)
+                          VkImage image,
+                          VkImageLayout oldLayout,
+                          VkImageLayout newLayout)
     {
         VkImageMemoryBarrier2 barrier{VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2};
         barrier.srcStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
@@ -35,10 +37,10 @@ namespace
     }
 
     inline void transitionImage(VkCommandBuffer cmd,
-                         VkImage image,
-                         VkImageLayout oldLayout,
-                         VkImageLayout newLayout,
-                         VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT)
+                                VkImage image,
+                                VkImageLayout oldLayout,
+                                VkImageLayout newLayout,
+                                VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT)
     {
         VkImageMemoryBarrier2 barrier{VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2};
         barrier.srcStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
@@ -50,26 +52,24 @@ namespace
         barrier.image = image;
         barrier.subresourceRange = {
             aspect, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS};
-        // ... rest unchanged
     }
 } // namespace
 
 namespace chai::gfx
 {
     VulkanRenderer::VulkanRenderer(chai::IWindow& window,
-                                   std::shared_ptr<AssetCache<Mesh>> meshCache, 
+                                   std::shared_ptr<AssetCache<Mesh>> meshCache,
                                    VulkanContext& context)
-        : 
-        window_(window), ctx_(context),
+        : window_(window), ctx_(context),
           swapchain_(ctx_,
                      [&] {
-              int w, h;
-              window.framebufferSize(w, h);
-              return VkExtent2D{uint32_t(w), uint32_t(h)};
-          }()),
-        meshCache_(meshCache)
+                         int w, h;
+                         window.framebufferSize(w, h);
+                         return VkExtent2D{uint32_t(w), uint32_t(h)};
+                     }()),
+          meshCache_(meshCache)
     {
-        //init vulkan context
+        // init vulkan context
         init();
         CHAI_LOG_INFO("VulkanRenderer initialized");
     }
@@ -86,7 +86,7 @@ namespace chai::gfx
         vkDestroyPipelineLayout(ctx_.device(), pipelineLayout_, nullptr);
         vkDestroyPipeline(ctx_.device(), pipeline_, nullptr);
 
-        //dont need to destory the buffers individually. Command Pool is enough
+        // dont need to destory the buffers individually. Command Pool is enough
         vkDestroyCommandPool(ctx_.device(), cmdPool_, nullptr);
 
         CHAI_LOG_INFO("VulkanRenderer destroyed");
@@ -106,7 +106,6 @@ namespace chai::gfx
         VkSemaphoreCreateInfo semaphoreCreateInfo = semaphoreCreate();
 
         for (int i = 0; i < kFramesInFlight; i++) {
-
             // allocate the default command buffer that we will use for rendering
             VkCommandBufferAllocateInfo cmdAllocInfo = {};
             cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -115,28 +114,25 @@ namespace chai::gfx
             cmdAllocInfo.commandBufferCount = 1;
             cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
-            VK_CHECK(vkAllocateCommandBuffers(
-                ctx_.device(), &cmdAllocInfo, &frames_[i].cmd));
+            VK_CHECK(vkAllocateCommandBuffers(ctx_.device(), &cmdAllocInfo, &frames_[i].cmd));
 
             VK_CHECK(vkCreateFence(ctx_.device(), &fenceCreateInfo, nullptr, &frames_[i].inFlight));
 
             VK_CHECK(vkCreateSemaphore(
                 ctx_.device(), &semaphoreCreateInfo, nullptr, &frames_[i].imageAvailable));
-
         }
 
         //////////////////////////////////////////////////////////////////////////////////////
-        //we love some temporary code...as long as its actually temporary
+        // we love some temporary code...as long as its actually temporary
         VkPushConstantRange pcRange{};
         pcRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         pcRange.offset = 0;
-        pcRange.size = sizeof(Mat4);
+        pcRange.size = sizeof(math::Mat4);
 
         VkPipelineLayoutCreateInfo layoutInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
         layoutInfo.pushConstantRangeCount = 1;
         layoutInfo.pPushConstantRanges = &pcRange;
         VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &layoutInfo, nullptr, &pipelineLayout_));
-
 
         const auto shaderDir = executableDir() / "shaders";
         VkShaderModule vert = loadShaderModule(ctx_.device(), shaderDir / "triangle.vert.spv");
@@ -149,15 +145,14 @@ namespace chai::gfx
         auto attrs = vertexAttributes();
         auto bind = vertexBinding();
 
-        pipeline_ =
-            PipelineBuilder{}
-                .setShaders(vert, frag)
-                .setVertexInput({attrs.begin(), attrs.end()}, bind)
-                .setColorFormat(swapchain_.format())
-                .enableDepthTest()
-                .setDepthFormat(swapchain_.depthFormat())
-                .disableBlending()
-                .build(ctx_.device(), pipelineLayout_);
+        pipeline_ = PipelineBuilder{}
+                        .setShaders(vert, frag)
+                        .setVertexInput({attrs.begin(), attrs.end()}, bind)
+                        .setColorFormat(swapchain_.format())
+                        .enableDepthTest()
+                        .setDepthFormat(swapchain_.depthFormat())
+                        .disableBlending()
+                        .build(ctx_.device(), pipelineLayout_);
 
         vkDestroyShaderModule(ctx_.device(), vert, nullptr);
         vkDestroyShaderModule(ctx_.device(), frag, nullptr);
@@ -180,6 +175,8 @@ namespace chai::gfx
             recreateSwapchain();
             return;
         }
+
+        //debugging
         view.clearColor = {{{0.05f, 0.10f, 0.15f, 1.0f}}};
 
         VK_CHECK(vkResetFences(ctx_.device(), 1, &frame.inFlight));
@@ -197,7 +194,7 @@ namespace chai::gfx
                         view.depthImage,
                         VK_IMAGE_LAYOUT_UNDEFINED,
                         VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-                        VK_IMAGE_ASPECT_DEPTH_BIT);  
+                        VK_IMAGE_ASPECT_DEPTH_BIT);
 
         VkRenderingAttachmentInfo color{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
         color.imageView = view.colorView;
@@ -221,16 +218,16 @@ namespace chai::gfx
         rendering.pColorAttachments = &color;
         rendering.pDepthAttachment = &depth;
 
-        //DRAW
+        // DRAW
         vkCmdBeginRendering(cmd, &rendering);
         renderScene(cmd, view, renderData);
         vkCmdEndRendering(cmd);
 
         //??
         transitionImage1(cmd,
-                        view.image,
-                        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+                         view.image,
+                         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                         VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
         VK_CHECK(vkEndCommandBuffer(cmd));
 
@@ -254,7 +251,6 @@ namespace chai::gfx
         submit.commandBufferInfoCount = 1;
         submit.pCommandBufferInfos = &cmdInfo;
 
-        
         VK_CHECK(vkQueueSubmit2(ctx_.graphicsQueue(), 1, &submit, frame.inFlight));
 
         if (!swapchain_.present(imageIndex))
@@ -321,9 +317,9 @@ namespace chai::gfx
             if (!mesh)
                 continue; // not ready, skip
 
-            Mat4 mvp = renderData.proj * renderData.view * obj.model;
+            math::Mat4 mvp = renderData.proj * renderData.view * obj.model;
             vkCmdPushConstants(
-                cmd, pipelineLayout_, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Mat4), &mvp);
+                cmd, pipelineLayout_, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(math::Mat4), &mvp);
 
             VkBuffer vb = mesh->vertexBuffer.handle;
             VkDeviceSize offset = 0;
@@ -332,4 +328,4 @@ namespace chai::gfx
             vkCmdDrawIndexed(cmd, mesh->indexCount, 1, 0, 0, 0);
         }
     }
-}
+} // namespace chai::gfx

@@ -62,6 +62,7 @@ namespace chai::gfx
         viewInfo.subresourceRange = {VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1};
         VK_CHECK(vkCreateImageView(ctx_.device(), &viewInfo, nullptr, &depthView_));
 
+        //per image semaphore
         VkSemaphoreCreateInfo semInfo{VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
         renderFinished_.resize(images_.size());
         for (auto& s : renderFinished_)

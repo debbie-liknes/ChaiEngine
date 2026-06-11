@@ -1,3 +1,7 @@
+/**
+ * @file VulkanPlugin.h
+ * @brief Plugin setup and registration of services
+ */
 #include <Log.h>
 #include <Plugin/PluginBase.h>
 #include <Plugin/PluginMacros.h>
@@ -29,10 +33,11 @@ namespace chai::gfx
             renderer_ =
                 std::make_shared<VulkanRenderer>(*window, meshRegistry_->cache(), *vulkCtx_);
 
-
+            //register services, but make sure to UN-register them on unload
             ctx.services.provide<AssetCache<Mesh>>(meshRegistry_->cache());
             ctx.services.provide<IRenderer>(renderer_);
             ctx.services.provide<IMeshRegistry>(meshRegistry_);
+
             CHAI_LOG_INFO("Renderer service provided");
 
         }
@@ -40,13 +45,14 @@ namespace chai::gfx
         void onUnload(PluginContext& ctx) override
         {
             if (renderer_)
-                renderer_->waitIdle(); // make sure the GPU is idle before teardown
+                renderer_->waitIdle(); // probably unnecessary here
 
             //remove services
             ctx.services.remove<IRenderer>();
             ctx.services.remove<IMeshRegistry>();
             ctx.services.remove<AssetCache<Mesh>>();
 
+            //release all our resources and pointers
             meshRegistry_->cache()->releaseAll();
             renderer_.reset();
             resources_.reset();

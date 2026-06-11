@@ -22,6 +22,7 @@ set(${PROJECT_NAME}_source
         Swapchain.cpp
         VulkanContext.cpp
         VulkanMemoryAllocator.cpp
+        Buffer.cpp
 )
 
 include(FetchContent)

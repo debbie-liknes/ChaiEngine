@@ -1,9 +1,15 @@
+/**
+ * @file GpuResources.h
+ */
 #pragma once
 #include "Mesh.h"
 #include "VulkanContext.h"
 
 namespace chai::gfx
 {
+    /**
+     * @brief Resources that belong to the plugin lifetime
+     */
     class GpuResources
     {
         MeshFactory meshFactory_;

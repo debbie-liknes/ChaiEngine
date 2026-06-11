@@ -1,3 +1,6 @@
+/**
+ * @file Mesh.h
+ */
 #pragma once
 #include "Buffer.h"
 #include <Renderer.h>
@@ -9,7 +12,11 @@
 
 namespace chai::gfx
 {
-    struct GpuMesh {
+    /**
+     * @brief GPU side data for a mesh
+     */
+    struct GpuMesh 
+    {
         Buffer vertexBuffer;
         Buffer indexBuffer;
         uint32_t indexCount = 0;
@@ -18,6 +25,10 @@ namespace chai::gfx
 
 namespace chai
 {
+    /**
+     * @brief Asset traits specialization for mesh
+     * Must be in chai namespace, not chai::gfx
+     */
     template <>
     struct AssetTraits<gfx::Mesh> {
         using Asset = gfx::MeshAsset;
@@ -27,6 +38,9 @@ namespace chai
 
 namespace chai::gfx
 {
+    /**
+     * @brief Knows how to turn a CPU mesh into a GPU resource
+     */
     class MeshFactory final : public ResourceFactory<Mesh>
     {
     public:
@@ -36,18 +50,14 @@ namespace chai::gfx
 
         bool loadAsset(AssetId id, MeshAsset& out) override
         {
-            // resolve id -> path, parse glTF into `out` (step 6 work)
-            return /* loaded */ out.isValid();
+            return out.isValid();
         }
 
-        void immediateSubmit(VulkanContext& ctx,
-                             std::function<void(VkCommandBuffer)>&& fn)
+        void immediateSubmit(VulkanContext& ctx, std::function<void(VkCommandBuffer)>&& fn)
         {
-            const VkFence fence = ctx.immediateFence(); // by-value accessor is fine
+            const VkFence fence = ctx.immediateFence();
             const VkCommandBuffer cmd = ctx.immediateCmd();
 
-            // Fence starts unsignaled; reset is belt-and-suspenders for the 2nd+ call,
-            // since the previous call left it signaled after its wait.
             VK_CHECK(vkResetFences(ctx.device(), 1, &fence));
             VK_CHECK(vkResetCommandBuffer(cmd, 0));
 
@@ -55,7 +65,7 @@ namespace chai::gfx
             begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
             VK_CHECK(vkBeginCommandBuffer(cmd, &begin));
 
-            fn(cmd); // caller's commands: the buffer copy, later a blit, etc.
+            fn(cmd); // caller's commands
 
             VK_CHECK(vkEndCommandBuffer(cmd));
 
@@ -63,8 +73,8 @@ namespace chai::gfx
             submit.commandBufferCount = 1;
             submit.pCommandBuffers = &cmd;
 
-            // Submit to the graphics queue for now. If a dedicated transfer queue ever
-            // appears on the context, this is the one line that changes.
+            // Submit to the graphics queue for now
+            //TODO: transfer queue?
             VK_CHECK(vkQueueSubmit(ctx.graphicsQueue(), 1, &submit, fence));
             VK_CHECK(vkWaitForFences(ctx.device(), 1, &fence, VK_TRUE, UINT64_MAX)); // <-- the block
         }
@@ -109,19 +119,20 @@ namespace chai::gfx
             auto* base = static_cast<std::byte*>(staging.info.pMappedData);
             std::memcpy(base, asset.vertices.data(), vbSize);
             std::memcpy(base + vbSize, asset.indices.data(), ibSize);
-            // No-op on HOST_COHERENT memory; correct if AUTO picked a non-coherent type.
+
             vmaFlushAllocation(allocator_, staging.allocation, 0, VK_WHOLE_SIZE);
 
+            //immediately submitting everything forever is not a good idea
             immediateSubmit(ctx_, [&](VkCommandBuffer cmd) {
-                VkBufferCopy vb{0, 0, vbSize}; // srcOffset, dstOffset, size
+                VkBufferCopy vb{0, 0, vbSize};
                 VkBufferCopy ib{vbSize, 0, ibSize};
                 vkCmdCopyBuffer(cmd, staging.handle, out.vertexBuffer.handle, 1, &vb);
                 vkCmdCopyBuffer(cmd, staging.handle, out.indexBuffer.handle, 1, &ib);
             });
 
-            // immediateSubmit fence-waited, so the copy is done — staging is safe NOW.
+            // we did the immediate submissions,s o we're good
             destroyBufferImmediate(allocator_, staging);
-            return LoadState::Ready; // synchronous: immediateSubmit blocked til done
+            return LoadState::Ready; //already done
         }
 
         void destroyResource(GpuMesh& res) noexcept override
@@ -138,6 +149,10 @@ namespace chai::gfx
         VmaAllocator allocator_;
     };
 
+    /**
+     * @brief The registry allows the core side to add meshes to the cache. The Mesh cache belogns to
+     * the renderer
+     */
     class MeshRegistry final : public IMeshRegistry
     {
     public:
@@ -156,7 +171,8 @@ namespace chai::gfx
         }
 
         Handle<Mesh> load(AssetId) override
-        { return {};
+        { 
+            return {};
         }
 
         std::shared_ptr<AssetCache<Mesh>> cache() { return cache_; } // plugin-internal access for the renderer

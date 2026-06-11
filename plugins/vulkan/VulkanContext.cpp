@@ -167,8 +167,7 @@ namespace chai::gfx
         vkAllocateCommandBuffers(device_, &cmdInfo, &immediateCmd_);
 
         VkFenceCreateInfo fenceInfo{VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
-        // NOTE: unsignaled — no flags. immediateSubmit resets-then-waits, so it must
-        // start unsignaled or the first reset/wait pairing is off.
+        // start this unsignaled
         vkCreateFence(device_, &fenceInfo, nullptr, &immediateFence_);
     }
 } // namespace chai
