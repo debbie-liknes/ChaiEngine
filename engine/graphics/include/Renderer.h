@@ -4,6 +4,7 @@
  */
 #pragma once
 #include <Handle.h>
+#include <FrameRenderData.h>
 
 namespace chai
 {
@@ -25,7 +26,7 @@ namespace chai
              * @brief Produces one frame.
              * Acquire a target, render to it, present it
              */
-            virtual void renderFrame() = 0;
+            virtual void renderFrame(const FrameRenderData& renderData) = 0;
 
             /**
              * @brief Tell the renderer the window was resized (swapchain)

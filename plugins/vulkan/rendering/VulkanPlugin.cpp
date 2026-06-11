@@ -5,6 +5,7 @@
 #include <Window/Window.h>
 #include <memory>
 #include "VulkanRenderer.h"
+#include "../Mesh.h"
 
 namespace chai::gfx
 {
@@ -21,9 +22,17 @@ namespace chai::gfx
                 return;
             }
 
-            services_ = &ctx.services;
-            renderer_ = std::make_shared<VulkanRenderer>(*window, services_);
+            vulkCtx_ = std::make_shared<VulkanContext>(*window);
+            resources_ = std::make_shared<GpuResources>(*vulkCtx_);
+            meshRegistry_ =
+                std::make_shared<MeshRegistry>(resources_->factory(), resources_->graveyard());
+            renderer_ =
+                std::make_shared<VulkanRenderer>(*window, meshRegistry_->cache(), *vulkCtx_);
+
+
+            ctx.services.provide<AssetCache<Mesh>>(meshRegistry_->cache());
             ctx.services.provide<IRenderer>(renderer_);
+            ctx.services.provide<IMeshRegistry>(meshRegistry_);
             CHAI_LOG_INFO("Renderer service provided");
 
         }
@@ -32,16 +41,26 @@ namespace chai::gfx
         {
             if (renderer_)
                 renderer_->waitIdle(); // make sure the GPU is idle before teardown
-            ctx.services.remove<IRenderer>();
-            renderer_.reset();
-            services_ = nullptr;
-            CHAI_LOG_INFO("Renderer removed");
 
+            //remove services
+            ctx.services.remove<IRenderer>();
+            ctx.services.remove<IMeshRegistry>();
+            ctx.services.remove<AssetCache<Mesh>>();
+
+            meshRegistry_->cache()->releaseAll();
+            renderer_.reset();
+            resources_.reset();
+            meshRegistry_.reset();
+            vulkCtx_.reset();
+
+            CHAI_LOG_INFO("Renderer removed");
         }
 
     private:
+        std::shared_ptr<VulkanContext> vulkCtx_;
+        std::shared_ptr<GpuResources> resources_;
         std::shared_ptr<VulkanRenderer> renderer_;
-        ServiceLocator* services_;
+        std::shared_ptr<MeshRegistry> meshRegistry_;
     };
 
     CHAI_PLUGIN(VulkanPlugin);

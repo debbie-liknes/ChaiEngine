@@ -26,10 +26,12 @@ namespace chai::gfx
 	class VulkanRenderer : public IRenderer
 	{
     public:
-        VulkanRenderer(chai::IWindow& window, ServiceLocator* services);
+        VulkanRenderer(chai::IWindow& window,
+                       std::shared_ptr<AssetCache<Mesh>> meshCache,
+                       VulkanContext& context);
         ~VulkanRenderer() override;
 
-        void renderFrame() override;
+        void renderFrame(const FrameRenderData& renderData) override;
         void onResize(int width, int height) override;
         void waitIdle() override;
 
@@ -53,12 +55,14 @@ namespace chai::gfx
          * the scene objects or graph. It also only renders to the target view, NOT directly
          * to the swapchain. This will make multiple view easier later...i think
          */
-        void renderScene(VkCommandBuffer cmd, const RenderTargetView& view);
+        void renderScene(VkCommandBuffer cmd,
+                         const RenderTargetView& view,
+                         const FrameRenderData& renderData);
         VkFenceCreateInfo fenceCreate(VkFenceCreateFlags flags = 0);
         VkSemaphoreCreateInfo semaphoreCreate(VkSemaphoreCreateFlags flags = 0);
 
         chai::IWindow& window_;
-        VulkanContext ctx_;
+        VulkanContext& ctx_;
         Swapchain swapchain_;
 
         VkCommandPool cmdPool_ = VK_NULL_HANDLE;
@@ -69,10 +73,8 @@ namespace chai::gfx
         //Porbably dont want this long term, just for hello triangle (vulkan edition!!)
         VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
         VkPipeline pipeline_ = VK_NULL_HANDLE;
-        Handle<Mesh> cube_;
 
         //Resources
-        ServiceLocator* services_;  //owned by the engine
-        GpuResources resources_;
+        std::shared_ptr<AssetCache<Mesh>> meshCache_;
     };
 }

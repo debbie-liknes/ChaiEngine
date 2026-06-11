@@ -4,6 +4,7 @@ set(${PROJECT_NAME}_headers
         include/Renderer.h
         include/Vertex.h
         include/MeshAsset.h
+        include/FrameRenderData.h
         include/Primitives.h
 )
 

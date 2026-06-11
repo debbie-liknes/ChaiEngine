@@ -138,6 +138,33 @@ namespace chai::gfx
         VmaAllocator allocator_;
     };
 
+    class MeshRegistry final : public IMeshRegistry
+    {
+    public:
+        MeshRegistry(MeshFactory& factory, DeferredDeleteQueue& graveyard)
+        {
+            cache_ = std::make_shared<AssetCache<Mesh>>(factory, graveyard);
+        }
+
+        Handle<Mesh> ingest(AssetId id, MeshAsset asset) override
+        {
+            return cache_->ingest(id, std::move(asset)); // forward to the real cache
+        }
+        void release(Handle<Mesh> h) override
+        {
+            cache_->release(h); // forward
+        }
+
+        Handle<Mesh> load(AssetId) override
+        { return {};
+        }
+
+        std::shared_ptr<AssetCache<Mesh>> cache() { return cache_; } // plugin-internal access for the renderer
+
+    private:
+        std::shared_ptr<AssetCache<Mesh>> cache_; // the template lives HERE, plugin-side, never escapes
+    };
+
     inline VkVertexInputBindingDescription vertexBinding()
     {
         return {0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX};

@@ -1,9 +1,12 @@
 #pragma once
-#include <Vertex.h>
 #include <vector>
+#include <Vertex.h>
+#include <Handle.h>
+#include <AssetCache.h>
 
 namespace chai::gfx
 {
+    struct Mesh;
     struct MeshAsset 
     {
         std::vector<Vertex> vertices;
@@ -20,5 +23,13 @@ namespace chai::gfx
                     return false;
             return true;
         }
+    };
+
+    class IMeshRegistry
+    {
+    public:
+        virtual Handle<Mesh> ingest(AssetId, MeshAsset) = 0;
+        virtual Handle<Mesh> load(AssetId) = 0;
+        virtual void release(Handle<Mesh>) = 0;
     };
 }

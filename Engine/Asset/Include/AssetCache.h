@@ -68,6 +68,11 @@ namespace chai
         void release(HandleType h);
 
         /**
+         * @brief Release all slots
+         */
+        void releaseAll();
+
+        /**
          * @brief Check the load state of a handle
          * @return The current load state
          */
@@ -336,5 +341,25 @@ namespace chai
         auto held = std::make_shared<Resource>(std::move(res));
         Factory* fac = factory_;
         graveyard_->enqueue([fac, held]() { fac->destroyResource(*held); });
+    }
+
+    template <typename T>
+    void AssetCache<T>::releaseAll()
+    {
+        slots_.forEach([&](HandleType h, Record& rec) {
+            destroyResourceDeferred(std::move(rec.resource));
+            rec.resource = Resource{};
+        });
+        slots_.clear();
+        byId_.clear();
+        uploading_.clear();
+
+        //slots_.forEach([this](HandleType h, Record& rec) {
+        //    destroyResourceDeferred(std::move(rec.resource));
+        //    rec.resource = Resource{};
+        //});
+        //slots_.clear();
+        //byId_.clear();
+        //uploading_.clear();
     }
 } // namespace chai

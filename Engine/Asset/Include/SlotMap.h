@@ -87,6 +87,21 @@ namespace chai
          */
         void clear();
 
+        /**
+         * @brief Iterate over the slots
+         */
+        template <typename Func>
+        void forEach(Func&& func)
+        {
+            for (std::size_t i = 0; i < slots_.size(); ++i) {
+                if (slots_[i].occupied) {
+                    HandleType h{static_cast<std::uint32_t>(i), slots_[i].generation};
+
+                    func(h, values_[i]);
+                }
+            }
+        }
+
     private:
         struct Slot {
             std::uint32_t generation = 0;

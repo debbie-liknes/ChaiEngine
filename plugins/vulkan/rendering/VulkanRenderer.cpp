@@ -37,17 +37,19 @@ namespace
 
 namespace chai::gfx
 {
-    VulkanRenderer::VulkanRenderer(chai::IWindow& window, ServiceLocator* services) : 
-        window_(window), ctx_(window), swapchain_(ctx_, [&] {
+    VulkanRenderer::VulkanRenderer(chai::IWindow& window,
+                                   std::shared_ptr<AssetCache<Mesh>> meshCache, 
+                                   VulkanContext& context)
+        : 
+        window_(window), ctx_(context),
+          swapchain_(ctx_,
+                     [&] {
               int w, h;
               window.framebufferSize(w, h);
               return VkExtent2D{uint32_t(w), uint32_t(h)};
           }()),
-          services_(services), resources_(ctx_)
+        meshCache_(meshCache)
     {
-        //setup caches for resources first
-        services_->provide<AssetCache<Mesh>>(resources_.meshCache());
-
         //init vulkan context
         init();
         CHAI_LOG_INFO("VulkanRenderer initialized");
@@ -56,10 +58,7 @@ namespace chai::gfx
     VulkanRenderer::~VulkanRenderer()
     {
         waitIdle();
-        resources_.meshCache()->release(
-            cube_);                        // or releaseAll() — drops refcount, enqueues buffers
-        resources_.graveyard().flushAll(); // force-drain now; no frames left to gate on
-                                           // ... then the rest of teardown
+
         for (int i = 0; i < kFramesInFlight; i++) {
             vkDestroyFence(ctx_.device(), frames_[i].inFlight, nullptr);
             vkDestroySemaphore(ctx_.device(), frames_[i].imageAvailable, nullptr);
@@ -71,8 +70,6 @@ namespace chai::gfx
         //dont need to destory the buffers individually. Command Pool is enough
         vkDestroyCommandPool(ctx_.device(), cmdPool_, nullptr);
 
-        //clean up caches
-        services_->remove<AssetCache<Mesh>>();
         CHAI_LOG_INFO("VulkanRenderer destroyed");
     }
 
@@ -111,7 +108,16 @@ namespace chai::gfx
 
         //////////////////////////////////////////////////////////////////////////////////////
         //we love some temporary code...as long as its actually temporary
-        cube_ = resources_.meshCache()->ingest(makeAssetId("builtin:cube"), makeCube(1.0f));
+        VkPushConstantRange pcRange{};
+        pcRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        pcRange.offset = 0;
+        pcRange.size = sizeof(Mat4);
+
+        VkPipelineLayoutCreateInfo layoutInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+        layoutInfo.pushConstantRangeCount = 1;
+        layoutInfo.pPushConstantRanges = &pcRange;
+        VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &layoutInfo, nullptr, &pipelineLayout_));
+
 
         const auto shaderDir = executableDir() / "shaders";
         VkShaderModule vert = loadShaderModule(ctx_.device(), shaderDir / "triangle.vert.spv");
@@ -120,9 +126,6 @@ namespace chai::gfx
             CHAI_LOG_CRITICAL("Triangle shaders failed to load from {}", shaderDir.string());
             return;
         }
-
-        VkPipelineLayoutCreateInfo layoutInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
-        VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &layoutInfo, nullptr, &pipelineLayout_));
 
         auto attrs = vertexAttributes();
         auto bind = vertexBinding();
@@ -140,9 +143,9 @@ namespace chai::gfx
         vkDestroyShaderModule(ctx_.device(), frag, nullptr);
     }
 
-    void VulkanRenderer::renderFrame()
+    void VulkanRenderer::renderFrame(const FrameRenderData& renderData)
     {
-        resources_.meshCache()->tick();
+        meshCache_->tick();
         if (needsResize_)
             recreateSwapchain();
 
@@ -186,7 +189,7 @@ namespace chai::gfx
 
         //DRAW
         vkCmdBeginRendering(cmd, &rendering);
-        renderScene(cmd, view);
+        renderScene(cmd, view, renderData);
         vkCmdEndRendering(cmd);
 
         //??
@@ -268,29 +271,28 @@ namespace chai::gfx
         needsResize_ = false;
     }
 
-    void VulkanRenderer::renderScene(VkCommandBuffer cmd, const RenderTargetView& view)
+    void VulkanRenderer::renderScene(VkCommandBuffer cmd,
+                                     const RenderTargetView& view,
+                                     const FrameRenderData& renderData)
     {
-        const GpuMesh* mesh =
-            resources_.meshCache()->resource(cube_);
-        if (mesh) {                                      // nullptr if not Ready
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
+
+        VkViewport viewport{0, 0, float(view.extent.width), float(view.extent.height), 0.f, 1.f};
+        vkCmdSetViewport(cmd, 0, 1, &viewport);
+        VkRect2D scissor{{0, 0}, view.extent};
+        vkCmdSetScissor(cmd, 0, 1, &scissor);
+
+        for (const RenderObject& obj : renderData.objects) {
+            const GpuMesh* mesh = meshCache_->resource(obj.mesh);
+            if (!mesh)
+                continue; // not ready, skip
+
+            Mat4 mvp = renderData.proj * renderData.view * obj.model;
+            vkCmdPushConstants(
+                cmd, pipelineLayout_, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Mat4), &mvp);
+
             VkBuffer vb = mesh->vertexBuffer.handle;
             VkDeviceSize offset = 0;
-            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
-
-            VkViewport viewport{};
-            viewport.x = 0.0f;
-            viewport.y = 0.0f;
-            viewport.width = static_cast<float>(view.extent.width);
-            viewport.height = static_cast<float>(view.extent.height);
-            viewport.minDepth = 0.0f;
-            viewport.maxDepth = 1.0f;
-            vkCmdSetViewport(cmd, 0, 1, &viewport);
-
-            VkRect2D scissor{};
-            scissor.offset = {0, 0};
-            scissor.extent = view.extent;
-            vkCmdSetScissor(cmd, 0, 1, &scissor);
-
             vkCmdBindVertexBuffers(cmd, 0, 1, &vb, &offset);
             vkCmdBindIndexBuffer(cmd, mesh->indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
             vkCmdDrawIndexed(cmd, mesh->indexCount, 1, 0, 0, 0);

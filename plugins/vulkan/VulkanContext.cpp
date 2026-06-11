@@ -47,7 +47,7 @@ namespace chai::gfx
         setupImmediate();
     }
 
-VulkanContext::~VulkanContext()
+    VulkanContext::~VulkanContext()
     {
         vkDestroyCommandPool(device_, immediatePool_, nullptr); // cmd buffer dies with it
         vkDestroyFence(device_, immediateFence_, nullptr);
