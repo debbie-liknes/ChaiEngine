@@ -7,6 +7,7 @@
 #include <vulkan/vulkan.h>
 #include "RenderTargetView.h"
 #include "VkBootstrap.h"
+#include <vk_mem_alloc.h>
 
 namespace chai::gfx
 {
@@ -46,6 +47,7 @@ namespace chai::gfx
         void recreate(VkExtent2D extent);
 
         VkFormat format() const { return format_; }
+        VkFormat depthFormat() const { return depthFormat_; }
         VkExtent2D extent() const { return extent_; }
 
     private:
@@ -60,5 +62,10 @@ namespace chai::gfx
         std::vector<VkImage> images_;
         std::vector<VkImageView> views_;
         std::vector<VkSemaphore> renderFinished_;
+
+        VkImage depthImage_;
+        VkImageView depthView_;
+        VkFormat depthFormat_;
+        VmaAllocation depthAlloc_;
     };
 } // namespace chai

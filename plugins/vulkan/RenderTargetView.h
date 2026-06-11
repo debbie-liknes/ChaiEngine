@@ -13,13 +13,15 @@ namespace chai::gfx
     struct RenderTargetView {
         VkExtent2D extent{};
 
-        VkImage image = VK_NULL_HANDLE;         // for layout barriers
+        VkImage image = VK_NULL_HANDLE;
         VkImageView colorView = VK_NULL_HANDLE; //render into this
         VkFormat colorFormat = VK_FORMAT_UNDEFINED;
-        VkClearValue clearColor{}; // loadOp = CLEAR uses this
 
-        //Later issues
-        // VkImageView depthView = VK_NULL_HANDLE;
-        // VkFormat    depthFormat = VK_FORMAT_UNDEFINED;
+        // depth
+        VkImage depthImage = VK_NULL_HANDLE;
+        VkImageView depthView = VK_NULL_HANDLE;
+        VkFormat depthFormat = VK_FORMAT_UNDEFINED;
+
+        VkClearValue clearColor{};
     };
 } // namespace chai

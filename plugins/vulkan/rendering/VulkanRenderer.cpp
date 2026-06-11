@@ -12,7 +12,7 @@
 namespace
 {
     //from vk guide but i need to understand this better tbh
-    void transitionImage(VkCommandBuffer cmd,
+    void transitionImage1(VkCommandBuffer cmd,
                          VkImage image,
                          VkImageLayout oldLayout,
                          VkImageLayout newLayout)
@@ -32,6 +32,25 @@ namespace
         dep.imageMemoryBarrierCount = 1;
         dep.pImageMemoryBarriers = &barrier;
         vkCmdPipelineBarrier2(cmd, &dep);
+    }
+
+    inline void transitionImage(VkCommandBuffer cmd,
+                         VkImage image,
+                         VkImageLayout oldLayout,
+                         VkImageLayout newLayout,
+                         VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT)
+    {
+        VkImageMemoryBarrier2 barrier{VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2};
+        barrier.srcStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
+        barrier.srcAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT;
+        barrier.dstStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
+        barrier.dstAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT | VK_ACCESS_2_MEMORY_READ_BIT;
+        barrier.oldLayout = oldLayout;
+        barrier.newLayout = newLayout;
+        barrier.image = image;
+        barrier.subresourceRange = {
+            aspect, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS};
+        // ... rest unchanged
     }
 } // namespace
 
@@ -135,7 +154,8 @@ namespace chai::gfx
                 .setShaders(vert, frag)
                 .setVertexInput({attrs.begin(), attrs.end()}, bind)
                 .setColorFormat(swapchain_.format())
-                .disableDepthTest()
+                .enableDepthTest()
+                .setDepthFormat(swapchain_.depthFormat())
                 .disableBlending()
                 .build(ctx_.device(), pipelineLayout_);
 
@@ -171,8 +191,13 @@ namespace chai::gfx
         VK_CHECK(vkBeginCommandBuffer(cmd, &begin));
 
         //??
-        transitionImage(
+        transitionImage1(
             cmd, view.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        transitionImage(cmd,
+                        view.depthImage,
+                        VK_IMAGE_LAYOUT_UNDEFINED,
+                        VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+                        VK_IMAGE_ASPECT_DEPTH_BIT);  
 
         VkRenderingAttachmentInfo color{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
         color.imageView = view.colorView;
@@ -181,11 +206,20 @@ namespace chai::gfx
         color.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         color.clearValue = view.clearColor;
 
+        VkRenderingAttachmentInfo depth{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
+        depth.imageView = view.depthView; // from RenderTargetView (plumbed through last turn)
+        depth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+        depth.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depth.storeOp =
+            VK_ATTACHMENT_STORE_OP_DONT_CARE; // depth is scratch, not needed after frame
+        depth.clearValue.depthStencil = {1.0f, 0};
+
         VkRenderingInfo rendering{VK_STRUCTURE_TYPE_RENDERING_INFO};
         rendering.renderArea = VkRect2D{{0, 0}, view.extent};
         rendering.layerCount = 1;
         rendering.colorAttachmentCount = 1;
         rendering.pColorAttachments = &color;
+        rendering.pDepthAttachment = &depth;
 
         //DRAW
         vkCmdBeginRendering(cmd, &rendering);
@@ -193,7 +227,7 @@ namespace chai::gfx
         vkCmdEndRendering(cmd);
 
         //??
-        transitionImage(cmd,
+        transitionImage1(cmd,
                         view.image,
                         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                         VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);

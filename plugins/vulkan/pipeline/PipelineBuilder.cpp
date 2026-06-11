@@ -42,6 +42,18 @@ namespace chai::gfx
         return *this;
     }
 
+    PipelineBuilder& PipelineBuilder::enableDepthTest()
+    {
+        depthTest_ = true;
+        return *this;
+    }
+
+    PipelineBuilder& PipelineBuilder::setDepthFormat(VkFormat depthFormat)
+    {
+        depthFormat_ = depthFormat;
+        return *this;
+    }
+
     PipelineBuilder& PipelineBuilder::disableBlending()
     {
         blending_ = false;
@@ -70,7 +82,6 @@ namespace chai::gfx
         stages[1].module = frag_;
         stages[1].pName = "main";
 
-        // TODO: this is hardcoded for triangle
         VkPipelineVertexInputStateCreateInfo vertexInput{
             VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
         vertexInput.vertexBindingDescriptionCount = 1;
@@ -128,6 +139,7 @@ namespace chai::gfx
             VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO};
         renderingInfo.colorAttachmentCount = 1;
         renderingInfo.pColorAttachmentFormats = &colorFormat_;
+        renderingInfo.depthAttachmentFormat = depthFormat_;
 
         VkGraphicsPipelineCreateInfo info{VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
         info.pNext = &renderingInfo;

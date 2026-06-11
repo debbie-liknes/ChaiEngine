@@ -21,7 +21,9 @@ namespace chai::gfx
         PipelineBuilder& setColorFormat(VkFormat format);
         PipelineBuilder& setVertexInput(std::vector<VkVertexInputAttributeDescription> attr,
                                         VkVertexInputBindingDescription bind);
+        PipelineBuilder& setDepthFormat(VkFormat depthFormat);
         PipelineBuilder& disableDepthTest();
+        PipelineBuilder& enableDepthTest();
         PipelineBuilder& disableBlending();
 
         /**
@@ -41,5 +43,6 @@ namespace chai::gfx
         VkVertexInputBindingDescription bind_;
         bool depthTest_ = false;
         bool blending_ = false;
+        VkFormat depthFormat_;
     };
 } // namespace chai

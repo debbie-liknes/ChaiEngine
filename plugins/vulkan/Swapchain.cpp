@@ -4,7 +4,8 @@
 
 namespace chai::gfx
 {
-    Swapchain::Swapchain(VulkanContext& ctx, VkExtent2D extent) : ctx_(ctx)
+    Swapchain::Swapchain(VulkanContext& ctx, VkExtent2D extent)
+        : ctx_(ctx), depthFormat_(VK_FORMAT_D32_SFLOAT)
     {
         build(extent);
     }
@@ -37,6 +38,30 @@ namespace chai::gfx
         images_ = vkbSwapchain_.get_images().value();
         views_ = vkbSwapchain_.get_image_views().value();
 
+        // depth
+        VkImageCreateInfo imgInfo{VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
+        imgInfo.imageType = VK_IMAGE_TYPE_2D;
+        imgInfo.format = depthFormat_;
+        imgInfo.extent = {extent_.width, extent_.height, 1};
+        imgInfo.mipLevels = 1;
+        imgInfo.arrayLayers = 1;
+        imgInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imgInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+        imgInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+        VmaAllocationCreateInfo allocCI{};
+        allocCI.usage = VMA_MEMORY_USAGE_AUTO;
+        allocCI.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+        VK_CHECK(vmaCreateImage(
+            ctx_.allocator(), &imgInfo, &allocCI, &depthImage_, &depthAlloc_, nullptr));
+
+        VkImageViewCreateInfo viewInfo{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+        viewInfo.image = depthImage_;
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        viewInfo.format = depthFormat_;
+        viewInfo.subresourceRange = {VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1};
+        VK_CHECK(vkCreateImageView(ctx_.device(), &viewInfo, nullptr, &depthView_));
+
         VkSemaphoreCreateInfo semInfo{VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
         renderFinished_.resize(images_.size());
         for (auto& s : renderFinished_)
@@ -48,6 +73,11 @@ namespace chai::gfx
         for (auto s : renderFinished_)
             vkDestroySemaphore(ctx_.device(), s, nullptr);
         renderFinished_.clear();
+
+        vkDestroyImageView(ctx_.device(), depthView_, nullptr);
+        vmaDestroyImage(ctx_.allocator(), depthImage_, depthAlloc_);
+        depthView_ = VK_NULL_HANDLE;
+        depthImage_ = VK_NULL_HANDLE;
 
         for (auto view : views_)
             vkDestroyImageView(ctx_.device(), view, nullptr);
@@ -74,6 +104,9 @@ namespace chai::gfx
             .image = images_[outImageIndex],
             .colorView = views_[outImageIndex],
             .colorFormat = format_,
+            .depthImage = depthImage_,
+            .depthView = depthView_,
+            .depthFormat = depthFormat_,
             .clearColor = {}
         };
         return true;
