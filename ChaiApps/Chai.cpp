@@ -75,6 +75,7 @@ int main()
         math::Mat4 model = q.toMat4();
 
         frame.objects.emplace_back(cube, model);
+        //end temp
 
         renderer->renderFrame(frame);
         engine.tick();
