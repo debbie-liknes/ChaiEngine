@@ -4,6 +4,7 @@
 #include <Components/ComponentBase.h>
 #include <FrameRenderData.h>
 #include <MeshAsset.h>
+#include <Loaders/ImageLoader.h>
 
 namespace chai::scene
 {
@@ -16,9 +17,11 @@ namespace chai::scene
         void extract(gfx::FrameRenderData& frame) const override;
 
         void setMesh(Handle<gfx::Mesh> m) { mesh_ = m; }
+        void setTexture(Handle<Texture> t) { texture_ = t; }
 
     private:
         Handle<gfx::Mesh> mesh_;
+        Handle<Texture> texture_;
         math::Vec4 color_{1, 0, 1, 1};
     };
 }

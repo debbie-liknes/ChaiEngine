@@ -12,11 +12,13 @@
 #include <Window/Window.h>
 #include <CameraData.h>
 #include "../ImageTransition.h"
+#include "../TextureFactory.h"
 
 namespace chai::gfx
 {
     VulkanRenderer::VulkanRenderer(chai::IWindow& window,
                                    std::shared_ptr<AssetCache<Mesh>> meshCache,
+                                   std::shared_ptr<AssetCache<Texture>> texCache,
                                    VulkanContext& context)
         : window_(window), ctx_(context),
           swapchain_(ctx_,
@@ -25,7 +27,7 @@ namespace chai::gfx
                          window.framebufferSize(w, h);
                          return VkExtent2D{uint32_t(w), uint32_t(h)};
                      }()),
-          meshCache_(meshCache)
+          meshCache_(meshCache), texCache_(texCache)
     {
         // init vulkan context
         init();
@@ -333,6 +335,18 @@ namespace chai::gfx
                     const GpuMesh* mesh = meshCache_->resource(item.mesh);
                     if (!mesh)
                         continue; // not ready, skip
+
+                    const GpuTexture* tex = texCache_->resource(item.texture);
+                    //if (!tex)
+                    //    tex = defaultWhite_;
+                    vkCmdBindDescriptorSets(cmd,
+                                            VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                            pipelineLayout_,
+                                            1,
+                                            1,
+                                            &tex->set,
+                                            0,
+                                            nullptr);
 
                     PushConstants consts;
                     consts.model = item.model;

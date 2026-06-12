@@ -78,6 +78,7 @@ int main()
         CHAI_LOG_ERROR("Could not find Texture Registry");
     }
     auto image = textures->load(makeAssetId("tex:crate"), assetDir() / "tardis.png");
+    meshComp->setTexture(image);
 
     //main loop
     while (!win->shouldClose()) {

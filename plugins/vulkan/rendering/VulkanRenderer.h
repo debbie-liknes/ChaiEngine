@@ -28,6 +28,7 @@ namespace chai::gfx
     public:
         VulkanRenderer(chai::IWindow& window,
                        std::shared_ptr<AssetCache<Mesh>> meshCache,
+                       std::shared_ptr<AssetCache<Texture>> texCache,
                        VulkanContext& context);
         ~VulkanRenderer() override;
 
@@ -81,6 +82,7 @@ namespace chai::gfx
 
         //Resources
         std::shared_ptr<AssetCache<Mesh>> meshCache_;
+        std::shared_ptr<AssetCache<Texture>> texCache_;
     };
 
     //dont leave this here forever

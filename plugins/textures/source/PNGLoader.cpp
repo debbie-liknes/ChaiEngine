@@ -20,6 +20,7 @@ namespace chai
             return std::nullopt;
         }
 
+        stbi_set_flip_vertically_on_load(true);
         int w = 0, h = 0, srcChannels = 0;
         stbi_uc* decoded = stbi_load_from_memory(
             bytes.data(), static_cast<int>(bytes.size()), &w, &h, &srcChannels, STBI_rgb_alpha);

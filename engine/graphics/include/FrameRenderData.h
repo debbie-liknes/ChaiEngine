@@ -5,6 +5,11 @@
 #include <ChaiMath.h>
 #include <Handle.h>
 
+namespace chai
+{
+    struct Texture;
+}
+
 namespace chai::gfx
 {
     struct Mesh;
@@ -19,6 +24,7 @@ namespace chai::gfx
         math::Mat4 model;
         //this will be material someday
         math::Vec4 color;
+        Handle<Texture> texture;
     };
 
     //This represents ONE world view
