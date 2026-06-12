@@ -64,10 +64,17 @@ int main()
     auto cubeObj = std::make_shared<scene::GameObject>();
     auto meshComp = cubeObj->addComponent<scene::MeshComponent>();
     Handle<gfx::Mesh> cube = registry->ingest(makeAssetId("builtin:cube"), gfx::makeCube(1.0f));
-    if (!cube.valid()) {
-        CHAI_LOG_ERROR("Cube is invalid");
-    }
     meshComp->setMesh(cube);
+    auto cubeTrans = cubeObj->getComponent<scene::TransformComponent>();
+    cubeTrans->setPosition(math::Vec3{1, 0, 0});
+    
+    auto cubeObj2 = std::make_shared<scene::GameObject>();
+    auto meshComp2 = cubeObj2->addComponent<scene::MeshComponent>();
+    Handle<gfx::Mesh> cube2 = registry->ingest(makeAssetId("builtin:cube2"), gfx::makeCube(1.0f));
+    meshComp2->setMesh(cube);
+    auto cubeTrans2 = cubeObj2->getComponent<scene::TransformComponent>();
+    cubeTrans2->setPosition(math::Vec3{-1, 0, 0});
+
 
     auto cameraObj = std::make_shared<scene::GameObject>();
     auto camComp = cameraObj->addComponent<scene::CameraComponent>();
@@ -81,6 +88,8 @@ int main()
     }
     auto image = textures->load(makeAssetId("tex:crate"), assetDir() / "tardis.png");
     meshComp->setTexture(image);
+    meshComp2->setTexture(image);
+    meshComp2->setMaterial(1);
 
     //main loop
     while (!win->shouldClose()) {
@@ -97,6 +106,7 @@ int main()
         math::Quaternion q = math::Quat::fromAxisAngle(math::Vec3{0, 1, 0}, angle);
         //keep the cube spinning
         cubeObj->getComponent<scene::TransformComponent>()->setRotation(q);
+        cubeObj2->getComponent<scene::TransformComponent>()->setRotation(q);
 
         //a scene should probably store these things, unsure how updating the camera would actually work. A controller?
         camComp->setAspectRatio(aspect);
@@ -107,9 +117,11 @@ int main()
 
         cameraObj->update(time);
         cubeObj->update(time);
+        cubeObj2->update(time);
 
         gfx::FrameRenderData frame;
         cubeObj->extract(frame);
+        cubeObj2->extract(frame);
         camComp->extract(frame);   
         //end temp
 

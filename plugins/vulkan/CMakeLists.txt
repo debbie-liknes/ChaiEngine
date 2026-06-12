@@ -15,6 +15,7 @@ set(${PROJECT_NAME}_headers
         TextureFactory.h
         ImageTransition.h
         VkUtils.h
+        Material.h
 )
 
 set(${PROJECT_NAME}_source

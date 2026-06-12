@@ -21,6 +21,7 @@ namespace chai::gfx
         //this will be material someday
         math::Vec4 color;
         Handle<Texture> texture;
+        uint32_t materialId = 0;
     };
 
     //This represents ONE world view

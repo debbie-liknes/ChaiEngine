@@ -18,6 +18,6 @@ namespace chai::scene
     { 
         auto const* t = getGameObject()->getComponent<TransformComponent>();
         const math::Mat4 model = t ? t->getWorldMatrix() : math::Mat4::identity();
-        frame.items.emplace_back(mesh_, model, color_, texture_);
+        frame.items.emplace_back(mesh_, model, color_, texture_, materialId_);
     }
 }

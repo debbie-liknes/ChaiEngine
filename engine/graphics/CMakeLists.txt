@@ -1,6 +1,7 @@
 project(Graphics)
 
 set(${PROJECT_NAME}_headers
+        include/Assets/DefaultTextures.h
         include/Assets/IMeshRegistry.h
         include/Assets/ITextureRegistry.h
         include/Assets/MeshAsset.h
@@ -18,6 +19,7 @@ set(${PROJECT_NAME}_headers
 
 set(${PROJECT_NAME}_source
         source/PrimitiveMeshes.cpp
+        source/DefaultTextures.cpp
 )
 
 add_library(${PROJECT_NAME}

@@ -12,6 +12,7 @@
 #include <array>
 #include <cstdint>
 #include "../GpuResources.h"
+#include "../Material.h"
 
 namespace chai
 {
@@ -66,6 +67,7 @@ namespace chai::gfx
                          const FrameRenderData& renderData);
         VkFenceCreateInfo fenceCreate(VkFenceCreateFlags flags = 0);
         VkSemaphoreCreateInfo semaphoreCreate(VkSemaphoreCreateFlags flags = 0);
+        void setupMaterials();
 
         chai::IWindow& window_;
         VulkanContext& ctx_;
@@ -76,13 +78,13 @@ namespace chai::gfx
         uint32_t currentFrame_ = 0;
         bool needsResize_ = false;
 
-        //Porbably dont want this long term, just for hello triangle (vulkan edition!!)
-        VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
-        VkPipeline pipeline_ = VK_NULL_HANDLE;
-
         //Resources
         std::shared_ptr<AssetCache<Mesh>> meshCache_;
         std::shared_ptr<AssetCache<Texture>> texCache_;
+
+        //The worlds simplest material system
+        std::vector<Material> materials_;
+        Handle<Texture> defaultWhite_;
     };
 
     //dont leave this here forever
