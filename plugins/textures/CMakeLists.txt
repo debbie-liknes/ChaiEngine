@@ -1,11 +1,12 @@
 # Add source to this project's executable.
 
 set(Loader_headers
-        include/Loader/PNGLoader.h
+        include/PNGLoader.h
 )
 
 set(Loader_source
-        source/Loader/PNGLoader.cpp
+        source/PNGLoader.cpp
+        source/TextureLoaderPlugin.cpp
 )
 
 add_library(TextureLoader SHARED
@@ -14,6 +15,6 @@ add_library(TextureLoader SHARED
 )
 
 target_include_directories(TextureLoader PUBLIC include)
-target_link_libraries(TextureLoader PUBLIC Core ChaiGraphics)
+target_link_libraries(TextureLoader PUBLIC Core)
 
-ChaiPluginDefaults(TextureLoader "Core/Plugins")
+ChaiPluginDefaults(TextureLoader "Plugins")

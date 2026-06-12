@@ -9,6 +9,7 @@
 #include <AssetCache.h>
 #include <VkBootstrap.h>
 #include "core/VkCheck.h"
+#include "VkUtils.h"
 
 namespace chai::gfx
 {
@@ -53,37 +54,11 @@ namespace chai::gfx
             return out.isValid();
         }
 
-        void immediateSubmit(VulkanContext& ctx, std::function<void(VkCommandBuffer)>&& fn)
-        {
-            const VkFence fence = ctx.immediateFence();
-            const VkCommandBuffer cmd = ctx.immediateCmd();
-
-            VK_CHECK(vkResetFences(ctx.device(), 1, &fence));
-            VK_CHECK(vkResetCommandBuffer(cmd, 0));
-
-            VkCommandBufferBeginInfo begin{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
-            begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-            VK_CHECK(vkBeginCommandBuffer(cmd, &begin));
-
-            fn(cmd); // caller's commands
-
-            VK_CHECK(vkEndCommandBuffer(cmd));
-
-            VkSubmitInfo submit{VK_STRUCTURE_TYPE_SUBMIT_INFO};
-            submit.commandBufferCount = 1;
-            submit.pCommandBuffers = &cmd;
-
-            // Submit to the graphics queue for now
-            //TODO: transfer queue?
-            VK_CHECK(vkQueueSubmit(ctx.graphicsQueue(), 1, &submit, fence));
-            VK_CHECK(vkWaitForFences(ctx.device(), 1, &fence, VK_TRUE, UINT64_MAX)); // <-- the block
-        }
-
         LoadState createResource(const MeshAsset& asset, GpuMesh& out) override
         {
             if (!asset.isValid()) {
                 CHAI_LOG_ERROR("Mesh asset is invalid. Could not create Mesh Resource.");
-                return {};
+                return LoadState::Failed;
             }
 
             const VkDeviceSize vbSize = asset.vertices.size() * sizeof(Vertex);
@@ -113,7 +88,7 @@ namespace chai::gfx
                 destroyBufferImmediate(allocator_, out.vertexBuffer);
                 destroyBufferImmediate(allocator_, out.indexBuffer);
                 destroyBufferImmediate(allocator_, staging);
-                return {};
+                return LoadState::Failed;
             }
 
             auto* base = static_cast<std::byte*>(staging.info.pMappedData);
@@ -167,7 +142,7 @@ namespace chai::gfx
         }
         void release(Handle<Mesh> h) override
         {
-            cache_->release(h); // forward
+            cache_->release(h);
         }
 
         Handle<Mesh> load(AssetId) override

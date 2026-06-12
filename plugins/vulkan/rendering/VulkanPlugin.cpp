@@ -10,6 +10,7 @@
 #include <memory>
 #include "VulkanRenderer.h"
 #include "../Mesh.h"
+#include "../TextureFactory.h"
 
 namespace chai::gfx
 {
@@ -32,15 +33,20 @@ namespace chai::gfx
                 std::make_shared<MeshRegistry>(resources_->factory(), resources_->graveyard());
             renderer_ =
                 std::make_shared<VulkanRenderer>(*window, meshRegistry_->cache(), *vulkCtx_);
+            texFactory_ = std::make_shared<TextureFactory>(vulkCtx_.get());
+            texRegistry_ = std::make_shared<TextureRegistry>(
+                *texFactory_, resources_->graveyard(), &ctx.services);
+
 
             //register services, but make sure to UN-register them on unload
             ctx.services.provide<AssetCache<Mesh>>(meshRegistry_->cache());
             ctx.services.provide<IRenderer>(renderer_);
             ctx.services.provide<IMeshRegistry>(meshRegistry_);
             ctx.services.provide<IRenderDevice>(vulkCtx_);
+            ctx.services.provide<ITextureRegistry>(texRegistry_);
+            ctx.services.provide<TextureFactory>(texFactory_);
 
             CHAI_LOG_INFO("Renderer service provided");
-
         }
 
         void onUnload(PluginContext& ctx) override
@@ -49,16 +55,22 @@ namespace chai::gfx
                 renderer_->waitIdle(); // probably unnecessary here
 
             //remove services
-            ctx.services.remove<IRenderer>();
-            ctx.services.remove<IMeshRegistry>();
-            ctx.services.remove<AssetCache<Mesh>>();
+            ctx.services.remove<TextureFactory>();
+            ctx.services.remove<ITextureRegistry>();
             ctx.services.remove<IRenderDevice>();
+            ctx.services.remove<IMeshRegistry>();
+            ctx.services.remove<IRenderer>();
+            ctx.services.remove<AssetCache<Mesh>>();
 
             //release all our resources and pointers
             meshRegistry_->cache()->releaseAll();
+            texRegistry_->cache()->releaseAll();
+
             renderer_.reset();
             resources_.reset();
             meshRegistry_.reset();
+            texRegistry_.reset();
+            texFactory_.reset();
             vulkCtx_.reset();
 
             CHAI_LOG_INFO("Renderer removed");
@@ -69,6 +81,8 @@ namespace chai::gfx
         std::shared_ptr<GpuResources> resources_;
         std::shared_ptr<VulkanRenderer> renderer_;
         std::shared_ptr<MeshRegistry> meshRegistry_;
+        std::shared_ptr<TextureFactory> texFactory_;
+        std::shared_ptr<TextureRegistry> texRegistry_;
     };
 
     CHAI_PLUGIN(VulkanPlugin);

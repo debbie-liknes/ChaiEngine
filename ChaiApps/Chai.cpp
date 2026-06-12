@@ -11,6 +11,12 @@
 #include <Components/MeshComponent.h>
 #include <Components/CameraComponent.h>
 #include <Components/TransformComponent.h>
+#include <Loaders/ImageLoader.h>
+
+std::filesystem::path assetDir()
+{
+    return CHAI_ASSET_DIR;
+}
 
 int main()
 {
@@ -56,6 +62,9 @@ int main()
     auto cubeObj = std::make_shared<scene::GameObject>();
     auto meshComp = cubeObj->addComponent<scene::MeshComponent>();
     Handle<gfx::Mesh> cube = registry->ingest(makeAssetId("builtin:cube"), gfx::makeCube(1.0f));
+    if (!cube.valid()) {
+        CHAI_LOG_ERROR("Cube is invalid");
+    }
     meshComp->setMesh(cube);
 
     auto cameraObj = std::make_shared<scene::GameObject>();
@@ -64,10 +73,11 @@ int main()
     auto camTrans = cameraObj->getComponent<scene::TransformComponent>();
     camTrans->setPosition(math::Vec3{0, 0, 3});
 
-    if (!cube.valid())
-    {
-        CHAI_LOG_ERROR("Cube is invalid");
+    auto textures = engine.services().tryResolve<ITextureRegistry>();
+    if (!textures) {
+        CHAI_LOG_ERROR("Could not find Texture Registry");
     }
+    auto image = textures->load(makeAssetId("tex:crate"), assetDir() / "tardis.png");
 
     //main loop
     while (!win->shouldClose()) {

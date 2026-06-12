@@ -180,7 +180,7 @@ namespace chai::gfx
         //i will outgrow this budget. Will need a pool of pools
         VkDescriptorPoolSize poolSizes[] = {
             {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 16},    //16 ubos
-            {VK_DESCRIPTOR_TYPE_SAMPLER, 64}            //64 textures
+            {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 64} // 64 textures
         };
 
         VkDescriptorPoolCreateInfo poolInfo{VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};

@@ -12,6 +12,9 @@ set(${PROJECT_NAME}_headers
         Buffer.h
         Mesh.h
         GpuResources.h
+        TextureFactory.h
+        ImageTransition.h
+        VkUtils.h
 )
 
 set(${PROJECT_NAME}_source
@@ -23,6 +26,7 @@ set(${PROJECT_NAME}_source
         VulkanContext.cpp
         VulkanMemoryAllocator.cpp
         Buffer.cpp
+        ImageTransition.cpp
 )
 
 include(FetchContent)

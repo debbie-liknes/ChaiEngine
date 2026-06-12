@@ -11,50 +11,7 @@
 #include <SystemPaths.h>
 #include <Window/Window.h>
 #include <CameraData.h>
-
-namespace
-{
-    // from vk guide but i need to understand this better tbh
-    void transitionImage1(VkCommandBuffer cmd,
-                          VkImage image,
-                          VkImageLayout oldLayout,
-                          VkImageLayout newLayout)
-    {
-        VkImageMemoryBarrier2 barrier{VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2};
-        barrier.srcStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
-        barrier.srcAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT;
-        barrier.dstStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
-        barrier.dstAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT | VK_ACCESS_2_MEMORY_READ_BIT;
-        barrier.oldLayout = oldLayout;
-        barrier.newLayout = newLayout;
-        barrier.image = image;
-        barrier.subresourceRange = VkImageSubresourceRange{
-            VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS};
-
-        VkDependencyInfo dep{VK_STRUCTURE_TYPE_DEPENDENCY_INFO};
-        dep.imageMemoryBarrierCount = 1;
-        dep.pImageMemoryBarriers = &barrier;
-        vkCmdPipelineBarrier2(cmd, &dep);
-    }
-
-    inline void transitionImage(VkCommandBuffer cmd,
-                                VkImage image,
-                                VkImageLayout oldLayout,
-                                VkImageLayout newLayout,
-                                VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT)
-    {
-        VkImageMemoryBarrier2 barrier{VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2};
-        barrier.srcStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
-        barrier.srcAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT;
-        barrier.dstStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
-        barrier.dstAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT | VK_ACCESS_2_MEMORY_READ_BIT;
-        barrier.oldLayout = oldLayout;
-        barrier.newLayout = newLayout;
-        barrier.image = image;
-        barrier.subresourceRange = {
-            aspect, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS};
-    }
-} // namespace
+#include "../ImageTransition.h"
 
 namespace chai::gfx
 {
@@ -240,14 +197,11 @@ namespace chai::gfx
         begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         VK_CHECK(vkBeginCommandBuffer(cmd, &begin));
 
-        //??
-        transitionImage1(
-            cmd, view.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        transitionImage(cmd, view.image, ImageState::Undefined, ImageState::ColorAttachment);
         transitionImage(cmd,
                         view.depthImage,
-                        VK_IMAGE_LAYOUT_UNDEFINED,
-                        VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-                        VK_IMAGE_ASPECT_DEPTH_BIT);
+                        ImageState::Undefined,
+                        ImageState::DepthAttachment);
 
         VkRenderingAttachmentInfo color{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
         color.imageView = view.colorView;
@@ -276,11 +230,7 @@ namespace chai::gfx
         renderScene(cmd, view, renderData);
         vkCmdEndRendering(cmd);
 
-        //??
-        transitionImage1(cmd,
-                         view.image,
-                         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                         VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+        transitionImage(cmd, view.image, ImageState::ColorAttachment, ImageState::Present);
 
         VK_CHECK(vkEndCommandBuffer(cmd));
 

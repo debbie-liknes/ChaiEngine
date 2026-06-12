@@ -9,17 +9,21 @@ set(${PROJECT_NAME}_headers
         include/Plugin/ServiceLocator.h
 	    include/Window/Window.h
 	    include/Window/WindowTypes.h
+	    include/Loaders/ImageLoader.h
         include/Engine.h
         include/SystemPaths.h
         include/Updatable.h
+        include/FileIO.h
 )
 
 set(${PROJECT_NAME}_source
+        source/Loaders/ImageLoader.cpp
         source/Plugin/DynamicLibrary.cpp
         source/Plugin/PluginLoader.cpp
         source/Plugin/ServiceLocator.cpp
         source/Engine.cpp
         source/SystemPaths.cpp
+        source/FileIO.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC
@@ -28,7 +32,7 @@ add_library(${PROJECT_NAME} STATIC
 )
 
 target_include_directories(Core PUBLIC ${CMAKE_BINARY_DIR}/exports/Core include)
-target_link_libraries(Core PUBLIC TypeReflection Logger)
+target_link_libraries(Core PUBLIC TypeReflection Logger Asset)
 
 add_subdirectory(tests)
 
