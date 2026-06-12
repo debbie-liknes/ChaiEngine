@@ -5,14 +5,10 @@
 #include <ChaiMath.h>
 #include <Handle.h>
 
-namespace chai
-{
-    struct Texture;
-}
-
 namespace chai::gfx
 {
     struct Mesh;
+    struct Texture;
 
     struct RenderView { // one per camera/view
         math::Mat4 view, proj, viewProj;

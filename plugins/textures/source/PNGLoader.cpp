@@ -10,7 +10,7 @@ namespace chai
         return ext == "png";
     }
 
-    std::optional<TextureAsset> PNGLoader::decode(std::span<const uint8_t> bytes) const
+    std::optional<gfx::TextureAsset> PNGLoader::decode(std::span<const uint8_t> bytes) const
     {
         if (bytes.empty())
             return std::nullopt;
@@ -30,7 +30,7 @@ namespace chai
             return std::nullopt;
         }
 
-        TextureAsset out;
+        gfx::TextureAsset out;
         out.width = static_cast<uint32_t>(w);
         out.height = static_cast<uint32_t>(h);
         out.channels = 4; 

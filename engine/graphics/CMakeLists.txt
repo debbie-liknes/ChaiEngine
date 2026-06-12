@@ -1,19 +1,23 @@
 project(Graphics)
 
 set(${PROJECT_NAME}_headers
-        include/Renderer.h
-        include/Vertex.h
-        include/MeshAsset.h
-        include/FrameRenderData.h
-        include/Primitives.h
-        include/GraphicsEnums.h
-        include/GraphicsMacros.h
-        include/CameraData.h
-        include/Descriptors.h
+        include/Assets/IMeshRegistry.h
+        include/Assets/ITextureRegistry.h
+        include/Assets/MeshAsset.h
+        include/Assets/PrimitiveMeshes.h
+        include/Assets/TextureAsset.h
+        include/Assets/TextureFormat.h
+        include/Common/GraphicsEnums.h
+        include/Common/GraphicsMacros.h
+        include/Geometry/Vertex.h
+        include/Loaders/ITextureLoader.h
+        include/Rendering/IRenderer.h
+        include/Rendering/FrameRenderData.h
+        include/Rendering/CameraData.h
 )
 
 set(${PROJECT_NAME}_source
-        source/Primitives.cpp
+        source/PrimitiveMeshes.cpp
 )
 
 add_library(${PROJECT_NAME}
@@ -24,5 +28,4 @@ add_library(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(${PROJECT_NAME} PUBLIC ChaiMath Asset)
 
-#ChaiLibDefaults(${PROJECT_NAME} "Engine")
-set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Engine")
+ChaiLibDefaults(${PROJECT_NAME} "Engine")

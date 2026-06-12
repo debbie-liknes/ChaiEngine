@@ -2,7 +2,7 @@
  * @file VulkanRenderer.h
  */
 #pragma once
-#include <Renderer.h>
+#include <Rendering/IRenderer.h>
 #include "../VulkanContext.h"
 #include "../Swapchain.h"
 #include "../RenderTargetView.h"

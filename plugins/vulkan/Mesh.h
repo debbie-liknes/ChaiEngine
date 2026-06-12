@@ -3,9 +3,10 @@
  */
 #pragma once
 #include "Buffer.h"
-#include <Renderer.h>
+#include <Rendering/IRenderer.h>
 #include <ResourceFactory.h>
-#include <MeshAsset.h>
+#include <Assets/MeshAsset.h>
+#include <Assets/IMeshRegistry.h>
 #include <AssetCache.h>
 #include <VkBootstrap.h>
 #include "core/VkCheck.h"

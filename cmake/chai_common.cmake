@@ -1,3 +1,12 @@
+function(chai_source_groups target)
+    get_target_property(target_sources ${target} SOURCES)
+
+    source_group(
+        TREE "${CMAKE_CURRENT_SOURCE_DIR}"
+        FILES ${target_sources}
+    )
+endfunction()
+
 function(ChaiLibDefaults target_name optional_path)
     #generate the shared lib header export
     include(GenerateExportHeader)
@@ -10,6 +19,8 @@ function(ChaiLibDefaults target_name optional_path)
     if (optional_path)
         set_target_properties(${target_name} PROPERTIES FOLDER ${optional_path})
     endif ()
+
+    chai_source_groups(${target_name})
 endfunction()
 
 function(ChaiPluginDefaults target_name optional_path)

@@ -4,14 +4,16 @@
 #include <Window/Window.h>
 #include <Plugin/PluginLoader.h>
 #include <SystemPaths.h>
-#include <Renderer.h>
-#include <Primitives.h>
-#include <MeshAsset.h>
+#include <Rendering/IRenderer.h>
+#include <Assets/PrimitiveMeshes.h>
+#include <Assets/MeshAsset.h>
+#include <Assets/IMeshRegistry.h>
 #include <Scene/GameObject.h>
 #include <Components/MeshComponent.h>
 #include <Components/CameraComponent.h>
 #include <Components/TransformComponent.h>
-#include <Loaders/ImageLoader.h>
+#include <Loaders/ITextureLoader.h>
+#include <Assets/ITextureRegistry.h>
 
 std::filesystem::path assetDir()
 {
@@ -73,7 +75,7 @@ int main()
     auto camTrans = cameraObj->getComponent<scene::TransformComponent>();
     camTrans->setPosition(math::Vec3{0, 0, 3});
 
-    auto textures = engine.services().tryResolve<ITextureRegistry>();
+    auto textures = engine.services().tryResolve<gfx::ITextureRegistry>();
     if (!textures) {
         CHAI_LOG_ERROR("Could not find Texture Registry");
     }

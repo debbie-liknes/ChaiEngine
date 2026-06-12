@@ -11,6 +11,8 @@
 #include "VulkanRenderer.h"
 #include "../Mesh.h"
 #include "../TextureFactory.h"
+#include <Assets/IMeshRegistry.h>
+#include <Assets/ITextureRegistry.h>
 
 namespace chai::gfx
 {

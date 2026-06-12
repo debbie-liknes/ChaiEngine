@@ -19,14 +19,14 @@ namespace chai
         void onLoad(PluginContext& ctx) override
         {
             // register services, but make sure to UN-register them on unload
-            ctx.services.provide<ITextureLoader>(std::make_shared<PNGLoader>());
+            ctx.services.provide<gfx::ITextureLoader>(std::make_shared<PNGLoader>());
 
             CHAI_LOG_INFO("Texture Plugin loaded");
         }
 
         void onUnload(PluginContext& ctx) override
         {
-            ctx.services.remove<ITextureLoader>();
+            ctx.services.remove<gfx::ITextureLoader>();
             CHAI_LOG_INFO("Texture Plugin removed");
         }
 

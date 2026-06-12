@@ -1,10 +1,9 @@
 #pragma once
 #include <SceneExport.h>
-#include <MeshAsset.h>
+#include <Assets/MeshAsset.h>
 #include <Components/ComponentBase.h>
-#include <FrameRenderData.h>
-#include <MeshAsset.h>
-#include <Loaders/ImageLoader.h>
+#include <Rendering/FrameRenderData.h>
+#include <Loaders/ITextureLoader.h>
 
 namespace chai::scene
 {
@@ -17,11 +16,11 @@ namespace chai::scene
         void extract(gfx::FrameRenderData& frame) const override;
 
         void setMesh(Handle<gfx::Mesh> m) { mesh_ = m; }
-        void setTexture(Handle<Texture> t) { texture_ = t; }
+        void setTexture(Handle<gfx::Texture> t) { texture_ = t; }
 
     private:
         Handle<gfx::Mesh> mesh_;
-        Handle<Texture> texture_;
+        Handle<gfx::Texture> texture_;
         math::Vec4 color_{1, 0, 1, 1};
     };
 }

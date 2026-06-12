@@ -1,5 +1,6 @@
 #pragma once
-#include <Loaders/ImageLoader.h>
+#include <Assets/ITextureRegistry.h>
+#include <Assets/TextureAsset.h>
 #include "Buffer.h"
 #include <AssetCache.h>
 #include "VulkanContext.h"
@@ -24,8 +25,8 @@ namespace chai::gfx
 namespace chai
 {
     template <>
-    struct AssetTraits<Texture> {
-        using Asset = TextureAsset;
+    struct AssetTraits<gfx::Texture> {
+        using Asset = gfx::TextureAsset;
         using Resource = gfx::GpuTexture;
     };
 } // namespace chai
@@ -39,9 +40,9 @@ namespace chai::gfx
         {
         }
 
-        bool loadAsset(AssetId id, TextureAsset& out) override { return out.isValid(); }
+        bool loadAsset(AssetId id, gfx::TextureAsset& out) override { return out.isValid(); }
 
-        LoadState createResource(const TextureAsset& asset, GpuTexture& out) override
+        LoadState createResource(const gfx::TextureAsset& asset, gfx::GpuTexture& out) override
         {
             if (!asset.isValid()) {
                 CHAI_LOG_ERROR("Texture asset is invalid. Could not create Texture Resource.");
@@ -184,7 +185,7 @@ namespace chai::gfx
             return LoadState::Ready;
         }
 
-        void destroyResource(GpuTexture& res) noexcept override
+        void destroyResource(gfx::GpuTexture& res) noexcept override
         {
             VkDevice device = ctx_->device();
             if (res.sampler)

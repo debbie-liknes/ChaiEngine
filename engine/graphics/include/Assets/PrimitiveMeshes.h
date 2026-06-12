@@ -3,7 +3,7 @@
  * @brief Create MeshAssets for common primitive types
  */
 #pragma once
-#include <MeshAsset.h>
+#include <Assets/MeshAsset.h>
 
 namespace chai::gfx
 {

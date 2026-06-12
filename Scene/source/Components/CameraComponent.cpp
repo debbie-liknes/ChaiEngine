@@ -1,7 +1,7 @@
 #include <Components/CameraComponent.h>
 #include <Scene/GameObject.h>
 #include <Components/TransformComponent.h>
-#include <FrameRenderData.h>
+#include <Rendering/FrameRenderData.h>
 
 namespace chai::scene
 {

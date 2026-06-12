@@ -3,7 +3,7 @@
  */
 #pragma once
 #include <vector>
-#include <Vertex.h>
+#include <Geometry/Vertex.h>
 #include <Handle.h>
 #include <AssetCache.h>
 
@@ -33,19 +33,5 @@ namespace chai::gfx
                     return false;
             return true;
         }
-    };
-
-    /**
-     * @brief Registries know how to create resources from assets.
-     * Intended to be implemented in renderer plugin
-     */
-    class IMeshRegistry
-    {
-    public:
-        virtual ~IMeshRegistry() = default;
-
-        virtual Handle<Mesh> ingest(AssetId, MeshAsset) = 0;
-        virtual Handle<Mesh> load(AssetId) = 0;
-        virtual void release(Handle<Mesh>) = 0;
     };
 }

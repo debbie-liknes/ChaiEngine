@@ -4,7 +4,7 @@
  */
 #pragma once
 #include <Handle.h>
-#include <FrameRenderData.h>
+#include <Rendering/FrameRenderData.h>
 
 namespace chai
 {

@@ -6,11 +6,10 @@
 
 #include <AssetCache.h>
 #include <Log.h>
-#include <MeshAsset.h>
-#include <Primitives.h>
+#include <Assets/MeshAsset.h>
 #include <SystemPaths.h>
 #include <Window/Window.h>
-#include <CameraData.h>
+#include <Rendering/CameraData.h>
 #include "../ImageTransition.h"
 #include "../TextureFactory.h"
 

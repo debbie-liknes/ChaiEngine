@@ -1,4 +1,4 @@
-#include <Primitives.h>
+#include <Assets/PrimitiveMeshes.h>
 
 namespace chai::gfx
 {

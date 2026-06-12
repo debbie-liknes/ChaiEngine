@@ -1,6 +1,6 @@
 #pragma once
 #include <ChaiMath.h>
-#include <GraphicsMacros.h>
+#include <Common/GraphicsMacros.h>
 
 namespace chai::gfx
 {
