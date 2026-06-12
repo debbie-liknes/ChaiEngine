@@ -43,6 +43,7 @@ namespace chai::gfx
 
         for (int i = 0; i < kFramesInFlight; i++) {
             vmaDestroyBuffer(ctx_.allocator(), frames_[i].cameraBuffer, frames_[i].cameraAlloc);
+            vmaDestroyBuffer(ctx_.allocator(), frames_[i].lightBuffer, frames_[i].lightAlloc);
             vkDestroyFence(ctx_.device(), frames_[i].inFlight, nullptr);
             vkDestroySemaphore(ctx_.device(), frames_[i].imageAvailable, nullptr);
         }
@@ -88,43 +89,86 @@ namespace chai::gfx
                 ctx_.device(), &semaphoreCreateInfo, nullptr, &frames_[i].imageAvailable));
 
             //camera
-            VkBufferCreateInfo bufInfo{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
-            bufInfo.size = sizeof(CameraData);
-            bufInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+            {
+                VkBufferCreateInfo bufInfo{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+                bufInfo.size = sizeof(CameraData);
+                bufInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
-            VmaAllocationCreateInfo aci{};
-            aci.usage = VMA_MEMORY_USAGE_AUTO;
-            aci.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-                        VMA_ALLOCATION_CREATE_MAPPED_BIT;
+                VmaAllocationCreateInfo aci{};
+                aci.usage = VMA_MEMORY_USAGE_AUTO;
+                aci.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+                            VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-            VmaAllocationInfo allocInfo{};
-            VK_CHECK(vmaCreateBuffer(ctx_.allocator(),
-                                     &bufInfo,
-                                     &aci,
-                                     &frames_[i].cameraBuffer,
-                                     &frames_[i].cameraAlloc,
-                                     &allocInfo));
-            frames_[i].cameraMapped = allocInfo.pMappedData;
+                VmaAllocationInfo allocInfo{};
+                VK_CHECK(vmaCreateBuffer(ctx_.allocator(),
+                                         &bufInfo,
+                                         &aci,
+                                         &frames_[i].cameraBuffer,
+                                         &frames_[i].cameraAlloc,
+                                         &allocInfo));
+                frames_[i].cameraMapped = allocInfo.pMappedData;
 
-            VkDescriptorSetLayout camLayout = ctx_.cameraSetLayout();
-            VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
-            dsai.descriptorPool = ctx_.descriptorPool();
-            dsai.descriptorSetCount = 1;
-            dsai.pSetLayouts = &camLayout;
-            VK_CHECK(vkAllocateDescriptorSets(ctx_.device(), &dsai, &frames_[i].cameraSet));
+                VkDescriptorSetLayout camLayout = ctx_.cameraSetLayout();
+                VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
+                dsai.descriptorPool = ctx_.descriptorPool();
+                dsai.descriptorSetCount = 1;
+                dsai.pSetLayouts = &camLayout;
+                VK_CHECK(vkAllocateDescriptorSets(ctx_.device(), &dsai, &frames_[i].cameraSet));
 
-            VkDescriptorBufferInfo dbi{};
-            dbi.buffer = frames_[i].cameraBuffer;
-            dbi.offset = 0;
-            dbi.range = sizeof(CameraData);
+                VkDescriptorBufferInfo dbi{};
+                dbi.buffer = frames_[i].cameraBuffer;
+                dbi.offset = 0;
+                dbi.range = sizeof(CameraData);
 
-            VkWriteDescriptorSet write{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
-            write.dstSet = frames_[i].cameraSet;
-            write.dstBinding = 0;
-            write.descriptorCount = 1;
-            write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            write.pBufferInfo = &dbi;
-            vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);
+                VkWriteDescriptorSet write{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+                write.dstSet = frames_[i].cameraSet;
+                write.dstBinding = 0;
+                write.descriptorCount = 1;
+                write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                write.pBufferInfo = &dbi;
+                vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);
+            }
+
+            //lights
+            {
+                VkBufferCreateInfo bufInfo{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+                bufInfo.size = sizeof(LightData);
+                bufInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+
+                VmaAllocationCreateInfo aci{};
+                aci.usage = VMA_MEMORY_USAGE_AUTO;
+                aci.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+                            VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+                VmaAllocationInfo allocInfo{};
+                VK_CHECK(vmaCreateBuffer(ctx_.allocator(),
+                                         &bufInfo,
+                                         &aci,
+                                         &frames_[i].lightBuffer,
+                                         &frames_[i].lightAlloc,
+                                         &allocInfo));
+                frames_[i].lightMapped = allocInfo.pMappedData;
+
+                VkDescriptorSetLayout lightLayout = ctx_.lightSetLayout();
+                VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
+                dsai.descriptorPool = ctx_.descriptorPool();
+                dsai.descriptorSetCount = 1;
+                dsai.pSetLayouts = &lightLayout;
+                VK_CHECK(vkAllocateDescriptorSets(ctx_.device(), &dsai, &frames_[i].lightSet));
+
+                VkDescriptorBufferInfo dbi{};
+                dbi.buffer = frames_[i].lightBuffer;
+                dbi.offset = 0;
+                dbi.range = sizeof(LightData);
+
+                VkWriteDescriptorSet write{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+                write.dstSet = frames_[i].lightSet;
+                write.dstBinding = 0;
+                write.descriptorCount = 1;
+                write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                write.pBufferInfo = &dbi;
+                vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);
+            }
         }
 
         setupMaterials();
@@ -147,6 +191,11 @@ namespace chai::gfx
         camUBO.viewProj = renderData.views[0].proj * renderData.views[0].view;
         camUBO.position = math::Vec3{0, 0, 0};
         std::memcpy(frame.cameraMapped, &camUBO, sizeof(camUBO));
+
+        LightData lightUBO{};
+        lightUBO.color = renderData.sun.color;
+        lightUBO.direction = renderData.sun.direction;
+        std::memcpy(frame.lightMapped, &lightUBO, sizeof(lightUBO));
 
         RenderTargetView view{};
         uint32_t imageIndex = 0;
@@ -303,6 +352,17 @@ namespace chai::gfx
             }
 
             FrameData& frame = frames_[currentFrame_];
+            if (item.materialId == 1) {
+                vkCmdBindDescriptorSets(cmd,
+                                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                        currentLayout,
+                                        2,
+                                        1,
+                                        &frame.lightSet,
+                                        0,
+                                        nullptr);
+            }
+
             vkCmdBindDescriptorSets(cmd,
                                     VK_PIPELINE_BIND_POINT_GRAPHICS,
                                     currentLayout,
@@ -350,11 +410,12 @@ namespace chai::gfx
         pcRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pcRange.size = sizeof(PushConstants);
 
-        VkDescriptorSetLayout setLayouts[] = {ctx_.cameraSetLayout(), ctx_.materialSetLayout()};
+        VkDescriptorSetLayout setLayouts[] = {
+            ctx_.cameraSetLayout(), ctx_.materialSetLayout(), ctx_.lightSetLayout()};
         VkPipelineLayoutCreateInfo layoutInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
         layoutInfo.pushConstantRangeCount = 1;
         layoutInfo.pPushConstantRanges = &pcRange;
-        layoutInfo.setLayoutCount = 2;
+        layoutInfo.setLayoutCount = 3;
         layoutInfo.pSetLayouts = setLayouts;
 
         VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &layoutInfo, nullptr, &materials_[0].layout));

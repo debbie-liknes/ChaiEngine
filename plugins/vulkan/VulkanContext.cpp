@@ -51,6 +51,7 @@ namespace chai::gfx
     VulkanContext::~VulkanContext()
     {
         vkDestroyCommandPool(device_, immediatePool_, nullptr); // cmd buffer dies with it
+        vkDestroyDescriptorSetLayout(device_, lightSetLayout_, nullptr);
         vkDestroyDescriptorSetLayout(device_, materialSetLayout_, nullptr);
         vkDestroyDescriptorSetLayout(device_, cameraSetLayout_, nullptr);
         vkDestroyDescriptorPool(device_, descriptorPool_, nullptr);
@@ -190,6 +191,7 @@ namespace chai::gfx
         poolInfo.maxSets = 128;
         VK_CHECK(vkCreateDescriptorPool(device_, &poolInfo, nullptr, &descriptorPool_));
 
+        //cameras
         VkDescriptorSetLayoutBinding camBinding{};
         camBinding.binding = 0;
         camBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -202,6 +204,7 @@ namespace chai::gfx
         camLayout.pBindings = &camBinding;
         VK_CHECK(vkCreateDescriptorSetLayout(device_, &camLayout, nullptr, &cameraSetLayout_));
 
+        //textures
         VkDescriptorSetLayoutBinding texBinding{};
         texBinding.binding = 0;
         texBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -213,5 +216,18 @@ namespace chai::gfx
         texLayout.bindingCount = 1;
         texLayout.pBindings = &texBinding;
         VK_CHECK(vkCreateDescriptorSetLayout(device_, &texLayout, nullptr, &materialSetLayout_));
+
+        // lights
+        VkDescriptorSetLayoutBinding lightBinding{};
+        lightBinding.binding = 0;
+        lightBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        lightBinding.descriptorCount = 1;
+        lightBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo lightLayout{
+            VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+        lightLayout.bindingCount = 1;
+        lightLayout.pBindings = &lightBinding;
+        VK_CHECK(vkCreateDescriptorSetLayout(device_, &lightLayout, nullptr, &lightSetLayout_));
     }
 } // namespace chai

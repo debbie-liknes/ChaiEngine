@@ -46,6 +46,7 @@ namespace chai::gfx
 
         VkDescriptorSetLayout cameraSetLayout() const { return cameraSetLayout_; }
         VkDescriptorSetLayout materialSetLayout() const { return materialSetLayout_; }
+        VkDescriptorSetLayout lightSetLayout() const { return lightSetLayout_; }
         VkDescriptorPool descriptorPool() const { return descriptorPool_; }
 
     private:
@@ -74,6 +75,7 @@ namespace chai::gfx
         VkDescriptorPool descriptorPool_ = VK_NULL_HANDLE;
         VkDescriptorSetLayout cameraSetLayout_ = VK_NULL_HANDLE;
         VkDescriptorSetLayout materialSetLayout_ = VK_NULL_HANDLE;
+        VkDescriptorSetLayout lightSetLayout_ = VK_NULL_HANDLE;
 
         void setupInstance(IWindow& window);
         void setupSurface(IWindow& window);

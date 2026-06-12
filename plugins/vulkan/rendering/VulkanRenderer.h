@@ -50,6 +50,11 @@ namespace chai::gfx
             VmaAllocation cameraAlloc = VK_NULL_HANDLE;
             void* cameraMapped = nullptr;
             VkDescriptorSet cameraSet = VK_NULL_HANDLE;
+
+            VkDescriptorSet lightSet = VK_NULL_HANDLE;
+            void* lightMapped = nullptr;
+            VkBuffer lightBuffer = VK_NULL_HANDLE;
+            VmaAllocation lightAlloc = VK_NULL_HANDLE;
         };
         static constexpr uint32_t kFramesInFlight = 2;
 

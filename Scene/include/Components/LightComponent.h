@@ -17,19 +17,23 @@ namespace chai::scene
     {
     public:
         explicit LightComponent(GameObject* owner = nullptr);
-        LightType type = LightType::POINT;
-        Vec3 color = Vec3(1.0f, 1.0f, 1.0f);
-        float intensity = 3.f;
+
+        virtual void extract(gfx::FrameRenderData& frame) const override;
+
+    private:
+        LightType type_ = LightType::DIRECTIONAL;
+        math::Vec3 color_ = math::Vec3(1.0f, 1.0f, 1.0f);
+        float intensity_ = 3.f;
 
         // For point/spot lights
-        float range = 100.0f;
-        Vec3 attenuation = Vec3(1.0f, 0.09f, 0.032f); // constant, linear, quadratic
+        float range_ = 100.0f;
+        math::Vec3 attenuation_ = math::Vec3(1.0f, 0.09f, 0.032f);
 
         // For spot lights
-        float innerCone = 12.5f; // degrees
-        float outerCone = 17.5f; // degrees
+        float innerCone_ = 12.5f; // degrees
+        float outerCone_ = 17.5f; // degrees
 
-        bool enabled = true;
-        bool shadowsEnabled = true;
+        bool enabled_ = true;
+        bool shadowsEnabled_ = true;
     };
 }

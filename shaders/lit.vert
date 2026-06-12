@@ -21,6 +21,6 @@ layout(location = 1) out vec2 fragUV;
 
 void main() {
     gl_Position = cam.viewProj * pc.model * vec4(inPosition, 1.0);
-    fragNormal  = inNormal;
-    fragUV      = inUV;
+    fragNormal = mat3(pc.model) * inNormal;
+    fragUV = inUV;
 }

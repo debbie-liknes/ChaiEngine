@@ -12,6 +12,7 @@
 #include <Components/MeshComponent.h>
 #include <Components/CameraComponent.h>
 #include <Components/TransformComponent.h>
+#include <Components/LightComponent.h>
 #include <Loaders/ITextureLoader.h>
 #include <Assets/ITextureRegistry.h>
 
@@ -75,6 +76,8 @@ int main()
     auto cubeTrans2 = cubeObj2->getComponent<scene::TransformComponent>();
     cubeTrans2->setPosition(math::Vec3{-1, 0, 0});
 
+    auto lightObj = std::make_shared<scene::GameObject>();
+    auto lightComp = lightObj->addComponent<scene::LightComponent>();
 
     auto cameraObj = std::make_shared<scene::GameObject>();
     auto camComp = cameraObj->addComponent<scene::CameraComponent>();
@@ -88,7 +91,7 @@ int main()
     }
     auto image = textures->load(makeAssetId("tex:crate"), assetDir() / "tardis.png");
     meshComp->setTexture(image);
-    meshComp2->setTexture(image);
+    //meshComp2->setTexture(image);
     meshComp2->setMaterial(1);
 
     //main loop
@@ -118,11 +121,13 @@ int main()
         cameraObj->update(time);
         cubeObj->update(time);
         cubeObj2->update(time);
+        lightObj->update(time);
 
         gfx::FrameRenderData frame;
         cubeObj->extract(frame);
         cubeObj2->extract(frame);
         camComp->extract(frame);   
+        lightComp->extract(frame);
         //end temp
 
         renderer->renderFrame(frame);
