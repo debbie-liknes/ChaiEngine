@@ -5,7 +5,7 @@ namespace chai::scene
 {
     using namespace chai::math;
     TransformComponent::TransformComponent(GameObject* owner)
-        : Component(owner), rotation_(math::Quat::identity())
+        : IComponent(owner), rotation_(math::Quat::identity())
     {
     }
 
@@ -79,6 +79,11 @@ namespace chai::scene
         } else {
             return rotation_;
         }
+    }
+
+    math::Quat TransformComponent::getLocalRotation() const
+    {
+        return rotation_;
     }
 
     void TransformComponent::lookAt(const Vec3& target, const Vec3& worldUp)

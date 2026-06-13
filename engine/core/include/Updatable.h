@@ -13,7 +13,7 @@ namespace chai
     public:
         virtual ~IUpdatable() = default;
 
-		virtual void update(double deltaTime) {}
+		virtual void update(float deltaTime) {}
         virtual void extract(gfx::FrameRenderData& frame) const {}
 	};
 }

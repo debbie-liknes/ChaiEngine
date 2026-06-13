@@ -4,14 +4,15 @@
 #include <typeindex>
 #include <string>
 #include <Controllers/Controller.h>
-#include <Components/ComponentBase.h>
+#include <Updatable.h>
+#include <IComponent.h>
 #include <unordered_map>
 
 namespace chai::scene
 {
     class GameObject;
 
-    class ControllerComponent : public Component
+    class ControllerComponent : public IComponent, public IUpdatable
     {
     public:
         explicit ControllerComponent(chai::scene::GameObject* owner);
@@ -88,7 +89,7 @@ namespace chai::scene
         }
 
         // Update all controllers
-        void update(double deltaTime) override
+        void update(float deltaTime) override
         {
             for (auto const& controller : controllers_)
             {

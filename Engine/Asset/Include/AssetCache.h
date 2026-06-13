@@ -353,13 +353,5 @@ namespace chai
         slots_.clear();
         byId_.clear();
         uploading_.clear();
-
-        //slots_.forEach([this](HandleType h, Record& rec) {
-        //    destroyResourceDeferred(std::move(rec.resource));
-        //    rec.resource = Resource{};
-        //});
-        //slots_.clear();
-        //byId_.clear();
-        //uploading_.clear();
     }
 } // namespace chai

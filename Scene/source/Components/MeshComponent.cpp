@@ -4,7 +4,7 @@
 
 namespace chai::scene
 {
-    MeshComponent::MeshComponent(GameObject* owner) : Component(owner)
+    MeshComponent::MeshComponent(GameObject* owner) : IComponent(owner)
     {
 
     }

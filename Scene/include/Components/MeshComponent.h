@@ -1,13 +1,14 @@
 #pragma once
 #include <SceneExport.h>
 #include <Assets/MeshAsset.h>
-#include <Components/ComponentBase.h>
 #include <Rendering/FrameRenderData.h>
 #include <Loaders/ITextureLoader.h>
+#include <IComponent.h>
+#include <Updatable.h>
 
 namespace chai::scene
 {
-    class SCENE_EXPORT MeshComponent : public Component
+    class SCENE_EXPORT MeshComponent : public IComponent, public IUpdatable
     {
     public:
         MeshComponent(GameObject* owner = nullptr);

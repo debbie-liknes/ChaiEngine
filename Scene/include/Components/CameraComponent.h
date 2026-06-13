@@ -1,16 +1,18 @@
 #pragma once
 #include <SceneExport.h>
-#include <Components/ComponentBase.h>
+#include <IComponent.h>
 #include <Scene/Camera.h>
 #include <memory>
 #include <ChaiMath.h>
+#include <Updatable.h>
+#include <Scene/GameObject.h>
 
 namespace chai::scene
 {
     class GameObject;
     class TransformComponent;
 
-    class SCENE_EXPORT CameraComponent : public Component
+    class SCENE_EXPORT CameraComponent : public IComponent, public IUpdatable
     {
     public:
         explicit CameraComponent(GameObject* owner = nullptr);

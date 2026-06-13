@@ -13,6 +13,8 @@ set(${PROJECT_NAME}_headers
         include/SystemPaths.h
         include/Updatable.h
         include/FileIO.h
+        include/IComponent.h
+        include/IScene.h
 )
 
 set(${PROJECT_NAME}_source
@@ -30,7 +32,7 @@ add_library(${PROJECT_NAME} STATIC
 )
 
 target_include_directories(Core PUBLIC ${CMAKE_BINARY_DIR}/exports/Core include)
-target_link_libraries(Core PUBLIC TypeReflection Logger Asset)
+target_link_libraries(Core PUBLIC TypeReflection Logger Asset Graphics)
 
 add_subdirectory(tests)
 

@@ -1,8 +1,8 @@
 #pragma once
 #include <memory>
-#include <Components/ComponentBase.h>
 #include <Components/ControllerComponent.h>
 #include <Updatable.h>
+#include <IComponent.h>
 #include <string>
 #include <span>
 
@@ -23,7 +23,7 @@ namespace chai::scene
         template <typename T>
         T* addComponent()
         {
-            static_assert(std::is_base_of<Component, T>::value, "T must derive from Component");
+            static_assert(std::is_base_of<IComponent, T>::value, "T must derive from Component");
             components_.push_back(std::make_unique<T>(this));
             return static_cast<T*>(components_.back().get());
         }
@@ -95,11 +95,11 @@ namespace chai::scene
             }
         }
 
-        virtual void update(double deltaTime) override;
+        virtual void update(float deltaTime) override;
         virtual void extract(gfx::FrameRenderData& frameData) const override;
 
     private:
-        std::vector<std::unique_ptr<Component>> components_;
+        std::vector<std::unique_ptr<IComponent>> components_;
         std::unique_ptr<ControllerComponent> controllerComponent_;
         std::string name_;
 

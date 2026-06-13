@@ -1,13 +1,14 @@
 #pragma once
 #include <SceneExport.h>
-#include <Components/ComponentBase.h>
 #include <ChaiMath.h>
+#include <Updatable.h>
+#include <IComponent.h>
 
 namespace chai::scene
 {
     class GameObject;
 
-    class SCENE_EXPORT TransformComponent : public Component
+    class SCENE_EXPORT TransformComponent : public IComponent, public IUpdatable
     {
     public:
         explicit TransformComponent(GameObject* owner = nullptr);
@@ -30,7 +31,9 @@ namespace chai::scene
         math::Vec3 right() const;
 
         math::Vec3 getWorldPosition() const;
+
         math::Quat getWorldRotation() const;
+        math::Quat getLocalRotation() const;
 
         void lookAt(const math::Vec3& target, const math::Vec3& worldUp);
 

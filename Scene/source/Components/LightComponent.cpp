@@ -5,7 +5,7 @@
 
 namespace chai::scene
 {
-    LightComponent::LightComponent(GameObject* owner) : Component(owner)
+    LightComponent::LightComponent(GameObject* owner) : IComponent(owner)
     {
     }
 

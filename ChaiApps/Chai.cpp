@@ -15,6 +15,9 @@
 #include <Components/LightComponent.h>
 #include <Loaders/ITextureLoader.h>
 #include <Assets/ITextureRegistry.h>
+#include <Scene/Scene.h>
+#include <Components/ControllerComponent.h>
+#include <Controllers/SpinController.h>
 
 std::filesystem::path assetDir()
 {
@@ -24,118 +27,64 @@ std::filesystem::path assetDir()
 int main()
 {
     using namespace chai;
+    using namespace scene;
 
     //setup logging
     SpdlogSink logSink; 
     setLogSink(&logSink);
     setLogLevel(chai::LogLevel::Info);
 
-    chai::Engine engine;
-
-    //Load plugins
-    chai::PluginLoader loader;
-    auto exeDir = chai::executableDir();
+    Engine engine;
+    PluginLoader loader;
+    auto exeDir = executableDir();
     if (exeDir.empty())
         exeDir = std::filesystem::current_path();
     loader.loadDirectory(exeDir / "plugins");
     engine.setPlugins(loader.plugins());
-
     engine.startup();
 
-    //Try to make a window
-    auto win = engine.services().tryResolve<IWindow>();
-    if (!win)
-    {
-        CHAI_LOG_CRITICAL("Could not locate Window Service.");
-        return 1;
-    }
-
-    auto renderer = engine.services().tryResolve<gfx::IRenderer>();
-    if (!renderer)
-    {
-        CHAI_LOG_CRITICAL("Could not locate Renderer.");
-        return 1;
-    }
-
-    static auto start = std::chrono::high_resolution_clock::now();
-
-    auto registry = engine.services().tryResolve<gfx::IMeshRegistry>();
-
-    //make an object
-    auto cubeObj = std::make_shared<scene::GameObject>();
-    auto meshComp = cubeObj->addComponent<scene::MeshComponent>();
-    Handle<gfx::Mesh> cube = registry->ingest(makeAssetId("builtin:cube"), gfx::makeCube(1.0f));
-    meshComp->setMesh(cube);
-    auto cubeTrans = cubeObj->getComponent<scene::TransformComponent>();
-    cubeTrans->setPosition(math::Vec3{1, 0, 0});
-    
-    auto cubeObj2 = std::make_shared<scene::GameObject>();
-    auto meshComp2 = cubeObj2->addComponent<scene::MeshComponent>();
-    Handle<gfx::Mesh> cube2 = registry->ingest(makeAssetId("builtin:cube2"), gfx::makeCube(1.0f));
-    meshComp2->setMesh(cube);
-    auto cubeTrans2 = cubeObj2->getComponent<scene::TransformComponent>();
-    cubeTrans2->setPosition(math::Vec3{-1, 0, 0});
-
-    auto lightObj = std::make_shared<scene::GameObject>();
-    auto lightComp = lightObj->addComponent<scene::LightComponent>();
-
-    auto cameraObj = std::make_shared<scene::GameObject>();
-    auto camComp = cameraObj->addComponent<scene::CameraComponent>();
-
-    auto camTrans = cameraObj->getComponent<scene::TransformComponent>();
-    camTrans->setPosition(math::Vec3{0, 0, 3});
-
+    auto meshes = engine.services().tryResolve<gfx::IMeshRegistry>();
     auto textures = engine.services().tryResolve<gfx::ITextureRegistry>();
-    if (!textures) {
-        CHAI_LOG_ERROR("Could not find Texture Registry");
-    }
-    auto image = textures->load(makeAssetId("tex:crate"), assetDir() / "tardis.png");
-    meshComp->setTexture(image);
-    //meshComp2->setTexture(image);
-    meshComp2->setMaterial(1);
-
-    //main loop
-    while (!win->shouldClose()) {
-        auto events = win->pollEvents();
-
-        //temp
-        auto now = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float>(now - start).count(); // seconds since start
-        float angle = time * math::radians(90.0f); // 90°/second, regardless of fps
-
-        int w = 0, h = 0;
-        win->framebufferSize(w, h);
-        float aspect = 1.f * w / h;
-        math::Quaternion q = math::Quat::fromAxisAngle(math::Vec3{0, 1, 0}, angle);
-        //keep the cube spinning
-        cubeObj->getComponent<scene::TransformComponent>()->setRotation(q);
-        cubeObj2->getComponent<scene::TransformComponent>()->setRotation(q);
-
-        //a scene should probably store these things, unsure how updating the camera would actually work. A controller?
-        camComp->setAspectRatio(aspect);
-        camComp->setFOV(math::radians(60.f));
-        camComp->setNearPlane(0.1f);
-        camComp->setFarPlane(100.f);
-
-
-        cameraObj->update(time);
-        cubeObj->update(time);
-        cubeObj2->update(time);
-        lightObj->update(time);
-
-        gfx::FrameRenderData frame;
-        cubeObj->extract(frame);
-        cubeObj2->extract(frame);
-        camComp->extract(frame);   
-        lightComp->extract(frame);
-        //end temp
-
-        renderer->renderFrame(frame);
-        engine.tick();
+    if (!meshes || !textures) {
+        CHAI_LOG_CRITICAL("Required registries missing.");
+        return 1;
     }
 
-    renderer.reset();
-    win.reset();
+    //build the scene
+    auto scene = std::make_unique<Scene>();
+
+    Handle<gfx::Mesh> cube = meshes->ingest(makeAssetId("builtin:cube"), gfx::makeCube(1.0f));
+    Handle<gfx::Texture> crate =
+        textures->load(makeAssetId("tex:tardis"), assetDir() / "tardis.png");
+
+    GameObject* cubeA = scene->createObject("cubeA");
+    auto* meshA = cubeA->addComponent<MeshComponent>();
+    meshA->setMesh(cube);
+    meshA->setTexture(crate);
+    cubeA->getComponent<TransformComponent>()->setPosition({1, 0, 0});
+
+    GameObject* cubeB = scene->createObject("cubeB");
+    auto* meshB = cubeB->addComponent<MeshComponent>();
+    meshB->setMesh(cube); 
+    meshB->setMaterial(1);
+    cubeB->getComponent<TransformComponent>()->setPosition({-1, 0, 0});
+    auto* controlB = cubeB->addComponent<ControllerComponent>();
+    controlB->addController<SpinController>();
+
+    GameObject* cam = scene->createObject("camera");
+    auto* camComp = cam->addComponent<CameraComponent>();
+    camComp->setFOV(math::radians(60.f));
+    camComp->setNearPlane(0.1f);
+    camComp->setFarPlane(100.f);
+    cam->getComponent<TransformComponent>()->setPosition({0, 0, 3});
+    scene->setCamera(cam);
+
+    GameObject* sun = scene->createObject("sun");
+    sun->addComponent<LightComponent>();
+    scene->setLight(sun);
+
+    engine.setScene(std::move(scene));
+    engine.run();
 
     engine.shutdown();
 }

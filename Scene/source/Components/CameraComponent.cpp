@@ -5,7 +5,7 @@
 
 namespace chai::scene
 {
-    CameraComponent::CameraComponent(GameObject* owner) : Component(owner)
+    CameraComponent::CameraComponent(GameObject* owner) : IComponent(owner)
     {
     }
 

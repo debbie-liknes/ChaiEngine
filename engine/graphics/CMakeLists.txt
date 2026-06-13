@@ -13,8 +13,8 @@ set(${PROJECT_NAME}_headers
         include/Geometry/Vertex.h
         include/Loaders/ITextureLoader.h
         include/Rendering/CameraData.h
-        include/Rendering/FrameRenderData.h
         include/Rendering/IRenderer.h
+        include/Rendering/FrameRenderData.h
         include/Rendering/LightData.h
 )
 

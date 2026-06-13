@@ -29,7 +29,7 @@ namespace chai::scene
     //    return m_children;
     //}
 
-    void GameObject::update(double deltaTime)
+    void GameObject::update(float deltaTime)
     {
         for (const auto& component : components_) {
             if (auto updatable = dynamic_cast<IUpdatable*>(component.get())) {
@@ -45,7 +45,8 @@ namespace chai::scene
     void GameObject::extract(gfx::FrameRenderData& frame) const
     {
         for (const auto& c : components_)
-            c->extract(frame);
+            if (auto updatable = dynamic_cast<IUpdatable*>(c.get()))
+                updatable->extract(frame);
         for (auto* child : children_)
             child->extract(frame);
     }

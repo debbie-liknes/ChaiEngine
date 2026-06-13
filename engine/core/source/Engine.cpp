@@ -1,8 +1,14 @@
 #include <Engine.h>
 #include <Log.h>
+#include <Window/Window.h>
+#include <Rendering/FrameRenderData.h>
 
 namespace chai
 {
+    Engine::~Engine()
+    {
+    }
+
     void Engine::startup()
     {
         CHAI_LOG_INFO("Engine starting");
@@ -10,13 +16,6 @@ namespace chai
             p->onLoad(ctx_);
             active_.push_back(p);
         }
-    }
-
-    bool Engine::tick()
-    {
-        float dt = clock_.tick();
-        (void)dt;
-        return running_;
     }
 
     void Engine::shutdown()
@@ -34,5 +33,51 @@ namespace chai
     void Engine::setPlugins(std::span<IPlugin* const> p)
     {
         plugins_.assign(p.begin(), p.end());
+    }
+
+    void Engine::setScene(std::unique_ptr<IScene> scene)
+    {
+        scene_ = std::move(scene);
+    }
+
+    void Engine::run()
+    {
+        auto window = services_.tryResolve<IWindow>();
+        if (!window) {
+            CHAI_LOG_CRITICAL("Could not locate Window Service.");
+        }
+
+        auto renderer = services_.tryResolve<gfx::IRenderer>();
+        if (!renderer) {
+            CHAI_LOG_CRITICAL("Could not locate Window Service.");
+        }
+
+        while (!window->shouldClose()) {
+            window->pollEvents();
+            float dt = clock_.tick();
+
+            updateActiveCameraAspect();
+            scene_->update(dt);
+
+            gfx::FrameRenderData frame;
+            scene_->extract(frame);
+            renderer->renderFrame(frame);
+        }
+    }
+
+    void Engine::updateActiveCameraAspect()
+    {
+        auto window = services().tryResolve<IWindow>();
+        if (!window || !scene_)
+            return; // headless: no window, nothing to do
+
+        //get framebuffer size
+        int w = 0, h = 0;
+        window->framebufferSize(w, h);
+        if (w == 0 || h == 0)
+            return; // minimized
+
+        float aspect = float(w) / float(h);
+        scene_->setCameraAspect(aspect);
     }
 }

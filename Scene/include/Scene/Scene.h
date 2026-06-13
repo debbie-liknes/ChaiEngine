@@ -1,27 +1,27 @@
 #pragma once
 #include <vector>
-#include <ChaiEngine/Light.h>
 #include <Scene/GameObject.h>
-#include <ChaiEngine/RenderCommandCollector.h>
-#include <Core/Updatable.h>
-#include <ChaiEngine/IMesh.h>
+#include <Updatable.h>
+#include <IScene.h>
 
 namespace chai::scene
 {
     //Scene class that holds all the entities in the scene
     //Does not hold the camera, those are associated with views (probably players?)
     //The scene should hold data that is persistent across frames
-    class Scene : public IUpdatable
+    class Scene : public IScene
     {
     public:
         Scene() = default;
         ~Scene() = default;
 
-        void addGameObject(std::unique_ptr<GameObject> object);
-        void collectRenderables(brew::RenderCommandCollector& collector) const;
-        void collectLights(brew::RenderCommandCollector& collector) const;
-        GameObject* createModelObject(const std::string& name, Handle<ModelAsset> modelHandle);
-        GameObject* createGameObject(const std::string& name);
+        void update(float deltaTime) override;
+        void extract(gfx::FrameRenderData& frame) const override;
+        void setCameraAspect(float aspect) override;
+
+        GameObject* createObject(const std::string& name);
+        void setCamera(GameObject* cam);
+        void setLight(GameObject* sun);
 
         template <typename T>
         std::vector<GameObject*> getObjectsWithComponent() const
@@ -37,11 +37,12 @@ namespace chai::scene
             return objects;
         }
 
-        void update(double deltaTime) override;
 
     private:
-        std::vector<std::unique_ptr<GameObject>> m_objects;
+        std::vector<std::shared_ptr<GameObject>> m_objects;
+
+        //special objects - but i dont really like that they are special
+        GameObject* sun_;
+        GameObject* camera_;
     };
-
-
 }

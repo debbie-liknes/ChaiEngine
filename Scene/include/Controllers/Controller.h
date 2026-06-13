@@ -10,7 +10,7 @@ namespace chai::scene
     public:
         virtual ~IController() = default;
 
-        virtual void update(double deltaTime) = 0;
+        virtual void update(float deltaTime) = 0;
         virtual void setEnabled(bool enabled) = 0;
         virtual bool isEnabled() const = 0;
 
@@ -18,9 +18,9 @@ namespace chai::scene
         virtual const char* getControllerType() const = 0;
 
     protected:
-        chai::scene::GameObject* gameObject = nullptr;
-        bool enabled = true;
+        chai::scene::GameObject* gameObject_ = nullptr;
+        bool enabled_ = true;
 
-        explicit IController(chai::scene::GameObject* obj) : gameObject(obj) {}
+        explicit IController(chai::scene::GameObject* obj) : gameObject_(obj) {}
     };
 }

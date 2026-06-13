@@ -68,11 +68,16 @@ namespace chai::gfx
             meshRegistry_->cache()->releaseAll();
             texRegistry_->cache()->releaseAll();
 
+            resources_->graveyard().flushAll();
+
             renderer_.reset();
-            resources_.reset();
+
             meshRegistry_.reset();
             texRegistry_.reset();
+
+
             texFactory_.reset();
+            resources_.reset();
             vulkCtx_.reset();
 
             CHAI_LOG_INFO("Renderer removed");
