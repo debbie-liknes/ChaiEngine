@@ -4,4 +4,5 @@
 namespace chai::gfx
 {
     TextureAsset createWhiteTexture();
+    TextureAsset createDefaultNormalTexture();
 }

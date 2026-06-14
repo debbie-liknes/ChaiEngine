@@ -16,6 +16,7 @@ set(${PROJECT_NAME}_headers
         ImageTransition.h
         VkUtils.h
         Material.h
+        MaterialFactory.h
 )
 
 set(${PROJECT_NAME}_source

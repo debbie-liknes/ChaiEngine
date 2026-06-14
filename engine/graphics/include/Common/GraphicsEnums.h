@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include <GraphicsMacros.h>
+#include <Common/GraphicsMacros.h>
 
 namespace chai::gfx
 {
@@ -36,4 +36,9 @@ namespace chai::gfx
     };
     CHAI_FLAG_OPS(BindingType)
 
+    enum class AlphaMode
+    {
+        Opaque
+    };
+    CHAI_FLAG_OPS(AlphaMode)
 }

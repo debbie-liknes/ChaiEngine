@@ -5,12 +5,13 @@ set(ModelLoaderSource
         ObjLoader.cpp
         GLTFLoader.h
         GLTFLoader.cpp
+        ModelLoaderPlugin.cpp
 )
 
 add_library(ModelLoader SHARED
         ${ModelLoaderSource}
 )
 
-target_link_libraries(ModelLoader PUBLIC Core ChaiGraphics ChaiMath)
+target_link_libraries(ModelLoader PUBLIC Core ChaiMath Graphics)
 
-ChaiPluginDefaults(ModelLoader "Core/Plugins")
+ChaiPluginDefaults(ModelLoader "Plugins")

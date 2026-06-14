@@ -8,10 +8,16 @@ set(${PROJECT_NAME}_headers
         include/Assets/PrimitiveMeshes.h
         include/Assets/TextureAsset.h
         include/Assets/TextureFormat.h
+        include/Assets/ModelAsset.h
+        include/Assets/ModelPrefab.h
+        include/Assets/IModelRegistry.h
+        include/Assets/IMaterialRegistry.h
+        include/Assets/MaterialAsset.h
         include/Common/GraphicsEnums.h
         include/Common/GraphicsMacros.h
         include/Geometry/Vertex.h
         include/Loaders/ITextureLoader.h
+        include/Loaders/IModelLoader.h
         include/Rendering/CameraData.h
         include/Rendering/IRenderer.h
         include/Rendering/FrameRenderData.h

@@ -14,7 +14,7 @@ namespace chai
     class TextureLoaderPlugin : public IPlugin
     {
     public:
-        const char* name() const override { return "Renderer(Vulkan)"; }
+        const char* name() const override { return "Loader(pngs)"; }
 
         void onLoad(PluginContext& ctx) override
         {

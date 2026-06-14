@@ -13,6 +13,9 @@
 #include "../TextureFactory.h"
 #include <Assets/IMeshRegistry.h>
 #include <Assets/ITextureRegistry.h>
+#include <ModelRegistry.h>
+#include <Assets/IMaterialRegistry.h>
+#include "../MaterialFactory.h"
 
 namespace chai::gfx
 {
@@ -38,6 +41,10 @@ namespace chai::gfx
                 *texFactory_, resources_->graveyard(), &ctx.services);
             renderer_ =
                 std::make_shared<VulkanRenderer>(*window, meshRegistry_->cache(), texRegistry_->cache(), *vulkCtx_);
+            matRegistry_ = std::make_shared<MaterialRegistry>(
+                *vulkCtx_, texRegistry_->cache(), resources_->graveyard());
+            modelRegistry_ = std::make_shared<ModelRegistry>(
+                *meshRegistry_, *texRegistry_, *matRegistry_, &ctx.services);
 
 
             //register services, but make sure to UN-register them on unload
@@ -47,6 +54,8 @@ namespace chai::gfx
             ctx.services.provide<IRenderDevice>(vulkCtx_);
             ctx.services.provide<ITextureRegistry>(texRegistry_);
             ctx.services.provide<TextureFactory>(texFactory_);
+            ctx.services.provide<IMaterialRegistry>(matRegistry_);
+            ctx.services.provide<IModelRegistry>(modelRegistry_);
 
             CHAI_LOG_INFO("Renderer service provided");
         }
@@ -63,10 +72,14 @@ namespace chai::gfx
             ctx.services.remove<IMeshRegistry>();
             ctx.services.remove<IRenderer>();
             ctx.services.remove<AssetCache<Mesh>>();
+            ctx.services.remove<IMaterialRegistry>();
+            ctx.services.remove<IModelRegistry>();
 
             //release all our resources and pointers
             meshRegistry_->cache()->releaseAll();
             texRegistry_->cache()->releaseAll();
+            modelRegistry_->releaseAll();
+            matRegistry_->cache()->releaseAll();
 
             resources_->graveyard().flushAll();
 
@@ -87,9 +100,19 @@ namespace chai::gfx
         std::shared_ptr<VulkanContext> vulkCtx_;
         std::shared_ptr<GpuResources> resources_;
         std::shared_ptr<VulkanRenderer> renderer_;
+
+        //Mesh
         std::shared_ptr<MeshRegistry> meshRegistry_;
+
+        //textures
         std::shared_ptr<TextureFactory> texFactory_;
         std::shared_ptr<TextureRegistry> texRegistry_;
+
+        //Models
+        std::shared_ptr<ModelRegistry> modelRegistry_;
+
+        //Materials
+        std::shared_ptr<MaterialRegistry> matRegistry_;
     };
 
     CHAI_PLUGIN(VulkanPlugin);

@@ -15,6 +15,7 @@ set(${PROJECT_NAME}_headers
         include/FileIO.h
         include/IComponent.h
         include/IScene.h
+        include/ModelRegistry.h
 )
 
 set(${PROJECT_NAME}_source
@@ -24,6 +25,7 @@ set(${PROJECT_NAME}_source
         source/Engine.cpp
         source/SystemPaths.cpp
         source/FileIO.cpp
+        source/ModelRegistry.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC
