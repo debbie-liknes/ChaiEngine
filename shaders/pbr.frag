@@ -1,0 +1,122 @@
+#version 450
+
+layout(location = 0) in vec3 vWorldPos;
+layout(location = 1) in vec3 vNormal;
+layout(location = 2) in vec4 vTangent;
+layout(location = 3) in vec2 vUV;
+
+// set 0 = camera (also read here for the view vector -> needs FRAGMENT stage flag)
+layout(set = 0, binding = 0) uniform Camera {
+    mat4 view;
+    mat4 proj;
+    mat4 viewProj;
+    vec3 position;
+} cam;
+
+// set 1 = material: factors UBO at 0, five maps at 1..5 (order matches MaterialFactory)
+layout(set = 1, binding = 0) uniform Material {
+    vec4 baseColor;  // baseColorFactor
+    vec4 emissive;   // emissiveFactor in .rgb
+    float metallic;
+    float roughness;
+    float alphaCutoff;
+    float _pad;
+} mat;
+layout(set = 1, binding = 1) uniform sampler2D baseColorTex;
+layout(set = 1, binding = 2) uniform sampler2D metalRoughTex;
+layout(set = 1, binding = 3) uniform sampler2D normalTex;
+layout(set = 1, binding = 4) uniform sampler2D occlusionTex;
+layout(set = 1, binding = 5) uniform sampler2D emissiveTex;
+
+// set 2 = light. vec4s on purpose -- see std140 note. Field order must match LightData.
+layout(set = 2, binding = 0) uniform Light {
+    vec4 direction; // .xyz = direction the light travels (sun -> scene)
+    vec4 color;     // .rgb = radiance
+} light;
+
+layout(location = 0) out vec4 outColor;
+
+const float PI = 3.14159265359;
+
+vec3 getNormal()
+{
+    vec3 n = texture(normalTex, vUV).xyz * 2.0 - 1.0; // tangent-space, unpacked
+    vec3 N = normalize(vNormal);
+    vec3 T = normalize(vTangent.xyz);
+    vec3 B = cross(N, T) * vTangent.w;
+    return normalize(mat3(T, B, N) * n);
+}
+
+float D_GGX(float NoH, float a)
+{
+    float a2 = a * a;
+    float d = NoH * NoH * (a2 - 1.0) + 1.0;
+    return a2 / (PI * d * d);
+}
+
+// Smith with Schlick-GGX, k for direct lighting
+float G_Smith(float NoV, float NoL, float roughness)
+{
+    float r = roughness + 1.0;
+    float k = (r * r) / 8.0;
+    float gv = NoV / (NoV * (1.0 - k) + k);
+    float gl = NoL / (NoL * (1.0 - k) + k);
+    return gv * gl;
+}
+
+vec3 F_Schlick(float VoH, vec3 f0)
+{
+    return f0 + (1.0 - f0) * pow(clamp(1.0 - VoH, 0.0, 1.0), 5.0);
+}
+
+void main()
+{
+    // baseColor + emissive sampled from sRGB textures -> already linear after sampling
+    vec4 base = texture(baseColorTex, vUV) * mat.baseColor;
+    vec3 albedo = base.rgb;
+
+    // glTF packs: metallic in B, roughness in G (linear texture)
+    vec3 mr = texture(metalRoughTex, vUV).rgb;
+    float metallic = mr.b * mat.metallic;
+    float roughness = clamp(mr.g * mat.roughness, 0.04, 1.0);
+
+    float ao = texture(occlusionTex, vUV).r;
+    vec3 emissive = texture(emissiveTex, vUV).rgb * mat.emissive.rgb;
+
+    vec3 N = getNormal();
+    vec3 V = normalize(cam.position - vWorldPos);
+    vec3 L = normalize(-light.direction.xyz); // surface -> light
+    vec3 H = normalize(V + L);
+
+    float NoV = max(dot(N, V), 1e-4);
+    float NoL = max(dot(N, L), 0.0);
+    float NoH = max(dot(N, H), 0.0);
+    float VoH = max(dot(V, H), 0.0);
+
+    vec3 f0 = mix(vec3(0.04), albedo, metallic);
+    float a = roughness * roughness;
+
+    float D = D_GGX(NoH, a);
+    float G = G_Smith(NoV, NoL, roughness);
+    vec3 F = F_Schlick(VoH, f0);
+
+    vec3 spec = (D * G * F) / max(4.0 * NoV * NoL, 1e-4);
+    vec3 kd = (vec3(1.0) - F) * (1.0 - metallic);
+    vec3 diffuse = kd * albedo / PI;
+
+    vec3 radiance = light.color.rgb;
+    vec3 lo = (diffuse + spec) * radiance * NoL;
+
+    // flat ambient stand-in until IBL; modulated by occlusion
+    vec3 ambient = vec3(0.03) * albedo * ao;
+
+    vec3 color = ambient + lo + emissive;
+
+    // Swapchain is UNORM, so encode manually. Reinhard tonemap + linear->sRGB.
+    // If you switch the swapchain to a *_SRGB format, drop the pow() (hardware does it).
+    color = color / (color + vec3(1.0));
+    color = pow(color, vec3(1.0 / 2.2));
+
+    outColor = vec4(color, base.a);
+
+}

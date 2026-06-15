@@ -12,7 +12,7 @@
 #include <array>
 #include <cstdint>
 #include "../GpuResources.h"
-#include "../Material.h"
+#include "../MaterialFactory.h"
 
 namespace chai
 {
@@ -30,6 +30,7 @@ namespace chai::gfx
         VulkanRenderer(chai::IWindow& window,
                        std::shared_ptr<AssetCache<Mesh>> meshCache,
                        std::shared_ptr<AssetCache<Texture>> texCache,
+                       std::shared_ptr<AssetCache<Material>> matCache,
                        VulkanContext& context);
         ~VulkanRenderer() override;
 
@@ -72,7 +73,7 @@ namespace chai::gfx
                          const FrameRenderData& renderData);
         VkFenceCreateInfo fenceCreate(VkFenceCreateFlags flags = 0);
         VkSemaphoreCreateInfo semaphoreCreate(VkSemaphoreCreateFlags flags = 0);
-        void setupMaterials();
+        void setupPipelines();
 
         chai::IWindow& window_;
         VulkanContext& ctx_;
@@ -86,10 +87,10 @@ namespace chai::gfx
         //Resources
         std::shared_ptr<AssetCache<Mesh>> meshCache_;
         std::shared_ptr<AssetCache<Texture>> texCache_;
+        std::shared_ptr<AssetCache<Material>> materialCache_;
 
-        //The worlds simplest material system
-        std::vector<Material> materials_;
-        Handle<Texture> defaultWhite_;
+        VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
+        VkPipeline pbrPipeline_ = VK_NULL_HANDLE;
     };
 
     //dont leave this here forever

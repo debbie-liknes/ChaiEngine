@@ -107,7 +107,7 @@ namespace chai::gfx
             const GpuTexture& occlusion = resolveOrDefault(asset.occlusion, defaultWhite_);
             const GpuTexture& emissive = resolveOrDefault(asset.emissive, defaultWhite_);
 
-            //5 textures...1 UBO
+            //5 textures
             VkDescriptorBufferInfo dbi{};
             dbi.buffer = out.factorsBuffer;
             dbi.offset = 0;

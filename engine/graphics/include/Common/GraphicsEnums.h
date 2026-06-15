@@ -38,7 +38,9 @@ namespace chai::gfx
 
     enum class AlphaMode
     {
-        Opaque
+        Opaque,
+        Mask,
+        Blend
     };
     CHAI_FLAG_OPS(AlphaMode)
 }

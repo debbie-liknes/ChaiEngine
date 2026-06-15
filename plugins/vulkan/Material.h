@@ -3,9 +3,9 @@
 
 namespace chai::gfx
 {
-	struct Material
-	{
-        VkPipeline pipeline = VK_NULL_HANDLE;
-        VkPipelineLayout layout = VK_NULL_HANDLE;
-	};
+	//struct Material
+	//{
+ //       VkPipeline pipeline = VK_NULL_HANDLE;
+ //       VkPipelineLayout layout = VK_NULL_HANDLE;
+	//};
 }

@@ -196,7 +196,7 @@ namespace chai::gfx
         camBinding.binding = 0;
         camBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         camBinding.descriptorCount = 1;
-        camBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        camBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
         VkDescriptorSetLayoutCreateInfo camLayout{
             VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
@@ -204,18 +204,24 @@ namespace chai::gfx
         camLayout.pBindings = &camBinding;
         VK_CHECK(vkCreateDescriptorSetLayout(device_, &camLayout, nullptr, &cameraSetLayout_));
 
-        //textures
-        VkDescriptorSetLayoutBinding texBinding{};
-        texBinding.binding = 0;
-        texBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        texBinding.descriptorCount = 1;
-        texBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        //materials
+        VkDescriptorSetLayoutBinding matBindings[6]{};
+        matBindings[0].binding = 0;
+        matBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        matBindings[0].descriptorCount = 1;
+        matBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        for (uint32_t i = 1; i < 6; ++i) {
+            matBindings[i].binding = i;
+            matBindings[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            matBindings[i].descriptorCount = 1;
+            matBindings[i].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        }
 
-        VkDescriptorSetLayoutCreateInfo texLayout{
+        VkDescriptorSetLayoutCreateInfo matLayout{
             VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
-        texLayout.bindingCount = 1;
-        texLayout.pBindings = &texBinding;
-        VK_CHECK(vkCreateDescriptorSetLayout(device_, &texLayout, nullptr, &materialSetLayout_));
+        matLayout.bindingCount = 6;
+        matLayout.pBindings = matBindings;
+        VK_CHECK(vkCreateDescriptorSetLayout(device_, &matLayout, nullptr, &materialSetLayout_));
 
         // lights
         VkDescriptorSetLayoutBinding lightBinding{};

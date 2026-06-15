@@ -20,6 +20,7 @@ namespace chai::gfx
     VulkanRenderer::VulkanRenderer(chai::IWindow& window,
                                    std::shared_ptr<AssetCache<Mesh>> meshCache,
                                    std::shared_ptr<AssetCache<Texture>> texCache,
+                                   std::shared_ptr<AssetCache<Material>> matCache,
                                    VulkanContext& context)
         : window_(window), ctx_(context),
           swapchain_(ctx_,
@@ -28,12 +29,10 @@ namespace chai::gfx
                          window.framebufferSize(w, h);
                          return VkExtent2D{uint32_t(w), uint32_t(h)};
                      }()),
-          meshCache_(meshCache), texCache_(texCache)
+          meshCache_(meshCache), texCache_(texCache), materialCache_(matCache)
     {
         // init vulkan context
         init();
-        defaultWhite_ =
-            texCache_->ingest(makeAssetId("builtin:white"), std::move(createWhiteTexture()));
         CHAI_LOG_INFO("VulkanRenderer initialized");
     }
 
@@ -48,10 +47,8 @@ namespace chai::gfx
             vkDestroySemaphore(ctx_.device(), frames_[i].imageAvailable, nullptr);
         }
 
-        for (int i = 0; i < materials_.size(); i++) {
-            vkDestroyPipelineLayout(ctx_.device(), materials_[i].layout, nullptr);
-            vkDestroyPipeline(ctx_.device(), materials_[i].pipeline, nullptr);
-        }
+        vkDestroyPipeline(ctx_.device(), pbrPipeline_, nullptr);
+        vkDestroyPipelineLayout(ctx_.device(), pipelineLayout_, nullptr);
 
         // dont need to destory the buffers individually. Command Pool is enough
         vkDestroyCommandPool(ctx_.device(), cmdPool_, nullptr);
@@ -171,7 +168,7 @@ namespace chai::gfx
             }
         }
 
-        setupMaterials();
+        setupPipelines();
     }
 
     void VulkanRenderer::renderFrame(const FrameRenderData& renderData)
@@ -331,62 +328,66 @@ namespace chai::gfx
         VkRect2D scissor{{0, 0}, view.extent};
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
+        
+        FrameData& frame = frames_[currentFrame_];
+
+        // Global sets, bound once. Same layout for every pipeline, so these stay valid
+        // across pipeline switches: camera at set 0, light at set 2.
+        vkCmdBindDescriptorSets(cmd,
+                                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                pipelineLayout_,
+                                0,
+                                1,
+                                &frame.cameraSet,
+                                0,
+                                nullptr);
+        vkCmdBindDescriptorSets(cmd,
+                                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                pipelineLayout_,
+                                2,
+                                1,
+                                &frame.lightSet,
+                                0,
+                                nullptr);
+
         std::vector<uint32_t> order(renderData.items.size());
         std::iota(order.begin(), order.end(), 0u);
 
         std::sort(order.begin(), order.end(), [&](uint32_t a, uint32_t b) {
-            return renderData.items[a].materialId < renderData.items[b].materialId;
+            return renderData.items[a].material.index < renderData.items[b].material.index;
         });
 
-        VkPipelineLayout currentLayout;
-        uint32_t lastMaterial = UINT32_MAX;
+        Handle<Material> lastMaterial{};
         for (uint32_t idx : order) {
             const RenderItem& item = renderData.items[idx];
 
-            if (item.materialId != lastMaterial) {
-                const Material& mat = materials_[item.materialId];
-                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mat.pipeline);
-
-                lastMaterial = item.materialId;
-                currentLayout = mat.layout;
-            }
-
-            FrameData& frame = frames_[currentFrame_];
-            if (item.materialId == 1) {
-                vkCmdBindDescriptorSets(cmd,
-                                        VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                        currentLayout,
-                                        2,
-                                        1,
-                                        &frame.lightSet,
-                                        0,
-                                        nullptr);
-            }
-
-            vkCmdBindDescriptorSets(cmd,
-                                    VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                    currentLayout,
-                                    0,
-                                    1,
-                                    &frame.cameraSet,
-                                    0,
-                                    nullptr);
+            const GpuMaterial* mat = materialCache_->resource(item.material);
+            if (!mat)
+                continue; // material not ready this frame; skip (same as mesh below)
 
             const GpuMesh* mesh = meshCache_->resource(item.mesh);
             if (!mesh)
-                continue; // not ready, skip
+                continue;
 
-            const GpuTexture* tex = texCache_->resource(item.texture);
-            if (!tex)
-                tex = texCache_->resource(defaultWhite_); // this will always be valid
-            vkCmdBindDescriptorSets(
-                cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, currentLayout, 1, 1, &tex->set, 0, nullptr);
+            //could swap pipelines later
+            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline_);
+
+            if (item.material != lastMaterial) {
+                vkCmdBindDescriptorSets(cmd,
+                                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                        pipelineLayout_,
+                                        1,
+                                        1,
+                                        &mat->set,
+                                        0,
+                                        nullptr);
+                lastMaterial = item.material;
+            }
 
             PushConstants consts;
             consts.model = item.model;
-            consts.color = item.color;
             vkCmdPushConstants(cmd,
-                               currentLayout,
+                               pipelineLayout_,
                                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                                0,
                                sizeof(PushConstants),
@@ -400,16 +401,14 @@ namespace chai::gfx
         }
     }
 
-    void VulkanRenderer::setupMaterials()
+    void VulkanRenderer::setupPipelines()
     {
-        materials_.resize(2);
-
         VkPushConstantRange pcRange{};
-        pcRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         pcRange.offset = 0;
         pcRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pcRange.size = sizeof(PushConstants);
 
+        // set 0 = camera, set 1 = material, set 2 = light
         VkDescriptorSetLayout setLayouts[] = {
             ctx_.cameraSetLayout(), ctx_.materialSetLayout(), ctx_.lightSetLayout()};
         VkPipelineLayoutCreateInfo layoutInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
@@ -418,49 +417,29 @@ namespace chai::gfx
         layoutInfo.setLayoutCount = 3;
         layoutInfo.pSetLayouts = setLayouts;
 
-        VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &layoutInfo, nullptr, &materials_[0].layout));
-        VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &layoutInfo, nullptr, &materials_[1].layout));
+        VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &layoutInfo, nullptr, &pipelineLayout_));
 
         const auto shaderDir = executableDir() / "shaders";
-        VkShaderModule vert = loadShaderModule(ctx_.device(), shaderDir / "unlit.vert.spv");
-        VkShaderModule frag = loadShaderModule(ctx_.device(), shaderDir / "unlit.frag.spv");
+        VkShaderModule vert = loadShaderModule(ctx_.device(), shaderDir / "pbr.vert.spv");
+        VkShaderModule frag = loadShaderModule(ctx_.device(), shaderDir / "pbr.frag.spv");
         if (vert == VK_NULL_HANDLE || frag == VK_NULL_HANDLE) {
             CHAI_LOG_CRITICAL("Triangle shaders failed to load from {}", shaderDir.string());
-            return;
-        }
-
-        const auto shaderDir1 = executableDir() / "shaders";
-        VkShaderModule vert1 = loadShaderModule(ctx_.device(), shaderDir1 / "lit.vert.spv");
-        VkShaderModule frag1 = loadShaderModule(ctx_.device(), shaderDir1 / "lit.frag.spv");
-        if (vert1 == VK_NULL_HANDLE || frag1 == VK_NULL_HANDLE) {
-            CHAI_LOG_CRITICAL("Triangle shaders failed to load from {}", shaderDir1.string());
             return;
         }
 
         auto attrs = vertexAttributes();
         auto bind = vertexBinding();
 
-        materials_[0].pipeline = PipelineBuilder{}
+        pbrPipeline_ = PipelineBuilder{}
                         .setShaders(vert, frag)
                         .setVertexInput({attrs.begin(), attrs.end()}, bind)
                         .setColorFormat(swapchain_.format())
                         .enableDepthTest()
                         .setDepthFormat(swapchain_.depthFormat())
                         .disableBlending()
-                        .build(ctx_.device(), materials_[0].layout);
-
-        materials_[1].pipeline = PipelineBuilder{}
-                           .setShaders(vert1, frag1)
-                           .setVertexInput({attrs.begin(), attrs.end()}, bind)
-                           .setColorFormat(swapchain_.format())
-                           .enableDepthTest()
-                           .setDepthFormat(swapchain_.depthFormat())
-                           .disableBlending()
-                           .build(ctx_.device(), materials_[1].layout);
+                        .build(ctx_.device(), pipelineLayout_);
 
         vkDestroyShaderModule(ctx_.device(), vert, nullptr);
         vkDestroyShaderModule(ctx_.device(), frag, nullptr);
-        vkDestroyShaderModule(ctx_.device(), vert1, nullptr);
-        vkDestroyShaderModule(ctx_.device(), frag1, nullptr);
     }
 } // namespace chai::gfx

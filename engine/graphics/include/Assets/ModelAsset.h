@@ -36,6 +36,9 @@ namespace chai::gfx
 
         struct ImageData {
             std::vector<uint8_t> bytes;
+            std::string name;
+            //should this be an enum?
+            std::string mimeType;
         };
 
         std::vector<MeshEntry> meshes;

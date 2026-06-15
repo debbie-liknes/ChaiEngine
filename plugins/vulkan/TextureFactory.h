@@ -158,30 +158,6 @@ namespace chai::gfx
             sampInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
             vkCreateSampler(device, &sampInfo, nullptr, &out.sampler);
 
-            //
-            VkDescriptorSetLayout matLayout = ctx_->materialSetLayout();
-            VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
-            dsai.descriptorPool = ctx_->descriptorPool();
-            dsai.descriptorSetCount = 1;
-            dsai.pSetLayouts = &matLayout;
-            if (vkAllocateDescriptorSets(device, &dsai, &out.set) != VK_SUCCESS) {
-                CHAI_LOG_ERROR("descriptor set alloc failed (pool exhausted?)");
-                return LoadState::Failed;
-            }
-
-            VkDescriptorImageInfo imgDesc{};
-            imgDesc.sampler = out.sampler;
-            imgDesc.imageView = out.view;
-            imgDesc.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-            VkWriteDescriptorSet write{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
-            write.dstSet = out.set;
-            write.dstBinding = 0;
-            write.descriptorCount = 1;
-            write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            write.pImageInfo = &imgDesc;
-            vkUpdateDescriptorSets(device, 1, &write, 0, nullptr);
-
             return LoadState::Ready;
         }
 

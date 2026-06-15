@@ -18,6 +18,9 @@
 #include <Scene/Scene.h>
 #include <Components/ControllerComponent.h>
 #include <Controllers/SpinController.h>
+#include <Assets/IModelRegistry.h>
+#include <Assets/MaterialAsset.h>
+#include <Assets/IMaterialRegistry.h>
 
 std::filesystem::path assetDir()
 {
@@ -45,13 +48,25 @@ int main()
 
     auto meshes = engine.services().tryResolve<gfx::IMeshRegistry>();
     auto textures = engine.services().tryResolve<gfx::ITextureRegistry>();
-    if (!meshes || !textures) {
+    auto models = engine.services().tryResolve<gfx::IModelRegistry>();
+    auto materials = engine.services().tryResolve<gfx::IMaterialRegistry>();
+    if (!meshes || !textures || !models) {
         CHAI_LOG_CRITICAL("Required registries missing.");
         return 1;
     }
 
     //build the scene
     auto scene = std::make_unique<Scene>();
+
+    //auto sponza = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.glTF");
+    //if (sponza)
+    //    instantiate(*helmet, *scene);
+
+    gfx::MaterialAsset red{};
+    red.baseColorFactor = {0.8f, 0.1f, 0.1f, 1.0f};
+    red.metallic = 0.0f;
+    red.roughness = 0.6f;
+    Handle<gfx::Material> redMat = materials->ingest(makeAssetId("mat:red"), std::move(red));
 
     Handle<gfx::Mesh> cube = meshes->ingest(makeAssetId("builtin:cube"), gfx::makeCube(1.0f));
     Handle<gfx::Texture> crate =
@@ -60,13 +75,13 @@ int main()
     GameObject* cubeA = scene->createObject("cubeA");
     auto* meshA = cubeA->addComponent<MeshComponent>();
     meshA->setMesh(cube);
-    meshA->setTexture(crate);
+    meshA->setMaterial(redMat);
     cubeA->getComponent<TransformComponent>()->setPosition({1, 0, 0});
 
     GameObject* cubeB = scene->createObject("cubeB");
     auto* meshB = cubeB->addComponent<MeshComponent>();
     meshB->setMesh(cube); 
-    meshB->setMaterial(1);
+    meshB->setMaterial(redMat);
     cubeB->getComponent<TransformComponent>()->setPosition({-1, 0, 0});
     auto* controlB = cubeB->addComponent<ControllerComponent>();
     controlB->addController<SpinController>();
@@ -81,6 +96,7 @@ int main()
 
     GameObject* sun = scene->createObject("sun");
     sun->addComponent<LightComponent>();
+    sun->getComponent<TransformComponent>()->lookAt(math::Vec3{1, 1, 0}, math::Vec3{0, 1, 0});
     scene->setLight(sun);
 
     engine.setScene(std::move(scene));

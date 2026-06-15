@@ -18,12 +18,12 @@ namespace chai::scene
 
         void setMesh(Handle<gfx::Mesh> m) { mesh_ = m; }
         void setTexture(Handle<gfx::Texture> t) { texture_ = t; }
-        void setMaterial(uint32_t id) { materialId_ = id; }
+        void setMaterial(Handle<gfx::Material> mat) { material_ = mat; }
 
     private:
         Handle<gfx::Mesh> mesh_;
         Handle<gfx::Texture> texture_;
         math::Vec4 color_{1, 0, 1, 1};
-        uint32_t materialId_ = 0;
+        Handle<gfx::Material> material_;
     };
 }

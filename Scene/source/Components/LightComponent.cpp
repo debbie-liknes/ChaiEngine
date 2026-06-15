@@ -14,7 +14,7 @@ namespace chai::scene
         auto const* t = getGameObject()->getComponent<TransformComponent>();
         auto dir = t->forward();
         if (type_ == LightType::DIRECTIONAL) {
-            frame.sun = {math::Vec4{-2, -2, 0, 1.0},
+            frame.sun = {math::Vec4{dir.x, dir.y, dir.z, 1.0},
                          math::Vec4{color_.x, color_.y, color_.z, 1.0}};
         }
     }
