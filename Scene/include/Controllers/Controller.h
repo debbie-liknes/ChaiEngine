@@ -1,5 +1,6 @@
 #pragma once
 #include <SceneExport.h>
+#include <IInput.h>
 
 namespace chai::scene
 {
@@ -10,7 +11,7 @@ namespace chai::scene
     public:
         virtual ~IController() = default;
 
-        virtual void update(float deltaTime) = 0;
+        virtual void update(const UpdateContext&) = 0;
         virtual void setEnabled(bool enabled) = 0;
         virtual bool isEnabled() const = 0;
 

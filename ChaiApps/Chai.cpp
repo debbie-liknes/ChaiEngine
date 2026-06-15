@@ -18,9 +18,11 @@
 #include <Scene/Scene.h>
 #include <Components/ControllerComponent.h>
 #include <Controllers/SpinController.h>
+#include <Controllers/FlyCamController.h>
 #include <Assets/IModelRegistry.h>
 #include <Assets/MaterialAsset.h>
 #include <Assets/IMaterialRegistry.h>
+#include <Scene/SpawnPrefab.h>
 
 std::filesystem::path assetDir()
 {
@@ -55,36 +57,20 @@ int main()
         return 1;
     }
 
+    auto input = engine.services().tryResolve<IInput>();
+    if (!input) {
+        CHAI_LOG_CRITICAL("Could not get input services.");
+        return 1;
+    }
+
     //build the scene
     auto scene = std::make_unique<Scene>();
 
-    //auto sponza = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.glTF");
-    //if (sponza)
-    //    instantiate(*helmet, *scene);
+    auto sponza = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.glTF");
+    //auto sponza = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/intel/main_sponza/NewSponza_Main_glTF_003.glTF");
 
-    gfx::MaterialAsset red{};
-    red.baseColorFactor = {0.8f, 0.1f, 0.1f, 1.0f};
-    red.metallic = 0.0f;
-    red.roughness = 0.6f;
-    Handle<gfx::Material> redMat = materials->ingest(makeAssetId("mat:red"), std::move(red));
-
-    Handle<gfx::Mesh> cube = meshes->ingest(makeAssetId("builtin:cube"), gfx::makeCube(1.0f));
-    Handle<gfx::Texture> crate =
-        textures->load(makeAssetId("tex:tardis"), assetDir() / "tardis.png");
-
-    GameObject* cubeA = scene->createObject("cubeA");
-    auto* meshA = cubeA->addComponent<MeshComponent>();
-    meshA->setMesh(cube);
-    meshA->setMaterial(redMat);
-    cubeA->getComponent<TransformComponent>()->setPosition({1, 0, 0});
-
-    GameObject* cubeB = scene->createObject("cubeB");
-    auto* meshB = cubeB->addComponent<MeshComponent>();
-    meshB->setMesh(cube); 
-    meshB->setMaterial(redMat);
-    cubeB->getComponent<TransformComponent>()->setPosition({-1, 0, 0});
-    auto* controlB = cubeB->addComponent<ControllerComponent>();
-    controlB->addController<SpinController>();
+    if (sponza)
+        scene::spawn(*scene, *sponza);
 
     GameObject* cam = scene->createObject("camera");
     auto* camComp = cam->addComponent<CameraComponent>();
@@ -92,6 +78,8 @@ int main()
     camComp->setNearPlane(0.1f);
     camComp->setFarPlane(100.f);
     cam->getComponent<TransformComponent>()->setPosition({0, 0, 3});
+    auto* controlCam = cam->addComponent<ControllerComponent>();
+    controlCam->addController<FlyCameraController>();
     scene->setCamera(cam);
 
     GameObject* sun = scene->createObject("sun");

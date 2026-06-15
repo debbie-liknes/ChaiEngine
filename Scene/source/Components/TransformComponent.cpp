@@ -17,15 +17,6 @@ namespace chai::scene
         return t * r * s;
     }
 
-    void TransformComponent::setLocalMatrix(const Mat4& matrix)
-    {
-        position_ = Vec3(matrix[3][0], matrix[3][1], matrix[3][2]);
-        rotation_ = Quat::quatFromMat4(matrix);
-        scale_ = Vec3(length(Vec3(matrix[0][0], matrix[0][1], matrix[0][2])),
-                       length(Vec3(matrix[1][0], matrix[1][1], matrix[1][2])),
-                       length(Vec3(matrix[2][0], matrix[2][1], matrix[2][2])));
-    }
-
     Mat4 TransformComponent::getWorldMatrix() const
     {
         if (auto parent = getGameObject()->getParent(); parent) {
@@ -38,13 +29,6 @@ namespace chai::scene
     void TransformComponent::setPosition(Vec3 newPos)
     {
         position_ = newPos;
-    }
-
-    void TransformComponent::setRotationEuler(Vec3 newRot)
-    {
-        //auto y = m_rotation * newRot;
-        //rotate()
-        //m_rotation = Quatf(newRot);
     }
 
     void TransformComponent::setScale(Vec3 newScale)
@@ -69,7 +53,8 @@ namespace chai::scene
 
     Vec3 TransformComponent::getWorldPosition() const
     {
-        return position_;
+        Mat4 w = getWorldMatrix();
+        return Vec3(w[3][0], w[3][1], w[3][2]);
     }
 
     Quat TransformComponent::getWorldRotation() const

@@ -16,6 +16,7 @@ set(${PROJECT_NAME}_headers
         include/IComponent.h
         include/IScene.h
         include/ModelRegistry.h
+        include/IInput.h
 )
 
 set(${PROJECT_NAME}_source

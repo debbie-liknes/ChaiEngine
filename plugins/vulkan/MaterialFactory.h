@@ -58,7 +58,7 @@ namespace chai::gfx
                 asset.emissiveFactor.x, asset.emissiveFactor.y, asset.emissiveFactor.z, 0.f};
             f.metallic = asset.metallic;
             f.roughness = asset.roughness;
-            //f.alphaCutoff = asset.alphaCutoff;
+            f.alphaCutoff = (asset.alphaMode == AlphaMode::Mask) ? asset.alphaCutoff : 0.f;
 
             VkBufferCreateInfo bufInfo{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
             bufInfo.size = sizeof(MaterialFactors);

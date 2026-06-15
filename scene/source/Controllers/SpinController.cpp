@@ -10,10 +10,10 @@ namespace chai::scene
     {
     }
 
-    void SpinController::update(float deltaTime)
+    void SpinController::update(const UpdateContext& ctx)
     {
         auto transformComp = gameObject_->getComponent<TransformComponent>();
-        float angle = math::radians(rotationSpeed_) * deltaTime;
+        float angle = math::radians(rotationSpeed_) * ctx.dt;
         math::Quat deltaRotation = math::Quat::fromAxisAngle(math::Vec3(0.0f, 1.0f, 0.0f), angle);
         math::Quat rotation = transformComp->getLocalRotation();
         rotation = deltaRotation * rotation;

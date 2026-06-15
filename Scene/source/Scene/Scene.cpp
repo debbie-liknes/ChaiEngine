@@ -6,10 +6,10 @@
 
 namespace chai::scene
 {
-    void Scene::update(float deltaTime)
+    void Scene::update(const UpdateContext& ctx)
     {
         for (auto const& object : m_objects) {
-            object->update(deltaTime);
+            object->update(ctx);
         }
     }
 

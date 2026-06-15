@@ -15,7 +15,7 @@ namespace chai::scene
         Scene() = default;
         ~Scene() = default;
 
-        void update(float deltaTime) override;
+        void update(const UpdateContext&) override;
         void extract(gfx::FrameRenderData& frame) const override;
         void setCameraAspect(float aspect) override;
 

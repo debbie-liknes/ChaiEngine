@@ -161,7 +161,7 @@ namespace chai::gfx
             d.occlusion = imageIndexOf(data, m.occlusion_texture);
             d.emissive = imageIndexOf(data, m.emissive_texture);
             d.emissiveFactor = {m.emissive_factor[0], m.emissive_factor[1], m.emissive_factor[2]};
-            //d.alphaCutoff = m.alpha_cutoff;
+            d.alphaCutoff = m.alpha_cutoff;
             d.doubleSided = (m.double_sided != 0);
             switch (m.alpha_mode) {
                 case cgltf_alpha_mode_mask:
@@ -189,22 +189,31 @@ namespace chai::gfx
                 out.name = n.name;
 
             if (n.has_matrix) {
-                auto t = n.matrix[1];
-                out.local = math::Mat4{n.matrix[0], n.matrix[1], n.matrix[2], n.matrix[3],
-                                       n.matrix[4], n.matrix[5], n.matrix[6], n.matrix[7],
-                                       n.matrix[8], n.matrix[9], n.matrix[10], n.matrix[11],
-                                       n.matrix[12], n.matrix[13], n.matrix[14], n.matrix[15]
-                };
-            } else {
-                auto translation = math::Vec3{n.translation[0], n.translation[1], n.translation[2]};
-                auto rotation = math::Quat{
-                    n.rotation[0], n.rotation[1], n.rotation[2], n.rotation[3]}; // x,y,z,w
-                auto scale = math::Vec3{n.scale[0], n.scale[1], n.scale[2]};
+                auto local = math::Mat4{n.matrix[0],
+                                        n.matrix[1],
+                                        n.matrix[2],
+                                        n.matrix[3],
+                                        n.matrix[4],
+                                        n.matrix[5],
+                                        n.matrix[6],
+                                        n.matrix[7],
+                                        n.matrix[8],
+                                        n.matrix[9],
+                                        n.matrix[10],
+                                        n.matrix[11],
+                                        n.matrix[12],
+                                        n.matrix[13],
+                                        n.matrix[14],
+                                        n.matrix[15]};
 
-                math::Mat4 t = math::translate(math::Mat4::identity(), translation);
-                math::Mat4 r = rotation.toMat4();
-                math::Mat4 s = math::scale(math::Mat4::identity(), scale);
-                out.local = t * r * s;
+                out.position = math::extractPosition(local);
+                out.rotation = math::extractRotationAsQuat(local);
+                out.scale = math::extractScale(local);
+            } else {
+                out.position = math::Vec3{n.translation[0], n.translation[1], n.translation[2]};
+                out.rotation = math::Quat{
+                    n.rotation[0], n.rotation[1], n.rotation[2], n.rotation[3]}; // x,y,z,w
+                out.scale = math::Vec3{n.scale[0], n.scale[1], n.scale[2]};
             }
 
             out.meshIndex = n.mesh ? static_cast<int>(n.mesh - data.meshes) : -1;

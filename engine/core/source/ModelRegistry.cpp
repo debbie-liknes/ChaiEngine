@@ -123,7 +123,9 @@ namespace chai::gfx
         prefab.nodes.reserve(model.nodes.size());
         for (ModelAsset::Node& n : model.nodes) {
             ModelPrefab::Node out;
-            out.local = n.local;
+            out.position = n.position;
+            out.rotation = n.rotation;
+            out.scale = n.scale;
             out.meshGroup = n.meshIndex;
             out.children = std::move(n.children);
             out.name = std::move(n.name);

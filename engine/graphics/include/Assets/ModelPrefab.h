@@ -23,7 +23,9 @@ namespace chai::gfx
         };
 
         struct Node {
-            math::Mat4 local{};
+            math::Vec3 position;
+            math::Quat rotation;
+            math::Vec3 scale;
             int meshGroup = -1;        // index into meshGroups, or -1 (pure transform node)
             std::vector<int> children; // indices into nodes
             std::string name;

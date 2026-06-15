@@ -16,7 +16,7 @@ namespace chai
     class WindowGLFW : public IWindow
     {
     public:
-        WindowGLFW(const WindowDesc& desc);
+        WindowGLFW(const WindowDesc& desc, class InputHandler* input);
         ~WindowGLFW() override;
 
         /**
@@ -68,5 +68,13 @@ namespace chai
     private:
         GLFWwindow* window_;
         std::vector<WindowEvent> events_;
+        InputHandler* input_;
+
+        friend void onFramebufferSize(GLFWwindow* window, int width, int height);
+        friend void onClose(GLFWwindow* window);
+        friend void onFocus(GLFWwindow* window, int focused);
+        friend void onKeyPress(GLFWwindow* window, int key, int scancode, int action, int mods);
+        friend void onMouseButton(GLFWwindow* window, int button, int action, int mods);
+        friend void onCursorMove(GLFWwindow* window, double xpos, double ypos);
     };
 }

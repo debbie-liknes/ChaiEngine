@@ -25,12 +25,21 @@ namespace chai::math
     }
 
     /**
-     * @brief Create a perspective projection matrix
+     * @brief Calculate length of vector
      */
     template <typename T, int N>
     inline T length(const Vec<T, N>& v)
     {
         return std::sqrt(dot(v, v));
+    }
+
+    /**
+     * @brief Its just a dot product
+     */
+    template <typename T, int N>
+    inline T lengthSq(const Vec<T, N>& v)
+    {
+        return dot(v, v);
     }
 
     /**
@@ -210,5 +219,74 @@ namespace chai::math
             for (int col = 0; col < 3; ++col)
                 r(row, col) = m(row, col);
         return r;
+    }
+
+    //-----------TRS MATRIX HELPERS-------------------
+
+    /**
+     * @brief Extract position from mat4
+     */
+    template <typename T>
+    inline Vec3T<T> extractPosition(const Mat4T<T>& m)
+    {
+        return Vec3T<T>{m[3][0], m[3][1], m[3][2]};
+    }
+
+    /**
+     * @brief Extracts the signed scale from mat4
+     */
+    template <typename T>
+    inline Vec3T<T> extractScale(const Mat4T<T>& m)
+    {
+        Vec3T<T> c0(m[0][0], m[0][1], m[0][2]);
+        Vec3T<T> c1(m[1][0], m[1][1], m[1][2]);
+        Vec3T<T> c2(m[2][0], m[2][1], m[2][2]);
+
+        Vec3T<T> s(length(c0), length(c1), length(c2));
+
+        // negative determinant
+        if (dot(c0, cross(c1, c2)) < 0.f)
+            s.x = -s.x;
+
+        return s;
+    }
+
+    /**
+     * @brief Extract rotation from mat4 as mt3
+     */
+    template <typename T>
+    inline Mat3T<T> extractRotationAsMat(const Mat4T<T>& m)
+    {
+        Vec3T<T> xAxis = Vec3T<T>(m[0][0], m[1][0], m[2][0]);
+        Vec3T<T> yAxis = Vec3T<T>(m[0][1], m[1][1], m[2][1]);
+        Vec3T<T> zAxis = Vec3T<T>(m[0][2], m[1][2], m[2][2]);
+
+        Vec3T<T> scale = extractScale(m);
+
+        xAxis = xAxis / scale.x;
+        yAxis = yAxis / scale.y;
+        zAxis = zAxis / scale.z;
+
+        Mat3T<T> R;
+
+        R[0][0] = xAxis.x;
+        R[0][1] = yAxis.x;
+        R[0][2] = zAxis.x;
+        R[1][0] = xAxis.y;
+        R[1][1] = yAxis.y;
+        R[1][2] = zAxis.y;
+        R[2][0] = xAxis.z;
+        R[2][1] = yAxis.z;
+        R[2][2] = zAxis.z;
+        return R;
+    }
+
+    /**
+     * @brief Extract quat rotation from mat4
+     */
+    template <typename T>
+    inline Quaternion<T> extractRotationAsQuat(const Mat4T<T>& m)
+    {
+        return Quat::quatFromMat3(extractRotationAsMat(m));
     }
 }

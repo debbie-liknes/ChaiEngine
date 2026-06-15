@@ -2,6 +2,7 @@
 #include <Log.h>
 #include <Window/Window.h>
 #include <Rendering/FrameRenderData.h>
+#include <IInput.h>
 
 namespace chai
 {
@@ -52,12 +53,19 @@ namespace chai
             CHAI_LOG_CRITICAL("Could not locate Window Service.");
         }
 
+        auto input = services_.tryResolve<IInput>();
+        if (!input) {
+            CHAI_LOG_CRITICAL("Could not locate Input Service.");
+        }
+
         while (!window->shouldClose()) {
+            input->newFrame();
             window->pollEvents();
             float dt = clock_.tick();
 
             updateActiveCameraAspect();
-            scene_->update(dt);
+            UpdateContext ctx{dt, *input};
+            scene_->update(ctx);
 
             gfx::FrameRenderData frame;
             scene_->extract(frame);

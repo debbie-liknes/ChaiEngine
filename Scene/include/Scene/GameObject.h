@@ -95,7 +95,7 @@ namespace chai::scene
             }
         }
 
-        virtual void update(float deltaTime) override;
+        virtual void update(const UpdateContext&) override;
         virtual void extract(gfx::FrameRenderData& frameData) const override;
 
     private:

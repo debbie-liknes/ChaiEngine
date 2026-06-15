@@ -40,8 +40,11 @@ const float PI = 3.14159265359;
 
 vec3 getNormal()
 {
-    vec3 n = texture(normalTex, vUV).xyz * 2.0 - 1.0; // tangent-space, unpacked
+    vec3 n = texture(normalTex, vUV).xyz * 2.0 - 1.0;
     vec3 N = normalize(vNormal);
+    float tlen = length(vTangent.xyz);
+    if (tlen < 1e-4) //check if there is a usable tangent
+        return N;
     vec3 T = normalize(vTangent.xyz);
     vec3 B = cross(N, T) * vTangent.w;
     return normalize(mat3(T, B, N) * n);
@@ -73,7 +76,9 @@ void main()
 {
     // baseColor + emissive sampled from sRGB textures -> already linear after sampling
     vec4 base = texture(baseColorTex, vUV) * mat.baseColor;
+    if (base.a < mat.alphaCutoff) discard;
     vec3 albedo = base.rgb;
+    //outColor = vec4(albedo, 1.0); return;
 
     // glTF packs: metallic in B, roughness in G (linear texture)
     vec3 mr = texture(metalRoughTex, vUV).rgb;
@@ -84,6 +89,8 @@ void main()
     vec3 emissive = texture(emissiveTex, vUV).rgb * mat.emissive.rgb;
 
     vec3 N = getNormal();
+    //outColor = vec4(N * 0.5 + 0.5, 1.0);
+    //return;
     vec3 V = normalize(cam.position - vWorldPos);
     vec3 L = normalize(-light.direction.xyz); // surface -> light
     vec3 H = normalize(V + L);

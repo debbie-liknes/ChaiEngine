@@ -1,20 +1,21 @@
 #pragma once
 #include <SceneExport.h>
 #include <Controllers/Controller.h>
+#include <Updatable.h>
 
 namespace chai::scene
 {
     class GameObject;
 
-    class SCENE_EXPORT SpinController : public IController
+    class SCENE_EXPORT SpinController : public IController, public IUpdatable
     {
     public:
         SpinController(chai::scene::GameObject* obj);
         virtual ~SpinController() = default;
 
-        void update(float deltaTime);
-        void setEnabled(bool enabled);
-        bool isEnabled() const;
+        void update(const UpdateContext&) override;
+        void setEnabled(bool enabled) override;
+        bool isEnabled() const override;
 
         // maybe optional
         const char* getControllerType() const override { return "SpinController"; }

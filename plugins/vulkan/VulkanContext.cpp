@@ -114,11 +114,15 @@ namespace chai::gfx
         features12.bufferDeviceAddress = true;
         features12.descriptorIndexing = true;
 
+        VkPhysicalDeviceFeatures required{};
+        required.samplerAnisotropy = VK_TRUE;
+
         // use vkbootstrap to select a gpu.
         vkb::PhysicalDeviceSelector selector{vkbInstance_};
         vkbPhysicalDevice_ = selector.set_minimum_version(1, 3)
                                                  .set_required_features_13(features)
                                                  .set_required_features_12(features12)
+                                                 .set_required_features(required)
                                                  .set_surface(surface_)
                                                  .select()
                                                  .value();

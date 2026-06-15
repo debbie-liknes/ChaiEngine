@@ -89,13 +89,13 @@ namespace chai::scene
         }
 
         // Update all controllers
-        void update(float deltaTime) override
+        void update(const UpdateContext& ctx) override
         {
             for (auto const& controller : controllers_)
             {
                 if (controller->isEnabled())
                 {
-                    controller->update(deltaTime);
+                    controller->update(ctx);
                 }
             }
         }

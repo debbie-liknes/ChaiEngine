@@ -423,7 +423,7 @@ namespace chai::gfx
         VkShaderModule vert = loadShaderModule(ctx_.device(), shaderDir / "pbr.vert.spv");
         VkShaderModule frag = loadShaderModule(ctx_.device(), shaderDir / "pbr.frag.spv");
         if (vert == VK_NULL_HANDLE || frag == VK_NULL_HANDLE) {
-            CHAI_LOG_CRITICAL("Triangle shaders failed to load from {}", shaderDir.string());
+            CHAI_LOG_CRITICAL("Shaders failed to load from {}", shaderDir.string());
             return;
         }
 

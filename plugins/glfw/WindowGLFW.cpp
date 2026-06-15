@@ -1,22 +1,72 @@
 #include "WindowGLFW.h"
 #include <Log.h>
+#include "Input.h"
 
 namespace chai
 {
     void onFramebufferSize(GLFWwindow* window, int width, int height)
     {
+        auto* windowService = static_cast<WindowGLFW*>(glfwGetWindowUserPointer(window));
+        windowService->events_.push_back(WindowEvent{WindowEventType::Resized, width, height});
     }
 
     void onClose(GLFWwindow* window)
     {
+        auto* windowService = static_cast<WindowGLFW*>(glfwGetWindowUserPointer(window));
+        windowService->events_.push_back(WindowEvent{WindowEventType::CloseRequested});
     }
 
     void onFocus(GLFWwindow* window, int focused)
     {
+        auto* windowService = static_cast<WindowGLFW*>(glfwGetWindowUserPointer(window));
+        WindowEvent event;
+        event.type =
+            focused == GLFW_TRUE ? WindowEventType::FocusGained : WindowEventType::FocusLost;
+        windowService->events_.push_back(event);
+    }
+
+    void onKeyPress(GLFWwindow* window, int key, int scancode, int action, int mods)
+    {
+        auto* windowService = static_cast<WindowGLFW*>(glfwGetWindowUserPointer(window));
+        KeyEvent event;
+        if (action == GLFW_PRESS)
+            event.type = InputEventType::KeyPress;
+        if (action == GLFW_RELEASE)
+            event.type = InputEventType::KeyRelease;
+        if (action == GLFW_REPEAT)
+            event.type = InputEventType::KeyRepeat;
+        event.key = toChaiKey(key);
+        //TODO: scancode, mods
+        windowService->input_->updateKeyPress(event);
+    }
+
+    void onMouseButton(GLFWwindow* window, int button, int action, int mods)
+    {
+        auto* windowService = static_cast<WindowGLFW*>(glfwGetWindowUserPointer(window));
+        MouseButtonEvent event;
+        event.type = action == GLFW_PRESS ? InputEventType::MouseButtonDown : InputEventType::MouseButtonUp;
+        if (button == GLFW_MOUSE_BUTTON_LEFT)
+            event.mouse = MouseButton::Left;
+        if (button == GLFW_MOUSE_BUTTON_RIGHT)
+            event.mouse = MouseButton::Right;
+        if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+            event.mouse = MouseButton::Middle;
+
+        windowService->input_->updateMousePress(event);
+    }
+
+    void onCursorMove(GLFWwindow* window, double xpos, double ypos)
+    {
+        auto* windowService = static_cast<WindowGLFW*>(glfwGetWindowUserPointer(window));
+        MouseMoveEvent event;
+        event.type = InputEventType::MouseMove;
+        event.x = static_cast<float>(xpos);
+        event.y = static_cast<float>(ypos);
+        windowService->input_->updateMouseMove(event);
 
     }
 
-    WindowGLFW::WindowGLFW(const WindowDesc& desc)
+    WindowGLFW::WindowGLFW(const WindowDesc& desc, class InputHandler* input) : input_(input)
     {
         // There might be a more graphics api agnostic way to do this
         // But ive got my heart set on vulkan right now, so this is how I will do it
@@ -33,6 +83,9 @@ namespace chai
         glfwSetFramebufferSizeCallback(window_, onFramebufferSize);
         glfwSetWindowCloseCallback(window_, onClose);
         glfwSetWindowFocusCallback(window_, onFocus);
+        glfwSetKeyCallback(window_, onKeyPress);
+        glfwSetMouseButtonCallback(window_, onMouseButton);
+        glfwSetCursorPosCallback(window_, onCursorMove);
 
         events_.reserve(16);
 

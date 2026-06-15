@@ -25,6 +25,7 @@ namespace chai::gfx
         PipelineBuilder& disableDepthTest();
         PipelineBuilder& enableDepthTest();
         PipelineBuilder& disableBlending();
+        PipelineBuilder& enableBlending();
 
         /**
          * @brief Assembles the create struct and returns the pipeline.

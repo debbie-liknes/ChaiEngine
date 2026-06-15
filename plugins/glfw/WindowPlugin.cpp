@@ -7,6 +7,7 @@
 #include <Plugin/PluginMacros.h>
 #include <Plugin/ServiceLocator.h>
 #include <Window/Window.h>
+#include "Input.h"
 #include <memory>
 
 namespace chai
@@ -30,14 +31,17 @@ namespace chai
             }
 
             WindowDesc desc;
-            window_ = std::make_shared<WindowGLFW>(desc);
+            input_ = std::make_shared<InputHandler>();
+            window_ = std::make_shared<WindowGLFW>(desc, input_.get());
             ctx.services.provide<IWindow>(window_);
+            ctx.services.provide<IInput>(input_);
             CHAI_LOG_INFO("Window service provided");
         }
 
         void onUnload(PluginContext& ctx) override
         {
             ctx.services.remove<IWindow>();
+            ctx.services.remove<IInput>();
             window_.reset();
             glfwTerminate();
             CHAI_LOG_INFO("Window removed, GLFW terminated");
@@ -45,6 +49,7 @@ namespace chai
 
     private:
         std::shared_ptr<WindowGLFW> window_;
+        std::shared_ptr<InputHandler> input_;
     };
 
     CHAI_PLUGIN(WindowPlugin);

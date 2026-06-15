@@ -54,6 +54,12 @@ namespace chai::gfx
         return *this;
     }
 
+    PipelineBuilder& PipelineBuilder::enableBlending()
+    {
+        blending_ = true;
+        return *this;
+    }
+
     PipelineBuilder& PipelineBuilder::disableBlending()
     {
         blending_ = false;

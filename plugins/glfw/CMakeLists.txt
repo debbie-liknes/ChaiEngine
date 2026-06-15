@@ -2,11 +2,13 @@ project(GLFWWindowPlugin)
 
 set(${PROJECT_NAME}_headers
         WindowGLFW.h
+        Input.h
 )
 
 set(${PROJECT_NAME}_source
         WindowGLFW.cpp
 	    WindowPlugin.cpp
+        Input.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED

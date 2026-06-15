@@ -62,16 +62,21 @@ namespace chai::gfx
             out.height = asset.height;
             out.format = format;
 
+            const uint32_t mipCount =
+                static_cast<uint32_t>(std::floor(std::log2(std::max(asset.width, asset.height)))) +
+                1;
+
             //Image on the device
             VkImageCreateInfo imageInfo{VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
             imageInfo.imageType = VK_IMAGE_TYPE_2D;
             imageInfo.format = format;
             imageInfo.extent = extent;
-            imageInfo.mipLevels = 1;
+            imageInfo.mipLevels = mipCount;
             imageInfo.arrayLayers = 1;
             imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
             imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-            imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
+                              VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
             imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
             VmaAllocationCreateInfo imgAlloc{};
@@ -115,25 +120,19 @@ namespace chai::gfx
                              VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
                              0,
                              VK_PIPELINE_STAGE_2_COPY_BIT,
-                             VK_ACCESS_2_TRANSFER_WRITE_BIT);
+                             VK_ACCESS_2_TRANSFER_WRITE_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT); // covers all mips via REMAINING
 
                 VkBufferImageCopy region{};
-                region.bufferOffset = 0;
-                region.bufferRowLength = 0; // 0 = tightly packed
+                region.bufferRowLength = 0;
                 region.bufferImageHeight = 0;
                 region.imageSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
                 region.imageExtent = extent;
                 vkCmdCopyBufferToImage(
                     cmd, staging, out.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-                imageBarrier(cmd,
-                             out.image,
-                             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                             VK_PIPELINE_STAGE_2_COPY_BIT,
-                             VK_ACCESS_2_TRANSFER_WRITE_BIT,
-                             VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
-                             VK_ACCESS_2_SHADER_READ_BIT);
+                generateMipmaps(
+                    cmd, out.image, int32_t(asset.width), int32_t(asset.height), mipCount);
             });
 
             vmaDestroyBuffer(allocator, staging, stagingAlloc);
@@ -142,7 +141,7 @@ namespace chai::gfx
             viewInfo.image = out.image;
             viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
             viewInfo.format = format;
-            viewInfo.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+            viewInfo.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, mipCount, 0, 1};
             if (vkCreateImageView(device, &viewInfo, nullptr, &out.view) != VK_SUCCESS) {
                 CHAI_LOG_ERROR("vkCreateImageView failed");
                 return LoadState::Failed;
@@ -156,6 +155,10 @@ namespace chai::gfx
             sampInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
             sampInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
             sampInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+            sampInfo.minLod = 0.0f;
+            sampInfo.maxLod = static_cast<float>(mipCount);
+            sampInfo.anisotropyEnable = VK_TRUE;
+            sampInfo.maxAnisotropy = 8.0f;
             vkCreateSampler(device, &sampInfo, nullptr, &out.sampler);
 
             return LoadState::Ready;

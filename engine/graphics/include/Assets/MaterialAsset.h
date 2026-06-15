@@ -27,6 +27,7 @@ namespace chai::gfx
         math::Vec3 emissiveFactor;
         AlphaMode alphaMode;
         bool doubleSided;
+        float alphaCutoff;
 
         Handle<gfx::Texture> baseColor;
         Handle<gfx::Texture> emissive;

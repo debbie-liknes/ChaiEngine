@@ -29,16 +29,16 @@ namespace chai::scene
     //    return m_children;
     //}
 
-    void GameObject::update(float deltaTime)
+    void GameObject::update(const UpdateContext& ctx)
     {
         for (const auto& component : components_) {
             if (auto updatable = dynamic_cast<IUpdatable*>(component.get())) {
-                updatable->update(deltaTime);
+                updatable->update(ctx);
             }
         }
 
         if (controllerComponent_) {
-            controllerComponent_->update(deltaTime);
+            controllerComponent_->update(ctx);
         }
     }
 

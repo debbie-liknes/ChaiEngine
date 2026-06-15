@@ -16,10 +16,7 @@ namespace chai::scene
         math::Mat4 getLocalMatrix() const;
         math::Mat4 getWorldMatrix() const;
 
-        void setLocalMatrix(const math::Mat4& matrix);
-
         void setPosition(math::Vec3 newPos);
-        void setRotationEuler(math::Vec3 newRot);
         void setRotation(const math::Quat& rot)
         { 
             rotation_ = rot;
