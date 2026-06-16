@@ -10,7 +10,7 @@ namespace chai
         return ext == "png";
     }
 
-    std::optional<gfx::TextureAsset> PNGLoader::decode(std::span<const uint8_t> bytes) const
+    std::optional<gfx::TextureAsset> PNGLoader::decode(std::span<const uint8_t> bytes, const gfx::TextureFormat& format) const
     {
         if (bytes.empty())
             return std::nullopt;
@@ -20,7 +20,6 @@ namespace chai
             return std::nullopt;
         }
 
-        stbi_set_flip_vertically_on_load(true);
         int w = 0, h = 0, srcChannels = 0;
         stbi_uc* decoded = stbi_load_from_memory(
             bytes.data(), static_cast<int>(bytes.size()), &w, &h, &srcChannels, STBI_rgb_alpha);
@@ -34,6 +33,7 @@ namespace chai
         out.width = static_cast<uint32_t>(w);
         out.height = static_cast<uint32_t>(h);
         out.channels = 4; 
+        out.format = format;
 
         const size_t byteCount = static_cast<size_t>(w) * h * 4;
         out.pixels.assign(decoded, decoded + byteCount);

@@ -4,6 +4,7 @@
 #include <Common/GraphicsMacros.h>
 #include <Handle.h>
 #include <Assets/TextureAsset.h>
+#include <string>
 
 namespace chai::gfx
 {
@@ -21,6 +22,7 @@ namespace chai::gfx
 
 	struct MaterialAsset
 	{
+        std::string name;
         math::Vec4 baseColorFactor;
         float metallic;
         float roughness;

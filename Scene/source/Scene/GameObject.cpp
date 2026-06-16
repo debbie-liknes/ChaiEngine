@@ -47,7 +47,10 @@ namespace chai::scene
         for (const auto& c : components_)
             if (auto updatable = dynamic_cast<IUpdatable*>(c.get()))
                 updatable->extract(frame);
-        for (auto* child : children_)
-            child->extract(frame);
+        for (auto const* child : children_)
+        {
+            if (child->parent_ == nullptr)
+                child->extract(frame);
+        }
     }
 } // namespace chai::cup

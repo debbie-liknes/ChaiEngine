@@ -7,7 +7,8 @@ namespace chai
 	{
     public:
         bool canLoad(std::string_view ext) const override;
-        std::optional<gfx::TextureAsset> decode(std::span<const uint8_t> bytes) const override;
+        std::optional<gfx::TextureAsset> decode(std::span<const uint8_t> bytes,
+                                                const gfx::TextureFormat& format) const override;
         const char* name() const override;
 	};
 }

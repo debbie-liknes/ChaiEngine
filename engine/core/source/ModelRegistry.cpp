@@ -69,6 +69,7 @@ namespace chai::gfx
             const ModelAsset::MaterialDesc& m = model.materials[i];
 
             MaterialAsset asset{};
+            asset.name = m.name;
             asset.baseColorFactor = m.baseColorFactor;
             asset.metallic = m.metallic;
             asset.roughness = m.roughness;
@@ -186,13 +187,14 @@ namespace chai::gfx
             return {};
         }
 
-        auto decoded = loader->decode(img.bytes);
+        TextureFormat format = srgb ? TextureFormat::RGBA8_SRGB : TextureFormat::RGBA8_UNORM;
+        auto decoded = loader->decode(img.bytes, format);
         if (!decoded) {
             CHAI_LOG_ERROR("ModelRegistry: failed to decode embedded image {}", idx);
             return {};
         }
 
-        decoded->format = srgb ? TextureFormat::RGBA8_SRGB : TextureFormat::RGBA8_UNORM;
+        decoded->format = format;
 
         AssetId texId = subId(modelId, "img:" + std::to_string(idx) + (srgb ? ":srgb" : ":lin"));
         return textures_.ingest(texId, std::move(*decoded));

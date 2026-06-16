@@ -43,6 +43,9 @@ namespace chai::gfx
         out.vertices.resize(pos->count);
         for (cgltf_size i = 0; i < pos->count; i++) {
             auto& v = out.vertices[i];
+            v.normal = {0, 0, 1};
+            v.uv = {0, 0};
+            v.tangent = {1, 0, 0, 1};
             cgltf_accessor_read_float(pos, i, &v.position.x, 3);
             if (nrm)
                 cgltf_accessor_read_float(nrm, i, &v.normal.x, 3);
@@ -77,11 +80,6 @@ namespace chai::gfx
 
             for (cgltf_size pi = 0; pi < meshData.primitives_count; ++pi) {
                 const cgltf_primitive& prim = meshData.primitives[pi];
-                //verify this primitive is valid, we only do triangles right now
-                if (prim.type != cgltf_primitive_type_triangles) {
-                    CHAI_LOG_WARN("Skipping non triangle primitive.")
-                    continue;
-                }
 
                 ModelAsset::Primitive primEntry;
                 if (!readPrimitive(prim, primEntry.mesh))
@@ -140,10 +138,8 @@ namespace chai::gfx
     {
         model.materials.reserve(data.materials_count);
         for (cgltf_size i = 0; i < data.materials_count; i++) {
-            const cgltf_material& mat = data.materials[i];
-            ModelAsset::MaterialDesc matDescription;
-
-                const cgltf_material& m = data.materials[i];
+            static int hack = 0;
+            const cgltf_material& m = data.materials[i];
             ModelAsset::MaterialDesc d;
 
             if (m.has_pbr_metallic_roughness) {
@@ -157,6 +153,8 @@ namespace chai::gfx
                 d.baseColor = imageIndexOf(data, pbr.base_color_texture);
                 d.metallicRoughness = imageIndexOf(data, pbr.metallic_roughness_texture);
             }
+            if (m.name)
+                d.name = m.name;
             d.normal = imageIndexOf(data, m.normal_texture);
             d.occlusion = imageIndexOf(data, m.occlusion_texture);
             d.emissive = imageIndexOf(data, m.emissive_texture);
@@ -175,9 +173,53 @@ namespace chai::gfx
                     break;
             }
             model.materials.push_back(d);
-
         }
     }
+
+    void decomposeMatrix(const cgltf_float m[16], math::Vec3& t, math::Quat& r, math::Vec3& s)
+    {
+        t = {m[12], m[13], m[14]};
+
+        math::Vec3 c0{m[0], m[1], m[2]};
+        math::Vec3 c1{m[4], m[5], m[6]};
+        math::Vec3 c2{m[8], m[9], m[10]};
+        s = {length(c0), length(c1), length(c2)};
+
+        const float ix = s.x ? 1.f / s.x : 0.f;
+        const float iy = s.y ? 1.f / s.y : 0.f;
+        const float iz = s.z ? 1.f / s.z : 0.f;
+        const float r00 = m[0] * ix, r01 = m[4] * iy, r02 = m[8] * iz;
+        const float r10 = m[1] * ix, r11 = m[5] * iy, r12 = m[9] * iz;
+        const float r20 = m[2] * ix, r21 = m[6] * iy, r22 = m[10] * iz;
+
+        const float trace = r00 + r11 + r22;
+        if (trace > 0.f) {
+            float k = std::sqrt(trace + 1.f) * 2.f;
+            r.w = 0.25f * k;
+            r.x = (r21 - r12) / k;
+            r.y = (r02 - r20) / k;
+            r.z = (r10 - r01) / k;
+        } else if (r00 > r11 && r00 > r22) {
+            float k = std::sqrt(1.f + r00 - r11 - r22) * 2.f;
+            r.w = (r21 - r12) / k;
+            r.x = 0.25f * k;
+            r.y = (r01 + r10) / k;
+            r.z = (r02 + r20) / k;
+        } else if (r11 > r22) {
+            float k = std::sqrt(1.f + r11 - r00 - r22) * 2.f;
+            r.w = (r02 - r20) / k;
+            r.x = (r01 + r10) / k;
+            r.y = 0.25f * k;
+            r.z = (r12 + r21) / k;
+        } else {
+            float k = std::sqrt(1.f + r22 - r00 - r11) * 2.f;
+            r.w = (r10 - r01) / k;
+            r.x = (r02 + r20) / k;
+            r.y = (r12 + r21) / k;
+            r.z = 0.25f * k;
+        }
+    }
+
 
     void extractNodes(const cgltf_data& data, ModelAsset& model)
     {
@@ -189,32 +231,14 @@ namespace chai::gfx
                 out.name = n.name;
 
             if (n.has_matrix) {
-                auto local = math::Mat4{n.matrix[0],
-                                        n.matrix[1],
-                                        n.matrix[2],
-                                        n.matrix[3],
-                                        n.matrix[4],
-                                        n.matrix[5],
-                                        n.matrix[6],
-                                        n.matrix[7],
-                                        n.matrix[8],
-                                        n.matrix[9],
-                                        n.matrix[10],
-                                        n.matrix[11],
-                                        n.matrix[12],
-                                        n.matrix[13],
-                                        n.matrix[14],
-                                        n.matrix[15]};
-
-                out.position = math::extractPosition(local);
-                out.rotation = math::extractRotationAsQuat(local);
-                out.scale = math::extractScale(local);
+                decomposeMatrix(n.matrix, out.position, out.rotation, out.scale);
             } else {
-                out.position = math::Vec3{n.translation[0], n.translation[1], n.translation[2]};
+                out.position = {n.translation[0], n.translation[1], n.translation[2]};
                 out.rotation = math::Quat{
-                    n.rotation[0], n.rotation[1], n.rotation[2], n.rotation[3]}; // x,y,z,w
-                out.scale = math::Vec3{n.scale[0], n.scale[1], n.scale[2]};
+                    n.rotation[0], n.rotation[1], n.rotation[2], n.rotation[3]};
+                out.scale = {n.scale[0], n.scale[1], n.scale[2]};
             }
+
 
             out.meshIndex = n.mesh ? static_cast<int>(n.mesh - data.meshes) : -1;
             out.children.reserve(n.children_count);

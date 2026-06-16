@@ -226,7 +226,7 @@ namespace chai::gfx
                 return {};
             }
 
-            auto image = loader->decode(bytes);
+            auto image = loader->decode(bytes, TextureFormat::RGBA8_SRGB);
             if (!image)
                 return {};
 

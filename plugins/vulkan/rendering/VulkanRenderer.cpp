@@ -186,7 +186,7 @@ namespace chai::gfx
         camUBO.view = renderData.views[0].view;
         camUBO.proj = renderData.views[0].proj;
         camUBO.viewProj = renderData.views[0].proj * renderData.views[0].view;
-        camUBO.position = math::Vec3{0, 0, 0};
+        camUBO.position = renderData.views[0].position;
         std::memcpy(frame.cameraMapped, &camUBO, sizeof(camUBO));
 
         LightData lightUBO{};
@@ -436,7 +436,9 @@ namespace chai::gfx
                         .setColorFormat(swapchain_.format())
                         .enableDepthTest()
                         .setDepthFormat(swapchain_.depthFormat())
-                        .disableBlending()
+                        .enableBlending()
+                           //.setPolygonMode(VK_POLYGON_MODE_LINE)
+                           .setCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE)
                         .build(ctx_.device(), pipelineLayout_);
 
         vkDestroyShaderModule(ctx_.device(), vert, nullptr);

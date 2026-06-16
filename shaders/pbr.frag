@@ -30,8 +30,8 @@ layout(set = 1, binding = 5) uniform sampler2D emissiveTex;
 
 // set 2 = light. vec4s on purpose -- see std140 note. Field order must match LightData.
 layout(set = 2, binding = 0) uniform Light {
-    vec4 direction; // .xyz = direction the light travels (sun -> scene)
-    vec4 color;     // .rgb = radiance
+    vec4 direction; // .xyz = direction
+    vec4 color;     // .rgb = color of light, w = stength
 } light;
 
 layout(location = 0) out vec4 outColor;
@@ -72,9 +72,18 @@ vec3 F_Schlick(float VoH, vec3 f0)
     return f0 + (1.0 - f0) * pow(clamp(1.0 - VoH, 0.0, 1.0), 5.0);
 }
 
+vec3 acesFilm(vec3 x) {
+    const float a = 2.51, b = 0.03, c = 2.43, d = 0.59, e = 0.14;
+    return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+}
+
 void main()
 {
+    //outColor = vec4(vUV, 0.0, 1.0); return;
     // baseColor + emissive sampled from sRGB textures -> already linear after sampling
+    //outColor = vec4(texture(baseColorTex, vUV).rgb, 1.0);
+    //return;
+
     vec4 base = texture(baseColorTex, vUV) * mat.baseColor;
     if (base.a < mat.alphaCutoff) discard;
     vec3 albedo = base.rgb;
@@ -89,6 +98,8 @@ void main()
     vec3 emissive = texture(emissiveTex, vUV).rgb * mat.emissive.rgb;
 
     vec3 N = getNormal();
+    if (!gl_FrontFacing) N = -N;
+    //vec3 c = N*0.5 + 0.5; outColor = vec4(c,1);
     //outColor = vec4(N * 0.5 + 0.5, 1.0);
     //return;
     vec3 V = normalize(cam.position - vWorldPos);
@@ -115,13 +126,14 @@ void main()
     vec3 lo = (diffuse + spec) * radiance * NoL;
 
     // flat ambient stand-in until IBL; modulated by occlusion
-    vec3 ambient = vec3(0.03) * albedo * ao;
+    vec3 ambient = vec3(0.04, 0.045, 0.06) * albedo * ao;
 
     vec3 color = ambient + lo + emissive;
 
     // Swapchain is UNORM, so encode manually. Reinhard tonemap + linear->sRGB.
     // If you switch the swapchain to a *_SRGB format, drop the pow() (hardware does it).
-    color = color / (color + vec3(1.0));
+    color *= light.color.w;
+    color = acesFilm(color);
     color = pow(color, vec3(1.0 / 2.2));
 
     outColor = vec4(color, base.a);

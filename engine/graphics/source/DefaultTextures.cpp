@@ -10,6 +10,7 @@ namespace chai::gfx
         texture.channels = 4;
         texture.bytesPerChannel = 1;
         texture.pixels = {255, 255, 255, 255};
+        texture.format = TextureFormat::RGBA8_SRGB;
 
         return texture;
     }
@@ -22,6 +23,7 @@ namespace chai::gfx
         texture.channels = 4;
         texture.bytesPerChannel = 1;
         texture.pixels = {128, 128, 255, 255};
+        texture.format = TextureFormat::RGBA8_UNORM;
 
         return texture;
     }

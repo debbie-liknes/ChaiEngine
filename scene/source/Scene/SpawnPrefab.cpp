@@ -21,7 +21,6 @@ namespace chai::scene
             tf->setPosition(node.position);
             tf->setRotation(node.rotation);
             tf->setScale(node.scale);
-            //tf->setLocalMatrix(node.local);
 
             if (parentObj)
                 obj->setParent(parentObj);

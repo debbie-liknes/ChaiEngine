@@ -18,8 +18,9 @@ namespace chai::gfx
         };
 
         struct MaterialDesc {
+            std::string name;
             math::Vec4 baseColorFactor{1, 1, 1, 1};
-            float metallic = 1.f, roughness = 1.f;
+            float metallic = 0.f, roughness = 0.f;
             math::Vec3 emissiveFactor{0, 0, 0};
             int baseColor = -1, metallicRoughness = -1, normal = -1, occlusion = -1,
                 emissive = -1;

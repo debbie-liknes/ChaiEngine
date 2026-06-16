@@ -71,6 +71,8 @@ namespace chai::gfx
 
         auto instRet = builder.set_app_name("")
                             .request_validation_layers(true)
+                            .add_validation_feature_enable(
+                               VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT)
                             .set_debug_callback(DebugCallback)
                             .enable_extensions(windowExtensions)
                             .require_api_version(1, 3, 0)
@@ -116,6 +118,7 @@ namespace chai::gfx
 
         VkPhysicalDeviceFeatures required{};
         required.samplerAnisotropy = VK_TRUE;
+        required.fillModeNonSolid = VK_TRUE;
 
         // use vkbootstrap to select a gpu.
         vkb::PhysicalDeviceSelector selector{vkbInstance_};
@@ -184,15 +187,15 @@ namespace chai::gfx
     {
         //i will outgrow this budget. Will need a pool of pools
         VkDescriptorPoolSize poolSizes[] = {
-            {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 16},    //16 ubos
-            {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 64} // 64 textures
+            {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 512},
+            {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2048}
         };
 
         VkDescriptorPoolCreateInfo poolInfo{VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
         poolInfo.flags = 0;
         poolInfo.pPoolSizes = poolSizes;
         poolInfo.poolSizeCount = uint32_t(std::size(poolSizes));
-        poolInfo.maxSets = 128;
+        poolInfo.maxSets = 512;
         VK_CHECK(vkCreateDescriptorPool(device_, &poolInfo, nullptr, &descriptorPool_));
 
         //cameras

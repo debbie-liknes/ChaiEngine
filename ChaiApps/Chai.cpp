@@ -66,11 +66,14 @@ int main()
     //build the scene
     auto scene = std::make_unique<Scene>();
 
-    auto sponza = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.glTF");
-    //auto sponza = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/intel/main_sponza/NewSponza_Main_glTF_003.glTF");
+    auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/intel/main_sponza/NewSponza_Main_glTF_003.glTF");
+    //auto prefab = models->load(makeAssetId("model:demo"), assetDir() / "VirtualCity/glTF/VirtualCity.glTF");
 
-    if (sponza)
-        scene::spawn(*scene, *sponza);
+    if (prefab)
+    {
+        auto prefabInstance = scene::spawn(*scene, *prefab);
+        //prefabInstance.root->getComponent<TransformComponent>()->setScale(math::Vec3{5.f, 5.f, 5.f});
+    }
 
     GameObject* cam = scene->createObject("camera");
     auto* camComp = cam->addComponent<CameraComponent>();
@@ -84,7 +87,7 @@ int main()
 
     GameObject* sun = scene->createObject("sun");
     sun->addComponent<LightComponent>();
-    sun->getComponent<TransformComponent>()->lookAt(math::Vec3{1, 1, 0}, math::Vec3{0, 1, 0});
+    sun->getComponent<TransformComponent>()->lookAt(math::Vec3{-0.5, -1, 0}, math::Vec3{0, 1, 0});
     scene->setLight(sun);
 
     engine.setScene(std::move(scene));
