@@ -1,18 +1,18 @@
 #include "VulkanRenderer.h"
 
+#include "../ImageTransition.h"
+#include "../TextureFactory.h"
 #include "../core/VkCheck.h"
 #include "../pipeline/PipelineBuilder.h"
 #include "../pipeline/ShaderModule.h"
 
 #include <AssetCache.h>
-#include <Log.h>
+#include <Assets/DefaultTextures.h>
 #include <Assets/MeshAsset.h>
+#include <Log.h>
+#include <Rendering/CameraData.h>
 #include <SystemPaths.h>
 #include <Window/Window.h>
-#include <Rendering/CameraData.h>
-#include "../ImageTransition.h"
-#include "../TextureFactory.h"
-#include <Assets/DefaultTextures.h>
 #include <numeric>
 
 namespace chai::gfx
@@ -48,6 +48,8 @@ namespace chai::gfx
         }
 
         vkDestroyPipeline(ctx_.device(), pbrPipeline_, nullptr);
+        vkDestroyPipeline(ctx_.device(), pbrBlendPipeline_, nullptr);
+        vkDestroyPipeline(ctx_.device(), skyboxPipeline_, nullptr);
         vkDestroyPipelineLayout(ctx_.device(), pipelineLayout_, nullptr);
 
         // dont need to destory the buffers individually. Command Pool is enough
@@ -85,7 +87,7 @@ namespace chai::gfx
             VK_CHECK(vkCreateSemaphore(
                 ctx_.device(), &semaphoreCreateInfo, nullptr, &frames_[i].imageAvailable));
 
-            //camera
+            // camera
             {
                 VkBufferCreateInfo bufInfo{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
                 bufInfo.size = sizeof(CameraData);
@@ -126,7 +128,7 @@ namespace chai::gfx
                 vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);
             }
 
-            //lights
+            // lights
             {
                 VkBufferCreateInfo bufInfo{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
                 bufInfo.size = sizeof(LightData);
@@ -201,7 +203,7 @@ namespace chai::gfx
             return;
         }
 
-        //debugging
+        // debugging
         view.clearColor = {{{0.05f, 0.10f, 0.15f, 1.0f}}};
 
         VK_CHECK(vkResetFences(ctx_.device(), 1, &frame.inFlight));
@@ -213,10 +215,7 @@ namespace chai::gfx
         VK_CHECK(vkBeginCommandBuffer(cmd, &begin));
 
         transitionImage(cmd, view.image, ImageState::Undefined, ImageState::ColorAttachment);
-        transitionImage(cmd,
-                        view.depthImage,
-                        ImageState::Undefined,
-                        ImageState::DepthAttachment);
+        transitionImage(cmd, view.depthImage, ImageState::Undefined, ImageState::DepthAttachment);
 
         VkRenderingAttachmentInfo color{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
         color.imageView = view.colorView;
@@ -328,7 +327,6 @@ namespace chai::gfx
         VkRect2D scissor{{0, 0}, view.extent};
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-        
         FrameData& frame = frames_[currentFrame_];
 
         // Global sets, bound once. Same layout for every pipeline, so these stay valid
@@ -354,7 +352,14 @@ namespace chai::gfx
         std::iota(order.begin(), order.end(), 0u);
 
         std::sort(order.begin(), order.end(), [&](uint32_t a, uint32_t b) {
-            return renderData.items[a].material.index < renderData.items[b].material.index;
+            const GpuMaterial* ma = materialCache_->resource(renderData.items[a].material);
+            const GpuMaterial* mb = materialCache_->resource(renderData.items[b].material);
+            bool aBlend = ma && ma->alphaMode == AlphaMode::Blend;
+            bool bBlend = mb && mb->alphaMode == AlphaMode::Blend;
+            if (aBlend != bBlend)
+                return !aBlend; // opaque first
+            return renderData.items[a].material.index <
+                   renderData.items[b].material.index; // then by material
         });
 
         Handle<Material> lastMaterial{};
@@ -369,8 +374,11 @@ namespace chai::gfx
             if (!mesh)
                 continue;
 
-            //could swap pipelines later
-            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline_);
+            // could swap pipelines later
+            if (mat->alphaMode == AlphaMode::Blend)
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrBlendPipeline_);
+            else
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline_);
 
             if (item.material != lastMaterial) {
                 vkCmdBindDescriptorSets(cmd,
@@ -399,6 +407,20 @@ namespace chai::gfx
             vkCmdBindIndexBuffer(cmd, mesh->indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
             vkCmdDrawIndexed(cmd, mesh->indexCount, 1, 0, 0, 0);
         }
+
+        // skybox render
+         const GpuTexture* cubeTex = texCache_->resource(renderData.environment.skyboxCube);
+         if (!cubeTex)
+             return;
+         ensureSkyboxSet(frame, *cubeTex, renderData.environment.skyboxCube);
+
+         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxPipeline_);
+
+         vkCmdBindDescriptorSets(
+             cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout_, 3, 1, &frame.skyboxSet, 0,
+             nullptr);
+
+         vkCmdDraw(cmd, 3, 1, 0, 0);
     }
 
     void VulkanRenderer::setupPipelines()
@@ -409,39 +431,113 @@ namespace chai::gfx
         pcRange.size = sizeof(PushConstants);
 
         // set 0 = camera, set 1 = material, set 2 = light
-        VkDescriptorSetLayout setLayouts[] = {
-            ctx_.cameraSetLayout(), ctx_.materialSetLayout(), ctx_.lightSetLayout()};
+        VkDescriptorSetLayout setLayouts[] = {ctx_.cameraSetLayout(),
+                                              ctx_.materialSetLayout(),
+                                              ctx_.lightSetLayout(),
+                                              ctx_.skyboxSetLayout()};
         VkPipelineLayoutCreateInfo layoutInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
         layoutInfo.pushConstantRangeCount = 1;
         layoutInfo.pPushConstantRanges = &pcRange;
-        layoutInfo.setLayoutCount = 3;
+        layoutInfo.setLayoutCount = 4;
         layoutInfo.pSetLayouts = setLayouts;
 
         VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &layoutInfo, nullptr, &pipelineLayout_));
 
-        const auto shaderDir = executableDir() / "shaders";
-        VkShaderModule vert = loadShaderModule(ctx_.device(), shaderDir / "pbr.vert.spv");
-        VkShaderModule frag = loadShaderModule(ctx_.device(), shaderDir / "pbr.frag.spv");
-        if (vert == VK_NULL_HANDLE || frag == VK_NULL_HANDLE) {
-            CHAI_LOG_CRITICAL("Shaders failed to load from {}", shaderDir.string());
-            return;
+        // opaque & blend pbr
+        {
+            const auto shaderDir = executableDir() / "shaders";
+            VkShaderModule vert = loadShaderModule(ctx_.device(), shaderDir / "pbr.vert.spv");
+            VkShaderModule frag = loadShaderModule(ctx_.device(), shaderDir / "pbr.frag.spv");
+            if (vert == VK_NULL_HANDLE || frag == VK_NULL_HANDLE) {
+                CHAI_LOG_CRITICAL("Shaders failed to load from {}", shaderDir.string());
+                return;
+            }
+
+            auto attrs = vertexAttributes();
+            auto bind = vertexBinding();
+
+            pbrPipeline_ = PipelineBuilder{}
+                               .setShaders(vert, frag)
+                               .setVertexInput({attrs.begin(), attrs.end()}, bind)
+                               .setColorFormat(swapchain_.format())
+                               .enableDepthTest()
+                               .enableDepthWrite()
+                               .disableBlending()
+                               .setDepthFormat(swapchain_.depthFormat())
+                               .setCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE)
+                               .build(ctx_.device(), pipelineLayout_);
+
+            pbrBlendPipeline_ =
+                PipelineBuilder{}
+                    .setShaders(vert, frag)
+                    .setVertexInput({attrs.begin(), attrs.end()}, bind)
+                    .setColorFormat(swapchain_.format())
+                    .enableDepthTest()
+                    .disableDepthWrite()
+                    .enableBlending()
+                    .setDepthFormat(swapchain_.depthFormat())
+                    .setCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE)
+                    .build(ctx_.device(), pipelineLayout_);
+
+            vkDestroyShaderModule(ctx_.device(), vert, nullptr);
+            vkDestroyShaderModule(ctx_.device(), frag, nullptr);
         }
 
-        auto attrs = vertexAttributes();
-        auto bind = vertexBinding();
+        // skybox pipeline
+        {
+            const auto shaderDir = executableDir() / "shaders";
+            VkShaderModule vert = loadShaderModule(ctx_.device(), shaderDir / "skybox.vert.spv");
+            VkShaderModule frag = loadShaderModule(ctx_.device(), shaderDir / "skybox.frag.spv");
+            if (vert == VK_NULL_HANDLE || frag == VK_NULL_HANDLE) {
+                CHAI_LOG_CRITICAL("Shaders failed to load from {}", shaderDir.string());
+                return;
+            }
 
-        pbrPipeline_ = PipelineBuilder{}
-                        .setShaders(vert, frag)
-                        .setVertexInput({attrs.begin(), attrs.end()}, bind)
-                        .setColorFormat(swapchain_.format())
-                        .enableDepthTest()
-                        .setDepthFormat(swapchain_.depthFormat())
-                        .enableBlending()
-                           //.setPolygonMode(VK_POLYGON_MODE_LINE)
-                           .setCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE)
-                        .build(ctx_.device(), pipelineLayout_);
+            skyboxPipeline_ = PipelineBuilder{}
+                                  .setShaders(vert, frag)
+                                  .setColorFormat(swapchain_.format())
+                                  .disableBlending()
+                                  .enableDepthTest()
+                                  .disableDepthWrite()
+                                  .setDepthOp(VK_COMPARE_OP_LESS_OR_EQUAL)
+                                  .setDepthFormat(swapchain_.depthFormat())
+                                  .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
+                                  .build(ctx_.device(), pipelineLayout_);
 
-        vkDestroyShaderModule(ctx_.device(), vert, nullptr);
-        vkDestroyShaderModule(ctx_.device(), frag, nullptr);
+            vkDestroyShaderModule(ctx_.device(), vert, nullptr);
+            vkDestroyShaderModule(ctx_.device(), frag, nullptr);
+        }
+    }
+
+    void VulkanRenderer::ensureSkyboxSet(FrameData& frame,
+                                         const GpuTexture& cube,
+                                         Handle<Texture> handle)
+    {
+        if (frame.skyboxSet != VK_NULL_HANDLE && frame.skyboxCube == handle)
+            return; // already built for this cube
+
+        if (frame.skyboxSet == VK_NULL_HANDLE) {
+            VkDescriptorSetLayout layout = ctx_.skyboxSetLayout();
+            VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
+            dsai.descriptorPool = ctx_.descriptorPool();
+            dsai.descriptorSetCount = 1;
+            dsai.pSetLayouts = &layout;
+            VK_CHECK(vkAllocateDescriptorSets(ctx_.device(), &dsai, &frame.skyboxSet));
+        }
+
+        VkDescriptorImageInfo img{};
+        img.imageView = cube.view;
+        img.sampler = cube.sampler;
+        img.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        VkWriteDescriptorSet write{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+        write.dstSet = frame.skyboxSet;
+        write.dstBinding = 0;
+        write.descriptorCount = 1;
+        write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        write.pImageInfo = &img;
+        vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);
+
+        frame.skyboxCube = handle;
     }
 } // namespace chai::gfx

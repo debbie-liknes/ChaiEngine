@@ -79,11 +79,6 @@ vec3 acesFilm(vec3 x) {
 
 void main()
 {
-    //outColor = vec4(vUV, 0.0, 1.0); return;
-    // baseColor + emissive sampled from sRGB textures -> already linear after sampling
-    //outColor = vec4(texture(baseColorTex, vUV).rgb, 1.0);
-    //return;
-
     vec4 base = texture(baseColorTex, vUV) * mat.baseColor;
     if (base.a < mat.alphaCutoff) discard;
     vec3 albedo = base.rgb;

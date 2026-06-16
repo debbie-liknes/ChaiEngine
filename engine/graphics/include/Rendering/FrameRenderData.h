@@ -5,6 +5,7 @@
 #include <ChaiMath.h>
 #include <Handle.h>
 #include <Rendering/LightData.h>
+#include <Rendering/EnvironmentData.h>
 
 namespace chai::gfx
 {
@@ -33,5 +34,6 @@ namespace chai::gfx
         std::vector<RenderView> views;
         std::vector<RenderItem> items;
         LightData sun;                  //have 1 directional light
+        EnvironmentData environment;
     };
 }

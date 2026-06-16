@@ -56,6 +56,9 @@ namespace chai::gfx
             void* lightMapped = nullptr;
             VkBuffer lightBuffer = VK_NULL_HANDLE;
             VmaAllocation lightAlloc = VK_NULL_HANDLE;
+
+            VkDescriptorSet skyboxSet = VK_NULL_HANDLE;
+            Handle<Texture> skyboxCube;
         };
         static constexpr uint32_t kFramesInFlight = 2;
 
@@ -74,6 +77,7 @@ namespace chai::gfx
         VkFenceCreateInfo fenceCreate(VkFenceCreateFlags flags = 0);
         VkSemaphoreCreateInfo semaphoreCreate(VkSemaphoreCreateFlags flags = 0);
         void setupPipelines();
+        void ensureSkyboxSet(FrameData& frame, const GpuTexture& cube, Handle<Texture> handle);
 
         chai::IWindow& window_;
         VulkanContext& ctx_;
@@ -91,6 +95,8 @@ namespace chai::gfx
 
         VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
         VkPipeline pbrPipeline_ = VK_NULL_HANDLE;
+        VkPipeline pbrBlendPipeline_ = VK_NULL_HANDLE;
+        VkPipeline skyboxPipeline_ = VK_NULL_HANDLE;
     };
 
     //dont leave this here forever

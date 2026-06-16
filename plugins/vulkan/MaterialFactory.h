@@ -60,14 +60,6 @@ namespace chai::gfx
             f.roughness = asset.roughness;
             f.alphaCutoff = (asset.alphaMode == AlphaMode::Mask) ? asset.alphaCutoff : 0.f;
 
-            //CHAI_LOG_INFO("Mat {} factors: metallic={} rough={} base=({},{},{})",
-            //              asset.name,
-            //              f.metallic,
-            //              f.roughness,
-            //              f.baseColor.x,
-            //              f.baseColor.y,
-            //              f.baseColor.z);
-
             VkBufferCreateInfo bufInfo{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
             bufInfo.size = sizeof(MaterialFactors);
             bufInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
@@ -114,15 +106,6 @@ namespace chai::gfx
             const GpuTexture& normal = resolveOrDefault(asset.normal, defaultNormal_);
             const GpuTexture& occlusion = resolveOrDefault(asset.occlusion, defaultWhite_);
             const GpuTexture& emissive = resolveOrDefault(asset.emissive, defaultWhite_);
-
-            //CHAI_LOG_INFO(
-            //    "Mat {}: baseTex={} mrTex={} normTex={} occlusion={} emissive={} ",
-            //    asset.name,
-            //    asset.baseColor.index,
-            //    asset.metallicRoughness.index,
-            //    asset.normal.index,
-            //    asset.occlusion.index,
-            //    asset.emissive.index);
 
             //5 textures
             VkDescriptorBufferInfo dbi{};

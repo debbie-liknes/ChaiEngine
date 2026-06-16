@@ -23,6 +23,7 @@
 #include <Assets/MaterialAsset.h>
 #include <Assets/IMaterialRegistry.h>
 #include <Scene/SpawnPrefab.h>
+#include <Components/SkyboxComponent.h>
 
 std::filesystem::path assetDir()
 {
@@ -66,13 +67,12 @@ int main()
     //build the scene
     auto scene = std::make_unique<Scene>();
 
-    auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/intel/main_sponza/NewSponza_Main_glTF_003.glTF");
-    //auto prefab = models->load(makeAssetId("model:demo"), assetDir() / "VirtualCity/glTF/VirtualCity.glTF");
+    //auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/intel/main_sponza/NewSponza_Main_glTF_003.glTF");
+    auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.gltf");
 
     if (prefab)
     {
         auto prefabInstance = scene::spawn(*scene, *prefab);
-        //prefabInstance.root->getComponent<TransformComponent>()->setScale(math::Vec3{5.f, 5.f, 5.f});
     }
 
     GameObject* cam = scene->createObject("camera");
@@ -89,6 +89,19 @@ int main()
     sun->addComponent<LightComponent>();
     sun->getComponent<TransformComponent>()->lookAt(math::Vec3{-0.5, -1, 0}, math::Vec3{0, 1, 0});
     scene->setLight(sun);
+
+    GameObject* sky = scene->createObject("skybox");
+    auto skyboxComp = sky->addComponent<SkyboxComponent>();
+    std::array<std::filesystem::path, 6> skyTextures{
+        assetDir() / "skybox/cubemap_0.png",
+        assetDir() / "skybox/cubemap_1.png",
+        assetDir() / "skybox/cubemap_2.png",
+        assetDir() / "skybox/cubemap_3.png",
+        assetDir() / "skybox/cubemap_4.png",
+        assetDir() / "skybox/cubemap_5.png"
+    };
+    auto skyBoxTex = textures->loadCubemap(makeAssetId("component:skybox"), skyTextures);
+    skyboxComp->setTexture(skyBoxTex);
 
     engine.setScene(std::move(scene));
     engine.run();

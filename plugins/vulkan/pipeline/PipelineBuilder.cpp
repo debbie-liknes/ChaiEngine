@@ -54,6 +54,24 @@ namespace chai::gfx
         return *this;
     }
 
+    PipelineBuilder& PipelineBuilder::setDepthOp(VkCompareOp compareOp)
+    {
+        depthCompareOp_ = compareOp;
+        return *this;
+    }
+
+    PipelineBuilder& PipelineBuilder::disableDepthWrite()
+    {
+        depthWrite_ = false;
+        return *this;
+    }
+
+    PipelineBuilder& PipelineBuilder::enableDepthWrite()
+    {
+        depthWrite_ = true;
+        return *this;
+    }
+
     PipelineBuilder& PipelineBuilder::enableBlending()
     {
         blending_ = true;
@@ -93,7 +111,8 @@ namespace chai::gfx
         vertexInput.vertexBindingDescriptionCount = 1;
         vertexInput.pVertexBindingDescriptions = &bind_;
         vertexInput.vertexAttributeDescriptionCount = static_cast<uint32_t>(attrs_.size());
-        vertexInput.pVertexAttributeDescriptions = attrs_.data();
+        //if (vertexInput.vertexAttributeDescriptionCount > 0)
+            vertexInput.pVertexAttributeDescriptions = attrs_.data();
 
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{
             VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
@@ -119,8 +138,8 @@ namespace chai::gfx
         VkPipelineDepthStencilStateCreateInfo depthStencil{
             VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO};
         depthStencil.depthTestEnable = depthTest_ ? VK_TRUE : VK_FALSE;
-        depthStencil.depthWriteEnable = depthTest_ ? VK_TRUE : VK_FALSE;
-        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthWriteEnable = depthWrite_ ? VK_TRUE : VK_FALSE;
+        depthStencil.depthCompareOp = depthCompareOp_;
         depthStencil.maxDepthBounds = 1.0f;
 
         VkPipelineColorBlendAttachmentState blendAttachment{};

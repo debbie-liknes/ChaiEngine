@@ -22,6 +22,7 @@ set(${PROJECT_NAME}_headers
         include/Rendering/IRenderer.h
         include/Rendering/FrameRenderData.h
         include/Rendering/LightData.h
+        include/Rendering/EnvironmentData.h
 )
 
 set(${PROJECT_NAME}_source

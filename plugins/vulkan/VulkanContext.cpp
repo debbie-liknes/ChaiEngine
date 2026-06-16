@@ -54,6 +54,7 @@ namespace chai::gfx
         vkDestroyDescriptorSetLayout(device_, lightSetLayout_, nullptr);
         vkDestroyDescriptorSetLayout(device_, materialSetLayout_, nullptr);
         vkDestroyDescriptorSetLayout(device_, cameraSetLayout_, nullptr);
+        vkDestroyDescriptorSetLayout(device_, skyboxSetLayout_, nullptr);
         vkDestroyDescriptorPool(device_, descriptorPool_, nullptr);
         vkDestroyFence(device_, immediateFence_, nullptr);
         vmaDestroyAllocator(allocator_); // BEFORE the device allocator holds device memory
@@ -71,8 +72,8 @@ namespace chai::gfx
 
         auto instRet = builder.set_app_name("")
                             .request_validation_layers(true)
-                            .add_validation_feature_enable(
-                               VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT)
+                            //.add_validation_feature_enable(
+                            //   VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT)
                             .set_debug_callback(DebugCallback)
                             .enable_extensions(windowExtensions)
                             .require_api_version(1, 3, 0)
@@ -242,5 +243,18 @@ namespace chai::gfx
         lightLayout.bindingCount = 1;
         lightLayout.pBindings = &lightBinding;
         VK_CHECK(vkCreateDescriptorSetLayout(device_, &lightLayout, nullptr, &lightSetLayout_));
+
+        //environment (skybox)
+        VkDescriptorSetLayoutBinding skyboxBinding{};
+        skyboxBinding.binding = 0;
+        skyboxBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        skyboxBinding.descriptorCount = 1;
+        skyboxBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo skyboxLayout{
+            VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+        skyboxLayout.bindingCount = 1;
+        skyboxLayout.pBindings = &skyboxBinding;
+        VK_CHECK(vkCreateDescriptorSetLayout(device_, &skyboxLayout, nullptr, &skyboxSetLayout_));
     }
 } // namespace chai
