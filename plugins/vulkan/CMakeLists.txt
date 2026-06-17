@@ -17,6 +17,8 @@ set(${PROJECT_NAME}_headers
         VkUtils.h
         Material.h
         MaterialFactory.h
+        VulkanTexture.h
+        VulkanTexture.cpp
 )
 
 set(${PROJECT_NAME}_source

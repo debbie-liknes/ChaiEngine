@@ -37,5 +37,6 @@ namespace chai::gfx
                       VkAccessFlags2 srcAccess,
                       VkPipelineStageFlags2 dstStage,
                       VkAccessFlags2 dstAccess,
-                      VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT);
+                      VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT,
+                      uint32_t layerCount = (~0U));
 }

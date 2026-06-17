@@ -24,7 +24,7 @@ namespace chai::scene
     private:
         LightType type_ = LightType::DIRECTIONAL;
         math::Vec3 color_ = math::Vec3(1.0f, 1.0f, 1.0f);
-        float intensity_ = 3.f;
+        float intensity_ = 0.9f;
 
         // For point/spot lights
         float range_ = 100.0f;

@@ -34,6 +34,8 @@ layout(set = 2, binding = 0) uniform Light {
     vec4 color;     // .rgb = color of light, w = stength
 } light;
 
+layout(set = 3, binding = 1) uniform samplerCube irradianceMap;
+
 layout(location = 0) out vec4 outColor;
 
 const float PI = 3.14159265359;
@@ -94,6 +96,7 @@ void main()
 
     vec3 N = getNormal();
     if (!gl_FrontFacing) N = -N;
+
     //vec3 c = N*0.5 + 0.5; outColor = vec4(c,1);
     //outColor = vec4(N * 0.5 + 0.5, 1.0);
     //return;
@@ -121,7 +124,10 @@ void main()
     vec3 lo = (diffuse + spec) * radiance * NoL;
 
     // flat ambient stand-in until IBL; modulated by occlusion
-    vec3 ambient = vec3(0.04, 0.045, 0.06) * albedo * ao;
+    //vec3 ambient = vec3(0.04, 0.045, 0.06) * albedo * ao;
+    vec3 irradiance = texture(irradianceMap, N).rgb;
+    vec3 diffuseIBL = irradiance * albedo;
+    vec3 ambient    = diffuseIBL * ao;
 
     vec3 color = ambient + lo + emissive;
 

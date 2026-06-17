@@ -1,11 +1,14 @@
 #pragma once
-#include <vulkan/vulkan.h>
-#include <Loaders/ITextureLoader.h>
+#include "VulkanTexture.h"
 #include "core/VkCheck.h"
+
+#include <Loaders/ITextureLoader.h>
+#include <vulkan/vulkan.h>
 
 namespace chai::gfx
 {
-    inline VkFormat convertTextureFormat(const TextureFormat& format) {
+    inline VkFormat convertTextureFormat(const TextureFormat& format)
+    {
         switch (format) {
             case TextureFormat::RGBA8_SRGB:
                 return VK_FORMAT_R8G8B8A8_SRGB;
@@ -16,7 +19,7 @@ namespace chai::gfx
         return VK_FORMAT_UNDEFINED;
     }
 
-    //temp
+    // temp
     inline void immediateSubmit(VulkanContext& ctx, std::function<void(VkCommandBuffer)>&& fn)
     {
         const VkFence fence = ctx.immediateFence();
@@ -106,11 +109,87 @@ namespace chai::gfx
             if (mh > 1)
                 mh /= 2;
         }
-        // last level was only ever a destination -> shader read
+        
         barrier(mipLevels - 1,
                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                 VK_ACCESS_2_TRANSFER_WRITE_BIT,
                 VK_ACCESS_2_SHADER_READ_BIT);
     }
-}
+
+    inline CubeRenderTarget createCubeRenderTarget(VulkanContext& ctx,
+                                                   uint32_t size,
+                                                   VkFormat format,
+                                                   VkImageUsageFlags usage)
+    {
+        VmaAllocator allocator = ctx.allocator();
+        VkDevice device = ctx.device();
+        const VkExtent3D extent{size, size, 1};
+        const uint32_t kLayerCount = 6u;
+        const uint32_t kMipLevels = 1u;
+
+        CubeRenderTarget t;
+        t.cube.width = size;
+        t.cube.height = size;
+        t.cube.format = format;
+
+        VkImageCreateInfo imageInfo{VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
+        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.format = format;
+        imageInfo.extent = extent;
+        imageInfo.mipLevels = kMipLevels;
+        imageInfo.arrayLayers = kLayerCount;
+        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+        imageInfo.usage = usage; // caller must pass COLOR_ATTACHMENT_BIT | SAMPLED_BIT
+        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imageInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+
+        VmaAllocationCreateInfo imgAlloc{};
+        imgAlloc.usage = VMA_MEMORY_USAGE_AUTO;
+        if (vmaCreateImage(
+                allocator, &imageInfo, &imgAlloc, &t.cube.image, &t.cube.alloc, nullptr) !=
+            VK_SUCCESS) {
+            CHAI_LOG_ERROR("createCubeRenderTarget: vmaCreateImage failed");
+            return {};
+        }
+
+        VkImageViewCreateInfo cubeView{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+        cubeView.image = t.cube.image;
+        cubeView.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+        cubeView.format = format;
+        cubeView.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, kMipLevels, 0, kLayerCount};
+        if (vkCreateImageView(device, &cubeView, nullptr, &t.cube.view) != VK_SUCCESS) {
+            CHAI_LOG_ERROR("createCubeRenderTarget: cube view failed");
+            return {};
+        }
+
+        //6 2d views, instead of 1 cube
+        for (uint32_t f = 0; f < kLayerCount; ++f) {
+            VkImageViewCreateInfo faceView{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+            faceView.image = t.cube.image;
+            faceView.viewType = VK_IMAGE_VIEW_TYPE_2D; // 2D, not CUBE
+            faceView.format = format;
+            faceView.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, f /*baseArrayLayer*/, 1};
+            if (vkCreateImageView(device, &faceView, nullptr, &t.faceViews[f]) != VK_SUCCESS) {
+                CHAI_LOG_ERROR("createCubeRenderTarget: face view {} failed", f);
+                return {};
+            }
+        }
+
+        VkSamplerCreateInfo samp{VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
+        samp.magFilter = VK_FILTER_LINEAR;
+        samp.minFilter = VK_FILTER_LINEAR;
+        samp.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samp.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samp.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samp.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        samp.maxLod = static_cast<float>(kMipLevels - 1); // 0 here
+        if (vkCreateSampler(device, &samp, nullptr, &t.cube.sampler) != VK_SUCCESS) {
+            CHAI_LOG_ERROR("createCubeRenderTarget: sampler failed");
+            return {};
+        }
+
+        return t;
+    }
+} // namespace chai::gfx

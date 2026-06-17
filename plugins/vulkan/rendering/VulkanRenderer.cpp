@@ -17,6 +17,8 @@
 
 namespace chai::gfx
 {
+    const uint32_t kIrradianceSize = 32;
+
     VulkanRenderer::VulkanRenderer(chai::IWindow& window,
                                    std::shared_ptr<AssetCache<Mesh>> meshCache,
                                    std::shared_ptr<AssetCache<Texture>> texCache,
@@ -50,7 +52,16 @@ namespace chai::gfx
         vkDestroyPipeline(ctx_.device(), pbrPipeline_, nullptr);
         vkDestroyPipeline(ctx_.device(), pbrBlendPipeline_, nullptr);
         vkDestroyPipeline(ctx_.device(), skyboxPipeline_, nullptr);
+        vkDestroyPipeline(ctx_.device(), irradiancePipeline_, nullptr);
         vkDestroyPipelineLayout(ctx_.device(), pipelineLayout_, nullptr);
+        vkDestroyPipelineLayout(ctx_.device(), irradianceLayout_, nullptr);
+        vkDestroySampler(ctx_.device(), irradianceTarget_.cube.sampler, nullptr);
+        vkDestroyImageView(ctx_.device(), irradianceTarget_.cube.view, nullptr);
+        for (auto v : irradianceTarget_.faceViews)
+            if (v)
+                vkDestroyImageView(ctx_.device(), v, nullptr);
+        vmaDestroyImage(
+            ctx_.allocator(), irradianceTarget_.cube.image, irradianceTarget_.cube.alloc);
 
         // dont need to destory the buffers individually. Command Pool is enough
         vkDestroyCommandPool(ctx_.device(), cmdPool_, nullptr);
@@ -170,6 +181,11 @@ namespace chai::gfx
             }
         }
 
+        irradianceTarget_ = createCubeRenderTarget(ctx_,
+                                                   kIrradianceSize,
+                                                   VK_FORMAT_R16G16B16A16_SFLOAT,
+                                                   VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+                                                       VK_IMAGE_USAGE_SAMPLED_BIT);
         setupPipelines();
     }
 
@@ -178,6 +194,14 @@ namespace chai::gfx
         meshCache_->tick();
         if (needsResize_)
             recreateSwapchain();
+
+        if (!irradianceBaked_) {
+            if (const GpuTexture* sky = texCache_->resource(renderData.environment.skyboxCube)) {
+                bakeIrradiance(*sky);
+                writeEnvironmentSet(*sky); // write binding 0 (skybox) + binding 1 (irradiance) ONCE
+                irradianceBaked_ = true;
+            }
+        }
 
         FrameData& frame = frames_[currentFrame_];
 
@@ -347,6 +371,14 @@ namespace chai::gfx
                                 &frame.lightSet,
                                 0,
                                 nullptr);
+        vkCmdBindDescriptorSets(cmd,
+                                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                pipelineLayout_,
+                                3,
+                                1,
+                                &irradianceSet_,
+                                0,
+                                nullptr);
 
         std::vector<uint32_t> order(renderData.items.size());
         std::iota(order.begin(), order.end(), 0u);
@@ -409,39 +441,61 @@ namespace chai::gfx
         }
 
         // skybox render
-         const GpuTexture* cubeTex = texCache_->resource(renderData.environment.skyboxCube);
-         if (!cubeTex)
-             return;
-         ensureSkyboxSet(frame, *cubeTex, renderData.environment.skyboxCube);
+        const GpuTexture* cubeTex = texCache_->resource(renderData.environment.skyboxCube);
+        if (!cubeTex)
+            return;
+        ensureSkyboxSet(frame, *cubeTex, renderData.environment.skyboxCube);
 
-         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxPipeline_);
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxPipeline_);
 
-         vkCmdBindDescriptorSets(
-             cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout_, 3, 1, &frame.skyboxSet, 0,
-             nullptr);
+        vkCmdBindDescriptorSets(cmd,
+                                 VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                 pipelineLayout_,
+                                 3,
+                                 1,
+                                 &frame.skyboxSet,
+                                 0,
+                                 nullptr);
 
          vkCmdDraw(cmd, 3, 1, 0, 0);
     }
 
     void VulkanRenderer::setupPipelines()
     {
-        VkPushConstantRange pcRange{};
-        pcRange.offset = 0;
-        pcRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-        pcRange.size = sizeof(PushConstants);
+        {
+            VkPushConstantRange pcRange{};
+            pcRange.offset = 0;
+            pcRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+            pcRange.size = sizeof(PushConstants);
 
-        // set 0 = camera, set 1 = material, set 2 = light
-        VkDescriptorSetLayout setLayouts[] = {ctx_.cameraSetLayout(),
-                                              ctx_.materialSetLayout(),
-                                              ctx_.lightSetLayout(),
-                                              ctx_.skyboxSetLayout()};
-        VkPipelineLayoutCreateInfo layoutInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
-        layoutInfo.pushConstantRangeCount = 1;
-        layoutInfo.pPushConstantRanges = &pcRange;
-        layoutInfo.setLayoutCount = 4;
-        layoutInfo.pSetLayouts = setLayouts;
+            // set 0 = camera, set 1 = material, set 2 = light
+            VkDescriptorSetLayout setLayouts[] = {ctx_.cameraSetLayout(),
+                                                  ctx_.materialSetLayout(),
+                                                  ctx_.lightSetLayout(),
+                                                  ctx_.environmentSetLayout()};
+            VkPipelineLayoutCreateInfo layoutInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+            layoutInfo.pushConstantRangeCount = 1;
+            layoutInfo.pPushConstantRanges = &pcRange;
+            layoutInfo.setLayoutCount = 4;
+            layoutInfo.pSetLayouts = setLayouts;
 
-        VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &layoutInfo, nullptr, &pipelineLayout_));
+            VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &layoutInfo, nullptr, &pipelineLayout_));
+        }
+
+        {
+            VkPushConstantRange irrPc{};
+            irrPc.offset = 0;
+            irrPc.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            irrPc.size = sizeof(int);
+
+            VkDescriptorSetLayout irrSets[] = {ctx_.environmentSetLayout()}; // 1 cube sampler
+            VkPipelineLayoutCreateInfo li{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+            li.setLayoutCount = 1;
+            li.pSetLayouts = irrSets;
+            li.pushConstantRangeCount = 1;
+            li.pPushConstantRanges = &irrPc;
+            VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &li, nullptr, &irradianceLayout_));
+        }
 
         // opaque & blend pbr
         {
@@ -507,6 +561,32 @@ namespace chai::gfx
             vkDestroyShaderModule(ctx_.device(), vert, nullptr);
             vkDestroyShaderModule(ctx_.device(), frag, nullptr);
         }
+
+        // Irradiance map
+        {
+            const auto shaderDir = executableDir() / "shaders";
+            VkShaderModule vert =
+                loadShaderModule(ctx_.device(), shaderDir / "irradiance.vert.spv");
+            VkShaderModule frag =
+                loadShaderModule(ctx_.device(), shaderDir / "irradiance.frag.spv");
+            if (vert == VK_NULL_HANDLE || frag == VK_NULL_HANDLE) {
+                CHAI_LOG_CRITICAL("Shaders failed to load from {}", shaderDir.string());
+                return;
+            }
+
+            irradiancePipeline_ =
+                PipelineBuilder{}
+                    .setShaders(vert, frag)
+                    .setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
+                    .disableBlending()
+                    .disableDepthTest()
+                    .disableDepthWrite()
+                    .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
+                    .build(ctx_.device(), irradianceLayout_);
+
+            vkDestroyShaderModule(ctx_.device(), vert, nullptr);
+            vkDestroyShaderModule(ctx_.device(), frag, nullptr);
+        }
     }
 
     void VulkanRenderer::ensureSkyboxSet(FrameData& frame,
@@ -517,7 +597,7 @@ namespace chai::gfx
             return; // already built for this cube
 
         if (frame.skyboxSet == VK_NULL_HANDLE) {
-            VkDescriptorSetLayout layout = ctx_.skyboxSetLayout();
+            VkDescriptorSetLayout layout = ctx_.environmentSetLayout();
             VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
             dsai.descriptorPool = ctx_.descriptorPool();
             dsai.descriptorSetCount = 1;
@@ -539,5 +619,129 @@ namespace chai::gfx
         vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);
 
         frame.skyboxCube = handle;
+    }
+
+    void VulkanRenderer::bakeIrradiance(const GpuTexture& envCube)
+    {
+        // allocate the set once, then write the SOURCE skybox cube into it
+        if (irradianceSet_ == VK_NULL_HANDLE) {
+            VkDescriptorSetLayout layout = ctx_.environmentSetLayout();
+            VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
+            dsai.descriptorPool = ctx_.descriptorPool();
+            dsai.descriptorSetCount = 1;
+            dsai.pSetLayouts = &layout;
+            VK_CHECK(vkAllocateDescriptorSets(ctx_.device(), &dsai, &irradianceSet_));
+        }
+        {
+            VkDescriptorImageInfo img{};
+            img.imageView = envCube.view; // SKYBOX (source)
+            img.sampler = envCube.sampler;
+            img.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            VkWriteDescriptorSet w{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+            w.dstSet = irradianceSet_;
+            w.dstBinding = 0;
+            w.descriptorCount = 1;
+            w.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            w.pImageInfo = &img;
+            vkUpdateDescriptorSets(ctx_.device(), 1, &w, 0, nullptr);
+        }
+
+        immediateSubmit(ctx_, [&](VkCommandBuffer cmd) {
+            // DESTINATION: UNDEFINED -> COLOR_ATTACHMENT, all 6 layers, attachment stages
+            imageBarrier(cmd,
+                         irradianceTarget_.cube.image,
+                         VK_IMAGE_LAYOUT_UNDEFINED,
+                         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                         VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
+                         0,
+                         VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+                         VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+                         VK_IMAGE_ASPECT_COLOR_BIT,
+                         6);
+
+            for (uint32_t face = 0; face < 6; ++face) {
+                VkRenderingAttachmentInfo color{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
+                color.imageView = irradianceTarget_.faceViews[face]; // 2D single-layer view
+                color.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                color.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+                color.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+                VkRenderingInfo ri{VK_STRUCTURE_TYPE_RENDERING_INFO};
+                ri.renderArea = {{0, 0}, {kIrradianceSize, kIrradianceSize}};
+                ri.layerCount = 1;
+                ri.colorAttachmentCount = 1;
+                ri.pColorAttachments = &color;
+
+                vkCmdBeginRendering(cmd, &ri);
+                VkViewport vp{0, 0, float(kIrradianceSize), float(kIrradianceSize), 0.f, 1.f};
+                vkCmdSetViewport(cmd, 0, 1, &vp);
+                VkRect2D sc{{0, 0}, {kIrradianceSize, kIrradianceSize}};
+                vkCmdSetScissor(cmd, 0, 1, &sc);
+
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, irradiancePipeline_);
+                vkCmdBindDescriptorSets(cmd,
+                                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                        irradianceLayout_,
+                                        0,
+                                        1,
+                                        &irradianceSet_,
+                                        0,
+                                        nullptr); // set 0, irradianceLayout_
+
+                int faceIndex = int(face);
+                vkCmdPushConstants(cmd,
+                                   irradianceLayout_,
+                                   VK_SHADER_STAGE_FRAGMENT_BIT,
+                                   0,
+                                   sizeof(int),
+                                   &faceIndex);
+
+                vkCmdDraw(cmd, 3, 1, 0, 0);
+                vkCmdEndRendering(cmd);
+            }
+
+            // DESTINATION: COLOR_ATTACHMENT -> SHADER_READ_ONLY, all 6 layers
+            imageBarrier(cmd,
+                         irradianceTarget_.cube.image,
+                         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                         VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+                         VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+                         VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+                         VK_ACCESS_2_SHADER_READ_BIT,
+                         VK_IMAGE_ASPECT_COLOR_BIT,
+                         6);
+        });
+    }
+
+    void VulkanRenderer::writeEnvironmentSet(const GpuTexture& skybox)
+    {
+        if (irradianceSet_ == VK_NULL_HANDLE) {
+            VkDescriptorSetLayout layout = ctx_.environmentSetLayout(); // the 2-binding layout
+            VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
+            dsai.descriptorPool = ctx_.descriptorPool();
+            dsai.descriptorSetCount = 1;
+            dsai.pSetLayouts = &layout;
+            VK_CHECK(vkAllocateDescriptorSets(ctx_.device(), &dsai, &irradianceSet_));
+        }
+
+        VkDescriptorImageInfo imgs[2]{};
+        imgs[0].imageView = skybox.view; // binding 0: skybox
+        imgs[0].sampler = skybox.sampler;
+        imgs[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imgs[1].imageView = irradianceTarget_.cube.view; // binding 1: irradiance
+        imgs[1].sampler = irradianceTarget_.cube.sampler;
+        imgs[1].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        VkWriteDescriptorSet writes[2]{};
+        for (int i = 0; i < 2; ++i) {
+            writes[i] = VkWriteDescriptorSet{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+            writes[i].dstSet = irradianceSet_;
+            writes[i].dstBinding = uint32_t(i);
+            writes[i].descriptorCount = 1;
+            writes[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            writes[i].pImageInfo = &imgs[i];
+        }
+        vkUpdateDescriptorSets(ctx_.device(), 2, writes, 0, nullptr);
     }
 } // namespace chai::gfx

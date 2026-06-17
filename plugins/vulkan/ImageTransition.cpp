@@ -61,7 +61,8 @@ namespace chai::gfx
                       VkAccessFlags2 srcAccess,
                       VkPipelineStageFlags2 dstStage,
                       VkAccessFlags2 dstAccess,
-                      VkImageAspectFlags aspect)
+                      VkImageAspectFlags aspect,
+                      uint32_t layerCount)
     {
         VkImageMemoryBarrier2 barrier{VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2};
 
@@ -77,7 +78,7 @@ namespace chai::gfx
         barrier.image = image;
 
         barrier.subresourceRange = {
-            aspect, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS};
+            aspect, 0, VK_REMAINING_MIP_LEVELS, 0, layerCount};
 
         VkDependencyInfo dep{VK_STRUCTURE_TYPE_DEPENDENCY_INFO};
 

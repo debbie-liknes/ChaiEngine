@@ -8,19 +8,7 @@
 #include <Assets/ITextureRegistry.h>
 #include <Assets/TextureAsset.h>
 #include <FileIO.h>
-
-namespace chai::gfx
-{
-    struct GpuTexture {
-        VkImage image = VK_NULL_HANDLE;
-        VmaAllocation alloc = VK_NULL_HANDLE;
-        VkImageView view = VK_NULL_HANDLE;
-        VkSampler sampler = VK_NULL_HANDLE;
-
-        uint32_t width = 0, height = 0;
-        VkFormat format = VK_FORMAT_UNDEFINED;
-    };
-} // namespace chai::gfx
+#include "VulkanTexture.h"
 
 namespace chai
 {

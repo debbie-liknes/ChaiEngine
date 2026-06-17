@@ -78,6 +78,8 @@ namespace chai::gfx
         VkSemaphoreCreateInfo semaphoreCreate(VkSemaphoreCreateFlags flags = 0);
         void setupPipelines();
         void ensureSkyboxSet(FrameData& frame, const GpuTexture& cube, Handle<Texture> handle);
+        void bakeIrradiance(const GpuTexture& envCube);
+        void writeEnvironmentSet(const GpuTexture& skybox);
 
         chai::IWindow& window_;
         VulkanContext& ctx_;
@@ -97,6 +99,14 @@ namespace chai::gfx
         VkPipeline pbrPipeline_ = VK_NULL_HANDLE;
         VkPipeline pbrBlendPipeline_ = VK_NULL_HANDLE;
         VkPipeline skyboxPipeline_ = VK_NULL_HANDLE;
+
+        //IBL
+        VkPipeline irradiancePipeline_ = VK_NULL_HANDLE;
+        CubeRenderTarget irradianceTarget_{};
+        VkPipelineLayout irradianceLayout_ = VK_NULL_HANDLE;
+        VkDescriptorSet irradianceSet_ = VK_NULL_HANDLE;
+        bool irradianceBaked_ = false;
+
     };
 
     //dont leave this here forever
