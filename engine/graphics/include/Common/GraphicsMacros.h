@@ -21,5 +21,6 @@
         return (static_cast<std::uint32_t>(value) & static_cast<std::uint32_t>(flag)) != 0;        \
     }
 
-#define ENFORCE_STD140_ALIGNMENT(Type)         \
-    static_assert(alignof(Type) == 16);
+#define ENFORCE_STD140_ALIGNMENT(Type)                                                             \
+        static_assert(alignof(Type) == 16);                                                        \
+        static_assert(sizeof(Type) % 16 == 0)

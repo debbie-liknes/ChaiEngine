@@ -1,3 +1,6 @@
+/**
+ * @file ModelRegistry.h
+ */
 #pragma once
 #include <Assets/IMaterialRegistry.h>
 #include <Assets/IMeshRegistry.h>
@@ -8,6 +11,10 @@
 
 namespace chai::gfx
 {
+    /**
+     * @brief Registry for models
+     * @note Have my doubts this needs to be in Core
+     */
     class ModelRegistry : public IModelRegistry
     {
     public:
@@ -26,9 +33,9 @@ namespace chai::gfx
 
     private:
         struct Loaded {
-            std::shared_ptr<ModelPrefab> prefab;
-            std::vector<Handle<Mesh>> meshes;
-            std::vector<Handle<Material>> materials;
+            std::shared_ptr<ModelPrefab>    prefab;
+            std::vector<Handle<Mesh>>       meshes;
+            std::vector<Handle<Material>>   materials;
         };
 
         static AssetId subId(AssetId base, const std::string& suffix);
@@ -36,10 +43,10 @@ namespace chai::gfx
         ingestImage(AssetId modelId, const ModelAsset::ImageData& img, int idx, bool srgb);
         void releaseEntry(Loaded& entry);
 
-        IMeshRegistry& meshes_;
-        ITextureRegistry& textures_;
-        IMaterialRegistry& materials_;
-        ServiceLocator* locator_;
+        IMeshRegistry&      meshes_;
+        ITextureRegistry&   textures_;
+        IMaterialRegistry&  materials_;
+        ServiceLocator*     locator_;
         std::unordered_map<std::uint64_t, Loaded> loaded_;
     };
 } // namespace chai::gfx

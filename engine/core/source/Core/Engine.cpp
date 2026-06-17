@@ -1,8 +1,8 @@
-#include <Engine.h>
+#include <Core/Engine.h>
 #include <Log.h>
 #include <Window/Window.h>
 #include <Rendering/FrameRenderData.h>
-#include <IInput.h>
+#include <Core/IInput.h>
 
 namespace chai
 {
@@ -58,8 +58,9 @@ namespace chai
             CHAI_LOG_CRITICAL("Could not locate Input Service.");
         }
 
+        // The main guts of the application
         while (!window->shouldClose()) {
-            input->newFrame();
+            input->newFrame();  //tell input to clear deltas FIRST
             window->pollEvents();
             float dt = clock_.tick();
 
@@ -77,7 +78,7 @@ namespace chai
     {
         auto window = services().tryResolve<IWindow>();
         if (!window || !scene_)
-            return; // headless: no window, nothing to do
+            return; // headless?
 
         //get framebuffer size
         int w = 0, h = 0;

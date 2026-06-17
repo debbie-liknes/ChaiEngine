@@ -1,3 +1,6 @@
+/**
+ * @file TextureFormat.h
+ */
 #pragma once
 #include <AssetCache.h>
 #include <AssetCommon.h>
@@ -5,6 +8,9 @@
 
 namespace chai::gfx
 {
+    /**
+     * @todo add all texture formats, theses are just the ones I use
+     */
     enum class TextureFormat 
     {
         // sRGB

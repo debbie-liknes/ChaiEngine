@@ -1,8 +1,14 @@
+/**
+ * @file IMaterialRegistry.h
+ */
 #pragma once
 #include <Assets/MaterialAsset.h>
 
 namespace chai::gfx
 {
+    /**
+     * @brief Interface to register a Material Asset (CPU data)
+     */
 	class IMaterialRegistry
 	{
     public:

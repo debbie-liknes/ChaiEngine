@@ -1,3 +1,6 @@
+/**
+ * @file ModelPrefab.h
+ */
 #pragma once
 #include <Handle.h>
 #include <ChaiMath.h>
@@ -5,28 +8,38 @@
 
 namespace chai::gfx
 {
-    // Tag types for Handle<>; full definitions not needed here.
     struct Mesh;
     struct Material;
 
+    /**
+     * @brief GPU ready template. Model Assets are consumed to create a prefab
+     */
     struct ModelPrefab 
     {
-        /// One drawable: a geometry + the material to render it with.
+        /**
+         * @brief One drawable
+         */
         struct Primitive {
             Handle<Mesh> mesh{};
             Handle<Material> material{};
         };
 
+        /**
+         * @brief Collection of primitives
+         */
         struct MeshGroup {
             std::vector<Primitive> primitives;
             std::string name;
         };
 
+        /**
+         * @brief Transform data
+         */
         struct Node {
             math::Vec3 position;
             math::Quat rotation;
             math::Vec3 scale;
-            int meshGroup = -1;        // index into meshGroups, or -1 (pure transform node)
+            int meshGroup = -1;
             std::vector<int> children; // indices into nodes
             std::string name;
         };

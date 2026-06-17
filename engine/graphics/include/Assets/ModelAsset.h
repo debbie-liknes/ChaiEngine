@@ -1,3 +1,6 @@
+/**
+ * @file ModelAsset.h
+ */
 #pragma once
 #include "MeshAsset.h"
 #include <string>
@@ -6,17 +9,31 @@
 
 namespace chai::gfx
 {
+    /**
+     * @brief Model Assets have primitives, materials and node data
+     * Need this to help decode different file formats, like glTF
+     */
     struct ModelAsset 
     {
+        /**
+         * @brief A single mesh asset and single material
+         */
         struct Primitive {
             MeshAsset mesh;
             int material = -1;
         };
+
+        /**
+         * @brief A collection of primitives
+         */
         struct MeshEntry {
             std::vector<Primitive> primitives;
             std::string name;
         };
 
+        /**
+         * @brief CPU description of a material
+         */
         struct MaterialDesc {
             std::string name;
             math::Vec4 baseColorFactor{1, 1, 1, 1};
@@ -29,6 +46,10 @@ namespace chai::gfx
             float alphaCutoff = 1.f;
         };
 
+        /**
+         * @brief Location data for where and how we should orient a mesh. Also
+         * provides parent/child relationships between meshes
+         */
         struct Node {
             math::Vec3 position;
             math::Quat rotation{0.f, 0.f, 0.f, 1.f};
@@ -38,6 +59,9 @@ namespace chai::gfx
             std::string name;
         };
 
+        /**
+         * @brief Raw image bytes for textures needed by the materials
+         */
         struct ImageData {
             std::vector<uint8_t> bytes;
             std::string name;

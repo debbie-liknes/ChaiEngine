@@ -9,9 +9,6 @@
 
 namespace chai::gfx
 {
-    /**
-     * @brief Emoty tag
-     */
     struct Mesh;
 
      /**

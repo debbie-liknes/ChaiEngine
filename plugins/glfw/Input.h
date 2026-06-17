@@ -1,5 +1,5 @@
 #pragma once
-#include <IInput.h>
+#include <Core/IInput.h>
 #include <set>
 
 namespace chai

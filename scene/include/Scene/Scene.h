@@ -1,8 +1,8 @@
 #pragma once
 #include <vector>
 #include <Scene/GameObject.h>
-#include <Updatable.h>
-#include <IScene.h>
+#include <Core/Updatable.h>
+#include <Scene/IScene.h>
 
 namespace chai::scene
 {

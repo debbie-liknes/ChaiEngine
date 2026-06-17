@@ -3,7 +3,7 @@
 
 #include <Plugin/ServiceLocator.h>
 #include <TypeRegistry.h>
-#include <Engine.h>
+#include <Core/Engine.h>
 #include <Plugin/PluginLoader.h>
 
 

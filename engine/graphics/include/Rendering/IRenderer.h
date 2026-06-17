@@ -13,8 +13,9 @@ namespace chai
     {
         struct MeshAsset;   //cpu side
         struct Mesh;        //gpu side
+
         /**
-         * @brief Deliberately graphics APU free. Engine can use this without knowing if it
+         * @brief Deliberately graphics API free. Engine can use this without knowing if it
          * depends on vulkan, opengl etc
          */
         class IRenderer
@@ -37,12 +38,6 @@ namespace chai
              * @brief Block until the gpu is idle. Used for teardown
              */
             virtual void waitIdle() = 0;
-        };
-
-        class IRenderDevice
-        {
-        public:
-            virtual ~IRenderDevice() = default;
         };
     }
 } // namespace chai

@@ -1,6 +1,6 @@
-#include <ModelRegistry.h>
+#include <Scene/ModelRegistry.h>
 #include <Log.h>
-#include <FileIO.h>
+#include <Core/FileIO.h>
 #include <Loaders/IModelLoader.h>
 #include <Assets/MaterialAsset.h>
 #include <Loaders/ITextureLoader.h>
@@ -24,9 +24,11 @@ namespace chai::gfx
     [[nodiscard]] std::shared_ptr<const ModelPrefab>
     ModelRegistry::load(AssetId id, const std::filesystem::path& path)
     {
+        //dedup
         if (auto it = loaded_.find(id.value); it != loaded_.end())
             return it->second.prefab;
 
+        //read from file
         auto bytes = readFileBytes(path);
         if (bytes.empty()) {
             CHAI_LOG_ERROR("ModelRegistry::load: could not read '{}'", path.string());
@@ -39,6 +41,7 @@ namespace chai::gfx
             return nullptr;
         }
 
+        //use the loader to convert raw file bytes -> cpu data
         auto parsed = loader->decode(bytes, path.parent_path());
         if (!parsed) {
             CHAI_LOG_ERROR("ModelRegistry::load: decode failed for '{}'", path.string());
@@ -46,11 +49,12 @@ namespace chai::gfx
         }
         ModelAsset& model = *parsed;
 
+        //The Registry entry we are building
         Loaded entry;
         entry.prefab = std::make_shared<ModelPrefab>();
         ModelPrefab& prefab = *entry.prefab;
 
-
+        //Images come from the model as raw bites with an image index
         std::unordered_map<std::uint32_t, Handle<Texture>> imageCache;
         auto resolveImage = [&](int imageIndex, bool srgb) -> Handle<Texture> {
             if (imageIndex < 0 || imageIndex >= static_cast<int>(model.images.size()))
@@ -59,11 +63,14 @@ namespace chai::gfx
                 (static_cast<std::uint32_t>(imageIndex) << 1) | static_cast<std::uint32_t>(srgb);
             if (auto it = imageCache.find(key); it != imageCache.end())
                 return it->second;
+
+            //Register this texture with the texture registry
             Handle<Texture> h = ingestImage(id, model.images[imageIndex], imageIndex, srgb);
             imageCache.emplace(key, h);
             return h;
         };
 
+        //Create material asset for each material, register textures as needed
         std::vector<Handle<Material>> matHandles(model.materials.size());
         for (std::size_t i = 0; i < model.materials.size(); ++i) {
             const ModelAsset::MaterialDesc& m = model.materials[i];
@@ -77,23 +84,20 @@ namespace chai::gfx
             asset.alphaMode = m.alphaMode;
             asset.doubleSided = m.doubleSided;
 
-            // sRGB: baseColor + emissive are color data; the rest are linear.
             asset.baseColor = resolveImage(m.baseColor, true);
             asset.emissive = resolveImage(m.emissive, true);
             asset.normal = resolveImage(m.normal, false);
             asset.metallicRoughness = resolveImage(m.metallicRoughness, false);
             asset.occlusion = resolveImage(m.occlusion, false);
 
-            // Ownership: the material now owns these texture references. The
-            // model registry does NOT separately retain or release textures;
-            // releasing the material releases its textures.
+            // The material now owns these texture references
             AssetId matId = subId(id, "mat:" + std::to_string(i));
             Handle<Material> h = materials_.ingest(matId, std::move(asset));
             matHandles[i] = h;
             entry.materials.push_back(h);
         }
 
-
+        //Create mesh prefab. The materials have already been created
         prefab.meshGroups.reserve(model.meshes.size());
         for (std::size_t mi = 0; mi < model.meshes.size(); ++mi) {
             ModelAsset::MeshEntry& entryMesh = model.meshes[mi];
@@ -105,7 +109,7 @@ namespace chai::gfx
             for (std::size_t pi = 0; pi < entryMesh.primitives.size(); ++pi) {
                 ModelAsset::Primitive& prim = entryMesh.primitives[pi];
 
-                // Each primitive's geometry is distinct -> its own mesh handle.
+                // Each primitive gets its own mesh handle
                 AssetId meshId = subId(id, "mesh:" + std::to_string(mi) + ":" + std::to_string(pi));
                 Handle<Mesh> mh = meshes_.ingest(meshId, std::move(prim.mesh));
                 entry.meshes.push_back(mh);
@@ -120,7 +124,7 @@ namespace chai::gfx
             prefab.meshGroups.push_back(std::move(group));
         }
 
-        // --- node hierarchy (pure data; glTF node.mesh -> our meshGroups index) ---
+        // Hierarchy
         prefab.nodes.reserve(model.nodes.size());
         for (ModelAsset::Node& n : model.nodes) {
             ModelPrefab::Node out;
@@ -166,8 +170,8 @@ namespace chai::gfx
     {
         for (Handle<Mesh> h : entry.meshes)
             meshes_.release(h);
-        //for (Handle<Material> h : entry.materials)
-        //    materials_.release(h);
+        for (Handle<Material> h : entry.materials)
+            materials_.release(h);
         entry.meshes.clear();
         entry.materials.clear();
     }

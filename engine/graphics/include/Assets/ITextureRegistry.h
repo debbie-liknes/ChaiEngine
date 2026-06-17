@@ -10,8 +10,7 @@
 namespace chai::gfx
 {
     /**
-     * @brief Registries know how to create Assets from files.
-     * They bookkeep the assets
+     * @brief Bookkeeping for CPU texture data
      */
     class ITextureRegistry
     {

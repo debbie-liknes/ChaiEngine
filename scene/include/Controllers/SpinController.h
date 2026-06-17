@@ -1,7 +1,7 @@
 #pragma once
 #include <SceneExport.h>
 #include <Controllers/Controller.h>
-#include <Updatable.h>
+#include <Core/Updatable.h>
 
 namespace chai::scene
 {

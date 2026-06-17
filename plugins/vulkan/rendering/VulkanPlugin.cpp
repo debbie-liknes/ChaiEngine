@@ -13,7 +13,7 @@
 #include "../TextureFactory.h"
 #include <Assets/IMeshRegistry.h>
 #include <Assets/ITextureRegistry.h>
-#include <ModelRegistry.h>
+#include <Scene/ModelRegistry.h>
 #include <Assets/IMaterialRegistry.h>
 #include "../MaterialFactory.h"
 
@@ -51,7 +51,6 @@ namespace chai::gfx
             ctx.services.provide<AssetCache<Mesh>>(meshRegistry_->cache());
             ctx.services.provide<IRenderer>(renderer_);
             ctx.services.provide<IMeshRegistry>(meshRegistry_);
-            ctx.services.provide<IRenderDevice>(vulkCtx_);
             ctx.services.provide<ITextureRegistry>(texRegistry_);
             ctx.services.provide<TextureFactory>(texFactory_);
             ctx.services.provide<IMaterialRegistry>(matRegistry_);
@@ -68,7 +67,6 @@ namespace chai::gfx
             //remove services
             ctx.services.remove<TextureFactory>();
             ctx.services.remove<ITextureRegistry>();
-            ctx.services.remove<IRenderDevice>();
             ctx.services.remove<IMeshRegistry>();
             ctx.services.remove<IRenderer>();
             ctx.services.remove<AssetCache<Mesh>>();

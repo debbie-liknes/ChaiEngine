@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include <Components/ControllerComponent.h>
-#include <Updatable.h>
+#include <Core/Updatable.h>
 #include <Components/Component.h>
 #include <string>
 #include <span>

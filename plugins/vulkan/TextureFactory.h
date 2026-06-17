@@ -7,7 +7,7 @@
 #include <AssetCache.h>
 #include <Assets/ITextureRegistry.h>
 #include <Assets/TextureAsset.h>
-#include <FileIO.h>
+#include <Core/FileIO.h>
 #include "VulkanTexture.h"
 
 namespace chai

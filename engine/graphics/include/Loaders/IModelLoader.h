@@ -1,3 +1,6 @@
+/**
+ * @brief IModelLoader.h
+ */
 #pragma once
 #include <Assets/ModelAsset.h>
 #include <optional>
@@ -7,6 +10,9 @@
 
 namespace chai::gfx
 {
+    /**
+     * @brief Inherit from this in a plugin to load in a model
+     */
     class IModelLoader
     {
     public:

@@ -21,7 +21,7 @@ namespace chai::gfx
      * Uses vk-bootstrap for the boilerplate code, but provides getters for the 
      * Vulkan objects
      */
-    class VulkanContext : public IRenderDevice
+    class VulkanContext
     {
     public:
         explicit VulkanContext(IWindow& window); // creates everything below

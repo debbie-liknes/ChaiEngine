@@ -1,3 +1,6 @@
+/**
+ * @file TextureAsset.h
+ */
 #pragma once
 #include <Assets/TextureFormat.h>
 

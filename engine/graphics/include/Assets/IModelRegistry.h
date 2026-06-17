@@ -1,3 +1,6 @@
+/**
+ * @file IModelRegistry.h
+ */
 #pragma once
 #include <memory>
 #include <Assets/ModelPrefab.h>
@@ -6,6 +9,9 @@
 
 namespace chai::gfx
 {
+    /**
+     * @brief Interface for CPU model data bookkeeping
+     */
     class IModelRegistry
     {
     public:

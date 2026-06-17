@@ -1,8 +1,15 @@
+/**
+ * @file IScene.h
+ */
 #pragma once
-#include <Updatable.h>
+#include <Core/Updatable.h>
 
 namespace chai
 {
+    /**
+     * @brief Interface for scene
+     * @note I have my doubts that this should be here
+     */
 	class IScene
 	{
     public:

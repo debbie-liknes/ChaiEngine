@@ -11,7 +11,7 @@
 #include <Assets/MeshAsset.h>
 #include <Log.h>
 #include <Rendering/CameraData.h>
-#include <SystemPaths.h>
+#include <Core/SystemPaths.h>
 #include <Window/Window.h>
 #include <numeric>
 

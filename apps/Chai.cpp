@@ -1,9 +1,9 @@
-﻿#include <Engine.h>
+﻿#include <Core/Engine.h>
 #include <SpdLogSink.h>
 #include <Log.h>
 #include <Window/Window.h>
 #include <Plugin/PluginLoader.h>
-#include <SystemPaths.h>
+#include <Core/SystemPaths.h>
 #include <Rendering/IRenderer.h>
 #include <Assets/PrimitiveMeshes.h>
 #include <Assets/MeshAsset.h>

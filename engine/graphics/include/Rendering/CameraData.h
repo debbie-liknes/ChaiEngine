@@ -1,10 +1,15 @@
+/**
+ * @file CameraData.h
+ */
 #pragma once
 #include <ChaiMath.h>
 #include <Common/GraphicsMacros.h>
 
 namespace chai::gfx
 {
-    //GPU camera struct
+    /**
+     * @brief GPU camera structure
+     */
     struct alignas(16) CameraData 
     {
         math::Mat4 view;
@@ -14,5 +19,5 @@ namespace chai::gfx
         float _pad0 = 0.0f;
     };
 
-    ENFORCE_STD140_ALIGNMENT(CameraData)
+    ENFORCE_STD140_ALIGNMENT(CameraData);
 }

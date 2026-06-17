@@ -4,7 +4,7 @@
 #include <Scene/Camera.h>
 #include <memory>
 #include <ChaiMath.h>
-#include <Updatable.h>
+#include <Core/Updatable.h>
 #include <Scene/GameObject.h>
 
 namespace chai::scene

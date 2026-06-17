@@ -1,6 +1,6 @@
 #include "GLTFLoader.h"
 #include <Log.h>
-#include <FileIO.h>
+#include <Core/FileIO.h>
 
 // Im tired of looking at these warnings that I cant fix
 // Cgltf.cpp

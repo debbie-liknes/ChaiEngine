@@ -1,3 +1,6 @@
+/**
+ * @brief ITextureLoader.h
+ */
 #pragma once
 #include <Assets/TextureAsset.h>
 #include <optional>
@@ -6,7 +9,9 @@
 
 namespace chai::gfx
 {
-    // bytes -> image asset
+    /**
+     * @brief Inherit from this in a plugin to convert file bytes to a TextureAsset
+     */
     class ITextureLoader
     {
     public:

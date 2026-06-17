@@ -1,5 +1,6 @@
 /**
  * @file FrameRenderData.h
+ * @brief Structures used when extracting from scene objects
  */
 #pragma once
 #include <GraphicsExport.h>
@@ -14,27 +15,31 @@ namespace chai::gfx
     struct Texture;
     struct Material;
 
-    struct RenderView { // one per camera/view
+    struct RenderView {
         math::Mat4 view, proj, viewProj;
         math::Vec3 position;
     };
 
-    struct RenderItem { // one per drawable
+    /**
+     * @brief Represents a single drawable for the renderer
+     * The model mat is fully transformed to world space, according to its
+     * hierarchy
+     */
+    struct RenderItem {
         Handle<Mesh> mesh;
         math::Mat4 model;
-        //this will be material someday
-        math::Vec4 color;
-        Handle<Texture> texture;
         Handle<Material> material;
     };
 
-    //This represents ONE world view
-    //if we have separate, unrelated panes, we'll need more of these
+    /**
+     * @brief Extract data from the scene into this. This structure is handed to the
+     * renderer every frame
+     */
     struct GRAPHICS_EXPORT FrameRenderData 
     {
         std::vector<RenderView> views;
         std::vector<RenderItem> items;
-        LightData sun;                  //have 1 directional light
+        LightData sun;                  //have 1 directional light, TODO: rethink after IBL
         EnvironmentData environment;
     };
 }

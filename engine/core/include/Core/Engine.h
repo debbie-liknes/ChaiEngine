@@ -9,9 +9,9 @@
 #include <TypeRegistry.h>
 #include <string>
 #include <vector>
-#include <Clock.h>
+#include <Core/Clock.h>
 #include <span>
-#include <IScene.h>
+#include <Scene/IScene.h>
 #include <Rendering/IRenderer.h>
 
 namespace chai
@@ -24,6 +24,7 @@ namespace chai
     {
     public:
         ~Engine();
+
         //lifecycle methods
         void startup();
         void shutdown();
@@ -35,13 +36,13 @@ namespace chai
         void setPlugins(std::span<IPlugin* const> p);
 
     private:
-        ServiceLocator services_;
-        std::vector<IPlugin*> plugins_;
-        TypeRegistry& types_ = TypeRegistry::instance();
-        PluginContext ctx_{services_, types_};
-        std::vector<IPlugin*> active_;
-        bool running_ = true;
-        Clock clock_;
+        ServiceLocator          services_;
+        std::vector<IPlugin*>   plugins_;
+        TypeRegistry&           types_ = TypeRegistry::instance();
+        PluginContext           ctx_{services_, types_};
+        std::vector<IPlugin*>   active_;
+        bool                    running_ = true;
+        Clock                   clock_;
         std::unique_ptr<IScene> scene_;
 
         void updateActiveCameraAspect();
