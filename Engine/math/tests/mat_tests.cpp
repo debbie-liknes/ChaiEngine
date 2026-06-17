@@ -1,0 +1,71 @@
+#include "test_helpers.h"
+
+#include <ChaiMath.h>
+
+namespace Mat4Tests
+{
+    using chai::math::Mat2;
+    using chai::math::Mat4;
+    using chai::math::Mat;
+    using chai::math::kEpsilonF;
+
+    using chai::math::Vec3;
+
+    TEST(Mat4Tests, SizeAndAlign)
+    {
+        EXPECT_EQ(sizeof(Mat4), sizeof(float) * 16);
+        EXPECT_EQ(alignof(Mat4), alignof(float));
+    }
+
+    TEST(Mat4Tests, Identity)
+    {
+        Mat4 id = Mat4::identity();
+        Mat4 mat =
+        {
+            1.f, 0.f, 0.f, 0.f,
+            0.f, 1.f, 0.f, 0.f,
+            0.f, 0.f, 1.f, 0.f,
+            0.f, 0.f, 0.f, 1.f
+        };
+
+        EXPECT_EQ(id, mat);
+    }
+
+    TEST(Mat4Tests, AssignmentAndEquality)
+    {
+        Mat4 mat{
+            1, 2, 3, 4,
+            5, 6, 7, 8,
+            9, 10, 11, 12,
+            13, 14, 15, 16
+        };
+
+        EXPECT_EQ(mat[0][0], 1);
+        mat[0][0] = 100;
+        EXPECT_EQ(mat[0][0], 100);
+
+        chai::math::Vec4 row1 = mat[1];
+        chai::math::Vec4 expected1{5, 6, 7, 8};
+        EXPECT_EQ(row1, expected1);
+    }
+
+    TEST(MatrixMultiplyTest, IdentityMatrix)
+    {
+        Mat < float, 4, 4 > A{
+            1, 2, 3, 4,
+            5, 6, 7, 8,
+            9, 10, 11, 12,
+            13, 14, 15, 16
+        };
+
+        for (int col = 0; col < 4; ++col)
+            for (int row = 0; row < 4; ++row)
+                A[col][row] = 1.0f + col * 4 + row;
+
+        Mat < float, 4, 4 > I = Mat < float, 4, 4 > ::identity();
+
+        auto R = A * I;
+
+        EXPECT_TRUE(MatNear(R, A, kEpsilonF));
+    }
+}
