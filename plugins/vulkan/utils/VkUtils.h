@@ -1,6 +1,6 @@
 #pragma once
-#include "VulkanTexture.h"
-#include "core/VkCheck.h"
+#include "../resources/VulkanTexture.h"
+#include "../utils/VkCheck.h"
 
 #include <Loaders/ITextureLoader.h>
 #include <vulkan/vulkan.h>

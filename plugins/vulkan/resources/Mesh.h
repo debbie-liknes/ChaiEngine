@@ -9,8 +9,8 @@
 #include <Assets/IMeshRegistry.h>
 #include <AssetCache.h>
 #include <VkBootstrap.h>
-#include "core/VkCheck.h"
-#include "VkUtils.h"
+#include "../utils/VkCheck.h"
+#include "../utils/VkUtils.h"
 
 namespace chai::gfx
 {

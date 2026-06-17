@@ -1,6 +1,6 @@
 #include "Swapchain.h"
-#include "VulkanContext.h"
-#include "core/VkCheck.h"
+#include "../renderer/VulkanContext.h"
+#include "../utils/VkCheck.h"
 
 namespace chai::gfx
 {

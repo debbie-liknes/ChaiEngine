@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <vector>
 #include <vulkan/vulkan.h>
-#include "RenderTargetView.h"
+#include "../resources/RenderTargetView.h"
 #include "VkBootstrap.h"
 #include <vk_mem_alloc.h>
 

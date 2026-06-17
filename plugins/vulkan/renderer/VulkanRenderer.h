@@ -3,16 +3,16 @@
  */
 #pragma once
 #include <Rendering/IRenderer.h>
-#include "../VulkanContext.h"
-#include "../Swapchain.h"
-#include "../RenderTargetView.h"
+#include "VulkanContext.h"
+#include "../swapchain/Swapchain.h"
+#include "../resources/RenderTargetView.h"
 #include <vulkan/vulkan.h>
 #include <Plugin/ServiceLocator.h>
  
 #include <array>
 #include <cstdint>
-#include "../GpuResources.h"
-#include "../MaterialFactory.h"
+#include "../resources/GpuResources.h"
+#include "../resources/MaterialFactory.h"
 
 namespace chai
 {

@@ -1,36 +1,37 @@
 project(VulkanRenderer)
 
 set(${PROJECT_NAME}_headers
-        core/VkCheck.h
-        core/VkCheck.cpp
+        commands/ImageTransition.h
         pipeline/PipelineBuilder.h
         pipeline/ShaderModule.h
-        rendering/VulkanRenderer.h
-        VulkanContext.h
-        RenderTargetView.h
-        Swapchain.h
-        Buffer.h
-        Mesh.h
-        GpuResources.h
-        TextureFactory.h
-        ImageTransition.h
-        VkUtils.h
-        Material.h
-        MaterialFactory.h
-        VulkanTexture.h
-        VulkanTexture.cpp
+        renderer/VulkanRenderer.h
+        renderer/VulkanContext.h
+        resources/RenderTargetView.h
+        swapchain/Swapchain.h
+        resources/Buffer.h
+        resources/GpuResources.h
+        resources/Mesh.h
+        resources/Material.h
+        resources/MaterialFactory.h
+        resources/TextureFactory.h
+        resources/VulkanTexture.h
+        utils/VkCheck.h
+        utils/VkUtils.h
 )
 
 set(${PROJECT_NAME}_source
+        commands/ImageTransition.cpp
         pipeline/PipelineBuilder.cpp
         pipeline/ShaderModule.cpp
-        rendering/VulkanPlugin.cpp
-        rendering/VulkanRenderer.cpp
-        Swapchain.cpp
-        VulkanContext.cpp
+        renderer/VulkanContext.cpp
+        renderer/VulkanRenderer.cpp
+        resources/Buffer.cpp
+        resources/VulkanTexture.cpp
+        swapchain/Swapchain.cpp
+        utils/VkCheck.cpp
+
         VulkanMemoryAllocator.cpp
-        Buffer.cpp
-        ImageTransition.cpp
+        VulkanPlugin.cpp
 )
 
 include(FetchContent)

@@ -8,14 +8,14 @@
 #include <Plugin/ServiceLocator.h>
 #include <Window/Window.h>
 #include <memory>
-#include "VulkanRenderer.h"
-#include "../Mesh.h"
-#include "../TextureFactory.h"
+#include "renderer/VulkanRenderer.h"
+#include "resources/Mesh.h"
+#include "resources/TextureFactory.h"
 #include <Assets/IMeshRegistry.h>
 #include <Assets/ITextureRegistry.h>
 #include <Scene/ModelRegistry.h>
 #include <Assets/IMaterialRegistry.h>
-#include "../MaterialFactory.h"
+#include "resources/MaterialFactory.h"
 
 namespace chai::gfx
 {

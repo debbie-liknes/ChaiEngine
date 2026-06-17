@@ -1,7 +1,7 @@
 #pragma once
 #include "Buffer.h"
-#include "ImageTransition.h"
-#include "VkUtils.h"
+#include "../commands/ImageTransition.h"
+#include "../utils/VkUtils.h"
 #include "VulkanContext.h"
 
 #include <AssetCache.h>

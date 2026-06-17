@@ -1,8 +1,8 @@
 #include "VulkanRenderer.h"
 
-#include "../ImageTransition.h"
-#include "../TextureFactory.h"
-#include "../core/VkCheck.h"
+#include "../commands/ImageTransition.h"
+#include "../resources/TextureFactory.h"
+#include "../utils/VkCheck.h"
 #include "../pipeline/PipelineBuilder.h"
 #include "../pipeline/ShaderModule.h"
 

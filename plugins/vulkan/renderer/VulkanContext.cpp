@@ -1,7 +1,7 @@
 #include "VulkanContext.h"
 #include <Window/Window.h>
 #include <Log.h>
-#include "core/VkCheck.h"
+#include "../utils/VkCheck.h"
 
 namespace chai
 {
