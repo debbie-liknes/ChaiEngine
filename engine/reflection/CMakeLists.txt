@@ -1,9 +1,9 @@
 project(TypeReflection)
 
 set(${PROJECT_NAME}_headers
+        include/ChaiReflect.h
         include/TypeRegistry.h
         include/TypeInfo.h
-        include/ChaiReflect.h
 )
 
 set(${PROJECT_NAME}_source

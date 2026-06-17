@@ -7,7 +7,7 @@
 #include <memory>
 
 //Please note there are NO SPDLOG INCLUDES HERE
-//Dont put any in this header
+//Dont put any in this header pls
 namespace spdlog
 {
     class logger;
@@ -15,6 +15,9 @@ namespace spdlog
 
 namespace chai
 {
+    /**
+     * @brief An ILogSink implementation backed by spdlog
+     */
     class SpdlogSink : public ILogSink
     {
     public:

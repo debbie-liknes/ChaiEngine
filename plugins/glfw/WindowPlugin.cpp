@@ -1,3 +1,6 @@
+/**
+ * @file WindowPlugin.cpp
+ */
 #include "WindowGLFW.h"
 
 #include <GLFW/glfw3.h>
@@ -17,6 +20,9 @@ namespace chai
         CHAI_LOG_ERROR("GLFW error {}: {}", code, desc);
     }
 
+    /**
+     * @brief GLFW init and teardown, sets up services for input and window
+     */
     class WindowPlugin : public IPlugin
     {
     public:

@@ -1,8 +1,6 @@
 # Add source to this project's executable.
 
 set(ModelLoaderSource
-        ObjLoader.h
-        ObjLoader.cpp
         GLTFLoader.h
         GLTFLoader.cpp
         ModelLoaderPlugin.cpp

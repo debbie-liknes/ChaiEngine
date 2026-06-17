@@ -1,7 +1,5 @@
 /**
  * @file TypeInfo.h
- * @brief Defines the TypeInfo class which holds metadata such as methods and
- * properties for reflection.
  */
 #pragma once
 #include <string>
@@ -55,20 +53,17 @@ namespace chai
 
         /**
          * @brief Adds a method to the type information, allowing it to be invoked via reflection.
-         * @param methodName The name of the method.
-         * @param method A pointer to the member function to be added.
          */
         template <typename T, typename R, typename... Args>
         void addMethod(const std::string& methodName, R (T::*method)(Args...))
         {
-            // For simplicity, we assume all methods are public and non-static
+            // Assume all methods are public and non-static
             MethodInfo info;
             info.name = methodName;
             info.returnType = std::type_index(typeid(R));
             info.paramTypes = {std::type_index(typeid(Args))...};
 
-            // Create an invoker that can call the method on an instance of T with the provided
-            // arguments
+            // Create an invoker that can call the method
             info.invoker = [method](void* obj, const std::vector<std::any>& args) -> std::any
             {
                 auto* typedObj = static_cast<T*>(obj);
@@ -86,7 +81,7 @@ namespace chai
                 }
                 else
                 {
-                    // Handle parameters (simplified for demonstration)
+                    // Handle parameters
                     return invokeWithArgs(typedObj, method, args, std::index_sequence_for < Args...>{});
                 }
             };

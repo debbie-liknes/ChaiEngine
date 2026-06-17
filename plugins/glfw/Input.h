@@ -1,9 +1,15 @@
+/**
+ * @file Input.h
+ */
 #pragma once
 #include <Core/IInput.h>
 #include <set>
 
 namespace chai
 {
+    /**
+     * @brief GLFW input handling
+     */
 	class InputHandler : public IInput
 	{
     public:

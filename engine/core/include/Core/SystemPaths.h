@@ -7,5 +7,8 @@
 
 namespace chai
 {
+    /**
+     * @brief Get directory alongside the current exe
+     */
     std::filesystem::path executableDir();
 }

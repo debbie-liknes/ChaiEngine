@@ -39,6 +39,7 @@ namespace chai::gfx
 
     bool readPrimitive(const cgltf_primitive& inPrim, MeshAsset& out)
     {
+        //this matches the chai Vertex structure
         const cgltf_accessor* pos = findAttr(inPrim, cgltf_attribute_type_position);
         if (!pos) {
             CHAI_LOG_WARN("cgltf: primitive has no POSITION; skipping");
@@ -48,6 +49,7 @@ namespace chai::gfx
         const cgltf_accessor* uv = findAttr(inPrim, cgltf_attribute_type_texcoord, 0);
         const cgltf_accessor* tan = findAttr(inPrim, cgltf_attribute_type_tangent);
 
+        //read all vertex data
         out.vertices.resize(pos->count);
         for (cgltf_size i = 0; i < pos->count; i++) {
             auto& v = out.vertices[i];
@@ -63,6 +65,7 @@ namespace chai::gfx
                 cgltf_accessor_read_float(tan, i, &v.tangent.x, 4);
         }
 
+        //May or may not have indices
         if (inPrim.indices) {
             out.indices.resize(inPrim.indices->count);
             for (cgltf_size i = 0; i < inPrim.indices->count; i++)
@@ -78,6 +81,7 @@ namespace chai::gfx
 
     void extractMeshes(const cgltf_data& data, ModelAsset& model)
     {
+        //Meshes are basically collections of primitives. Loop through meshes, and their prims
         model.meshes.reserve(data.meshes_count);
         for (cgltf_size i = 0; i < data.meshes_count; i++)
         {
@@ -105,6 +109,8 @@ namespace chai::gfx
     void
     extractImages(const cgltf_data& data, const std::filesystem::path& baseDir, ModelAsset& model)
     {
+        //We get raw image bytes for a cgltf image OR a ui
+        // we'll use the registry later, for now just store the bytes or read then store
         model.images.reserve(data.images_count);
         for (cgltf_size i = 0; i < data.images_count; i++) {
             const cgltf_image& image = data.images[i];
@@ -144,6 +150,7 @@ namespace chai::gfx
 
     void extractMaterials(const cgltf_data& data, ModelAsset& model)
     {
+        //these are pbr materials, convert to our material types
         model.materials.reserve(data.materials_count);
         for (cgltf_size i = 0; i < data.materials_count; i++) {
             static int hack = 0;
@@ -188,6 +195,7 @@ namespace chai::gfx
     {
         t = {m[12], m[13], m[14]};
 
+        //save the scale out first, so we dont lose its sign
         math::Vec3 c0{m[0], m[1], m[2]};
         math::Vec3 c1{m[4], m[5], m[6]};
         math::Vec3 c2{m[8], m[9], m[10]};
@@ -238,6 +246,7 @@ namespace chai::gfx
             if (n.name)
                 out.name = n.name;
 
+            //The math here can be a bit tricky. Converting between TRS and a matrix can cause loss
             if (n.has_matrix) {
                 decomposeMatrix(n.matrix, out.position, out.rotation, out.scale);
             } else {
@@ -297,7 +306,7 @@ namespace chai::gfx
         extractMaterials(*data, model);
         extractNodes(*data, model);
 
-        CHAI_LOG_INFO("cgltf: decoded {} meshes, {} materials, {} images, {} nodes",
+        CHAI_LOG_DEBUG("cgltf: decoded {} meshes, {} materials, {} images, {} nodes",
           model.meshes.size(),
           model.materials.size(),
           model.images.size(),

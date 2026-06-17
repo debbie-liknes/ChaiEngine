@@ -16,10 +16,10 @@ namespace chai
     {
     public:
         /**
-         * @brief In this case, we use a singleton pattern for the TypeRegistry to ensure a single
+         * @brief In this case, use a singleton pattern for the TypeRegistry to ensure a single
          * global instance that can be accessed throughout the application.
          * 
-         * Be careful not to abuse this pattern for every use case
+         * Be careful not to abuse this pattern
          */
         static TypeRegistry& instance();
 

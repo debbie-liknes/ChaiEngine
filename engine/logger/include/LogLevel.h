@@ -8,7 +8,7 @@
 namespace chai
 {
     /**
-     * @brief Log levels for the CHAI logging system. Ordered from least to most severe
+     * @brief Ordered from least to most severe
      */
     enum class LogLevel { Trace = 0, Debug, Info, Warn, Error, Critical, Off };
 

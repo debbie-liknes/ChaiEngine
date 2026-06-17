@@ -68,7 +68,7 @@ namespace chai
 
     WindowGLFW::WindowGLFW(const WindowDesc& desc, class InputHandler* input) : input_(input)
     {
-        // There might be a more graphics api agnostic way to do this
+        // TODO: There might be a more graphics api agnostic way to do this
         // But ive got my heart set on vulkan right now, so this is how I will do it
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, desc.resizable ? GLFW_TRUE : GLFW_FALSE);
@@ -105,8 +105,8 @@ namespace chai
 
     std::span<const WindowEvent> WindowGLFW::pollEvents()
     {
-        events_.clear();  // keeps capacity ? steady-state no allocation
-        glfwPollEvents(); // invokes the callbacks, which pushEvent() into events_
+        events_.clear();
+        glfwPollEvents();
         return events_;
 
     }

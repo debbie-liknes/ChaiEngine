@@ -1,3 +1,6 @@
+/**
+ * @file Updatable.h
+ */
 #pragma once
 #include <CoreExport.h>
 
@@ -10,6 +13,11 @@ namespace chai
 
 	struct UpdateContext;
 
+	/**
+     * @brief Interface for anything that needs to be updated every frame
+	 * @todo Figure out if this is needed in the Core or the Scene, decide
+	 * if this should be moved to 2 different interfaces
+     */
 	class CORE_EXPORT IUpdatable
 	{
     public:

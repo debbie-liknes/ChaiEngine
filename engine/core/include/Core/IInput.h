@@ -35,6 +35,9 @@ namespace chai
         None
     };
 
+    /**
+     * @brief Input event base class
+     */
     struct InputEvent
     {
         InputEventType type = InputEventType::None;
@@ -53,6 +56,9 @@ namespace chai
         float x, y;
     };
 
+    /**
+     * @brief Interface to be implemented in (likely a window) plugin
+     */
     class IInput
     {
     public:
@@ -70,6 +76,10 @@ namespace chai
         virtual void newFrame() = 0;
     };
 
+    /**
+     * @file SpdLogSink.h
+     * @todo Feels like this belongs alongside the Updatable Interface
+     */
     struct UpdateContext {
         float dt;
         IInput& input;
