@@ -13,7 +13,7 @@ namespace chai::scene
     {
         IInput& in = ctx.input;
 
-        // Hold right mouse to look (and capture the cursor); release to free it.
+        // Hold right mouse to look
         const bool looking = in.mouseDown(MouseButton::Right);
         in.setCursorMode(looking ? CursorMode::Disabled : CursorMode::Normal);
 
@@ -54,10 +54,6 @@ namespace chai::scene
         
         if (math::lengthSq(move) > 0.f)
             tf->setPosition(tf->getWorldPosition() + normalize(move) * speed_ * boost * ctx.dt);
-
-        //math::Quat rot = math::Quat::fromAxisAngle({0, 1, 0}, yaw_) *
-        //                 math::Quat::fromAxisAngle({1, 0, 0}, pitch_);
-        //tf->setRotation(rot);
     }
 
     void FlyCameraController::setEnabled(bool enabled)

@@ -1,29 +1,29 @@
-﻿#include <Core/Engine.h>
-#include <SpdLogSink.h>
-#include <Log.h>
-#include <Window/Window.h>
-#include <Plugin/PluginLoader.h>
-#include <Core/SystemPaths.h>
-#include <Rendering/IRenderer.h>
-#include <Assets/PrimitiveMeshes.h>
-#include <Assets/MeshAsset.h>
+﻿#include <Assets/IMaterialRegistry.h>
 #include <Assets/IMeshRegistry.h>
-#include <Scene/GameObject.h>
-#include <Components/MeshComponent.h>
-#include <Components/CameraComponent.h>
-#include <Components/TransformComponent.h>
-#include <Components/LightComponent.h>
-#include <Loaders/ITextureLoader.h>
-#include <Assets/ITextureRegistry.h>
-#include <Scene/Scene.h>
-#include <Components/ControllerComponent.h>
-#include <Controllers/SpinController.h>
-#include <Controllers/FlyCamController.h>
 #include <Assets/IModelRegistry.h>
+#include <Assets/ITextureRegistry.h>
 #include <Assets/MaterialAsset.h>
-#include <Assets/IMaterialRegistry.h>
-#include <Scene/SpawnPrefab.h>
+#include <Assets/MeshAsset.h>
+#include <Assets/PrimitiveMeshes.h>
+#include <Components/CameraComponent.h>
+#include <Components/ControllerComponent.h>
+#include <Components/LightComponent.h>
+#include <Components/MeshComponent.h>
 #include <Components/SkyboxComponent.h>
+#include <Components/TransformComponent.h>
+#include <Controllers/FlyCamController.h>
+#include <Controllers/SpinController.h>
+#include <Core/Engine.h>
+#include <Core/SystemPaths.h>
+#include <Loaders/ITextureLoader.h>
+#include <Log.h>
+#include <Plugin/PluginLoader.h>
+#include <Rendering/IRenderer.h>
+#include <Scene/GameObject.h>
+#include <Scene/Scene.h>
+#include <Scene/SpawnPrefab.h>
+#include <SpdLogSink.h>
+#include <Window/Window.h>
 
 std::filesystem::path assetDir()
 {
@@ -35,8 +35,8 @@ int main()
     using namespace chai;
     using namespace scene;
 
-    //setup logging
-    SpdlogSink logSink; 
+    // setup logging
+    SpdlogSink logSink;
     setLogSink(&logSink);
     setLogLevel(chai::LogLevel::Info);
 
@@ -64,14 +64,14 @@ int main()
         return 1;
     }
 
-    //build the scene
+    // build the scene
     auto scene = std::make_unique<Scene>();
 
-    //auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/intel/main_sponza/NewSponza_Main_glTF_003.glTF");
+    // auto prefab = models->load(makeAssetId("model:sponza"), assetDir() /
+    // "Sponza/intel/main_sponza/NewSponza_Main_glTF_003.glTF");
     auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.gltf");
 
-    if (prefab)
-    {
+    if (prefab) {
         auto prefabInstance = scene::spawn(*scene, *prefab);
     }
 
@@ -92,14 +92,12 @@ int main()
 
     GameObject* sky = scene->createObject("skybox");
     auto skyboxComp = sky->addComponent<SkyboxComponent>();
-    std::array<std::filesystem::path, 6> skyTextures{
-        assetDir() / "skybox/cubemap_0.png",
-        assetDir() / "skybox/cubemap_1.png",
-        assetDir() / "skybox/cubemap_2.png",
-        assetDir() / "skybox/cubemap_3.png",
-        assetDir() / "skybox/cubemap_4.png",
-        assetDir() / "skybox/cubemap_5.png"
-    };
+    std::array<std::filesystem::path, 6> skyTextures{assetDir() / "skybox/cubemap_0.png",
+                                                     assetDir() / "skybox/cubemap_1.png",
+                                                     assetDir() / "skybox/cubemap_2.png",
+                                                     assetDir() / "skybox/cubemap_3.png",
+                                                     assetDir() / "skybox/cubemap_4.png",
+                                                     assetDir() / "skybox/cubemap_5.png"};
     auto skyBoxTex = textures->loadCubemap(makeAssetId("component:skybox"), skyTextures);
     skyboxComp->setTexture(skyBoxTex);
 

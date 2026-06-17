@@ -19,9 +19,6 @@ vec3 dirForFace(int face, vec2 uv) {
 }
 
 void main() {
-    // TODO: get this fragment's uv in [-1,1]. Easiest: pass it from the vertex
-    // shader (the same fullscreen-triangle uv you already compute, mapped to [-1,1]),
-    // or derive from gl_FragCoord / target resolution. Call it `uv`.
     vec2 uv = /* TODO */ vec2(0.0);
 
     vec3 N = dirForFace(pc.faceIndex, uv);
@@ -31,7 +28,7 @@ void main() {
     vec3 right = normalize(cross(up, N));
     up         = normalize(cross(N, right));
 
-    // Convolve the hemisphere: integrate incoming radiance weighted by cos(theta).
+    // Convolve the hemisphere
     vec3 irradiance = vec3(0.0);
     float sampleDelta = 0.025;
     float nrSamples = 0.0;

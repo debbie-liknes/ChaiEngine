@@ -10,6 +10,9 @@
 
 namespace chai::gfx
 {
+    /**
+     * @brief Vulkan resources for a material
+     */
     struct GpuMaterial {
         VkBuffer factorsBuffer = VK_NULL_HANDLE;
         VmaAllocation factorsAlloc = VK_NULL_HANDLE;

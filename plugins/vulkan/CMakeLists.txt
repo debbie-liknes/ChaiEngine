@@ -19,6 +19,7 @@ set(${PROJECT_NAME}_headers
         resources/TextureFactory.h
         resources/TextureRegistry.h
         resources/VulkanTexture.h
+        resources/VulkanVertex.h
         utils/VkCheck.h
         utils/VkUtils.h
 )

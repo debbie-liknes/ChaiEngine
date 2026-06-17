@@ -1,3 +1,6 @@
+/**
+ * @file TextureRegistry.h
+ */
 #pragma once
 #include <Assets/ITextureRegistry.h>
 #include <Plugin/ServiceLocator.h>
@@ -11,7 +14,9 @@
 
 namespace chai::gfx
 {
-    // concrete impl
+    /**
+     * @brief Bookkeeping for Texture assets
+     */
     class TextureRegistry : public ITextureRegistry
     {
     public:

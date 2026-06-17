@@ -5,7 +5,7 @@ layout(location = 1) in vec3 vNormal;
 layout(location = 2) in vec4 vTangent;
 layout(location = 3) in vec2 vUV;
 
-// set 0 = camera (also read here for the view vector -> needs FRAGMENT stage flag)
+// set 0 = camera
 layout(set = 0, binding = 0) uniform Camera {
     mat4 view;
     mat4 proj;
@@ -13,7 +13,7 @@ layout(set = 0, binding = 0) uniform Camera {
     vec3 position;
 } cam;
 
-// set 1 = material: factors UBO at 0, five maps at 1..5 (order matches MaterialFactory)
+// set 1 = material
 layout(set = 1, binding = 0) uniform Material {
     vec4 baseColor;  // baseColorFactor
     vec4 emissive;   // emissiveFactor in .rgb
@@ -28,7 +28,7 @@ layout(set = 1, binding = 3) uniform sampler2D normalTex;
 layout(set = 1, binding = 4) uniform sampler2D occlusionTex;
 layout(set = 1, binding = 5) uniform sampler2D emissiveTex;
 
-// set 2 = light. vec4s on purpose -- see std140 note. Field order must match LightData.
+// set 2 = light
 layout(set = 2, binding = 0) uniform Light {
     vec4 direction; // .xyz = direction
     vec4 color;     // .rgb = color of light, w = stength
@@ -59,7 +59,7 @@ float D_GGX(float NoH, float a)
     return a2 / (PI * d * d);
 }
 
-// Smith with Schlick-GGX, k for direct lighting
+// Smith with Schlick GGX
 float G_Smith(float NoV, float NoL, float roughness)
 {
     float r = roughness + 1.0;
@@ -81,6 +81,8 @@ vec3 acesFilm(vec3 x) {
 
 void main()
 {
+    //A lot of math
+
     vec4 base = texture(baseColorTex, vUV) * mat.baseColor;
     if (base.a < mat.alphaCutoff) discard;
     vec3 albedo = base.rgb;
@@ -97,9 +99,6 @@ void main()
     vec3 N = getNormal();
     if (!gl_FrontFacing) N = -N;
 
-    //vec3 c = N*0.5 + 0.5; outColor = vec4(c,1);
-    //outColor = vec4(N * 0.5 + 0.5, 1.0);
-    //return;
     vec3 V = normalize(cam.position - vWorldPos);
     vec3 L = normalize(-light.direction.xyz); // surface -> light
     vec3 H = normalize(V + L);
@@ -123,7 +122,6 @@ void main()
     vec3 radiance = light.color.rgb;
     vec3 lo = (diffuse + spec) * radiance * NoL;
 
-    // flat ambient stand-in until IBL; modulated by occlusion
     //vec3 ambient = vec3(0.04, 0.045, 0.06) * albedo * ao;
     vec3 irradiance = texture(irradianceMap, N).rgb;
     vec3 diffuseIBL = irradiance * albedo;
@@ -131,8 +129,6 @@ void main()
 
     vec3 color = ambient + lo + emissive;
 
-    // Swapchain is UNORM, so encode manually. Reinhard tonemap + linear->sRGB.
-    // If you switch the swapchain to a *_SRGB format, drop the pow() (hardware does it).
     color *= light.color.w;
     color = acesFilm(color);
     color = pow(color, vec3(1.0 / 2.2));

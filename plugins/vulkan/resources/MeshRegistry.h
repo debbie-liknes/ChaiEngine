@@ -1,3 +1,6 @@
+/**
+ * @file MeshRegistry.h
+ */
 #pragma once
 #include <Assets/IMeshRegistry.h>
 #include "MeshFactory.h"

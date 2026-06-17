@@ -9,7 +9,7 @@ namespace chai::gfx
 
     Handle<Mesh> MeshRegistry::ingest(AssetId id, MeshAsset asset) 
     {
-        return cache_->ingest(id, std::move(asset)); // forward to the real cache
+        return cache_->ingest(id, std::move(asset));
     }
 
     void MeshRegistry::release(Handle<Mesh> h) 
@@ -17,9 +17,9 @@ namespace chai::gfx
         cache_->release(h);
     }
 
-    Handle<Mesh> MeshRegistry::load(AssetId) 
+    Handle<Mesh> MeshRegistry::load(AssetId id) 
     {
-        return {};
+        return cache_->acquire(id);
     }
 
     std::shared_ptr<AssetCache<Mesh>> MeshRegistry::cache()

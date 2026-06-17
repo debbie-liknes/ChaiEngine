@@ -94,14 +94,14 @@ namespace chai::gfx
                          VK_ACCESS_2_TRANSFER_WRITE_BIT,
                          VK_IMAGE_ASPECT_COLOR_BIT);
 
-            // one copy region PER FACE
+            // one copy region per face
             std::vector<VkBufferImageCopy> regions(layers);
             for (uint32_t f = 0; f < layers; ++f) {
                 regions[f].bufferOffset = VkDeviceSize(f) * layerSize;
                 regions[f].bufferRowLength = 0;
                 regions[f].bufferImageHeight = 0;
                 regions[f].imageSubresource = {
-                    VK_IMAGE_ASPECT_COLOR_BIT, 0 /*mip*/, f /*baseArrayLayer*/, 1};
+                    VK_IMAGE_ASPECT_COLOR_BIT, 0, f, 1};
                 regions[f].imageExtent = extent;
             }
             vkCmdCopyBufferToImage(cmd,

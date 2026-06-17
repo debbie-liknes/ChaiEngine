@@ -1,3 +1,6 @@
+/**
+ * @file TextureFactory.h
+ */
 #pragma once
 #include "../commands/ImageTransition.h"
 #include "../renderer/VulkanContext.h"
@@ -21,6 +24,9 @@ namespace chai
 
 namespace chai::gfx
 {
+    /**
+     * @brief Creates a GPU resource frpm a CPU texture asset
+     */
     class TextureFactory final : public ResourceFactory<Texture>
     {
     public:

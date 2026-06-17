@@ -6,10 +6,8 @@ set(ChaiScene_headers
         include/Components/ControllerComponent.h
         include/Components/LightComponent.h
         include/Components/MeshComponent.h
-        #include/Components/RenderableComponent.h
         include/Components/SkyboxComponent.h
         include/Components/TransformComponent.h
-        #include/Controllers/CameraController.h
         include/Controllers/Controller.h
         include/Controllers/FlyCamController.h
         include/Scene/Camera.h
@@ -29,7 +27,6 @@ set(ChaiScene_source
         source/Components/TransformComponent.cpp
         source/Controllers/SpinController.cpp
         source/Controllers/FlyCamController.cpp
-        #source/Controllers/CameraController.cpp
         source/Scene/Camera.cpp
         source/Scene/GameObject.cpp
         source/Scene/Scene.cpp

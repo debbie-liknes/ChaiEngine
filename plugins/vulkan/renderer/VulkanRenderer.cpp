@@ -14,6 +14,7 @@
 #include <Rendering/CameraData.h>
 #include <Window/Window.h>
 #include <numeric>
+#include "../resources/VulkanVertex.h"
 
 namespace chai::gfx
 {
