@@ -1,17 +1,17 @@
 #include "VulkanRenderer.h"
 
 #include "../commands/ImageTransition.h"
-#include "../resources/TextureFactory.h"
-#include "../utils/VkCheck.h"
 #include "../pipeline/PipelineBuilder.h"
 #include "../pipeline/ShaderModule.h"
+#include "../resources/TextureFactory.h"
+#include "../utils/VkCheck.h"
 
 #include <AssetCache.h>
 #include <Assets/DefaultTextures.h>
 #include <Assets/MeshAsset.h>
+#include <Core/SystemPaths.h>
 #include <Log.h>
 #include <Rendering/CameraData.h>
-#include <Core/SystemPaths.h>
 #include <Window/Window.h>
 #include <numeric>
 
@@ -33,7 +33,6 @@ namespace chai::gfx
                      }()),
           meshCache_(meshCache), texCache_(texCache), materialCache_(matCache)
     {
-        // init vulkan context
         init();
         CHAI_LOG_INFO("VulkanRenderer initialized");
     }
@@ -181,6 +180,7 @@ namespace chai::gfx
             }
         }
 
+        //only need this one, because its environment
         irradianceTarget_ = createCubeRenderTarget(ctx_,
                                                    kIrradianceSize,
                                                    VK_FORMAT_R16G16B16A16_SFLOAT,
@@ -195,10 +195,11 @@ namespace chai::gfx
         if (needsResize_)
             recreateSwapchain();
 
+        //lazy bake and write this once
         if (!irradianceBaked_) {
             if (const GpuTexture* sky = texCache_->resource(renderData.environment.skyboxCube)) {
                 bakeIrradiance(*sky);
-                writeEnvironmentSet(*sky); // write binding 0 (skybox) + binding 1 (irradiance) ONCE
+                writeEnvironmentSet(*sky);
                 irradianceBaked_ = true;
             }
         }
@@ -208,6 +209,7 @@ namespace chai::gfx
         // Wait until this frame slots previous work is done.
         VK_CHECK(vkWaitForFences(ctx_.device(), 1, &frame.inFlight, VK_TRUE, UINT64_MAX));
 
+        //TODO: should undo this hardcode index, might have more view later
         CameraData camUBO{};
         camUBO.view = renderData.views[0].view;
         camUBO.proj = renderData.views[0].proj;
@@ -226,9 +228,6 @@ namespace chai::gfx
             recreateSwapchain();
             return;
         }
-
-        // debugging
-        view.clearColor = {{{0.05f, 0.10f, 0.15f, 1.0f}}};
 
         VK_CHECK(vkResetFences(ctx_.device(), 1, &frame.inFlight));
 
@@ -249,11 +248,11 @@ namespace chai::gfx
         color.clearValue = view.clearColor;
 
         VkRenderingAttachmentInfo depth{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
-        depth.imageView = view.depthView; // from RenderTargetView (plumbed through last turn)
+        depth.imageView = view.depthView;
         depth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
         depth.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         depth.storeOp =
-            VK_ATTACHMENT_STORE_OP_DONT_CARE; // depth is scratch, not needed after frame
+            VK_ATTACHMENT_STORE_OP_DONT_CARE; // dont need it after the frame
         depth.clearValue.depthStencil = {1.0f, 0};
 
         VkRenderingInfo rendering{VK_STRUCTURE_TYPE_RENDERING_INFO};
@@ -353,8 +352,7 @@ namespace chai::gfx
 
         FrameData& frame = frames_[currentFrame_];
 
-        // Global sets, bound once. Same layout for every pipeline, so these stay valid
-        // across pipeline switches: camera at set 0, light at set 2.
+        // Global sets, bound once
         vkCmdBindDescriptorSets(cmd,
                                 VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 pipelineLayout_,
@@ -391,7 +389,7 @@ namespace chai::gfx
             if (aBlend != bBlend)
                 return !aBlend; // opaque first
             return renderData.items[a].material.index <
-                   renderData.items[b].material.index; // then by material
+                   renderData.items[b].material.index;
         });
 
         Handle<Material> lastMaterial{};
@@ -400,13 +398,13 @@ namespace chai::gfx
 
             const GpuMaterial* mat = materialCache_->resource(item.material);
             if (!mat)
-                continue; // material not ready this frame; skip (same as mesh below)
+                continue; // mat not ready
 
             const GpuMesh* mesh = meshCache_->resource(item.mesh);
             if (!mesh)
                 continue;
 
-            // could swap pipelines later
+            //this is not scalable, will require refactor when there are too many pipelines
             if (mat->alphaMode == AlphaMode::Blend)
                 vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrBlendPipeline_);
             else
@@ -449,15 +447,15 @@ namespace chai::gfx
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxPipeline_);
 
         vkCmdBindDescriptorSets(cmd,
-                                 VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                 pipelineLayout_,
-                                 3,
-                                 1,
-                                 &frame.skyboxSet,
-                                 0,
-                                 nullptr);
+                                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                pipelineLayout_,
+                                3,
+                                1,
+                                &frame.skyboxSet,
+                                0,
+                                nullptr);
 
-         vkCmdDraw(cmd, 3, 1, 0, 0);
+        vkCmdDraw(cmd, 3, 1, 0, 0);
     }
 
     void VulkanRenderer::setupPipelines()
@@ -468,7 +466,7 @@ namespace chai::gfx
             pcRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
             pcRange.size = sizeof(PushConstants);
 
-            // set 0 = camera, set 1 = material, set 2 = light
+            // set 0 = camera, set 1 = material, set 2 = light, set 3 = env
             VkDescriptorSetLayout setLayouts[] = {ctx_.cameraSetLayout(),
                                                   ctx_.materialSetLayout(),
                                                   ctx_.lightSetLayout(),
@@ -623,7 +621,7 @@ namespace chai::gfx
 
     void VulkanRenderer::bakeIrradiance(const GpuTexture& envCube)
     {
-        // allocate the set once, then write the SOURCE skybox cube into it
+        // allocate the set once, then write the cube into it
         if (irradianceSet_ == VK_NULL_HANDLE) {
             VkDescriptorSetLayout layout = ctx_.environmentSetLayout();
             VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
@@ -634,7 +632,7 @@ namespace chai::gfx
         }
         {
             VkDescriptorImageInfo img{};
-            img.imageView = envCube.view; // SKYBOX (source)
+            img.imageView = envCube.view; //the skybox
             img.sampler = envCube.sampler;
             img.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             VkWriteDescriptorSet w{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
@@ -647,7 +645,6 @@ namespace chai::gfx
         }
 
         immediateSubmit(ctx_, [&](VkCommandBuffer cmd) {
-            // DESTINATION: UNDEFINED -> COLOR_ATTACHMENT, all 6 layers, attachment stages
             imageBarrier(cmd,
                          irradianceTarget_.cube.image,
                          VK_IMAGE_LAYOUT_UNDEFINED,
@@ -686,7 +683,7 @@ namespace chai::gfx
                                         1,
                                         &irradianceSet_,
                                         0,
-                                        nullptr); // set 0, irradianceLayout_
+                                        nullptr);
 
                 int faceIndex = int(face);
                 vkCmdPushConstants(cmd,
@@ -700,7 +697,6 @@ namespace chai::gfx
                 vkCmdEndRendering(cmd);
             }
 
-            // DESTINATION: COLOR_ATTACHMENT -> SHADER_READ_ONLY, all 6 layers
             imageBarrier(cmd,
                          irradianceTarget_.cube.image,
                          VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
@@ -717,7 +713,7 @@ namespace chai::gfx
     void VulkanRenderer::writeEnvironmentSet(const GpuTexture& skybox)
     {
         if (irradianceSet_ == VK_NULL_HANDLE) {
-            VkDescriptorSetLayout layout = ctx_.environmentSetLayout(); // the 2-binding layout
+            VkDescriptorSetLayout layout = ctx_.environmentSetLayout();
             VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
             dsai.descriptorPool = ctx_.descriptorPool();
             dsai.descriptorSetCount = 1;

@@ -1,3 +1,6 @@
+/**
+ * @file ImageTransition.h
+ */
 #pragma once
 #include <vulkan/vulkan.h>
 
@@ -24,6 +27,7 @@ namespace chai::gfx
         VkImageAspectFlags aspect;
     };
 
+    //I almost think this wrapper is too simplistic hmm
     void transitionImage(VkCommandBuffer cmd,
                          VkImage image,
                          ImageState oldState,

@@ -11,6 +11,9 @@
 #include <VkBootstrap.h>
 #include "../utils/VkCheck.h"
 #include "../utils/VkUtils.h"
+#include <vulkan/vulkan.h>
+#include <array>
+#include "../renderer/VulkanContext.h"
 
 namespace chai::gfx
 {

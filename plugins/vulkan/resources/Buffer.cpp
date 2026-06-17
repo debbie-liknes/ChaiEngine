@@ -13,7 +13,7 @@ namespace chai::gfx
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         VmaAllocationCreateInfo allocInfo{};
-        allocInfo.usage = VMA_MEMORY_USAGE_AUTO; // intent-based; VMA picks the type
+        allocInfo.usage = VMA_MEMORY_USAGE_AUTO; // vma will pick the type
         allocInfo.flags = allocFlags;
 
         Buffer buffer;
@@ -24,7 +24,7 @@ namespace chai::gfx
                             &buffer.allocation,
                             &buffer.info) != VK_SUCCESS) {
             CHAI_LOG_ERROR("createBuffer failed (size={})", size);
-            return {}; // handle stays VK_NULL_HANDLE -> valid() == false
+            return {};
         }
         return buffer;
     }

@@ -14,8 +14,8 @@
 #include <Assets/IMeshRegistry.h>
 #include <Assets/ITextureRegistry.h>
 #include <Scene/ModelRegistry.h>
-#include <Assets/IMaterialRegistry.h>
 #include "resources/MaterialFactory.h"
+#include "resources/MaterialRegistry.h"
 
 namespace chai::gfx
 {

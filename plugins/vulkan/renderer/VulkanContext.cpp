@@ -1,7 +1,8 @@
 #include "VulkanContext.h"
+#include "../utils/VkCheck.h"
+
 #include <Window/Window.h>
 #include <Log.h>
-#include "../utils/VkCheck.h"
 
 namespace chai
 {
@@ -57,7 +58,7 @@ namespace chai::gfx
         vkDestroyDescriptorSetLayout(device_, environmentSetLayout_, nullptr);
         vkDestroyDescriptorPool(device_, descriptorPool_, nullptr);
         vkDestroyFence(device_, immediateFence_, nullptr);
-        vmaDestroyAllocator(allocator_); // BEFORE the device allocator holds device memory
+        vmaDestroyAllocator(allocator_);
         vkDestroyDevice(device_, nullptr);
         vkDestroySurfaceKHR(instance_, surface_, nullptr);
         vkb::destroy_debug_utils_messenger(instance_, debugMessenger_);
@@ -73,8 +74,8 @@ namespace chai::gfx
         auto instRet = builder.set_app_name("")
                             .request_validation_layers(true)
                             //.add_validation_feature_enable(
-                            //   VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT)
-                            .set_debug_callback(DebugCallback)
+                            //   VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT) //add this for debugf
+                            .set_debug_callback(DebugCallback)  //routes the validation output to our log
                             .enable_extensions(windowExtensions)
                             .require_api_version(1, 3, 0)
                             .build();

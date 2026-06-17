@@ -1,6 +1,5 @@
 #include "PipelineBuilder.h"
-
-#include "../core/VkCheck.h"
+#include "../utils/VkCheck.h"
 
 namespace chai::gfx
 {
@@ -111,8 +110,7 @@ namespace chai::gfx
         vertexInput.vertexBindingDescriptionCount = 1;
         vertexInput.pVertexBindingDescriptions = &bind_;
         vertexInput.vertexAttributeDescriptionCount = static_cast<uint32_t>(attrs_.size());
-        //if (vertexInput.vertexAttributeDescriptionCount > 0)
-            vertexInput.pVertexAttributeDescriptions = attrs_.data();
+        vertexInput.pVertexAttributeDescriptions = attrs_.data();
 
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{
             VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};

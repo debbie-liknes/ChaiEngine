@@ -1,14 +1,15 @@
 #pragma once
-#include "Buffer.h"
 #include "../commands/ImageTransition.h"
+#include "../renderer/VulkanContext.h"
 #include "../utils/VkUtils.h"
-#include "VulkanContext.h"
+#include "Buffer.h"
+#include "VulkanTexture.h"
 
 #include <AssetCache.h>
 #include <Assets/ITextureRegistry.h>
 #include <Assets/TextureAsset.h>
 #include <Core/FileIO.h>
-#include "VulkanTexture.h"
+#include <Plugin/ServiceLocator.h>
 
 namespace chai
 {

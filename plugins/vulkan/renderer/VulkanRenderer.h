@@ -3,16 +3,18 @@
  */
 #pragma once
 #include <Rendering/IRenderer.h>
+
 #include "VulkanContext.h"
 #include "../swapchain/Swapchain.h"
-#include "../resources/RenderTargetView.h"
-#include <vulkan/vulkan.h>
-#include <Plugin/ServiceLocator.h>
- 
-#include <array>
-#include <cstdint>
 #include "../resources/GpuResources.h"
 #include "../resources/MaterialFactory.h"
+#include "../resources/RenderTargetView.h"
+
+#include <Plugin/ServiceLocator.h>
+
+#include <vulkan/vulkan.h>
+#include <array>
+#include <cstdint>
 
 namespace chai
 {
@@ -57,12 +59,12 @@ namespace chai::gfx
             VkBuffer lightBuffer = VK_NULL_HANDLE;
             VmaAllocation lightAlloc = VK_NULL_HANDLE;
 
+            //TODO: this doesnt belong as a per frame item. its global
             VkDescriptorSet skyboxSet = VK_NULL_HANDLE;
             Handle<Texture> skyboxCube;
         };
         static constexpr uint32_t kFramesInFlight = 2;
 
-        void init();
 
         void recreateSwapchain();
 
@@ -74,6 +76,9 @@ namespace chai::gfx
         void renderScene(VkCommandBuffer cmd,
                          const RenderTargetView& view,
                          const FrameRenderData& renderData);
+
+        //setup
+        void init();
         VkFenceCreateInfo fenceCreate(VkFenceCreateFlags flags = 0);
         VkSemaphoreCreateInfo semaphoreCreate(VkSemaphoreCreateFlags flags = 0);
         void setupPipelines();
@@ -90,11 +95,12 @@ namespace chai::gfx
         uint32_t currentFrame_ = 0;
         bool needsResize_ = false;
 
-        //Resources
+        //Caches
         std::shared_ptr<AssetCache<Mesh>> meshCache_;
         std::shared_ptr<AssetCache<Texture>> texCache_;
         std::shared_ptr<AssetCache<Material>> materialCache_;
 
+        //pipelines and layouts
         VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
         VkPipeline pbrPipeline_ = VK_NULL_HANDLE;
         VkPipeline pbrBlendPipeline_ = VK_NULL_HANDLE;
@@ -109,7 +115,7 @@ namespace chai::gfx
 
     };
 
-    //dont leave this here forever
+    //TODO: dont leave this here forever
     struct PushConstants {
         math::Mat4 model;
         math::Vec4 color;

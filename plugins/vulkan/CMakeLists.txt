@@ -10,9 +10,10 @@ set(${PROJECT_NAME}_headers
         swapchain/Swapchain.h
         resources/Buffer.h
         resources/GpuResources.h
-        resources/Mesh.h
         resources/Material.h
         resources/MaterialFactory.h
+        resources/MaterialRegistry.h
+        resources/Mesh.h
         resources/TextureFactory.h
         resources/VulkanTexture.h
         utils/VkCheck.h
@@ -26,6 +27,8 @@ set(${PROJECT_NAME}_source
         renderer/VulkanContext.cpp
         renderer/VulkanRenderer.cpp
         resources/Buffer.cpp
+        resources/MaterialFactory.cpp
+        resources/MaterialRegistry.cpp
         resources/VulkanTexture.cpp
         swapchain/Swapchain.cpp
         utils/VkCheck.cpp
