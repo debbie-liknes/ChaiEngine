@@ -58,7 +58,6 @@ namespace Mat4Tests
             13, 14, 15, 16
         };
 
-        // Transposed initializer (column-major) for simplicity
         for (int col = 0; col < 4; ++col)
             for (int row = 0; row < 4; ++row)
                 A[col][row] = 1.0f + col * 4 + row;

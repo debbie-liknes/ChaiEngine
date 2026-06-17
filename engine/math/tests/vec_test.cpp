@@ -2,8 +2,6 @@
 
 #include <ChaiMath.h>
 
-//Baisc tests for the specialized vecs and their operators
-
 namespace vec2_tests
 {
     using chai::math::Vec2;
@@ -59,7 +57,7 @@ namespace vec2_tests
         EXPECT_EQ(a, b);
 
         Vec2 c(std::move(a));
-        EXPECT_EQ(c, b); // a is now moved-from, c should still be valid
+        EXPECT_EQ(c, b);
     }
 
     TEST(Vec2Tests, AdditionOperator)
@@ -141,7 +139,7 @@ namespace vec3_tests
         EXPECT_EQ(a, b);
 
         Vec3 c(std::move(a));
-        EXPECT_EQ(c, b); // a is now moved-from, c should still be valid
+        EXPECT_EQ(c, b);
     }
 
     TEST(Vec3Tests, AdditionOperator)
@@ -225,7 +223,7 @@ namespace vec4_tests
         EXPECT_EQ(a, b);
 
         Vec4 c(std::move(a));
-        EXPECT_EQ(c, b); // a is now moved-from, c should still be valid
+        EXPECT_EQ(c, b);
     }
 
     TEST(Vec4Tests, AdditionOperator)
