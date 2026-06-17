@@ -3,12 +3,12 @@
 #include <Rendering/FrameRenderData.h>
 #include <Loaders/ITextureLoader.h>
 #include <Assets/TextureAsset.h>
-#include <IComponent.h>
+#include <Components/Component.h>
 #include <Updatable.h>
 
 namespace chai::scene
 {
-    class SCENE_EXPORT SkyboxComponent : public IComponent, public IUpdatable
+    class SkyboxComponent : public Component, public IUpdatable
     {
     public:
         explicit SkyboxComponent(GameObject* owner = nullptr);

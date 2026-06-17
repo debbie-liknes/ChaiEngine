@@ -5,14 +5,14 @@
 #include <string>
 #include <Controllers/Controller.h>
 #include <Updatable.h>
-#include <IComponent.h>
+#include <Components/Component.h>
 #include <unordered_map>
 
 namespace chai::scene
 {
     class GameObject;
 
-    class ControllerComponent : public IComponent, public IUpdatable
+    class ControllerComponent : public Component, public IUpdatable
     {
     public:
         explicit ControllerComponent(chai::scene::GameObject* owner);

@@ -29,7 +29,7 @@ struct chai::AssetTraits<MockTex> {
 class MockFactory : public chai::ResourceFactory<MockTex>
 {
 public:
-    MOCK_METHOD(bool, loadAsset, (chai::AssetId id, MockAsset& out), (override));
+    //MOCK_METHOD(bool, loadAsset, (chai::AssetId id, MockAsset& out), (override));
     MOCK_METHOD(chai::LoadState,
                 createResource,
                 (const MockAsset& asset, MockResource& out),

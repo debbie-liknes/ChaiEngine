@@ -5,7 +5,7 @@ using namespace chai::gfx;
 
 namespace chai::scene
 {
-    SkyboxComponent::SkyboxComponent(GameObject* owner) : IComponent(owner)
+    SkyboxComponent::SkyboxComponent(GameObject* owner) : Component(owner)
     {
 
     }

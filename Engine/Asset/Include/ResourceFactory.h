@@ -31,7 +31,7 @@ namespace chai
          * @param out The output asset. On failure, the cache will never call createResource
          * @return False if the load failed
          */
-        [[nodiscard]] virtual bool loadAsset(AssetId id, Asset& out) = 0;
+        //[[nodiscard]] virtual bool loadAsset(AssetId id, Asset& out) = 0;
 
         /**
          * @brief Turn the CPU asset into a GPU resource

@@ -44,8 +44,6 @@ namespace chai::gfx
         MaterialFactory(VulkanContext* ctx, std::shared_ptr<AssetCache<Texture>> texCache, Handle<Texture> white, Handle<Texture> normal) : 
             ctx_(ctx), textureCache_(texCache), defaultWhite_(white), defaultNormal_(normal) {}
 
-        bool loadAsset(AssetId id, gfx::MaterialAsset& out) override { return false; }
-
         LoadState createResource(const gfx::MaterialAsset& asset, gfx::GpuMaterial& out) override
         {
             VkDevice device = ctx_->device();

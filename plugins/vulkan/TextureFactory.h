@@ -26,8 +26,6 @@ namespace chai::gfx
     public:
         TextureFactory(VulkanContext* ctx) : ctx_(ctx) {}
 
-        bool loadAsset(AssetId id, gfx::TextureAsset& out) override { return out.isValid(); }
-
         LoadState createResource(const gfx::TextureAsset& asset, gfx::GpuTexture& out) override
         {
             if (!asset.isValid()) {

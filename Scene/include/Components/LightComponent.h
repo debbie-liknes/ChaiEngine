@@ -1,6 +1,6 @@
 #pragma once
 #include <ChaiMath.h>
-#include <IComponent.h>
+#include <Components/Component.h>
 #include <Updatable.h>
 
 namespace chai::scene
@@ -14,7 +14,7 @@ namespace chai::scene
 
     class GameObject;
 
-    class LightComponent : public IComponent, public IUpdatable
+    class LightComponent : public Component, public IUpdatable
     {
     public:
         explicit LightComponent(GameObject* owner = nullptr);

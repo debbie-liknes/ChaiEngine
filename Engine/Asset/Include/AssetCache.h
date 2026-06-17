@@ -52,7 +52,7 @@ namespace chai
         [[nodiscard]] HandleType acquire(AssetId id);
 
         /**
-         * @brief Acquire, but the asset is supplied directly
+         * @brief Supply the asset to be cached
          */
         [[nodiscard]] auto ingest(AssetId id, Asset asset) -> HandleType;
 
@@ -135,7 +135,6 @@ namespace chai
             Resource resource{}; // GPU
         };
 
-        void startLoad(HandleType h);
         void startUpload(HandleType h);
         void promoteReady(Record& rec, LoadState s);
         void destroyResourceDeferred(Resource res);
@@ -175,7 +174,6 @@ namespace chai
 
         HandleType h = slots_.insert(std::move(rec));
         byId_.emplace(id.value, h);
-        startLoad(h);
         return h;
     }
 
@@ -292,21 +290,6 @@ namespace chai
         rec->resource = Resource{};
         rec->asset = Asset{};
         rec->state = LoadState::Loading;
-        startLoad(it->second);
-    }
-
-    template <typename T>
-    void AssetCache<T>::startLoad(HandleType h)
-    {
-        Record* rec = slots_.get(h);
-        if (!rec)
-            return;
-
-        if (!factory_->loadAsset(rec->id, rec->asset)) {
-            rec->state = LoadState::Failed;
-            return;
-        }
-        startUpload(h);
     }
 
     template <typename T>

@@ -26,12 +26,12 @@ namespace chai::gfx
                 emissive = -1;
             AlphaMode alphaMode = AlphaMode::Opaque;
             bool doubleSided = false;
-            float alphaCutoff;
+            float alphaCutoff = 1.f;
         };
 
         struct Node {
             math::Vec3 position;
-            math::Quat rotation;
+            math::Quat rotation{0.f, 0.f, 0.f, 1.f};
             math::Vec3 scale;
             int meshIndex = -1;
             std::vector<int> children;

@@ -3,8 +3,8 @@
  * @brief Logging interface for Bedrock and plugins.
  */
 #pragma once
-#include <LogSink.h>
 #include <LogLevel.h>
+#include <LogSink.h>
 #include <format>
 
 namespace chai
@@ -37,12 +37,13 @@ namespace chai
  * level
  */
 #define CHAI_LOG_AT(level, ...)                                                                    \
-    if constexpr ((level) >= CHAI_COMPILE_LOG_LEVEL) {                                             \
-        if (::chai::logEnabled(level)) {                                                           \
-            ::chai::logRecord(                                                                     \
-                ::chai::LogRecord{(level), ::std::format(__VA_ARGS__), __FILE__, __LINE__});       \
+    do {                                                                                           \
+        if constexpr ((level) >= CHAI_COMPILE_LOG_LEVEL) {                                         \
+            if (::chai::logEnabled(level)) {                                                       \
+                ::chai::logRecord({(level), std::format(__VA_ARGS__), __FILE__, __LINE__});        \
+            }                                                                                      \
         }                                                                                          \
-    }  
+    } while (false)
 
 #define CHAI_LOG_TRACE(...) CHAI_LOG_AT(::chai::LogLevel::Trace, __VA_ARGS__)
 #define CHAI_LOG_DEBUG(...) CHAI_LOG_AT(::chai::LogLevel::Debug, __VA_ARGS__)

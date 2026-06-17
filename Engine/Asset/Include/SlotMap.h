@@ -30,15 +30,12 @@ namespace chai
 
         /**
          * @brief Insert a value into the slot map
-         * @param value The value to insert
-         * @return Handle to the inserted value.
          */
         [[nodiscard]] HandleType insert(V value);
 
         /**
          * @brief Construct a value in-place in the slot map
          * @param args Arguments to forward to V's constructor
-         * @return Handle to the inserted value
          */
         template <typename... Args>
         [[nodiscard]] HandleType emplace(Args&&... args);

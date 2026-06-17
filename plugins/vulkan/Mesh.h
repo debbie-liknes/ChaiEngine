@@ -50,11 +50,6 @@ namespace chai::gfx
         {
         }
 
-        bool loadAsset(AssetId id, MeshAsset& out) override
-        {
-            return out.isValid();
-        }
-
         LoadState createResource(const MeshAsset& asset, GpuMesh& out) override
         {
             if (!asset.isValid()) {

@@ -1,8 +1,16 @@
 #include "GLTFLoader.h"
-#define CGLTF_IMPLEMENTATION
-#include <cgltf.h>
 #include <Log.h>
 #include <FileIO.h>
+
+// Im tired of looking at these warnings that I cant fix
+// Cgltf.cpp
+#pragma warning(push)
+#pragma warning(disable : 4996 26449) // whatever cgltf emits
+
+#define CGLTF_IMPLEMENTATION
+#include <cgltf.h>
+
+#pragma warning(pop)
 
 
 namespace chai::gfx

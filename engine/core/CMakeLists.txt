@@ -13,7 +13,6 @@ set(${PROJECT_NAME}_headers
         include/SystemPaths.h
         include/Updatable.h
         include/FileIO.h
-        include/IComponent.h
         include/IScene.h
         include/ModelRegistry.h
         include/IInput.h
@@ -29,7 +28,7 @@ set(${PROJECT_NAME}_source
         source/ModelRegistry.cpp
 )
 
-add_library(${PROJECT_NAME} STATIC
+add_library(${PROJECT_NAME} SHARED
         ${${PROJECT_NAME}_headers}
         ${${PROJECT_NAME}_source}
 )

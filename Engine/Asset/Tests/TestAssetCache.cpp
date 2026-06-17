@@ -18,11 +18,6 @@ namespace chai
     protected:
         void SetUp() override
         {
-            ON_CALL(factory, loadAsset(_, _)).WillByDefault(Invoke([](AssetId, MockAsset& a) {
-                a.loaded = true;
-                a.width = 4;
-                return true;
-            }));
             ON_CALL(factory, createResource(_, _))
                 .WillByDefault(Invoke([this](const MockAsset&, MockResource& r) {
                     r.id = ++lastId;
@@ -44,7 +39,6 @@ namespace chai
 
     TEST_F(AssetCacheTest, AcquireSameIdAsset)
     {
-        EXPECT_CALL(factory, loadAsset(_, _)).Times(1);
         EXPECT_CALL(factory, createResource(_, _)).Times(1);
 
         auto a = cache.acquire(idA());
@@ -66,8 +60,6 @@ namespace chai
 
     TEST_F(AssetCacheTest, DifferentIdsGetDifferentSlots)
     {
-        EXPECT_CALL(factory, loadAsset(_, _)).Times(2);
-
         auto a = cache.acquire(idA());
         auto b = cache.acquire(idB());
         EXPECT_NE(a, b);
@@ -112,7 +104,6 @@ namespace chai
 
     TEST_F(AssetCacheTest, FailedLoad)
     {
-        EXPECT_CALL(factory, loadAsset(_, _)).WillOnce(Return(false));
         EXPECT_CALL(factory, createResource(_, _)).Times(0);
 
         auto h = cache.acquire(idA());

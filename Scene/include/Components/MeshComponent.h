@@ -3,12 +3,12 @@
 #include <Assets/MeshAsset.h>
 #include <Rendering/FrameRenderData.h>
 #include <Loaders/ITextureLoader.h>
-#include <IComponent.h>
+#include <Components/Component.h>
 #include <Updatable.h>
 
 namespace chai::scene
 {
-    class SCENE_EXPORT MeshComponent : public IComponent, public IUpdatable
+    class SCENE_EXPORT MeshComponent : public Component, public IUpdatable
     {
     public:
         MeshComponent(GameObject* owner = nullptr);

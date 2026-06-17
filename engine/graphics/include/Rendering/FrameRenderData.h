@@ -2,6 +2,7 @@
  * @file FrameRenderData.h
  */
 #pragma once
+#include <GraphicsExport.h>
 #include <ChaiMath.h>
 #include <Handle.h>
 #include <Rendering/LightData.h>
@@ -29,7 +30,7 @@ namespace chai::gfx
 
     //This represents ONE world view
     //if we have separate, unrelated panes, we'll need more of these
-    struct FrameRenderData 
+    struct GRAPHICS_EXPORT FrameRenderData 
     {
         std::vector<RenderView> views;
         std::vector<RenderItem> items;

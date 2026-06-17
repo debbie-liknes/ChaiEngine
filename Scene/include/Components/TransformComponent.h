@@ -2,13 +2,13 @@
 #include <SceneExport.h>
 #include <ChaiMath.h>
 #include <Updatable.h>
-#include <IComponent.h>
+#include <Components/Component.h>
 
 namespace chai::scene
 {
     class GameObject;
 
-    class SCENE_EXPORT TransformComponent : public IComponent, public IUpdatable
+    class TransformComponent : public Component, public IUpdatable
     {
     public:
         explicit TransformComponent(GameObject* owner = nullptr);

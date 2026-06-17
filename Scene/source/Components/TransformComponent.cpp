@@ -5,7 +5,7 @@ namespace chai::scene
 {
     using namespace chai::math;
     TransformComponent::TransformComponent(GameObject* owner)
-        : IComponent(owner), rotation_(math::Quat::identity())
+        : Component(owner), rotation_(math::Quat::identity())
     {
     }
 

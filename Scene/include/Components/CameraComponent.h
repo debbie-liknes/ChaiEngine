@@ -1,6 +1,6 @@
 #pragma once
 #include <SceneExport.h>
-#include <IComponent.h>
+#include <Components/Component.h>
 #include <Scene/Camera.h>
 #include <memory>
 #include <ChaiMath.h>
@@ -12,7 +12,7 @@ namespace chai::scene
     class GameObject;
     class TransformComponent;
 
-    class SCENE_EXPORT CameraComponent : public IComponent, public IUpdatable
+    class SCENE_EXPORT CameraComponent : public Component, public IUpdatable
     {
     public:
         explicit CameraComponent(GameObject* owner = nullptr);
