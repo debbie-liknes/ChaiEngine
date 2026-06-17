@@ -1,9 +1,10 @@
 #pragma once
-#include "../resources/VulkanTexture.h"
-#include "../utils/VkCheck.h"
-
-#include <Loaders/ITextureLoader.h>
 #include <vulkan/vulkan.h>
+#include "VkCheck.h"
+#include "../resources/VulkanTexture.h"
+#include <Assets/TextureFormat.h>
+#include <functional>
+#include "../renderer/VulkanContext.h"
 
 namespace chai::gfx
 {

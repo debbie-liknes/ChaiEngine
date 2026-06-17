@@ -1,3 +1,6 @@
+/**
+ * @file MaterialRegistry.h
+ */
 #pragma once
 #include "../renderer/VulkanContext.h"
 #include "MaterialFactory.h"
@@ -7,6 +10,9 @@
 
 namespace chai::gfx
 {
+    /**
+     * @brief Bookkeeping for a Material
+     */
     class MaterialRegistry : public IMaterialRegistry
     {
     public:
@@ -16,11 +22,8 @@ namespace chai::gfx
         ~MaterialRegistry() = default;
 
         Handle<Material> ingest(AssetId id, MaterialAsset asset) override;
-
         Handle<Material> load(AssetId id) override;
-
         void release(Handle<Material> h) override;
-
         Handle<Material> defaultMaterial() override;
 
         std::shared_ptr<AssetCache<Material>> cache();

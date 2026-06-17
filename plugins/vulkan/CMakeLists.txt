@@ -14,7 +14,10 @@ set(${PROJECT_NAME}_headers
         resources/MaterialFactory.h
         resources/MaterialRegistry.h
         resources/Mesh.h
+        resources/MeshFactory.h
+        resources/MeshRegistry.h
         resources/TextureFactory.h
+        resources/TextureRegistry.h
         resources/VulkanTexture.h
         utils/VkCheck.h
         utils/VkUtils.h
@@ -29,7 +32,10 @@ set(${PROJECT_NAME}_source
         resources/Buffer.cpp
         resources/MaterialFactory.cpp
         resources/MaterialRegistry.cpp
-        resources/VulkanTexture.cpp
+        resources/MeshFactory.cpp
+        resources/MeshRegistry.cpp
+        resources/TextureFactory.cpp
+        resources/TextureRegistry.cpp
         swapchain/Swapchain.cpp
         utils/VkCheck.cpp
 

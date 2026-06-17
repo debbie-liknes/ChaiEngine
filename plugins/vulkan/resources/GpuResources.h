@@ -2,8 +2,8 @@
  * @file GpuResources.h
  */
 #pragma once
-#include "Mesh.h"
-#include "VulkanContext.h"
+#include "../renderer/VulkanContext.h"
+#include "../resources/MeshFactory.h"
 
 namespace chai::gfx
 {

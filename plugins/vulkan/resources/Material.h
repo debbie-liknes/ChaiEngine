@@ -1,3 +1,6 @@
+/**
+ * @file Material.h
+ */
 #pragma once
 #include <Assets/TextureAsset.h>
 #include <Common/GraphicsEnums.h>

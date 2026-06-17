@@ -10,12 +10,14 @@
 #include <memory>
 #include "renderer/VulkanRenderer.h"
 #include "resources/Mesh.h"
-#include "resources/TextureFactory.h"
 #include <Assets/IMeshRegistry.h>
-#include <Assets/ITextureRegistry.h>
 #include <Scene/ModelRegistry.h>
 #include "resources/MaterialFactory.h"
 #include "resources/MaterialRegistry.h"
+#include "resources/TextureFactory.h"
+#include "resources/TextureRegistry.h"
+#include "resources/MeshRegistry.h"
+#include "resources/MeshFactory.h"
 
 namespace chai::gfx
 {

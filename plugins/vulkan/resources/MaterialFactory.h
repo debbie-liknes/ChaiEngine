@@ -1,7 +1,10 @@
+/**
+ * @file MaterialFactory.h
+ */
 #pragma once
+#include "../renderer/VulkanContext.h"
 #include "Material.h"
 #include "TextureFactory.h"
-#include "../renderer/VulkanContext.h"
 
 #include <AssetCache.h>
 #include <Assets/DefaultTextures.h>
@@ -20,6 +23,10 @@ namespace chai
 
 namespace chai::gfx
 {
+    /**
+     * @brief Knows how to convert an asset (CPU) to a resource (GPU).
+     * Manages the lifetime of the GPU material
+     */
     class MaterialFactory : public ResourceFactory<Material>
     {
     public:
@@ -29,14 +36,12 @@ namespace chai::gfx
                         Handle<Texture> normal);
 
         LoadState createResource(const gfx::MaterialAsset& asset, gfx::GpuMaterial& out) override;
-
         void destroyResource(gfx::GpuMaterial& m) noexcept override;
-        
         bool discardAssetAfterUpload() const noexcept override;
 
     private:
         const GpuTexture& resolveOrDefault(Handle<Texture> tex, Handle<Texture> fallback);
-        
+
         VulkanContext* ctx_;
         std::shared_ptr<AssetCache<Texture>> textureCache_;
         Handle<Texture> defaultWhite_;
