@@ -17,8 +17,20 @@ namespace chai::gfx
         VkFormat format = VK_FORMAT_UNDEFINED;
     };
 
+    struct RenderTarget2D {
+        GpuTexture tex;
+        VkImageView view{};
+    };
+
     struct CubeRenderTarget {
         GpuTexture cube;
         VkImageView faceViews[6]{};
+    };
+
+    struct PrefilterTarget {
+        GpuTexture cube;
+        std::vector<VkImageView> faceMipViews;
+        uint32_t baseSize = 0;
+        uint32_t mipCount = 0;
     };
 } // namespace chai::gfx

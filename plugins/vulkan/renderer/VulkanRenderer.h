@@ -84,6 +84,8 @@ namespace chai::gfx
         void setupPipelines();
         void ensureSkyboxSet(FrameData& frame, const GpuTexture& cube, Handle<Texture> handle);
         void bakeIrradiance(const GpuTexture& envCube);
+        void bakeBrdfLut();
+        void bakePrefilter(const GpuTexture& envCube);
         void writeEnvironmentSet(const GpuTexture& skybox);
 
         chai::IWindow& window_;
@@ -110,9 +112,18 @@ namespace chai::gfx
         VkPipeline irradiancePipeline_ = VK_NULL_HANDLE;
         CubeRenderTarget irradianceTarget_{};
         VkPipelineLayout irradianceLayout_ = VK_NULL_HANDLE;
-        VkDescriptorSet irradianceSet_ = VK_NULL_HANDLE;
-        bool irradianceBaked_ = false;
+        VkDescriptorSet environmentSet_ = VK_NULL_HANDLE;
 
+        VkPipeline brdfLutPipeline_ = VK_NULL_HANDLE;
+        RenderTarget2D brdfLut_{};
+        VkPipelineLayout brdfLutLayout_ = VK_NULL_HANDLE;
+        bool brdfBaked_ = false;
+
+        PrefilterTarget prefilterTarget_{};
+        VkPipeline prefilterPipeline_ = VK_NULL_HANDLE;
+        VkPipelineLayout prefilterLayout_ = VK_NULL_HANDLE;
+        VkDescriptorSet prefilterSet_ = VK_NULL_HANDLE;
+        bool iblBaked_ = false;
     };
 
     //TODO: dont leave this here forever

@@ -48,6 +48,7 @@ namespace chai::gfx
         VkDescriptorSetLayout materialSetLayout() const { return materialSetLayout_; }
         VkDescriptorSetLayout lightSetLayout() const { return lightSetLayout_; }
         VkDescriptorSetLayout environmentSetLayout() const { return environmentSetLayout_; }
+        VkDescriptorSetLayout prefilterSetLayout() const { return prefilterSetLayout_; }
         VkDescriptorPool descriptorPool() const { return descriptorPool_; }
 
     private:
@@ -78,6 +79,7 @@ namespace chai::gfx
         VkDescriptorSetLayout materialSetLayout_ = VK_NULL_HANDLE;
         VkDescriptorSetLayout lightSetLayout_ = VK_NULL_HANDLE;
         VkDescriptorSetLayout environmentSetLayout_ = VK_NULL_HANDLE;
+        VkDescriptorSetLayout prefilterSetLayout_ = VK_NULL_HANDLE;
 
         void setupInstance(IWindow& window);
         void setupSurface(IWindow& window);

@@ -193,4 +193,157 @@ namespace chai::gfx
 
         return t;
     }
+
+    inline RenderTarget2D create2DRenderTarget(VulkanContext& ctx,
+                                                   uint32_t width,
+                                                   uint32_t height,
+                                                   VkFormat format,
+                                                   VkImageUsageFlags usage)
+    {
+        VmaAllocator allocator = ctx.allocator();
+        VkDevice device = ctx.device();
+        const VkExtent3D extent{width, height, 1};
+        const uint32_t kLayerCount = 1u;
+        const uint32_t kMipLevels = 1u;
+
+        RenderTarget2D t;
+        t.tex.width = width;
+        t.tex.height = height;
+        t.tex.format = format;
+
+        VkImageCreateInfo imageInfo{VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
+        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.format = format;
+        imageInfo.extent = extent;
+        imageInfo.mipLevels = kMipLevels;
+        imageInfo.arrayLayers = kLayerCount;
+        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+        imageInfo.usage = usage;
+        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        //imageInfo.flags |= VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
+
+        VmaAllocationCreateInfo imgAlloc{};
+        imgAlloc.usage = VMA_MEMORY_USAGE_AUTO;
+        if (vmaCreateImage(
+                allocator, &imageInfo, &imgAlloc, &t.tex.image, &t.tex.alloc, nullptr) !=
+            VK_SUCCESS) {
+            CHAI_LOG_ERROR("create2DRenderTarget: vmaCreateImage failed");
+            return {};
+        }
+
+        VkImageViewCreateInfo view{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+        view.image = t.tex.image;
+        view.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        view.format = format;
+        view.subresourceRange = {
+            VK_IMAGE_ASPECT_COLOR_BIT, 0, kMipLevels, 0, VK_REMAINING_ARRAY_LAYERS};
+        if (vkCreateImageView(device, &view, nullptr, &t.tex.view) != VK_SUCCESS) {
+            CHAI_LOG_ERROR("create2DRenderTarget: render target view failed");
+            return {};
+        }
+
+        VkImageViewCreateInfo faceView{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+        faceView.image = t.tex.image;
+        faceView.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        faceView.format = format;
+        faceView.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+        if (vkCreateImageView(device, &faceView, nullptr, &t.view) != VK_SUCCESS) {
+            CHAI_LOG_ERROR("create2DRenderTarget: view failed");
+            return {};
+        }
+
+        VkSamplerCreateInfo samp{VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
+        samp.magFilter = VK_FILTER_LINEAR;
+        samp.minFilter = VK_FILTER_LINEAR;
+        samp.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samp.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samp.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samp.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        samp.maxLod = static_cast<float>(kMipLevels - 1); // 0 here
+        if (vkCreateSampler(device, &samp, nullptr, &t.tex.sampler) != VK_SUCCESS) {
+            CHAI_LOG_ERROR("create2DRenderTarget: sampler failed");
+            return {};
+        }
+
+        return t;
+    }
+
+    inline PrefilterTarget createPrefilterRenderTarget(VulkanContext& ctx,
+                                                   uint32_t size,
+                                                   VkFormat format,
+                                                   VkImageUsageFlags usage)
+    {
+        VmaAllocator allocator = ctx.allocator();
+        VkDevice device = ctx.device();
+        const VkExtent3D extent{size, size, 1};
+        const uint32_t kLayerCount = 6;
+        const uint32_t kPrefilterMips = 5;
+
+        PrefilterTarget t;
+        t.cube.width = size;
+        t.cube.height = size;
+        t.cube.format = format;
+        t.faceMipViews.resize(kLayerCount * kPrefilterMips);
+        t.baseSize = size;
+        t.mipCount = kPrefilterMips;
+
+        VkImageCreateInfo imageInfo{VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
+        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.format = format;
+        imageInfo.extent = extent;
+        imageInfo.mipLevels = kPrefilterMips;
+        imageInfo.arrayLayers = kLayerCount;
+        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+        imageInfo.usage = usage; // caller must pass COLOR_ATTACHMENT_BIT | SAMPLED_BIT
+        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imageInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+
+        VmaAllocationCreateInfo imgAlloc{};
+        imgAlloc.usage = VMA_MEMORY_USAGE_AUTO;
+        if (vmaCreateImage(
+                allocator, &imageInfo, &imgAlloc, &t.cube.image, &t.cube.alloc, nullptr) !=
+            VK_SUCCESS) {
+            CHAI_LOG_ERROR("createPrefilterRenderTarget: vmaCreateImage failed");
+            return {};
+        }
+
+        VkImageViewCreateInfo cubeView{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+        cubeView.image = t.cube.image;
+        cubeView.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+        cubeView.format = format;
+        cubeView.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, kPrefilterMips, 0, kLayerCount};
+        if (vkCreateImageView(device, &cubeView, nullptr, &t.cube.view) != VK_SUCCESS) {
+            CHAI_LOG_ERROR("createPrefilterRenderTarget: cube view failed");
+            return {};
+        }
+
+        for (uint32_t mip = 0; mip < kPrefilterMips; ++mip) {
+            for (uint32_t face = 0; face < kLayerCount; ++face) {
+                VkImageViewCreateInfo v{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+                v.image = t.cube.image;
+                v.viewType = VK_IMAGE_VIEW_TYPE_2D;
+                v.format = format;
+                v.subresourceRange = {
+                    VK_IMAGE_ASPECT_COLOR_BIT, mip, 1, face, 1}; // baseMip=mip, baseLayer=face
+                vkCreateImageView(device, &v, nullptr, &t.faceMipViews[mip * 6 + face]);
+            }
+        }
+
+        VkSamplerCreateInfo samp{VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
+        samp.magFilter = VK_FILTER_LINEAR;
+        samp.minFilter = VK_FILTER_LINEAR;
+        samp.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samp.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samp.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samp.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        samp.maxLod = static_cast<float>(kPrefilterMips - 1);
+        if (vkCreateSampler(device, &samp, nullptr, &t.cube.sampler) != VK_SUCCESS) {
+            CHAI_LOG_ERROR("createPrefilterRenderTarget: sampler failed");
+            return {};
+        }
+
+        return t;
+    }
 } // namespace chai::gfx

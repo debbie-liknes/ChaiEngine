@@ -56,6 +56,7 @@ namespace chai::gfx
         vkDestroyDescriptorSetLayout(device_, materialSetLayout_, nullptr);
         vkDestroyDescriptorSetLayout(device_, cameraSetLayout_, nullptr);
         vkDestroyDescriptorSetLayout(device_, environmentSetLayout_, nullptr);
+        vkDestroyDescriptorSetLayout(device_, prefilterSetLayout_, nullptr);
         vkDestroyDescriptorPool(device_, descriptorPool_, nullptr);
         vkDestroyFence(device_, immediateFence_, nullptr);
         vmaDestroyAllocator(allocator_);
@@ -246,7 +247,7 @@ namespace chai::gfx
         VK_CHECK(vkCreateDescriptorSetLayout(device_, &lightLayout, nullptr, &lightSetLayout_));
 
         //environment (skybox)
-        VkDescriptorSetLayoutBinding envBindings[2]{};
+        VkDescriptorSetLayoutBinding envBindings[4]{};
         envBindings[0].binding = 0;
         envBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         envBindings[0].descriptorCount = 1;
@@ -257,11 +258,35 @@ namespace chai::gfx
         envBindings[1].descriptorCount = 1;
         envBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+        envBindings[2].binding = 2;
+        envBindings[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        envBindings[2].descriptorCount = 1;
+        envBindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        envBindings[3].binding = 3;
+        envBindings[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        envBindings[3].descriptorCount = 1;
+        envBindings[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
         VkDescriptorSetLayoutCreateInfo envLayout{
             VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
-        envLayout.bindingCount = 2;
+        envLayout.bindingCount = 4;
         envLayout.pBindings = envBindings;
         VK_CHECK(vkCreateDescriptorSetLayout(
             device_, &envLayout, nullptr, &environmentSetLayout_));
+
+        // prefilter
+        VkDescriptorSetLayoutBinding filterBindings{};
+        filterBindings.binding = 0;
+        filterBindings.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        filterBindings.descriptorCount = 1;
+        filterBindings.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo filterLayout{
+            VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+        filterLayout.bindingCount = 1;
+        filterLayout.pBindings = &filterBindings;
+        VK_CHECK(
+            vkCreateDescriptorSetLayout(device_, &filterLayout, nullptr, &prefilterSetLayout_));
     }
 } // namespace chai
