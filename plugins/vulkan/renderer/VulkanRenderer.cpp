@@ -2,6 +2,7 @@
 
 #include "../commands/ImageTransition.h"
 #include "../pipeline/PipelineBuilder.h"
+#include "../pipeline/PipelineHelpers.h"
 #include "../pipeline/ShaderModule.h"
 #include "../resources/TextureFactory.h"
 #include "../resources/VulkanVertex.h"
@@ -186,17 +187,11 @@ namespace chai::gfx
         }
 
         // only need this one, because its environment
-        irradianceTarget_ =
-            createCube(ctx_,
-                       kIrradianceSize,
-                       VK_FORMAT_R16G16B16A16_SFLOAT, 5);
+        irradianceTarget_ = createCube(ctx_, kIrradianceSize, VK_FORMAT_R16G16B16A16_SFLOAT, 5);
 
         brdfLut_ = createColor2D(ctx_, kBRDFLUT, kBRDFLUT, VK_FORMAT_R16G16B16A16_SFLOAT);
 
-        prefilterTarget_ =
-            createCube(ctx_,
-                       kPrefilterSize,
-                       VK_FORMAT_R16G16B16A16_SFLOAT, 5);
+        prefilterTarget_ = createCube(ctx_, kPrefilterSize, VK_FORMAT_R16G16B16A16_SFLOAT, 5);
         setupPipelines();
     }
 
@@ -532,143 +527,80 @@ namespace chai::gfx
             VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &li, nullptr, &prefilterLayout_));
         }
 
-        // opaque & blend pbr
-        {
-            const auto shaderDir = executableDir() / "shaders";
-            VkShaderModule vert = loadShaderModule(ctx_.device(), shaderDir / "pbr.vert.spv");
-            VkShaderModule frag = loadShaderModule(ctx_.device(), shaderDir / "pbr.frag.spv");
-            if (vert == VK_NULL_HANDLE || frag == VK_NULL_HANDLE) {
-                CHAI_LOG_CRITICAL("Shaders failed to load from {}", shaderDir.string());
-                return;
-            }
+        auto attrs = vertexAttributes();
+        auto bind = vertexBinding();
 
-            auto attrs = vertexAttributes();
-            auto bind = vertexBinding();
-
-            pbrPipeline_ = PipelineBuilder{}
-                               .setShaders(vert, frag)
-                               .setVertexInput({attrs.begin(), attrs.end()}, bind)
-                               .setColorFormat(swapchain_.format())
-                               .enableDepthTest()
-                               .enableDepthWrite()
-                               .disableBlending()
-                               .setDepthFormat(swapchain_.depthFormat())
-                               .setCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE)
-                               .build(ctx_.device(), pipelineLayout_);
-
-            pbrBlendPipeline_ =
-                PipelineBuilder{}
-                    .setShaders(vert, frag)
-                    .setVertexInput({attrs.begin(), attrs.end()}, bind)
+        pbrPipeline_ = loadPipelineByName(
+            ctx_, "pbr.vert.spv", "pbr.frag.spv", pipelineLayout_, [&](PipelineBuilder& b) {
+                b.setVertexInput({attrs.begin(), attrs.end()}, bind)
                     .setColorFormat(swapchain_.format())
+                    .setDepthFormat(swapchain_.depthFormat())
+                    .enableDepthTest()
+                    .enableDepthWrite()
+                    .disableBlending()
+                    .setCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
+            });
+
+        pbrBlendPipeline_ = loadPipelineByName(
+            ctx_, "pbr.vert.spv", "pbr.frag.spv", pipelineLayout_, [&](PipelineBuilder& b) {
+                b.setVertexInput({attrs.begin(), attrs.end()}, bind)
+                    .setColorFormat(swapchain_.format())
+                    .setDepthFormat(swapchain_.depthFormat())
                     .enableDepthTest()
                     .disableDepthWrite()
                     .enableBlending()
+                    .setCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
+            });
+
+        skyboxPipeline_ = loadPipelineByName(
+            ctx_, "skybox.vert.spv", "skybox.frag.spv", pipelineLayout_, [&](PipelineBuilder& b) {
+                b.setColorFormat(swapchain_.format())
                     .setDepthFormat(swapchain_.depthFormat())
-                    .setCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE)
-                    .build(ctx_.device(), pipelineLayout_);
+                    .enableDepthTest()
+                    .disableDepthWrite()
+                    .setDepthOp(VK_COMPARE_OP_LESS_OR_EQUAL)
+                    .disableBlending()
+                    .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
+            });
 
-            vkDestroyShaderModule(ctx_.device(), vert, nullptr);
-            vkDestroyShaderModule(ctx_.device(), frag, nullptr);
-        }
-
-        // skybox pipeline
-        {
-            const auto shaderDir = executableDir() / "shaders";
-            VkShaderModule vert = loadShaderModule(ctx_.device(), shaderDir / "skybox.vert.spv");
-            VkShaderModule frag = loadShaderModule(ctx_.device(), shaderDir / "skybox.frag.spv");
-            if (vert == VK_NULL_HANDLE || frag == VK_NULL_HANDLE) {
-                CHAI_LOG_CRITICAL("Shaders failed to load from {}", shaderDir.string());
-                return;
-            }
-
-            skyboxPipeline_ = PipelineBuilder{}
-                                  .setShaders(vert, frag)
-                                  .setColorFormat(swapchain_.format())
-                                  .disableBlending()
-                                  .enableDepthTest()
-                                  .disableDepthWrite()
-                                  .setDepthOp(VK_COMPARE_OP_LESS_OR_EQUAL)
-                                  .setDepthFormat(swapchain_.depthFormat())
-                                  .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
-                                  .build(ctx_.device(), pipelineLayout_);
-
-            vkDestroyShaderModule(ctx_.device(), vert, nullptr);
-            vkDestroyShaderModule(ctx_.device(), frag, nullptr);
-        }
-
-        // Irradiance map
-        {
-            const auto shaderDir = executableDir() / "shaders";
-            VkShaderModule vert =
-                loadShaderModule(ctx_.device(), shaderDir / "irradiance.vert.spv");
-            VkShaderModule frag =
-                loadShaderModule(ctx_.device(), shaderDir / "irradiance.frag.spv");
-            if (vert == VK_NULL_HANDLE || frag == VK_NULL_HANDLE) {
-                CHAI_LOG_CRITICAL("Shaders failed to load from {}", shaderDir.string());
-                return;
-            }
-
-            irradiancePipeline_ =
-                PipelineBuilder{}
-                    .setShaders(vert, frag)
-                    .setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
+        irradiancePipeline_ = loadPipelineByName(
+            ctx_,
+            "irradiance.vert.spv",
+            "irradiance.frag.spv",
+            irradianceLayout_,
+            [&](PipelineBuilder& b) {
+                b.setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
                     .disableBlending()
                     .disableDepthTest()
                     .disableDepthWrite()
-                    .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
-                    .build(ctx_.device(), irradianceLayout_);
+                    .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
+            });
 
-            vkDestroyShaderModule(ctx_.device(), vert, nullptr);
-            vkDestroyShaderModule(ctx_.device(), frag, nullptr);
-        }
+        brdfLutPipeline_ = loadPipelineByName(ctx_,
+                                              "brdf_lut.vert.spv",
+                                              "brdf_lut.frag.spv",
+                                              brdfLutLayout_,
+                                              [&](PipelineBuilder& b) {
+                                                  b.setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
+                                                      .disableBlending()
+                                                      .disableDepthTest()
+                                                      .disableDepthWrite()
+                                                      .setCullMode(VK_CULL_MODE_NONE,
+                                                                   VK_FRONT_FACE_COUNTER_CLOCKWISE);
+                                              });
 
-        // BRDF LUT
-        {
-            const auto shaderDir = executableDir() / "shaders";
-            VkShaderModule vert = loadShaderModule(ctx_.device(), shaderDir / "brdf_lut.vert.spv");
-            VkShaderModule frag = loadShaderModule(ctx_.device(), shaderDir / "brdf_lut.frag.spv");
-            if (vert == VK_NULL_HANDLE || frag == VK_NULL_HANDLE) {
-                CHAI_LOG_CRITICAL("Shaders failed to load from {}", shaderDir.string());
-                return;
-            }
-
-            brdfLutPipeline_ = PipelineBuilder{}
-                                   .setShaders(vert, frag)
-                                   .setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
-                                   .disableBlending()
-                                   .disableDepthTest()
-                                   .disableDepthWrite()
-                                   .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
-                                   .build(ctx_.device(), brdfLutLayout_);
-
-            vkDestroyShaderModule(ctx_.device(), vert, nullptr);
-            vkDestroyShaderModule(ctx_.device(), frag, nullptr);
-        }
-
-        // prefilter
-        {
-            const auto shaderDir = executableDir() / "shaders";
-            VkShaderModule vert = loadShaderModule(ctx_.device(), shaderDir / "prefilter.vert.spv");
-            VkShaderModule frag = loadShaderModule(ctx_.device(), shaderDir / "prefilter.frag.spv");
-            if (vert == VK_NULL_HANDLE || frag == VK_NULL_HANDLE) {
-                CHAI_LOG_CRITICAL("Shaders failed to load from {}", shaderDir.string());
-                return;
-            }
-
-            prefilterPipeline_ =
-                PipelineBuilder{}
-                    .setShaders(vert, frag)
-                    .setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
+        prefilterPipeline_ = loadPipelineByName(
+            ctx_,
+            "prefilter.vert.spv",
+            "prefilter.frag.spv",
+            prefilterLayout_,
+            [&](PipelineBuilder& b) {
+                b.setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
                     .disableBlending()
                     .disableDepthTest()
                     .disableDepthWrite()
-                    .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
-                    .build(ctx_.device(), prefilterLayout_);
-
-            vkDestroyShaderModule(ctx_.device(), vert, nullptr);
-            vkDestroyShaderModule(ctx_.device(), frag, nullptr);
-        }
+                    .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
+            });
     }
 
     void VulkanRenderer::ensureSkyboxSet(FrameData& frame,

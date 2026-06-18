@@ -1,5 +1,7 @@
 #include "PipelineBuilder.h"
+
 #include "../utils/VkCheck.h"
+#include "../utils/VkUtils.h"
 
 namespace chai::gfx
 {
@@ -85,16 +87,17 @@ namespace chai::gfx
 
     PipelineBuilder&
     PipelineBuilder::setVertexInput(std::vector<VkVertexInputAttributeDescription> attr,
-        VkVertexInputBindingDescription bind)
+                                    VkVertexInputBindingDescription bind)
     {
         attrs_ = std::move(attr);
         bind_ = bind;
+        hasVertexInput_ = true; 
         return *this;
     }
 
     VkPipeline PipelineBuilder::build(VkDevice device, VkPipelineLayout layout)
     {
-        //TODO: support adding multiple shader stages
+        // TODO: support adding multiple shader stages
         VkPipelineShaderStageCreateInfo stages[2]{};
         stages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         stages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -107,10 +110,12 @@ namespace chai::gfx
 
         VkPipelineVertexInputStateCreateInfo vertexInput{
             VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
-        vertexInput.vertexBindingDescriptionCount = 1;
-        vertexInput.pVertexBindingDescriptions = &bind_;
-        vertexInput.vertexAttributeDescriptionCount = static_cast<uint32_t>(attrs_.size());
-        vertexInput.pVertexAttributeDescriptions = attrs_.data();
+        if (hasVertexInput_) {
+            vertexInput.vertexBindingDescriptionCount = 1;
+            vertexInput.pVertexBindingDescriptions = &bind_;
+            vertexInput.vertexAttributeDescriptionCount = uint32_t(attrs_.size());
+            vertexInput.pVertexAttributeDescriptions = attrs_.data();
+        }
 
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{
             VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};

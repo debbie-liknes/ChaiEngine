@@ -3,8 +3,8 @@
  * @brief Graphics pipeline creation helper
  */
 #pragma once
-#include <vulkan/vulkan.h>
 #include <vector>
+#include <vulkan/vulkan.h>
 
 namespace chai::gfx
 {
@@ -23,7 +23,7 @@ namespace chai::gfx
         PipelineBuilder& setVertexInput(std::vector<VkVertexInputAttributeDescription> attr,
                                         VkVertexInputBindingDescription bind);
 
-        //Depth
+        // Depth
         PipelineBuilder& setDepthFormat(VkFormat depthFormat);
         PipelineBuilder& setDepthOp(VkCompareOp compareOp);
         PipelineBuilder& disableDepthTest();
@@ -31,7 +31,7 @@ namespace chai::gfx
         PipelineBuilder& disableDepthWrite();
         PipelineBuilder& enableDepthWrite();
 
-        //blending
+        // blending
         PipelineBuilder& disableBlending();
         PipelineBuilder& enableBlending();
 
@@ -48,13 +48,14 @@ namespace chai::gfx
         VkCullModeFlags cullMode_ = VK_CULL_MODE_NONE;
         VkFrontFace frontFace_ = VK_FRONT_FACE_CLOCKWISE;
         VkFormat colorFormat_ = VK_FORMAT_UNDEFINED;
-        std::vector<VkVertexInputAttributeDescription> attrs_;
-        VkVertexInputBindingDescription bind_;
+        std::vector<VkVertexInputAttributeDescription> attrs_{};
+        VkVertexInputBindingDescription bind_{};
         bool blending_ = false;
 
-        VkFormat depthFormat_;
+        VkFormat depthFormat_ = VK_FORMAT_UNDEFINED;
         bool depthTest_ = false;
         bool depthWrite_ = false;
+        bool hasVertexInput_ = false;
         VkCompareOp depthCompareOp_ = VK_COMPARE_OP_LESS;
     };
-} // namespace chai
+} // namespace chai::gfx

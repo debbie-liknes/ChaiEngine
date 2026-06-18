@@ -3,6 +3,7 @@ project(VulkanRenderer)
 set(${PROJECT_NAME}_headers
         commands/ImageTransition.h
         pipeline/PipelineBuilder.h
+        pipeline/PipelineHelpers.h
         pipeline/ShaderModule.h
         renderer/VulkanRenderer.h
         renderer/VulkanContext.h
@@ -28,6 +29,7 @@ set(${PROJECT_NAME}_headers
 set(${PROJECT_NAME}_source
         commands/ImageTransition.cpp
         pipeline/PipelineBuilder.cpp
+        pipeline/PipelineHelpers.cpp
         pipeline/ShaderModule.cpp
         renderer/VulkanContext.cpp
         renderer/VulkanRenderer.cpp
