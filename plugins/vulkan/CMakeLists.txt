@@ -20,6 +20,7 @@ set(${PROJECT_NAME}_headers
         resources/TextureRegistry.h
         resources/VulkanTexture.h
         resources/VulkanVertex.h
+        resources/VulkanRenderTarget.h
         utils/VkCheck.h
         utils/VkUtils.h
 )
@@ -37,6 +38,7 @@ set(${PROJECT_NAME}_source
         resources/MeshRegistry.cpp
         resources/TextureFactory.cpp
         resources/TextureRegistry.cpp
+        resources/VulkanRenderTarget.cpp
         swapchain/Swapchain.cpp
         utils/VkCheck.cpp
 

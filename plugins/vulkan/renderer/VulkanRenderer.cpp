@@ -63,25 +63,9 @@ namespace chai::gfx
         vkDestroyPipelineLayout(ctx_.device(), brdfLutLayout_, nullptr);
         vkDestroyPipelineLayout(ctx_.device(), prefilterLayout_, nullptr);
 
-        vkDestroySampler(ctx_.device(), irradianceTarget_.cube.sampler, nullptr);
-        vkDestroyImageView(ctx_.device(), irradianceTarget_.cube.view, nullptr);
-        for (auto v : irradianceTarget_.faceViews)
-            if (v)
-                vkDestroyImageView(ctx_.device(), v, nullptr);
-        vmaDestroyImage(
-            ctx_.allocator(), irradianceTarget_.cube.image, irradianceTarget_.cube.alloc);
-
-        vkDestroySampler(ctx_.device(), brdfLut_.tex.sampler, nullptr);
-        vkDestroyImageView(ctx_.device(), brdfLut_.tex.view, nullptr);
-        vkDestroyImageView(ctx_.device(), brdfLut_.view, nullptr);
-        vmaDestroyImage(ctx_.allocator(), brdfLut_.tex.image, brdfLut_.tex.alloc);
-
-        vkDestroySampler(ctx_.device(), prefilterTarget_.cube.sampler, nullptr);
-        vkDestroyImageView(ctx_.device(), prefilterTarget_.cube.view, nullptr);
-        for (auto v : prefilterTarget_.faceMipViews)
-            if (v)
-                vkDestroyImageView(ctx_.device(), v, nullptr);
-        vmaDestroyImage(ctx_.allocator(), prefilterTarget_.cube.image, prefilterTarget_.cube.alloc);
+        irradianceTarget_.destroy(ctx_);
+        brdfLut_.destroy(ctx_);
+        prefilterTarget_.destroy(ctx_);
 
         // dont need to destory the buffers individually. Command Pool is enough
         vkDestroyCommandPool(ctx_.device(), cmdPool_, nullptr);
@@ -202,24 +186,17 @@ namespace chai::gfx
         }
 
         // only need this one, because its environment
-        irradianceTarget_ = createCubeRenderTarget(ctx_,
-                                                   kIrradianceSize,
-                                                   VK_FORMAT_R16G16B16A16_SFLOAT,
-                                                   VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-                                                       VK_IMAGE_USAGE_SAMPLED_BIT);
+        irradianceTarget_ =
+            createCube(ctx_,
+                       kIrradianceSize,
+                       VK_FORMAT_R16G16B16A16_SFLOAT, 5);
 
-        brdfLut_ =
-            create2DRenderTarget(ctx_,
-                                 kBRDFLUT,
-                                 kBRDFLUT,
-                                 VK_FORMAT_R16G16B16A16_SFLOAT,
-                                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+        brdfLut_ = createColor2D(ctx_, kBRDFLUT, kBRDFLUT, VK_FORMAT_R16G16B16A16_SFLOAT);
 
-        prefilterTarget_ = createPrefilterRenderTarget(ctx_,
-                                                       kPrefilterSize,
-                                                       VK_FORMAT_R16G16B16A16_SFLOAT,
-                                                       VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-                                                           VK_IMAGE_USAGE_SAMPLED_BIT);
+        prefilterTarget_ =
+            createCube(ctx_,
+                       kPrefilterSize,
+                       VK_FORMAT_R16G16B16A16_SFLOAT, 5);
         setupPipelines();
     }
 
@@ -679,14 +656,15 @@ namespace chai::gfx
                 return;
             }
 
-            prefilterPipeline_ = PipelineBuilder{}
-                                   .setShaders(vert, frag)
-                                   .setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
-                                   .disableBlending()
-                                   .disableDepthTest()
-                                   .disableDepthWrite()
-                                   .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
-                                   .build(ctx_.device(), prefilterLayout_);
+            prefilterPipeline_ =
+                PipelineBuilder{}
+                    .setShaders(vert, frag)
+                    .setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
+                    .disableBlending()
+                    .disableDepthTest()
+                    .disableDepthWrite()
+                    .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
+                    .build(ctx_.device(), prefilterLayout_);
 
             vkDestroyShaderModule(ctx_.device(), vert, nullptr);
             vkDestroyShaderModule(ctx_.device(), frag, nullptr);
@@ -752,7 +730,7 @@ namespace chai::gfx
 
         immediateSubmit(ctx_, [&](VkCommandBuffer cmd) {
             imageBarrier(cmd,
-                         irradianceTarget_.cube.image,
+                         irradianceTarget_.image,
                          VK_IMAGE_LAYOUT_UNDEFINED,
                          VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                          VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
@@ -764,7 +742,7 @@ namespace chai::gfx
 
             for (uint32_t face = 0; face < 6; ++face) {
                 VkRenderingAttachmentInfo color{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
-                color.imageView = irradianceTarget_.faceViews[face]; // 2D single-layer view
+                color.imageView = irradianceTarget_.renderViews[face]; // 2D single-layer view
                 color.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
                 color.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
                 color.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -804,7 +782,7 @@ namespace chai::gfx
             }
 
             imageBarrier(cmd,
-                         irradianceTarget_.cube.image,
+                         irradianceTarget_.image,
                          VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                          VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
@@ -819,50 +797,50 @@ namespace chai::gfx
     void VulkanRenderer::bakeBrdfLut()
     {
         immediateSubmit(ctx_, [&](VkCommandBuffer cmd) {
-             imageBarrier(cmd,
-                          brdfLut_.tex.image,
-                          VK_IMAGE_LAYOUT_UNDEFINED,
-                          VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                          VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
-                          0,
-                          VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-                          VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-                          VK_IMAGE_ASPECT_COLOR_BIT,
-                          1);
+            imageBarrier(cmd,
+                         brdfLut_.image,
+                         VK_IMAGE_LAYOUT_UNDEFINED,
+                         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                         VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
+                         0,
+                         VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+                         VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+                         VK_IMAGE_ASPECT_COLOR_BIT,
+                         1);
 
-             VkRenderingAttachmentInfo color{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
-             color.imageView = brdfLut_.view;
-             color.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-             color.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-             color.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            VkRenderingAttachmentInfo color{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
+            color.imageView = brdfLut_.view;
+            color.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            color.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            color.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 
-             VkRenderingInfo ri{VK_STRUCTURE_TYPE_RENDERING_INFO};
-             ri.renderArea = {{0, 0}, {kBRDFLUT, kBRDFLUT}};
-             ri.layerCount = 1;
-             ri.colorAttachmentCount = 1;
-             ri.pColorAttachments = &color;
+            VkRenderingInfo ri{VK_STRUCTURE_TYPE_RENDERING_INFO};
+            ri.renderArea = {{0, 0}, {kBRDFLUT, kBRDFLUT}};
+            ri.layerCount = 1;
+            ri.colorAttachmentCount = 1;
+            ri.pColorAttachments = &color;
 
-             vkCmdBeginRendering(cmd, &ri);
-             VkViewport vp{0, 0, float(kBRDFLUT), float(kBRDFLUT), 0.f, 1.f};
-             vkCmdSetViewport(cmd, 0, 1, &vp);
-             VkRect2D sc{{0, 0}, {kBRDFLUT, kBRDFLUT}};
-             vkCmdSetScissor(cmd, 0, 1, &sc);
+            vkCmdBeginRendering(cmd, &ri);
+            VkViewport vp{0, 0, float(kBRDFLUT), float(kBRDFLUT), 0.f, 1.f};
+            vkCmdSetViewport(cmd, 0, 1, &vp);
+            VkRect2D sc{{0, 0}, {kBRDFLUT, kBRDFLUT}};
+            vkCmdSetScissor(cmd, 0, 1, &sc);
 
-             vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, brdfLutPipeline_);
+            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, brdfLutPipeline_);
 
-             vkCmdDraw(cmd, 3, 1, 0, 0);
-             vkCmdEndRendering(cmd);
+            vkCmdDraw(cmd, 3, 1, 0, 0);
+            vkCmdEndRendering(cmd);
 
-             imageBarrier(cmd,
-                          brdfLut_.tex.image,
-                          VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                          VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-                          VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-                          VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
-                          VK_ACCESS_2_SHADER_READ_BIT,
-                          VK_IMAGE_ASPECT_COLOR_BIT,
-                          1);
+            imageBarrier(cmd,
+                         brdfLut_.image,
+                         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                         VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+                         VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+                         VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+                         VK_ACCESS_2_SHADER_READ_BIT,
+                         VK_IMAGE_ASPECT_COLOR_BIT,
+                         1);
         });
     }
 
@@ -881,14 +859,14 @@ namespace chai::gfx
         imgs[0].imageView = skybox.view; // binding 0: skybox
         imgs[0].sampler = skybox.sampler;
         imgs[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imgs[1].imageView = irradianceTarget_.cube.view; // binding 1: irradiance
-        imgs[1].sampler = irradianceTarget_.cube.sampler;
+        imgs[1].imageView = irradianceTarget_.view; // binding 1: irradiance
+        imgs[1].sampler = irradianceTarget_.sampler;
         imgs[1].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imgs[2].imageView = brdfLut_.tex.view; // binding 2: brdf lut
-        imgs[2].sampler = brdfLut_.tex.sampler;
+        imgs[2].imageView = brdfLut_.view; // binding 2: brdf lut
+        imgs[2].sampler = brdfLut_.sampler;
         imgs[2].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imgs[3].imageView = prefilterTarget_.cube.view; // binding 3: prefilter
-        imgs[3].sampler = prefilterTarget_.cube.sampler;
+        imgs[3].imageView = prefilterTarget_.view; // binding 3: prefilter
+        imgs[3].sampler = prefilterTarget_.sampler;
         imgs[3].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         VkWriteDescriptorSet writes[4]{};
@@ -930,7 +908,7 @@ namespace chai::gfx
 
         immediateSubmit(ctx_, [&](VkCommandBuffer cmd) {
             imageBarrier(cmd,
-                         prefilterTarget_.cube.image,
+                         prefilterTarget_.image,
                          VK_IMAGE_LAYOUT_UNDEFINED,
                          VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                          VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
@@ -947,7 +925,7 @@ namespace chai::gfx
 
                 for (uint32_t face = 0; face < 6; ++face) {
                     VkRenderingAttachmentInfo color{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
-                    color.imageView = prefilterTarget_.faceMipViews[mip * 6 + face];
+                    color.imageView = prefilterTarget_.renderView(mip, face);
                     color.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
                     color.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
                     color.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -991,7 +969,7 @@ namespace chai::gfx
             }
 
             imageBarrier(cmd,
-                         prefilterTarget_.cube.image,
+                         prefilterTarget_.image,
                          VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                          VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,

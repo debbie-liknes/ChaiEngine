@@ -9,6 +9,8 @@
 #include "../resources/GpuResources.h"
 #include "../resources/MaterialFactory.h"
 #include "../resources/RenderTargetView.h"
+#include "../resources/VulkanRenderTarget.h"
+
 
 #include <Plugin/ServiceLocator.h>
 
@@ -110,16 +112,16 @@ namespace chai::gfx
 
         //IBL
         VkPipeline irradiancePipeline_ = VK_NULL_HANDLE;
-        CubeRenderTarget irradianceTarget_{};
+        RenderTarget irradianceTarget_{};
         VkPipelineLayout irradianceLayout_ = VK_NULL_HANDLE;
         VkDescriptorSet environmentSet_ = VK_NULL_HANDLE;
 
         VkPipeline brdfLutPipeline_ = VK_NULL_HANDLE;
-        RenderTarget2D brdfLut_{};
+        RenderTarget brdfLut_{};
         VkPipelineLayout brdfLutLayout_ = VK_NULL_HANDLE;
         bool brdfBaked_ = false;
 
-        PrefilterTarget prefilterTarget_{};
+        RenderTarget prefilterTarget_{};
         VkPipeline prefilterPipeline_ = VK_NULL_HANDLE;
         VkPipelineLayout prefilterLayout_ = VK_NULL_HANDLE;
         VkDescriptorSet prefilterSet_ = VK_NULL_HANDLE;
