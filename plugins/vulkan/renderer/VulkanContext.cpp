@@ -234,16 +234,20 @@ namespace chai::gfx
         VK_CHECK(vkCreateDescriptorSetLayout(device_, &matLayout, nullptr, &materialSetLayout_));
 
         // lights
-        VkDescriptorSetLayoutBinding lightBinding{};
-        lightBinding.binding = 0;
-        lightBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        lightBinding.descriptorCount = 1;
-        lightBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        VkDescriptorSetLayoutBinding lightBindings[2]{};
+        lightBindings[0].binding = 0;
+        lightBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        lightBindings[0].descriptorCount = 1;
+        lightBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        lightBindings[1].binding = 1;
+        lightBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        lightBindings[1].descriptorCount = 1;
+        lightBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         VkDescriptorSetLayoutCreateInfo lightLayout{
             VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
-        lightLayout.bindingCount = 1;
-        lightLayout.pBindings = &lightBinding;
+        lightLayout.bindingCount = 2;
+        lightLayout.pBindings = lightBindings;
         VK_CHECK(vkCreateDescriptorSetLayout(device_, &lightLayout, nullptr, &lightSetLayout_));
 
         //environment (skybox)

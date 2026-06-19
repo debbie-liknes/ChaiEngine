@@ -116,7 +116,7 @@ namespace chai::gfx
                                 VK_IMAGE_ASPECT_DEPTH_BIT,
                                 false,
                                 VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
-                                compare); // border = outside-shadow = lit
+                                compare);
     }
 
     RenderTarget createCube(VulkanContext& ctx, uint32_t size, VkFormat fmt, uint32_t mips)

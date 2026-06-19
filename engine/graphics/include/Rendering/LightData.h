@@ -14,6 +14,8 @@ namespace chai::gfx
 	{
         math::Vec4 direction;
         math::Vec4 color;
+        math::Mat4 view;
+        math::Mat4 proj;
 	};
     ENFORCE_STD140_ALIGNMENT(LightData);
 }

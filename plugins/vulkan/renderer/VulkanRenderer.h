@@ -64,6 +64,8 @@ namespace chai::gfx
             //TODO: this doesnt belong as a per frame item. its global
             VkDescriptorSet skyboxSet = VK_NULL_HANDLE;
             Handle<Texture> skyboxCube;
+
+            RenderTarget shadowTarget{};
         };
         static constexpr uint32_t kFramesInFlight = 2;
 
@@ -77,7 +79,8 @@ namespace chai::gfx
          */
         void renderScene(VkCommandBuffer cmd,
                          const RenderTargetView& view,
-                         const FrameRenderData& renderData);
+                         const FrameRenderData& renderData,
+                         const std::vector<uint32_t>&);
 
         //setup
         void init();
@@ -89,6 +92,7 @@ namespace chai::gfx
         void bakeBrdfLut();
         void bakePrefilter(const GpuTexture& envCube);
         void writeEnvironmentSet(const GpuTexture& skybox);
+        void shadowMapping(VkCommandBuffer cmd, const std::vector<uint32_t>&, const FrameRenderData&);
 
         chai::IWindow& window_;
         VulkanContext& ctx_;
@@ -126,6 +130,11 @@ namespace chai::gfx
         VkPipelineLayout prefilterLayout_ = VK_NULL_HANDLE;
         VkDescriptorSet prefilterSet_ = VK_NULL_HANDLE;
         bool iblBaked_ = false;
+
+        //shadows
+        VkPipeline shadowPipeline_ = VK_NULL_HANDLE;
+        VkPipelineLayout shadowLayout_ = VK_NULL_HANDLE;
+
     };
 
     //TODO: dont leave this here forever

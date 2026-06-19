@@ -30,6 +30,7 @@ namespace chai::gfx
         PipelineBuilder& enableDepthTest();
         PipelineBuilder& disableDepthWrite();
         PipelineBuilder& enableDepthWrite();
+        PipelineBuilder& enableDepthBias();
 
         // blending
         PipelineBuilder& disableBlending();
@@ -48,6 +49,7 @@ namespace chai::gfx
         VkCullModeFlags cullMode_ = VK_CULL_MODE_NONE;
         VkFrontFace frontFace_ = VK_FRONT_FACE_CLOCKWISE;
         VkFormat colorFormat_ = VK_FORMAT_UNDEFINED;
+        bool hasColor_ = false;
         std::vector<VkVertexInputAttributeDescription> attrs_{};
         VkVertexInputBindingDescription bind_{};
         bool blending_ = false;
@@ -55,7 +57,9 @@ namespace chai::gfx
         VkFormat depthFormat_ = VK_FORMAT_UNDEFINED;
         bool depthTest_ = false;
         bool depthWrite_ = false;
-        bool hasVertexInput_ = false;
+        bool depthBias_ = false;
         VkCompareOp depthCompareOp_ = VK_COMPARE_OP_LESS;
+
+        bool hasVertexInput_ = false;
     };
 } // namespace chai::gfx

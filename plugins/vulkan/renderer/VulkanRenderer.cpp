@@ -21,6 +21,7 @@ namespace chai::gfx
 {
     const uint32_t kIrradianceSize = 32;
     const uint32_t kPrefilterSize = 128;
+    const uint32_t kShadowMapSize = 1024;
     const uint32_t kBRDFLUT = 512;
 
     VulkanRenderer::VulkanRenderer(chai::IWindow& window,
@@ -50,6 +51,7 @@ namespace chai::gfx
             vmaDestroyBuffer(ctx_.allocator(), frames_[i].lightBuffer, frames_[i].lightAlloc);
             vkDestroyFence(ctx_.device(), frames_[i].inFlight, nullptr);
             vkDestroySemaphore(ctx_.device(), frames_[i].imageAvailable, nullptr);
+            frames_[i].shadowTarget.destroy(ctx_);
         }
 
         vkDestroyPipeline(ctx_.device(), pbrPipeline_, nullptr);
@@ -58,11 +60,13 @@ namespace chai::gfx
         vkDestroyPipeline(ctx_.device(), irradiancePipeline_, nullptr);
         vkDestroyPipeline(ctx_.device(), brdfLutPipeline_, nullptr);
         vkDestroyPipeline(ctx_.device(), prefilterPipeline_, nullptr);
+        vkDestroyPipeline(ctx_.device(), shadowPipeline_, nullptr);
 
         vkDestroyPipelineLayout(ctx_.device(), pipelineLayout_, nullptr);
         vkDestroyPipelineLayout(ctx_.device(), irradianceLayout_, nullptr);
         vkDestroyPipelineLayout(ctx_.device(), brdfLutLayout_, nullptr);
         vkDestroyPipelineLayout(ctx_.device(), prefilterLayout_, nullptr);
+        vkDestroyPipelineLayout(ctx_.device(), shadowLayout_, nullptr);
 
         irradianceTarget_.destroy(ctx_);
         brdfLut_.destroy(ctx_);
@@ -144,6 +148,9 @@ namespace chai::gfx
                 vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);
             }
 
+            frames_[i].shadowTarget =
+                createDepth2D(ctx_, kShadowMapSize, kShadowMapSize, VK_FORMAT_D32_SFLOAT, true);
+
             // lights
             {
                 VkBufferCreateInfo bufInfo{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
@@ -176,22 +183,35 @@ namespace chai::gfx
                 dbi.offset = 0;
                 dbi.range = sizeof(LightData);
 
-                VkWriteDescriptorSet write{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
-                write.dstSet = frames_[i].lightSet;
-                write.dstBinding = 0;
-                write.descriptorCount = 1;
-                write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                write.pBufferInfo = &dbi;
-                vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);
+                VkWriteDescriptorSet writes[2]{};
+                writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                writes[0].dstSet = frames_[i].lightSet;
+                writes[0].dstBinding = 0;
+                writes[0].descriptorCount = 1;
+                writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                writes[0].pBufferInfo = &dbi;
+
+                VkDescriptorImageInfo imageInfo{};
+                imageInfo.sampler = frames_[i].shadowTarget.sampler;
+                imageInfo.imageView = frames_[i].shadowTarget.view;
+                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+                writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                writes[1].dstSet = frames_[i].lightSet;
+                writes[1].dstBinding = 1;
+                writes[1].descriptorCount = 1;
+                writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                writes[1].pImageInfo = &imageInfo;
+
+                vkUpdateDescriptorSets(ctx_.device(), 2, writes, 0, nullptr);
             }
         }
 
         // only need this one, because its environment
-        irradianceTarget_ = createCube(ctx_, kIrradianceSize, VK_FORMAT_R16G16B16A16_SFLOAT, 5);
-
+        irradianceTarget_ = createCube(ctx_, kIrradianceSize, VK_FORMAT_R16G16B16A16_SFLOAT, 1);
         brdfLut_ = createColor2D(ctx_, kBRDFLUT, kBRDFLUT, VK_FORMAT_R16G16B16A16_SFLOAT);
-
         prefilterTarget_ = createCube(ctx_, kPrefilterSize, VK_FORMAT_R16G16B16A16_SFLOAT, 5);
+
         setupPipelines();
     }
 
@@ -232,6 +252,8 @@ namespace chai::gfx
         LightData lightUBO{};
         lightUBO.color = renderData.sun.color;
         lightUBO.direction = renderData.sun.direction;
+        lightUBO.proj = renderData.sun.proj;
+        lightUBO.view = renderData.sun.view;
         std::memcpy(frame.lightMapped, &lightUBO, sizeof(lightUBO));
 
         RenderTargetView view{};
@@ -273,9 +295,25 @@ namespace chai::gfx
         rendering.pColorAttachments = &color;
         rendering.pDepthAttachment = &depth;
 
+        //sort by opaque/blend
+        std::vector<uint32_t> order(renderData.items.size());
+        std::iota(order.begin(), order.end(), 0u);
+
+        std::sort(order.begin(), order.end(), [&](uint32_t a, uint32_t b) {
+            const GpuMaterial* ma = materialCache_->resource(renderData.items[a].material);
+            const GpuMaterial* mb = materialCache_->resource(renderData.items[b].material);
+            bool aBlend = ma && ma->alphaMode == AlphaMode::Blend;
+            bool bBlend = mb && mb->alphaMode == AlphaMode::Blend;
+            if (aBlend != bBlend)
+                return !aBlend; // opaque first
+            return renderData.items[a].material.index < renderData.items[b].material.index;
+        });
+
         // DRAW
+        shadowMapping(cmd, order, renderData);
+
         vkCmdBeginRendering(cmd, &rendering);
-        renderScene(cmd, view, renderData);
+        renderScene(cmd, view, renderData, order);
         vkCmdEndRendering(cmd);
 
         transitionImage(cmd, view.image, ImageState::ColorAttachment, ImageState::Present);
@@ -354,7 +392,8 @@ namespace chai::gfx
 
     void VulkanRenderer::renderScene(VkCommandBuffer cmd,
                                      const RenderTargetView& view,
-                                     const FrameRenderData& renderData)
+                                     const FrameRenderData& renderData,
+                                     const std::vector<uint32_t>& order)
     {
         VkViewport viewport{0, 0, float(view.extent.width), float(view.extent.height), 0.f, 1.f};
         vkCmdSetViewport(cmd, 0, 1, &viewport);
@@ -389,18 +428,7 @@ namespace chai::gfx
                                 0,
                                 nullptr);
 
-        std::vector<uint32_t> order(renderData.items.size());
-        std::iota(order.begin(), order.end(), 0u);
-
-        std::sort(order.begin(), order.end(), [&](uint32_t a, uint32_t b) {
-            const GpuMaterial* ma = materialCache_->resource(renderData.items[a].material);
-            const GpuMaterial* mb = materialCache_->resource(renderData.items[b].material);
-            bool aBlend = ma && ma->alphaMode == AlphaMode::Blend;
-            bool bBlend = mb && mb->alphaMode == AlphaMode::Blend;
-            if (aBlend != bBlend)
-                return !aBlend; // opaque first
-            return renderData.items[a].material.index < renderData.items[b].material.index;
-        });
+        // this should likely loop over a number of lights
 
         Handle<Material> lastMaterial{};
         for (uint32_t idx : order) {
@@ -527,6 +555,19 @@ namespace chai::gfx
             VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &li, nullptr, &prefilterLayout_));
         }
 
+        {
+            VkPushConstantRange shadowPc{};
+            shadowPc.offset = 0;
+            shadowPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+            shadowPc.size = sizeof(math::Mat4) * 3;
+
+            VkPipelineLayoutCreateInfo li{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+            li.setLayoutCount = 0;
+            li.pushConstantRangeCount = 1;
+            li.pPushConstantRanges = &shadowPc;
+            VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &li, nullptr, &shadowLayout_));
+        }
+
         auto attrs = vertexAttributes();
         auto bind = vertexBinding();
 
@@ -599,6 +640,17 @@ namespace chai::gfx
                     .disableBlending()
                     .disableDepthTest()
                     .disableDepthWrite()
+                    .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
+            });
+
+        shadowPipeline_ = loadPipelineByName(
+            ctx_, "shadow.vert.spv", "shadow.frag.spv", shadowLayout_, [&](PipelineBuilder& b) {
+                b.setVertexInput({attrs.begin(), attrs.end()}, bind)
+                    .setDepthFormat(swapchain_.depthFormat())
+                    .disableBlending()
+                    .enableDepthTest()
+                    .enableDepthWrite()
+                    .enableDepthBias()
                     .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
             });
     }
@@ -913,4 +965,97 @@ namespace chai::gfx
                          kPrefilterMips);
         });
     }
+
+    void VulkanRenderer::shadowMapping(VkCommandBuffer cmd,
+                                       const std::vector<uint32_t>& order,
+                                       const FrameRenderData& renderData)
+    {
+        auto& target = frames_[currentFrame_].shadowTarget;
+        const auto& items = renderData.items;
+
+        {
+            VkDescriptorImageInfo img{};
+            img.imageView = target.view; // the skybox
+            img.sampler = target.sampler;
+            img.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            VkWriteDescriptorSet w{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+            w.dstSet = frames_[currentFrame_].lightSet;
+            w.dstBinding = 1;
+            w.descriptorCount = 1;
+            w.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            w.pImageInfo = &img;
+            vkUpdateDescriptorSets(ctx_.device(), 1, &w, 0, nullptr);
+        }
+
+        imageBarrier(cmd,
+                     target.image,
+                     VK_IMAGE_LAYOUT_UNDEFINED,
+                     VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+                     VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
+                     0,
+                     VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT |
+                         VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
+                     VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+                     VK_IMAGE_ASPECT_DEPTH_BIT, // no stencil
+                     1,
+                     1);
+
+        VkRenderingAttachmentInfo depth{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
+        depth.imageView = target.view;
+        depth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+        depth.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depth.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        depth.clearValue.depthStencil.depth = 1.0f;
+
+        VkRenderingInfo ri{VK_STRUCTURE_TYPE_RENDERING_INFO};
+        ri.renderArea = {{0, 0}, {kShadowMapSize, kShadowMapSize}};
+        ri.layerCount = 1;
+        ri.pDepthAttachment = &depth;
+
+        vkCmdBeginRendering(cmd, &ri);
+        VkViewport vp{0, 0, float(kShadowMapSize), float(kShadowMapSize), 0.f, 1.f};
+        vkCmdSetViewport(cmd, 0, 1, &vp);
+        VkRect2D sc{{0, 0}, {kShadowMapSize, kShadowMapSize}};
+        vkCmdSetScissor(cmd, 0, 1, &sc);
+
+        vkCmdSetDepthBias(cmd, 1.25f, 0.f, 2.f);
+
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipeline_);
+
+        for (auto& idx : order) {
+            const RenderItem& item = items[idx];
+
+            const GpuMesh* mesh = meshCache_->resource(item.mesh);
+            if (!mesh)
+                continue;
+
+            struct {
+                math::Mat4 proj;
+                math::Mat4 view;
+                math::Mat4 model;
+            } push{renderData.sun.proj, renderData.sun.view, item.model};
+            vkCmdPushConstants(
+                cmd, shadowLayout_, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(push), &push);
+            VkBuffer vb = mesh->vertexBuffer.handle;
+            VkDeviceSize offset = 0;
+            vkCmdBindVertexBuffers(cmd, 0, 1, &vb, &offset);
+            vkCmdBindIndexBuffer(cmd, mesh->indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
+            vkCmdDrawIndexed(cmd, mesh->indexCount, 1, 0, 0, 0);
+        }
+
+        vkCmdEndRendering(cmd);
+
+        imageBarrier(cmd,
+                     target.image,
+                     VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+                     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                     VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
+                     VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+                     VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+                     VK_ACCESS_2_SHADER_READ_BIT,
+                     VK_IMAGE_ASPECT_DEPTH_BIT, // No stencil
+                     1,
+                     1);
+    }
+
 } // namespace chai::gfx

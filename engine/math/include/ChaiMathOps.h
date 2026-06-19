@@ -186,6 +186,31 @@ namespace chai::math
         return r;
     }
 
+    template <typename T>
+    inline Mat4T<T>
+    orthographicVK(T left, T right, T bottom, T top, T zNear, T zFar, bool flipY = true)
+    {
+        assert(right != left);
+        assert(top != bottom);
+        assert(zFar != zNear);
+
+        Mat4T<T> r{};
+
+        r(0, 0) = T(2) / (right - left);
+        r(1, 1) = (flipY ? T(-2) : T(2)) / (top - bottom);
+
+        // Vulkan depth [0,1]
+        r(2, 2) = T(1) / (zNear - zFar);
+
+        r(0, 3) = -(right + left) / (right - left);
+        r(1, 3) = -(top + bottom) / (top - bottom);
+        r(2, 3) = zNear / (zNear - zFar);
+
+        r(3, 3) = T(1);
+
+        return r;
+    }
+
     /**
      * @brief Create a perspective projection matrix
      */

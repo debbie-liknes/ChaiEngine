@@ -32,7 +32,10 @@ layout(set = 1, binding = 5) uniform sampler2D emissiveTex;
 layout(set = 2, binding = 0) uniform Light {
     vec4 direction; // .xyz = direction
     vec4 color;     // .rgb = color of light, w = stength
+    mat4 view;
+    mat4 lightSpaceProj;
 } light;
+layout(set = 2, binding = 1) uniform sampler2DShadow shadowMap;
 
 layout(set = 3, binding = 1) uniform samplerCube irradianceMap;
 layout(set = 3, binding = 2) uniform sampler2D brdfLut;
@@ -87,6 +90,35 @@ vec3 acesFilm(vec3 x) {
     return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
 }
 
+//tells us how much of the frament is IN shadow
+float ShadowCalculation(vec4 fragPosLightSpace)
+{
+    float bias = 0.001;
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform to [0,1] range
+
+    projCoords.xy = projCoords.xy * 0.5 + 0.5;
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = texture(shadowMap, vec3(projCoords.xy, currentDepth)).r; 
+
+    float shadow = 0.0;
+    vec2 texel = 1.0 / vec2(textureSize(shadowMap, 0));
+    for (int x = -1; x <= 1; ++x)
+        for (int y = -1; y <= 1; ++y) {
+            float d = texture(shadowMap,
+            vec3(
+                projCoords.xy + vec2(x, y) * texel,
+                currentDepth - bias));
+            shadow += (currentDepth - bias) > d ? 1.0 : 0.0;
+        }
+    shadow /= 9.0;
+
+    return shadow;
+}  
+
 void main()
 {
     vec4 base = texture(baseColorTex, vUV) * mat.baseColor;
@@ -122,7 +154,6 @@ void main()
     vec3  kdDirect = (vec3(1.0) - Fd) * (1.0 - metallic);
     vec3  diffuseDirect = kdDirect * albedo / PI;
     vec3  radiance = light.color.rgb;
-    vec3  lo = (diffuseDirect + spec) * radiance * NoL;
 
     // IBL (ambient)
     vec3 Fi = fresnelSchlickRoughness(NoV, f0, roughness);
@@ -135,6 +166,10 @@ void main()
     vec2 brdf        = texture(brdfLut, vec2(NoV, roughness)).rg;
     vec3 specularIBL = prefiltered * (Fi * brdf.x + brdf.y);
 
+    vec4 lightPos = light.lightSpaceProj * light.view * vec4(vWorldPos, 1.0);
+    float shadow = ShadowCalculation(lightPos); 
+    //shadows attenuate lo, which is from the light (sun)
+    vec3 lo = (diffuseDirect + spec) * radiance * NoL * (1.0 - shadow);
     vec3 ambient = (kD * diffuseIBL + specularIBL) * ao;
 
     // ---- combine ----

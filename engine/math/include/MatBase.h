@@ -5,6 +5,7 @@
 #pragma once
 #include <VecBase.h>
 #include <cassert>
+#include <optional>
 
 #ifndef CHAI_ROW_MAJOR
 #define CHAI_ROW_MAJOR 0
@@ -314,24 +315,42 @@ namespace chai::math
             return t;
         }
 
-        /**
-         * @brief Returns the inverse of the matrix using Gaussian elimination.
-         */
-        constexpr Mat<T, R, C> inverse() const noexcept
+        constexpr std::optional<Mat<T, R, C>> tryInverse() const noexcept
         {
             static_assert(R == C, "inverse() requires square matrix");
+
             Mat<T, R, C> inv = Mat<T, R, C>::identity();
             Mat<T, R, C> mcopy = *this;
+
             for (int i = 0; i < R; ++i) {
-                T pivot = mcopy(i, i);
-                if (pivot == T(0)) {
-                    return Mat<T, R, C>::identity();
+                // partial pivot
+                int pivotRow = i;
+                T pivotMag = (mcopy(i, i) < T(0)) ? -mcopy(i, i) : mcopy(i, i);
+                for (int r = i + 1; r < R; ++r) {
+                    T mag = (mcopy(r, i) < T(0)) ? -mcopy(r, i) : mcopy(r, i);
+                    if (mag > pivotMag) {
+                        pivotMag = mag;
+                        pivotRow = r;
+                    }
                 }
-                T invPivot = T(1) / pivot;
+
+                if (pivotMag == T(0)) {
+                    return std::nullopt;
+                }
+
+                if (pivotRow != i) {
+                    for (int c = 0; c < C; ++c) {
+                        std::swap(mcopy(i, c), mcopy(pivotRow, c));
+                        std::swap(inv(i, c), inv(pivotRow, c));
+                    }
+                }
+
+                T invPivot = T(1) / mcopy(i, i);
                 for (int c = 0; c < C; ++c) {
                     mcopy(i, c) *= invPivot;
                     inv(i, c) *= invPivot;
                 }
+
                 for (int r = 0; r < R; ++r) {
                     if (r != i) {
                         T factor = mcopy(r, i);
@@ -343,6 +362,16 @@ namespace chai::math
                 }
             }
             return inv;
+        }
+
+        /**
+         * @brief Returns the inverse of the matrix using Gaussian elimination.
+         */
+        constexpr Mat<T, R, C> inverse() const noexcept
+        {
+            auto inv = tryInverse();
+            assert(inv.has_value() && "inverse() called on singular matrix");
+            return inv.value_or(Mat<T, R, C>::identity());
         }
 
     private:

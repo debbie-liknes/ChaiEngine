@@ -34,6 +34,7 @@ namespace chai::gfx
     PipelineBuilder& PipelineBuilder::setColorFormat(VkFormat f)
     {
         colorFormat_ = f;
+        hasColor_ = true;
         return *this;
     }
 
@@ -72,6 +73,13 @@ namespace chai::gfx
         depthWrite_ = true;
         return *this;
     }
+
+    PipelineBuilder& PipelineBuilder::enableDepthBias()
+    {
+        depthBias_ = true;
+        return *this;
+    }
+
 
     PipelineBuilder& PipelineBuilder::enableBlending()
     {
@@ -132,6 +140,7 @@ namespace chai::gfx
         raster.cullMode = cullMode_;
         raster.frontFace = frontFace_;
         raster.lineWidth = 1.0f;
+        raster.depthBiasEnable = depthBias_ ? VK_TRUE : VK_FALSE;
 
         VkPipelineMultisampleStateCreateInfo multisample{
             VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO};
@@ -161,17 +170,20 @@ namespace chai::gfx
         colorBlend.attachmentCount = 1;
         colorBlend.pAttachments = &blendAttachment;
 
-        VkDynamicState dynamicStates[] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+        VkDynamicState dynamicStates[] = {
+            VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_DEPTH_BIAS};
         VkPipelineDynamicStateCreateInfo dynamic{
             VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO};
-        dynamic.dynamicStateCount = 2;
+        dynamic.dynamicStateCount = 3;
         dynamic.pDynamicStates = dynamicStates;
 
         // Dynamic rendering hookup
         VkPipelineRenderingCreateInfo renderingInfo{
             VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO};
-        renderingInfo.colorAttachmentCount = 1;
-        renderingInfo.pColorAttachmentFormats = &colorFormat_;
+        if (hasColor_) {
+            renderingInfo.colorAttachmentCount = 1;
+            renderingInfo.pColorAttachmentFormats = &colorFormat_;
+        }
         renderingInfo.depthAttachmentFormat = depthFormat_;
 
         VkGraphicsPipelineCreateInfo info{VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};

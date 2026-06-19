@@ -67,9 +67,9 @@ int main()
     // build the scene
     auto scene = std::make_unique<Scene>();
 
-    // auto prefab = models->load(makeAssetId("model:sponza"), assetDir() /
-    // "Sponza/intel/main_sponza/NewSponza_Main_glTF_003.glTF");
-    auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.gltf");
+    auto prefab = models->load(makeAssetId("model:sponza"), assetDir() /
+    "Sponza/intel/main_sponza/NewSponza_Main_glTF_003.glTF");
+    //auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.gltf");
 
     if (prefab) {
         auto prefabInstance = scene::spawn(*scene, *prefab);
@@ -87,7 +87,8 @@ int main()
 
     GameObject* sun = scene->createObject("sun");
     sun->addComponent<LightComponent>();
-    sun->getComponent<TransformComponent>()->lookAt(math::Vec3{-0.5, -1, 0}, math::Vec3{0, 1, 0});
+    auto sunLoc = sun->getComponent<TransformComponent>();
+    sunLoc->lookAt(math::Vec3{-0.5, -1, -0.4f}, math::Vec3{0, 1, 0});
     scene->setLight(sun);
 
     GameObject* sky = scene->createObject("skybox");
