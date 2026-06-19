@@ -1,4 +1,4 @@
-﻿# Chai Engine
+# Chai Engine
 
 A Vulkan game engine built around a modern, physically-based renderer. Written in C++as a focused study of real-time rendering techniques and engine architecture. In active development
 ![sponza-pbr-shadows](images/intel-sponza-vulkan.png)
