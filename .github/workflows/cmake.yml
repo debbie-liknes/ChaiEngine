@@ -9,7 +9,7 @@ on:
 jobs:
   build-windows-vs2022:
     name: Windows (VS2022)
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
