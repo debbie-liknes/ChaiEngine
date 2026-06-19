@@ -32,8 +32,7 @@ namespace chai
         const float maxZ = std::max(this->center.z + (this->width / 2.f),
                                     box.center.z + (box.width / 2.f));
 
-        return aabb{
-            Vec3((maxX + minX) / 2.f, (maxY + minY) / 2.f, (maxZ + minZ) / 2.f),
+        return aabb{math::Vec3((maxX + minX) / 2.f, (maxY + minY) / 2.f, (maxZ + minZ) / 2.f),
             maxX - minX,
             maxY - minY,
             maxZ - minZ
@@ -43,14 +42,14 @@ namespace chai
     aabb BoxCollider::getWorldBounds() const
     {
         // the octet cluster of points
-        auto lll = center + box.center + Vec3(-box.width / 2.f, -box.height / 2.f, -box.length / 2.f);
-        auto rll = center + box.center + Vec3(box.width / 2.f, -box.height / 2.f, -box.length / 2.f);
-        auto lul = center + box.center + Vec3(-box.width / 2.f, box.height / 2.f, -box.length / 2.f);
-        auto rul = center + box.center + Vec3(box.width / 2.f, box.height / 2.f, -box.length / 2.f);
-        auto llr = center + box.center + Vec3(-box.width / 2.f, -box.height / 2.f, box.length / 2.f);
-        auto rlr = center + box.center + Vec3(box.width / 2.f, -box.height / 2.f, box.length / 2.f);
-        auto lur = center + box.center + Vec3(-box.width / 2.f, box.height / 2.f, box.length / 2.f);
-        auto rur = center + box.center + Vec3(box.width / 2.f, box.height / 2.f, box.length / 2.f);
+        auto lll = center + box.center + math::Vec3(-box.width / 2.f, -box.height / 2.f, -box.length / 2.f);
+        auto rll = center + box.center + math::Vec3(box.width / 2.f, -box.height / 2.f, -box.length / 2.f);
+        auto lul = center + box.center + math::Vec3(-box.width / 2.f, box.height / 2.f, -box.length / 2.f);
+        auto rul = center + box.center + math::Vec3(box.width / 2.f, box.height / 2.f, -box.length / 2.f);
+        auto llr = center + box.center + math::Vec3(-box.width / 2.f, -box.height / 2.f, box.length / 2.f);
+        auto rlr = center + box.center + math::Vec3(box.width / 2.f, -box.height / 2.f, box.length / 2.f);
+        auto lur = center + box.center + math::Vec3(-box.width / 2.f, box.height / 2.f, box.length / 2.f);
+        auto rur = center + box.center + math::Vec3(box.width / 2.f, box.height / 2.f, box.length / 2.f);
 
         auto rotatedPoints = {
             rotateAt(lll),
@@ -85,8 +84,7 @@ namespace chai
             else if (pt.z > max_z)
                 max_z = pt.z;
 
-        return aabb{
-            Vec3((max_x + min_x) / 2.f, (max_y + min_y) / 2.f, (max_z + min_z) / 2.f),
+        return aabb{math::Vec3((max_x + min_x) / 2.f, (max_y + min_y) / 2.f, (max_z + min_z) / 2.f),
             max_x - min_x,
             max_y - min_y,
             max_z - min_z

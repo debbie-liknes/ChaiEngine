@@ -13,7 +13,7 @@ namespace chai
         aabb expand(const aabb& box) const;
 
         // The center point in the AABB
-        Vec3 center;
+        math::Vec3 center;
         float width;
         float length;
         float height;
@@ -25,13 +25,13 @@ namespace chai
 
         // Local rotation is represented by centroid starting point
         // multiplied by quaternion for rotational axis + degree.
-        Vec3 center;
-        Quat rot;
+        math::Vec3 center;
+        math::Quat rot;
 
-        Vec4 rotateAt(Vec3 pos) const
+        math::Vec4 rotateAt(math::Vec3 pos) const
         {
-            Vec3 r = rot * pos;
-            return Vec4{r[0], r[1], r[2], 1.0f};
+            math::Vec3 r = rot * pos;
+            return math::Vec4{r[0], r[1], r[2], 1.0f};
         }
 
         aabb getWorldBounds() const;

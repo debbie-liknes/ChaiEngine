@@ -19,7 +19,7 @@ inline float volumeToDb(float volume)
 }
 
 #ifdef FMOD_FOUND
-inline FMOD_VECTOR vec3ToFmod(const chai::Vec3& vec)
+inline FMOD_VECTOR vec3ToFmod(const chai::math::Vec3& vec)
 {
     return {vec.x, vec.y, vec.z};
 }
@@ -132,7 +132,7 @@ void AudioEngine::UnLoadSound(const std::string& strSoundName)
 }
 
 int AudioEngine::PlaySound(const std::string& strSoundName,
-                           const chai::Vec3& vPosition, float fVolumedB)
+                           const chai::math::Vec3& vPosition, float fVolumedB)
 {
 #ifdef FMOD_FOUND
     int nChannelId = sgpImplementation->mnNextChannelId++;
@@ -163,8 +163,8 @@ int AudioEngine::PlaySound(const std::string& strSoundName,
 #endif
 }
 
-void AudioEngine::Set3dListenerAndOrientation(const chai::Vec3& vPosition,
-                                              const chai::Vec3& vLook, const chai::Vec3& vUp)
+void AudioEngine::Set3dListenerAndOrientation(const chai::math::Vec3& vPosition,
+                                              const chai::math::Vec3& vLook, const chai::math::Vec3& vUp)
 {
 #ifdef FMOD_FOUND
     auto pos = vec3ToFmod(vPosition);
@@ -216,7 +216,7 @@ void AudioEngine::StopAllChannels()
 }
 
 void AudioEngine::SetChannel3dPosition(int nChannelId,
-                                       const chai::Vec3& vPosition)
+                                       const chai::math::Vec3& vPosition)
 {
 #ifdef FMOD_FOUND
     CHECK_BOUNDS(nChannelId, sgpImplementation->mChannels, );

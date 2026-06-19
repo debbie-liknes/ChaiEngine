@@ -93,31 +93,24 @@ vec3 acesFilm(vec3 x) {
 //tells us how much of the frament is IN shadow
 float ShadowCalculation(vec4 fragPosLightSpace)
 {
-    float bias = 0.001;
-    // perform perspective divide
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    // transform to [0,1] range
-
     projCoords.xy = projCoords.xy * 0.5 + 0.5;
-    // get depth of current fragment from light's perspective
-    float currentDepth = projCoords.z;
-    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-    float closestDepth = texture(shadowMap, vec3(projCoords.xy, currentDepth)).r; 
+
+    // beyond the lights far plane, treat as fully lit
+    if (projCoords.z > 1.0) return 0.0;
+
+    float bias = 0.001;
+    float ref  = projCoords.z - bias;
 
     float shadow = 0.0;
     vec2 texel = 1.0 / vec2(textureSize(shadowMap, 0));
     for (int x = -1; x <= 1; ++x)
         for (int y = -1; y <= 1; ++y) {
-            float d = texture(shadowMap,
-            vec3(
-                projCoords.xy + vec2(x, y) * texel,
-                currentDepth - bias));
-            shadow += (currentDepth - bias) > d ? 1.0 : 0.0;
+            float lit = texture(shadowMap, vec3(projCoords.xy + vec2(x, y) * texel, ref));
+            shadow += 1.0 - lit;
         }
-    shadow /= 9.0;
-
-    return shadow;
-}  
+    return shadow / 9.0;
+}
 
 void main()
 {
@@ -153,7 +146,7 @@ void main()
     vec3  spec = (D * G * Fd) / max(4.0 * NoV * NoL, 1e-4);
     vec3  kdDirect = (vec3(1.0) - Fd) * (1.0 - metallic);
     vec3  diffuseDirect = kdDirect * albedo / PI;
-    vec3  radiance = light.color.rgb;
+    vec3 radiance = light.color.rgb * light.color.w;
 
     // IBL (ambient)
     vec3 Fi = fresnelSchlickRoughness(NoV, f0, roughness);
@@ -173,9 +166,10 @@ void main()
     vec3 ambient = (kD * diffuseIBL + specularIBL) * ao;
 
     // ---- combine ----
+    //TODO: make this a uniform
+    float exposure = 2.9;
     vec3 color = ambient + lo + emissive;
-    color *= light.color.w;
+    color *= exposure;
     color = acesFilm(color);
-    color = pow(color, vec3(1.0 / 2.2));
     outColor = vec4(color, base.a);
 }
