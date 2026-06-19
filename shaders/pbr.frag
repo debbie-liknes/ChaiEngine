@@ -1,111 +1,175 @@
-#version 420 core
+#version 450
 
-const float PI = 3.14159256;
+layout(location = 0) in vec3 vWorldPos;
+layout(location = 1) in vec3 vNormal;
+layout(location = 2) in vec4 vTangent;
+layout(location = 3) in vec2 vUV;
 
-in vec3 v_FragPos;
-in vec3 v_Normal;
-in vec2 v_TexCoord;
-in mat3 v_TBN;
+// set 0 = camera
+layout(set = 0, binding = 0) uniform Camera {
+    mat4 view;
+    mat4 proj;
+    mat4 viewProj;
+    vec3 position;
+} cam;
 
-out vec4 FragColor;
+// set 1 = material
+layout(set = 1, binding = 0) uniform Material {
+    vec4 baseColor;
+    vec4 emissive;
+    float metallic;
+    float roughness;
+    float alphaCutoff;
+    float _pad;
+} mat;
+layout(set = 1, binding = 1) uniform sampler2D baseColorTex;
+layout(set = 1, binding = 2) uniform sampler2D metalRoughTex;
+layout(set = 1, binding = 3) uniform sampler2D normalTex;
+layout(set = 1, binding = 4) uniform sampler2D occlusionTex;
+layout(set = 1, binding = 5) uniform sampler2D emissiveTex;
 
-layout(std140, binding = 0) uniform PerFrameUniforms
+// set 2 = light
+layout(set = 2, binding = 0) uniform Light {
+    vec4 direction; // .xyz = direction
+    vec4 color;     // .rgb = color of light, w = stength
+    mat4 view;
+    mat4 lightSpaceProj;
+} light;
+layout(set = 2, binding = 1) uniform sampler2DShadow shadowMap;
+
+layout(set = 3, binding = 1) uniform samplerCube irradianceMap;
+layout(set = 3, binding = 2) uniform sampler2D brdfLut;
+layout(set = 3, binding = 3) uniform samplerCube prefilterTex;
+int prefilterMipCount = 5;
+
+layout(location = 0) out vec4 outColor;
+
+const float PI = 3.14159265359;
+
+vec3 getNormal()
 {
-    mat4 u_view;
-    mat4 u_projection;
-    mat4 u_invView;
-};
-
-
-struct ShaderLightData {
-    vec4 positionAndType;// xyz = pos/dir, w = type
-    vec4 color;// rgb = color, a = intensity
-    vec4 directionAndRange;// xyz = direction, w = range
-    vec4 spotParams;// x = inner cone, y = outer cone
-};
-
-layout(std140, binding = 2) uniform LightingData {
-    ShaderLightData lights[8];
-    int numLights;
-} u_Lighting;
-
-uniform vec3 u_albedo;
-layout(binding = 1) uniform sampler2D u_albedoMap;
-uniform float u_metallic;
-uniform float u_roughness;
-layout(binding = 2) uniform sampler2D u_metallicRoughnessMap;
-//layout(binding = 3) uniform sampler2D u_roughnessMap;
-layout(binding = 4) uniform sampler2D u_normalMap;
-
-float normalDistGGX(vec3 N, vec3 H, float roughness) {
-    float alpha = roughness * roughness;
-    float alpha2 = alpha * alpha;
-    float NdotH = max(dot(N, H), 0.0);
-    float d = (NdotH * NdotH) * (alpha2 - 1.0) + 1.0;
-    return alpha2 / (PI * d * d);
+    vec3 n = texture(normalTex, vUV).xyz * 2.0 - 1.0;
+    vec3 N = normalize(vNormal);
+    float tlen = length(vTangent.xyz);
+    if (tlen < 1e-4)
+        return N;
+    vec3 T = normalize(vTangent.xyz);
+    vec3 B = cross(N, T) * vTangent.w;
+    return normalize(mat3(T, B, N) * n);
 }
 
-float geometrySchlickGGX(float NdotV, float k) {
-    float d = NdotV * (1.0 - k) + k;
-    return NdotV / d;
-}
-
-float geometrySmith(vec3 N, vec3 V, vec3 L, float k) {
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
-    float g1 = geometrySchlickGGX(NdotV, k);
-    float g2 = geometrySchlickGGX(NdotL, k);
-
-    return g1 * g2;
-}
-
-vec3 fresnelSchlick(float cosTheta, vec3 F0)
+float D_GGX(float NoH, float a)
 {
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+    float a2 = a * a;
+    float d = NoH * NoH * (a2 - 1.0) + 1.0;
+    return a2 / (PI * d * d);
+}
+
+// Smith with Schlick GGX
+float G_Smith(float NoV, float NoL, float roughness)
+{
+    float r = roughness + 1.0;
+    float k = (r * r) / 8.0;
+    float gv = NoV / (NoV * (1.0 - k) + k);
+    float gl = NoL / (NoL * (1.0 - k) + k);
+    return gv * gl;
+}
+
+vec3 F_Schlick(float VoH, vec3 f0)
+{
+    return f0 + (1.0 - f0) * pow(clamp(1.0 - VoH, 0.0, 1.0), 5.0);
+}
+
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+vec3 acesFilm(vec3 x) {
+    const float a = 2.51, b = 0.03, c = 2.43, d = 0.59, e = 0.14;
+    return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+}
+
+//tells us how much of the frament is IN shadow
+float ShadowCalculation(vec4 fragPosLightSpace)
+{
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords.xy = projCoords.xy * 0.5 + 0.5;
+
+    // beyond the lights far plane, treat as fully lit
+    if (projCoords.z > 1.0) return 0.0;
+
+    float bias = 0.001;
+    float ref  = projCoords.z - bias;
+
+    float shadow = 0.0;
+    vec2 texel = 1.0 / vec2(textureSize(shadowMap, 0));
+    for (int x = -1; x <= 1; ++x)
+        for (int y = -1; y <= 1; ++y) {
+            float lit = texture(shadowMap, vec3(projCoords.xy + vec2(x, y) * texel, ref));
+            shadow += 1.0 - lit;
+        }
+    return shadow / 9.0;
 }
 
 void main()
 {
-    // based on this explanation: https://learnopengl.com/PBR/Theory
+    vec4 base = texture(baseColorTex, vUV) * mat.baseColor;
+    if (base.a < mat.alphaCutoff) discard;
+    vec3 albedo = base.rgb;
 
-    vec3 cameraPos = u_invView[3].xyz;
+    vec3 mr = texture(metalRoughTex, vUV).rgb;
+    float metallic  = mr.b * mat.metallic;
+    float roughness = clamp(mr.g * mat.roughness, 0.04, 1.0);
+    float ao        = texture(occlusionTex, vUV).r;
+    vec3 emissive   = texture(emissiveTex, vUV).rgb * mat.emissive.rgb;
 
-    vec3 albedo = texture(u_albedoMap, v_TexCoord).rgb * u_albedo;
-    vec4 mr = texture(u_metallicRoughnessMap, v_TexCoord);
-    float metallic = mr.b * u_metallic;
-    float roughness = mr.g * u_roughness;
+    vec3 N = getNormal();
+    if (!gl_FrontFacing) N = -N;
+    vec3 V = normalize(cam.position - vWorldPos);
+    vec3 R = reflect(-V, N);
+    vec3 L = normalize(-light.direction.xyz);
+    vec3 H = normalize(V + L);
 
-    //vec3 N = normalize(v_Normal);
-    //vec3 N = normalize(v_TBN[2]);
-    vec3 normalTex = texture(u_normalMap, v_TexCoord).rgb;
-    normalTex = normalTex * 2.0 - 1.0;  // Remap from [0,1] to [-1,1]
-    vec3 N = normalize(v_TBN * normalTex);
-    vec3 V = normalize(cameraPos - v_FragPos);
+    float NoV = max(dot(N, V), 1e-4);
+    float NoL = max(dot(N, L), 0.0);
+    float NoH = max(dot(N, H), 0.0);
+    float VoH = max(dot(V, H), 0.0);
 
-    //vec3 ambient = vec3(0.03) * albedo;
-    vec3 ambient = albedo / PI;
-    vec3 F0 = mix(vec3(0.04), albedo, metallic);
+    vec3  f0 = mix(vec3(0.04), albedo, metallic);
+    float a  = roughness * roughness;
 
-    vec3 Lo = vec3(0.0);
-    for(int i = 0; i < u_Lighting.numLights; i++) {
-        vec3 L = normalize(u_Lighting.lights[i].positionAndType.xyz - v_FragPos);
-        vec3 H = normalize(V + L);
-        
-        float NdotL = max(dot(N, L), 0.0);
-        float NdotV = max(dot(N, V), 0.0);
-        float HdotV = max(dot(H, V), 0.0);
-        
-        float D = normalDistGGX(N, H, roughness);
-        float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
-        float G = geometrySmith(N, V, L, k);
-        vec3 F = fresnelSchlick(HdotV, F0);
-        
-        vec3 specular = (D * G * F) / max(4.0 * NdotV * NdotL, 0.001);
-        vec3 kD = (1.0 - F) * (1.0 - metallic);
-        vec3 diffuse = kD * albedo / PI;
-        
-        vec3 radiance = u_Lighting.lights[i].color.rgb * u_Lighting.lights[i].color.a;
-        Lo += (diffuse + specular) * radiance * NdotL;
-    }
-    FragColor = vec4(ambient + Lo, 1.0);
+    // Cook-Torrance
+    float D = D_GGX(NoH, a);
+    float G = G_Smith(NoV, NoL, roughness);
+    vec3  Fd = F_Schlick(VoH, f0);
+    vec3  spec = (D * G * Fd) / max(4.0 * NoV * NoL, 1e-4);
+    vec3  kdDirect = (vec3(1.0) - Fd) * (1.0 - metallic);
+    vec3  diffuseDirect = kdDirect * albedo / PI;
+    vec3 radiance = light.color.rgb * light.color.w;
+
+    // IBL (ambient)
+    vec3 Fi = fresnelSchlickRoughness(NoV, f0, roughness);
+    vec3 kD = (vec3(1.0) - Fi) * (1.0 - metallic);
+
+    vec3 irradiance  = texture(irradianceMap, N).rgb;
+    vec3 diffuseIBL  = irradiance * albedo;
+
+    vec3 prefiltered = textureLod(prefilterTex, R, roughness * float(prefilterMipCount - 1)).rgb;
+    vec2 brdf        = texture(brdfLut, vec2(NoV, roughness)).rg;
+    vec3 specularIBL = prefiltered * (Fi * brdf.x + brdf.y);
+
+    vec4 lightPos = light.lightSpaceProj * light.view * vec4(vWorldPos, 1.0);
+    float shadow = ShadowCalculation(lightPos); 
+    //shadows attenuate lo, which is from the light (sun)
+    vec3 lo = (diffuseDirect + spec) * radiance * NoL * (1.0 - shadow);
+    vec3 ambient = (kD * diffuseIBL + specularIBL) * ao;
+
+    // ---- combine ----
+    //TODO: make this a uniform
+    float exposure = 2.9;
+    vec3 color = ambient + lo + emissive;
+    color *= exposure;
+    color = acesFilm(color);
+    outColor = vec4(color, base.a);
 }

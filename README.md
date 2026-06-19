@@ -1,35 +1,64 @@
-﻿# Chai Engine
+# Chai Engine
 
-A modular C++ game engine focused on modern rendering techniques and clean architecture.
+A Vulkan game engine built around a modern, physically-based renderer. Written in C++as a focused study of real-time rendering techniques and engine architecture. In active development
+![sponza-pbr-shadows](images/intel-sponza-vulkan.png)
+![sponza-shadows](images/sponza-closeup-shadows.png)
+![chess](images/abeautifulgame.png)
 
-## Features
+## About
+ 
+ChaiEngine is a personal engine project aimed at building a clean, modern rendering pipeline from the ground up on Vulkan. The focus is on a well-factored render hardware interface, a physically-based shading model, image-based lighting, and an asset pipeline that handles resource lifetimes correctly.
+ 
+At the moment, it is **rendering-focused** rather than a general-purpose game engine. See the status and roadmap sections for current and planned features.
 
-**Rendering**
-- Deferred shading pipeline with configurable G-buffer
-- Physically-based rendering (Cook-Torrance BRDF)
-- Multi-light forward rendering support
-- Skybox rendering with cubemap support
+## Status
+ 
+> Honest snapshot of where things are. Implemented features work in the tested scenes below. The roadmap reflects planned work, not promises.
 
-**Asset Pipeline**
-- glTF 2.0 loader (tested with Intel Sponza)
-- Three-tier material system (MaterialAsset → MaterialResource → MaterialInstance)
-- Shader permutation system
+### Implemented
+- **Vulkan backend** behind an interface abstraction layer
+- **glTF 2.0 loading** (via cgltf) meshes, materials, textures, and node hierarchy
+- **PBR metallic-roughness materials** with a Cook-Torrance BRDF
+- **Image-based lighting** diffuse irradiance plus specular IBL (split sum: prefiltered environment map and a BRDF integration LUT)
+- **Shadow mapping** directional shadow maps with 3×3 PCF filtering and depth bias
+- **Skybox / cubemap rendering**
+- **HDR pipeline with ACES filmic tonemapping**
+- **Opaque / transparent pipeline split** with correct alpha blending
+- **Scene layer** transform hierarchy and a component system
+- **Asset system** generational handles, an asset cache, and a deferred-delete graveyard for safe GPU resource teardown
+- **Three-layer asset architecture** cooked files -> CPU-side assets -> GPU resources
+- **Plugin architecture** runtime DLL discovery with a service locator
+- **ChaiMath** a header-only math library with full unit-test coverage
+- Supporting infrastructure: type reflection, a pluggable logging sink (spdlog), and GLFW windowing
 
-**Architecture**
-- Scene hierarchy with GameObjects and components
-- Decoupled rendering backend (OpenGL; Vulkan planned)
-- Event-driven input system
+### Roadmap
+- Cascaded shadow maps
+- Deferred rendering
+- Material instances
+- A 2D UI
+- Audio Engine
+- Physics Engine
 
-## Screenshots
-![sponza-deferred-shading](images/sponza_deferred.jpg)
+
+## Architecture
+ 
+The engine is organized into layers, so the renderer can evolve without the rest of the codebase reaching into Vulkan directly.
+ 
+- **RHI layer** A backend-agnostic interface (enums, resource types, camera data) sitting in front of the Vulkan implementation. Pipelines are renderer-owned and shared. Materials own their texture handles.
+- **Asset pipeline** Three stages (cooked -> CPU asset -> GPU resource) with clear ownership transfer. Resource lifetimes are managed through generational handles and a deferred-delete graveyard, which keeps GPU teardown ordering correct.
+- **Scene layer** A transform hierarchy and component system that produces render data through an `update` / `extract` contract
+- **Plugin system** A service-locator with runtime DLL discovery, so subsystems register themselves rather than being hard-wired.
+- **ChaiMath** A standalone, header-only math library, unit-tested.
+
+## Tech stack
+ 
+- **Language:** C++20
+- **Graphics API:** Vulkan
+- **Key dependencies:** Vulkan SDK, Vulkan Memory Allocator (VMA), GLFW, cgltf, spdlog
+- **Build system:** CMake
+- **Platform:** Windows (linux support planned)
 
 ## Building
-
-### Prerequisites
-- CMake
-- MSVC (Windows only currently)
-- Visual Studio
-- [FMOD](https://www.fmod.com/) with `FMOD_HOME` environment variable set
 
 ### Steps
 ```bash
@@ -41,10 +70,6 @@ cmake ..
 start Chai.sln
 ```
 
-## Roadmap
-- Vulkan backend
-- Screen-space ambient occlusion
-- Coordinate system abstraction for non-Euclidean spaces
-
-## Dependencies
-GLFW, stb_image, glad, FMOD
+## Tested scenes
+ 
+Currently tested against **Intel Sponza** and a **VirtualCity** scene to validate asset loading, material handling, and the transparent/opaque split

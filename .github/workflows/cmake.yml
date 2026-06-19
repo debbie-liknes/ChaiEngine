@@ -1,33 +1,34 @@
 name: Build and Test
-
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
 jobs:
   build-windows-vs2022:
     name: Windows (VS2022)
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-      - name: Initialize submodules
-        uses: snickerbockers/submodules-init@v4
+      - name: Install Vulkan SDK
+        uses: jakoch/install-vulkan-sdk-action@v1
+        with:
+          vulkan_version: latest
+          install_runtime: true
+          cache: true
 
       - name: Set up CMake
         uses: jwlawson/actions-setup-cmake@v1
-
-      - name: Create build directory
-        run: mkdir -p build
 
       - name: Configure CMake
         run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 
       - name: Build
-        run: cmake --build build
+        run: cmake --build build --config Debug
 
       - name: Run tests via CTest
         run: ctest --test-dir build --output-on-failure -C Debug

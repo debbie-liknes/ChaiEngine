@@ -1,6 +1,8 @@
 # External submodule libraries
 
-add_subdirectory(glm)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(glfw)
 
 add_library(glad STATIC ${CMAKE_CURRENT_SOURCE_DIR}/glad/src/gl.c)
@@ -10,7 +12,6 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(googletest)
 
 set_target_properties(glad PROPERTIES FOLDER "external")
-set_target_properties(glm PROPERTIES FOLDER "external")
 set_target_properties(glfw PROPERTIES FOLDER "external/GLFW3")
 set_target_properties(uninstall PROPERTIES FOLDER "external/GLFW3")
 set_target_properties(update_mappings PROPERTIES FOLDER "external/GLFW3")
