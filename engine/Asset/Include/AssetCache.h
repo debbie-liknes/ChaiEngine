@@ -264,10 +264,10 @@ namespace chai
     void AssetCache<T>::tick()
     {
         const int kUploadsPerFrame = 16;
-        int budget = kUploadsPerFrame; // member or constant, e.g. 16
+        int budget = kUploadsPerFrame;
         while (budget > 0 && !queued_.empty()) {
             HandleType h = queued_.front();
-            queued_.erase(queued_.begin()); // or pop from a deque front
+            queued_.erase(queued_.begin()); // pop from front
             if (slots_.get(h)) {            // still live?
                 startUpload(h);
                 --budget;

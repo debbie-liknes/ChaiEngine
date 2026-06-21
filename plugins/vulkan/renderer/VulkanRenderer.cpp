@@ -234,7 +234,8 @@ namespace chai::gfx
         // we require the default textures to be ready
         ctx_.uploadContext().waitFor(ctx_.uploadContext().lastSubmittedValue());
 
-        //I dont like that theres no way out
+        //TODO: I dont like that theres no way out. Need to rethink how to default bind the environment
+        //Or if default binding (to a black skybox cube) makes sense. 
         while (!texCache_->isReady(cube)) {
             texCache_->tick();
         }
