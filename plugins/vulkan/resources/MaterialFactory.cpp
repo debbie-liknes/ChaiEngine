@@ -66,6 +66,22 @@ namespace chai::gfx
         out.alphaMode = asset.alphaMode;
         out.doubleSided = asset.doubleSided;
 
+        auto pendingSlot = [&](Handle<Texture> h) {
+            return h.valid() && textureCache_->resource(h) == nullptr; // valid handle, not ready
+        };
+
+        out.pendingMask = 0;
+        if (pendingSlot(asset.baseColor))
+            out.pendingMask |= 1u << 0;
+        if (pendingSlot(asset.metallicRoughness))
+            out.pendingMask |= 1u << 1;
+        if (pendingSlot(asset.normal))
+            out.pendingMask |= 1u << 2;
+        if (pendingSlot(asset.occlusion))
+            out.pendingMask |= 1u << 3;
+        if (pendingSlot(asset.emissive))
+            out.pendingMask |= 1u << 4;
+
         const GpuTexture& base = resolveOrDefault(asset.baseColor, defaultWhite_);
         const GpuTexture& mr = resolveOrDefault(asset.metallicRoughness, defaultWhite_);
         const GpuTexture& normal = resolveOrDefault(asset.normal, defaultNormal_);
@@ -103,7 +119,7 @@ namespace chai::gfx
         }
         vkUpdateDescriptorSets(device, 6, writes, 0, nullptr);
 
-        return LoadState::Ready;
+        return out.pendingMask == 0 ? LoadState::Ready : LoadState::Uploading;
     }
 
     void MaterialFactory::destroyResource(gfx::GpuMaterial& m) noexcept
@@ -131,8 +147,74 @@ namespace chai::gfx
     const GpuTexture& MaterialFactory::resolveOrDefault(Handle<Texture> tex,
                                                         Handle<Texture> fallback)
     {
-        if (const GpuTexture* t = textureCache_->resource(tex))
+        const GpuTexture* t = textureCache_->resource(tex);
+        if (t && textureCache_->isReady(tex))
             return *t;
         return *textureCache_->resource(fallback);
+    }
+
+    LoadState MaterialFactory::pollState(const GpuMaterial& mat)
+    {
+        using enum chai::LoadState;
+        if (mat.pendingMask == 0)
+            return Ready; // already resolved, nothing to do
+
+        VkDevice device = ctx_->device();
+
+        // gather the slots that are pending AND now ready
+        struct Slot {
+            uint32_t bit;
+            Handle<Texture> handle;
+        };
+        const Slot slots[5] = {
+            {1u << 0, mat.baseColor},
+            {1u << 1, mat.metallicRoughness},
+            {1u << 2, mat.normal},
+            {1u << 3, mat.occlusion},
+            {1u << 4, mat.emissive},
+        };
+
+        // figure out which pending slots have a ready texture now
+        uint32_t nowReady = 0;
+        const GpuTexture* ready[5] = {};
+        for (int i = 0; i < 5; ++i) {
+            if (!(mat.pendingMask & slots[i].bit))
+                continue; // not pending
+            const GpuTexture* t = textureCache_->resource(slots[i].handle);
+            if (t) {
+                nowReady |= slots[i].bit;
+                ready[i] = t;
+            }
+        }
+
+        if (nowReady == 0)
+            return Uploading; // still waiting, nothing to rewrite this tick
+
+        // TODO: Right now, this only happens on application startup, but dont keep this for production
+        vkDeviceWaitIdle(device);
+
+        // rewrite only the bindings that just became ready
+        VkDescriptorImageInfo imgInfo[5]{};
+        VkWriteDescriptorSet writes[5]{};
+        uint32_t n = 0;
+        for (int i = 0; i < 5; ++i) {
+            if (!(nowReady & slots[i].bit))
+                continue;
+            imgInfo[n].imageView = ready[i]->view;
+            imgInfo[n].sampler = ready[i]->sampler;
+            imgInfo[n].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+            writes[n] = VkWriteDescriptorSet{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+            writes[n].dstSet = mat.set;
+            writes[n].dstBinding = uint32_t(i + 1);
+            writes[n].descriptorCount = 1;
+            writes[n].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            writes[n].pImageInfo = &imgInfo[n];
+            ++n;
+        }
+        vkUpdateDescriptorSets(device, n, writes, 0, nullptr);
+
+        mat.pendingMask &= ~nowReady; // clear the slots we just resolved
+        return mat.pendingMask == 0 ? Ready : Uploading;
     }
 } // namespace chai::gfx

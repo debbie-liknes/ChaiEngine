@@ -15,4 +15,9 @@ namespace chai::gfx
      * @brief Creates a 1x1 normal pixel
      */
     TextureAsset createDefaultNormalTexture();
+
+    /**
+     * @brief Creates a black cube texture
+     */
+    TextureAsset createDefaultCubeTexture();
 }

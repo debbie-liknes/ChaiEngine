@@ -47,6 +47,7 @@ namespace chai::gfx
         setupQueues();
         setupAllocator();
         setupImmediate();
+        uploadCtx_.init(device_, graphicsQueue_, graphicsFamily_);
     }
 
     VulkanContext::~VulkanContext()
@@ -60,6 +61,7 @@ namespace chai::gfx
         vkDestroyDescriptorPool(device_, descriptorPool_, nullptr);
         vkDestroyFence(device_, immediateFence_, nullptr);
         vmaDestroyAllocator(allocator_);
+        uploadCtx_.shutdown();
         vkDestroyDevice(device_, nullptr);
         vkDestroySurfaceKHR(instance_, surface_, nullptr);
         vkb::destroy_debug_utils_messenger(instance_, debugMessenger_);
@@ -118,6 +120,7 @@ namespace chai::gfx
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES};
         features12.bufferDeviceAddress = true;
         features12.descriptorIndexing = true;
+        features12.timelineSemaphore = true;
 
         VkPhysicalDeviceFeatures required{};
         required.samplerAnisotropy = VK_TRUE;
@@ -171,8 +174,7 @@ namespace chai::gfx
     {
         VkCommandPoolCreateInfo poolInfo{VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
         poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-        poolInfo.queueFamilyIndex =
-            graphicsFamily_; // or a dedicated transfer family if you have one
+        poolInfo.queueFamilyIndex = graphicsFamily_;
         vkCreateCommandPool(device_, &poolInfo, nullptr, &immediatePool_);
 
         VkCommandBufferAllocateInfo cmdInfo{VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};

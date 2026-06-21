@@ -25,6 +25,8 @@ namespace chai::gfx
         Buffer vertexBuffer;
         Buffer indexBuffer;
         uint32_t indexCount = 0;
+
+        bool operator==(const GpuMesh&) const = default;
     };
 } // namespace chai::gfx
 

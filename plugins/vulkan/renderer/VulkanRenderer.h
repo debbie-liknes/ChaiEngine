@@ -17,6 +17,8 @@
 #include <vulkan/vulkan.h>
 #include <array>
 #include <cstdint>
+#include "../resources/TextureRegistry.h"
+#include <Scene/ModelRegistry.h>
 
 namespace chai
 {
@@ -35,6 +37,7 @@ namespace chai::gfx
                        std::shared_ptr<AssetCache<Mesh>> meshCache,
                        std::shared_ptr<AssetCache<Texture>> texCache,
                        std::shared_ptr<AssetCache<Material>> matCache,
+                       std::shared_ptr<ModelRegistry> texReg,
                        VulkanContext& context);
         ~VulkanRenderer() override;
 
@@ -60,10 +63,6 @@ namespace chai::gfx
             void* lightMapped = nullptr;
             VkBuffer lightBuffer = VK_NULL_HANDLE;
             VmaAllocation lightAlloc = VK_NULL_HANDLE;
-
-            //TODO: this doesnt belong as a per frame item. its global
-            VkDescriptorSet skyboxSet = VK_NULL_HANDLE;
-            Handle<Texture> skyboxCube;
 
             RenderTarget shadowTarget{};
         };
@@ -107,6 +106,7 @@ namespace chai::gfx
         std::shared_ptr<AssetCache<Mesh>> meshCache_;
         std::shared_ptr<AssetCache<Texture>> texCache_;
         std::shared_ptr<AssetCache<Material>> materialCache_;
+        std::shared_ptr<ModelRegistry> modelReg_;
 
         //pipelines and layouts
         VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
@@ -135,6 +135,8 @@ namespace chai::gfx
         VkPipeline shadowPipeline_ = VK_NULL_HANDLE;
         VkPipelineLayout shadowLayout_ = VK_NULL_HANDLE;
 
+        VkDescriptorSet skyboxSet_ = VK_NULL_HANDLE;
+        Handle<Texture> skyboxCube_;
     };
 
     //TODO: dont leave this here forever

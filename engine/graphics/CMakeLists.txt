@@ -1,6 +1,7 @@
 project(Graphics)
 
 set(${PROJECT_NAME}_headers
+        include/Assets/DecodePool.h
         include/Assets/DefaultTextures.h
         include/Assets/IMaterialRegistry.h
         include/Assets/IMeshRegistry.h
@@ -26,6 +27,7 @@ set(${PROJECT_NAME}_headers
 )
 
 set(${PROJECT_NAME}_source
+        source/DecodePool.cpp
         source/DefaultTextures.cpp
         source/PrimitiveMeshes.cpp
 )

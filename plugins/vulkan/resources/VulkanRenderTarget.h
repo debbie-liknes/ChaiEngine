@@ -6,23 +6,6 @@
 
 namespace chai::gfx
 {
-    // struct RenderTarget2D {
-    //     GpuTexture tex;
-    //     VkImageView view{};
-    // };
-
-    // struct CubeRenderTarget {
-    //     GpuTexture cube;
-    //     VkImageView faceViews[6]{};
-    // };
-
-    // struct PrefilterTarget {
-    //     GpuTexture cube;
-    //     std::vector<VkImageView> faceMipViews;
-    //     uint32_t baseSize = 0;
-    //     uint32_t mipCount = 0;
-    // };
-
     struct RenderTarget {
         VkImage image = VK_NULL_HANDLE;
         VmaAllocation alloc = VK_NULL_HANDLE;
@@ -35,7 +18,6 @@ namespace chai::gfx
         VkFormat format = VK_FORMAT_UNDEFINED;
         bool isCube = false;
 
-        // attachment view for a given (mip, face); matches your prefilter indexing
         VkImageView renderView(uint32_t mip = 0, uint32_t face = 0) const
         {
             return renderViews[mip * layerCount + face];

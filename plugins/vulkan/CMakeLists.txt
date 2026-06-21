@@ -19,6 +19,7 @@ set(${PROJECT_NAME}_headers
         resources/MeshRegistry.h
         resources/TextureFactory.h
         resources/TextureRegistry.h
+        resources/UploadContext.h
         resources/VulkanTexture.h
         resources/VulkanVertex.h
         resources/VulkanRenderTarget.h
@@ -38,6 +39,7 @@ set(${PROJECT_NAME}_source
         resources/MaterialRegistry.cpp
         resources/MeshFactory.cpp
         resources/MeshRegistry.cpp
+        resources/UploadContext.cpp
         resources/TextureFactory.cpp
         resources/TextureRegistry.cpp
         resources/VulkanRenderTarget.cpp

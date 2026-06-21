@@ -144,6 +144,7 @@ namespace chai
         SlotMap<T, Record> slots_;
         std::unordered_map<std::uint64_t, HandleType> byId_;
         std::vector<HandleType> uploading_;
+        std::vector<HandleType> queued_;
     };
 
     ///////////////////////////////// implementation below /////////////////////////////////
@@ -182,6 +183,11 @@ namespace chai
     {
         if (auto it = byId_.find(id.value); it != byId_.end()) {
             if (Record* rec = slots_.get(it->second)) {
+                //we reserved the slot before but didnt fill it, update and return
+                if (rec->state == LoadState::Loading) {
+                    rec->asset = std::move(asset);
+                    queued_.push_back(it->second);
+                }
                 rec->refCount++;
                 return it->second;
             }
@@ -196,7 +202,8 @@ namespace chai
 
         HandleType h = slots_.insert(std::move(rec));
         byId_.emplace(id.value, h);
-        startUpload(h); // skip loadAsset, go straight to createResource
+        //startUpload(h); // skip loadAsset, go straight to createResource
+        queued_.push_back(h);
         return h;
     }
 
@@ -256,6 +263,17 @@ namespace chai
     template <typename T>
     void AssetCache<T>::tick()
     {
+        const int kUploadsPerFrame = 16;
+        int budget = kUploadsPerFrame; // member or constant, e.g. 16
+        while (budget > 0 && !queued_.empty()) {
+            HandleType h = queued_.front();
+            queued_.erase(queued_.begin()); // or pop from a deque front
+            if (slots_.get(h)) {            // still live?
+                startUpload(h);
+                --budget;
+            }
+        }
+
         // Check all pending uploads
         std::size_t w = 0;
         for (std::size_t r = 0; r < uploading_.size(); ++r) {

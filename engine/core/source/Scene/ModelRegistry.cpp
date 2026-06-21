@@ -11,9 +11,9 @@ namespace chai::gfx
         ITextureRegistry& textures,
         IMaterialRegistry& materials,
         ServiceLocator* locator)
-        : meshes_(meshes), textures_(textures), locator_(locator), materials_(materials)
+        : meshes_(meshes), textures_(textures), materials_(materials), locator_(locator),
+          pool_(locator_->resolve<ITextureLoader>(), 8)
     {
-
     }
 
     ModelRegistry::~ModelRegistry()
@@ -192,16 +192,26 @@ namespace chai::gfx
         }
 
         TextureFormat format = srgb ? TextureFormat::RGBA8_SRGB : TextureFormat::RGBA8_UNORM;
-        auto decoded = loader->decode(img.bytes, format);
-        if (!decoded) {
-            CHAI_LOG_ERROR("ModelRegistry: failed to decode embedded image {}", idx);
-            return {};
-        }
-
-        decoded->format = format;
-
         AssetId texId = subId(modelId, "img:" + std::to_string(idx) + (srgb ? ":srgb" : ":lin"));
-        return textures_.ingest(texId, std::move(*decoded));
+
+        Handle<Texture> h = textures_.reserve(texId);
+        pool_.enqueue({texId, img.bytes, format});
+
+        return h;
     }
 
+    void ModelRegistry::tick()
+    {
+        //collect decodes from the worker threads
+        auto results = pool_.collect();
+        if (!results.empty()) {
+            for (const DecodeResult& r : results) {
+                if (!r.jobSucceeded) {
+                    CHAI_LOG_ERROR("Failed to decode image.");
+                    continue;
+                }
+                textures_.ingest(r.id, std::move(r.asset));
+            }
+        }
+    }
 }

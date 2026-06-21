@@ -19,6 +19,8 @@ namespace chai::gfx
 
         bool valid() const { return handle != VK_NULL_HANDLE; }
         void* mapped() const { return info.pMappedData; }
+
+        bool operator==(const Buffer&) const = default;
     };
 
     /**

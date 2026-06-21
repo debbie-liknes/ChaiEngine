@@ -27,4 +27,24 @@ namespace chai::gfx
 
         return texture;
     }
+
+    TextureAsset createDefaultCubeTexture()
+    {
+        TextureAsset texture;
+        texture.width = 1;
+        texture.height = 1;
+        texture.channels = 4;
+        texture.bytesPerChannel = 1;
+        texture.pixels = {0, 0, 0, 255,
+                          0, 0, 0, 255,
+                          0, 0, 0, 255,
+                          0, 0, 0, 255,
+                          0, 0, 0, 255,
+                          0, 0, 0, 255};
+        texture.isCube = true;
+        texture.layerCount = 6;
+        texture.format = TextureFormat::RGBA8_SRGB;
+
+        return texture;
+    }
 }

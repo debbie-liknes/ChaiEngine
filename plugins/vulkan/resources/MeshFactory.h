@@ -30,7 +30,17 @@ namespace chai::gfx
         void destroyResource(GpuMesh& res) noexcept override;
         bool discardAssetAfterUpload() const noexcept override;
 
+        LoadState pollState(const GpuMesh&) override;
+
     private:
+
+        struct PendingUpload {
+            GpuMesh mesh;
+            Buffer buff;
+            uint64_t value;
+        };
+        std::vector<PendingUpload> pending_;
+
         VulkanContext& ctx_;
         VmaAllocator allocator_;
     };
