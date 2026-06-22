@@ -229,7 +229,7 @@ namespace chai
         // Last release. free the slot and GPU resource
         byId_.erase(rec->id.value);
         destroyResourceDeferred(
-            std::move(rec->resource)); // safe way to destroy even mid-upload resources
+            std::move(rec->resource)); // safe way to destroy mid uplaod
         slots_.erase(h);
     }
 
