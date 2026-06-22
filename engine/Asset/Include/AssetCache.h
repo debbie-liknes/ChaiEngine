@@ -34,10 +34,10 @@ namespace chai
         using Factory = ResourceFactory<T>;
 
         /**
-        * @brief Creates an asset cache using the provided factory and delete queue.
-        * 
-        * The factory and delete queue must outlive the cache.
-        */
+         * @brief Creates an asset cache using the provided factory and delete queue.
+         *
+         * The factory and delete queue must outlive the cache.
+         */
         AssetCache(Factory& factory, DeferredDeleteQueue& graveyard) noexcept;
 
         AssetCache(const AssetCache&) = delete;
@@ -151,7 +151,8 @@ namespace chai
     template <typename T>
     AssetCache<T>::AssetCache(Factory& factory, DeferredDeleteQueue& graveyard) noexcept
         : factory_(&factory), graveyard_(&graveyard)
-    {}
+    {
+    }
 
     template <typename T>
     auto AssetCache<T>::acquire(AssetId id) -> HandleType
@@ -163,7 +164,7 @@ namespace chai
                 rec->refCount++;
                 return it->second;
             }
-            //stale 
+            // stale
             byId_.erase(it);
         }
 
@@ -183,12 +184,12 @@ namespace chai
     {
         if (auto it = byId_.find(id.value); it != byId_.end()) {
             if (Record* rec = slots_.get(it->second)) {
-                //we reserved the slot before but didnt fill it, update and return
+                // fulfillment. do NOT touch refCount
                 if (rec->state == LoadState::Loading) {
                     rec->asset = std::move(asset);
+                    rec->state = LoadState::Queued;
                     queued_.push_back(it->second);
                 }
-                rec->refCount++;
                 return it->second;
             }
             byId_.erase(it);
@@ -197,12 +198,11 @@ namespace chai
         Record rec{};
         rec.id = id;
         rec.refCount = 1;
-        rec.state = LoadState::Loading;
-        rec.asset = std::move(asset); // we already have the CPU data
+        rec.state = LoadState::Queued;
+        rec.asset = std::move(asset);
 
         HandleType h = slots_.insert(std::move(rec));
         byId_.emplace(id.value, h);
-        //startUpload(h); // skip loadAsset, go straight to createResource
         queued_.push_back(h);
         return h;
     }
@@ -228,7 +228,8 @@ namespace chai
 
         // Last release. free the slot and GPU resource
         byId_.erase(rec->id.value);
-        destroyResourceDeferred(std::move(rec->resource)); // safe way to destroy even mid-upload resources
+        destroyResourceDeferred(
+            std::move(rec->resource)); // safe way to destroy even mid-upload resources
         slots_.erase(h);
     }
 
@@ -267,14 +268,14 @@ namespace chai
         int budget = kUploadsPerFrame;
         while (budget > 0 && !queued_.empty()) {
             HandleType h = queued_.front();
-            queued_.erase(queued_.begin()); // pop from front
+            queued_.erase(queued_.begin());
             if (slots_.get(h)) {            // still live?
-                startUpload(h);
+                startUpload(h); // Queued -> Uploading | Ready | Failed
                 --budget;
             }
         }
 
-        // Check all pending uploads
+        //process uploading
         std::size_t w = 0;
         for (std::size_t r = 0; r < uploading_.size(); ++r) {
             HandleType h = uploading_[r];
@@ -284,9 +285,9 @@ namespace chai
 
             LoadState s = factory_->pollState(rec->resource);
             if (s == LoadState::Uploading) {
-                uploading_[w++] = h; // keep pending uploads in the list
+                uploading_[w++] = h;
             } else {
-                promoteReady(*rec, s); // Promote if ready
+                promoteReady(*rec, s);
             }
         }
         uploading_.resize(w);
@@ -354,5 +355,6 @@ namespace chai
         slots_.clear();
         byId_.clear();
         uploading_.clear();
+        queued_.clear();
     }
 } // namespace chai

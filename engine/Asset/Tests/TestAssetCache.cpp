@@ -47,6 +47,8 @@ namespace chai
         auto h = cache.ingest(idA(), asset);
 
         EXPECT_TRUE(h.valid());
+        EXPECT_TRUE(!cache.isReady(h));
+        cache.tick();
         EXPECT_TRUE(cache.isReady(h));
         EXPECT_NE(cache.resource(h), nullptr);
     }
@@ -100,11 +102,11 @@ namespace chai
 
         EXPECT_CALL(factory, createResource(_, _)).WillOnce(Return(LoadState::Uploading));
 
-        EXPECT_CALL(factory, pollState(_)).WillOnce(Return(LoadState::Ready));
+        auto handle = cache.acquire(idA());
+        EXPECT_EQ(cache.state(handle), LoadState::Loading);
 
         auto h = cache.ingest(idA(), asset);
-
-        EXPECT_EQ(cache.state(h), LoadState::Uploading);
+        EXPECT_EQ(cache.state(h), LoadState::Queued);
 
         cache.tick();
 
@@ -118,7 +120,7 @@ namespace chai
         EXPECT_CALL(factory, createResource(_, _)).WillOnce(Return(LoadState::Failed));
 
         auto h = cache.ingest(idA(), asset);
-
+        cache.tick();
         EXPECT_EQ(cache.state(h), LoadState::Failed);
     }
 
