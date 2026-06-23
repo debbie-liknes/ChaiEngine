@@ -77,6 +77,9 @@ namespace chai::gfx
 
     Handle<Texture> TextureRegistry::load(AssetId id, const std::filesystem::path& path) 
     {
+        if (Handle<Texture> tex = cache_->acquire(id); tex.valid())
+            return tex;
+
         auto bytes = readFileBytes(path);
         if (bytes.empty()) {
             return {};
@@ -102,5 +105,15 @@ namespace chai::gfx
     void TextureRegistry::release(Handle<Texture> h) 
     {
         cache_->release(h);
+    }
+
+    Handle<Texture> TextureRegistry::get(AssetId id)
+    {
+        return cache_->acquire(id);
+    }
+
+    Handle<Texture> TextureRegistry::reserve(AssetId id)
+    {
+        return cache_->acquire(id);
     }
 }

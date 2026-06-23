@@ -36,7 +36,17 @@ namespace chai::gfx
         void destroyResource(gfx::GpuTexture& res) noexcept override;
         bool discardAssetAfterUpload() const noexcept override;
 
+        LoadState pollState(const gfx::GpuTexture&) override;
+
     private:
         VulkanContext* ctx_ = nullptr;
+
+        struct PendingUpload {
+            GpuTexture tex;
+            uint64_t value;
+            VmaAllocation alloc;
+            VkBuffer staging;
+        };
+        std::vector<PendingUpload> pending_;
     };
 } // namespace chai::gfx

@@ -39,6 +39,8 @@ namespace chai::gfx
         void destroyResource(gfx::GpuMaterial& m) noexcept override;
         bool discardAssetAfterUpload() const noexcept override;
 
+        LoadState pollState(const GpuMaterial&) override;
+
     private:
         const GpuTexture& resolveOrDefault(Handle<Texture> tex, Handle<Texture> fallback);
 

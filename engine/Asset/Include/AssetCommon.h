@@ -14,11 +14,12 @@ namespace chai
      * @brief Where a slot is in its load lifecycle. 
      */
     enum class LoadState : std::uint8_t {
-        Empty,
-        Loading,
-        Uploading,
-        Ready,
-        Failed
+        Empty,      //Reserve for invalid handle
+        Loading,    //acquired slot, but no cpu bytes yet
+        Queued,     //cpu bytes ingested, queued for upload
+        Uploading,  //waiting on createResource
+        Ready,      //ready to use
+        Failed      //something went wrong
     };
 
     /**

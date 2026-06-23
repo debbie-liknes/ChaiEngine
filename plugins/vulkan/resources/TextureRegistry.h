@@ -28,11 +28,14 @@ namespace chai::gfx
 
         std::shared_ptr<AssetCache<Texture>> cache();
 
+        Handle<Texture> get(AssetId id) override;
         Handle<Texture> ingest(AssetId id, TextureAsset asset) override;
         Handle<Texture> loadCubemap(AssetId id,
                                     const std::array<std::filesystem::path, 6>& files) override;
         Handle<Texture> load(AssetId id, const std::filesystem::path& path) override;
         void release(Handle<Texture> h) override;
+        Handle<Texture> reserve(AssetId id) override;
+
 
     private:
         std::shared_ptr<AssetCache<Texture>> cache_;

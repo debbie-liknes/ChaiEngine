@@ -49,17 +49,16 @@ namespace chai::gfx
 
         vmaFlushAllocation(allocator_, staging.allocation, 0, VK_WHOLE_SIZE);
 
-        // immediately submitting everything forever is not a good idea
-        immediateSubmit(ctx_, [&](VkCommandBuffer cmd) {
+        uint64_t value = ctx_.uploadContext().submit([&](VkCommandBuffer cmd) {
             VkBufferCopy vb{0, 0, vbSize};
             VkBufferCopy ib{vbSize, 0, ibSize};
             vkCmdCopyBuffer(cmd, staging.handle, out.vertexBuffer.handle, 1, &vb);
             vkCmdCopyBuffer(cmd, staging.handle, out.indexBuffer.handle, 1, &ib);
         });
 
-        // we did the immediate submissions,s o we're good
-        destroyBufferImmediate(allocator_, staging);
-        return LoadState::Ready; // already done
+        pending_.emplace_back(out, staging, value);
+
+        return LoadState::Uploading;
     }
 
     void MeshFactory::destroyResource(GpuMesh& res) noexcept 
@@ -72,5 +71,27 @@ namespace chai::gfx
     bool MeshFactory::discardAssetAfterUpload() const noexcept 
     {
         return true;
+    }
+
+    LoadState MeshFactory::pollState(const GpuMesh& mesh)
+    {
+        using enum chai::LoadState;
+        auto it = std::find_if(
+            pending_.begin(), pending_.end(), [&](const MeshFactory::PendingUpload& upload) {
+                return upload.mesh.vertexBuffer.handle == mesh.vertexBuffer.handle;
+            });
+
+        if (it != pending_.end()) {
+            if (uint64_t completed = ctx_.uploadContext().completedValue();
+                it->value <= completed) {
+                // we completed the upload to the gpu
+                destroyBufferImmediate(allocator_, it->buff);
+                pending_.erase(it);
+                return Ready;
+            }
+            return Uploading;
+        }
+
+        return Failed;
     }
 }

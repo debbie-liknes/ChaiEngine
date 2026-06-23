@@ -14,6 +14,10 @@ namespace chai::gfx
         factory_ =
             std::make_unique<MaterialFactory>(&ctx, texCache_, defaultWhite_, defaultNormal_);
         cache_ = std::make_shared<AssetCache<Material>>(*factory_, graveyard);
+
+        //we require the deafult textures to be ready
+        ctx.uploadContext().waitFor(ctx.uploadContext().lastSubmittedValue());
+        texCache_->tick();
     }
 
     Handle<Material> MaterialRegistry::ingest(AssetId id, MaterialAsset asset)

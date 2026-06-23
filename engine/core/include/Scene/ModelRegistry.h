@@ -8,6 +8,7 @@
 #include <Assets/ITextureRegistry.h>
 #include <Assets/ModelAsset.h>
 #include <Plugin/ServiceLocator.h>
+#include <Assets/DecodePool.h>
 
 namespace chai::gfx
 {
@@ -30,6 +31,7 @@ namespace chai::gfx
 
         void release(AssetId id) override;
         void releaseAll();
+        void tick();
 
     private:
         struct Loaded {
@@ -47,6 +49,7 @@ namespace chai::gfx
         ITextureRegistry&   textures_;
         IMaterialRegistry&  materials_;
         ServiceLocator*     locator_;
+        DecodePool          pool_;
         std::unordered_map<std::uint64_t, Loaded> loaded_;
     };
 } // namespace chai::gfx

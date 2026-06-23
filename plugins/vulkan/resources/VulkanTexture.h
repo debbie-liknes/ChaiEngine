@@ -15,5 +15,7 @@ namespace chai::gfx
 
         uint32_t width = 0, height = 0;
         VkFormat format = VK_FORMAT_UNDEFINED;
+
+        bool operator==(const GpuTexture&) const = default;
     };
 } // namespace chai::gfx

@@ -26,5 +26,8 @@ namespace chai::gfx
 
         AlphaMode alphaMode = AlphaMode::Opaque;
         bool doubleSided = false;
+
+        //tells us which textures were pending
+        mutable uint32_t pendingMask = 0;
     };
 } // namespace chai::gfx

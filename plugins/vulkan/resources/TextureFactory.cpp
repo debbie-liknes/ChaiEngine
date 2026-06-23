@@ -4,8 +4,7 @@ namespace chai::gfx
 {
     TextureFactory::TextureFactory(VulkanContext* ctx) : ctx_(ctx) {}
 
-    LoadState TextureFactory::createResource(const gfx::TextureAsset& asset,
-                                           gfx::GpuTexture& out) 
+    LoadState TextureFactory::createResource(const gfx::TextureAsset& asset, gfx::GpuTexture& out)
     {
         if (!asset.isValid()) {
             CHAI_LOG_ERROR("Texture asset is invalid. Could not create Texture Resource.");
@@ -80,54 +79,7 @@ namespace chai::gfx
         }
         std::memcpy(stagingInfo.pMappedData, asset.pixels.data(), imageSize);
 
-        // another synchronous point to be removed
         const uint32_t layers = asset.layerCount;
-
-        immediateSubmit(*ctx_, [&](VkCommandBuffer cmd) {
-            imageBarrier(cmd,
-                         out.image,
-                         VK_IMAGE_LAYOUT_UNDEFINED,
-                         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                         VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
-                         0,
-                         VK_PIPELINE_STAGE_2_COPY_BIT,
-                         VK_ACCESS_2_TRANSFER_WRITE_BIT,
-                         VK_IMAGE_ASPECT_COLOR_BIT);
-
-            // one copy region per face
-            std::vector<VkBufferImageCopy> regions(layers);
-            for (uint32_t f = 0; f < layers; ++f) {
-                regions[f].bufferOffset = VkDeviceSize(f) * layerSize;
-                regions[f].bufferRowLength = 0;
-                regions[f].bufferImageHeight = 0;
-                regions[f].imageSubresource = {
-                    VK_IMAGE_ASPECT_COLOR_BIT, 0, f, 1};
-                regions[f].imageExtent = extent;
-            }
-            vkCmdCopyBufferToImage(cmd,
-                                   staging,
-                                   out.image,
-                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                                   layers,
-                                   regions.data());
-
-            if (asset.isCube) {
-                imageBarrier(cmd,
-                             out.image,
-                             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                             VK_PIPELINE_STAGE_2_COPY_BIT,
-                             VK_ACCESS_2_TRANSFER_WRITE_BIT,
-                             VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
-                             VK_ACCESS_2_SHADER_READ_BIT,
-                             VK_IMAGE_ASPECT_COLOR_BIT /*, all layers */);
-            } else {
-                generateMipmaps(
-                    cmd, out.image, int32_t(asset.width), int32_t(asset.height), mipCount);
-            }
-        });
-
-        vmaDestroyBuffer(allocator, staging, stagingAlloc);
 
         VkImageViewCreateInfo viewInfo{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
         viewInfo.image = out.image;
@@ -153,15 +105,64 @@ namespace chai::gfx
         sampInfo.addressModeW = mode;
         sampInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
         sampInfo.minLod = 0.0f;
-        sampInfo.maxLod = static_cast<float>(mipCount);
+        sampInfo.maxLod = static_cast<float>(mipCount - 1);
         sampInfo.anisotropyEnable = VK_TRUE;
         sampInfo.maxAnisotropy = 8.0f;
         vkCreateSampler(device, &sampInfo, nullptr, &out.sampler);
 
-        return LoadState::Ready;
+        uint64_t value = ctx_->uploadContext().submit([&](VkCommandBuffer cmd) {
+            imageBarrier(cmd,
+                         out.image,
+                         VK_IMAGE_LAYOUT_UNDEFINED,
+                         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                         VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
+                         0,
+                         VK_PIPELINE_STAGE_2_COPY_BIT,
+                         VK_ACCESS_2_TRANSFER_WRITE_BIT,
+                         VK_IMAGE_ASPECT_COLOR_BIT,
+                         asset.layerCount,
+                         mipCount);
+
+            // one copy region per face
+            std::vector<VkBufferImageCopy> regions(layers);
+            for (uint32_t f = 0; f < layers; ++f) {
+                regions[f].bufferOffset = VkDeviceSize(f) * layerSize;
+                regions[f].bufferRowLength = 0;
+                regions[f].bufferImageHeight = 0;
+                regions[f].imageSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, f, 1};
+                regions[f].imageExtent = extent;
+            }
+            vkCmdCopyBufferToImage(cmd,
+                                   staging,
+                                   out.image,
+                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                   layers,
+                                   regions.data());
+
+            if (asset.isCube) {
+                imageBarrier(cmd,
+                             out.image,
+                             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                             VK_PIPELINE_STAGE_2_COPY_BIT,
+                             VK_ACCESS_2_TRANSFER_WRITE_BIT,
+                             VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+                             VK_ACCESS_2_SHADER_READ_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             asset.layerCount,
+                             1);
+            } else {
+                generateMipmaps(
+                    cmd, out.image, int32_t(asset.width), int32_t(asset.height), mipCount);
+            }
+        });
+
+        pending_.emplace_back(out, value, stagingAlloc, staging);
+
+        return LoadState::Uploading;
     }
 
-    void TextureFactory::destroyResource(gfx::GpuTexture& res) noexcept 
+    void TextureFactory::destroyResource(gfx::GpuTexture& res) noexcept
     {
         VkDevice device = ctx_->device();
         if (res.sampler)
@@ -172,8 +173,31 @@ namespace chai::gfx
             vmaDestroyImage(ctx_->allocator(), res.image, res.alloc);
     }
 
-    bool TextureFactory::discardAssetAfterUpload() const noexcept 
+    bool TextureFactory::discardAssetAfterUpload() const noexcept
     {
         return true;
     }
-}
+
+    LoadState TextureFactory::pollState(const gfx::GpuTexture& tex)
+    {
+        using enum chai::LoadState;
+        auto it = std::find_if(
+            pending_.begin(), pending_.end(), [&](const TextureFactory::PendingUpload& upload) {
+                return upload.tex == tex;
+            });
+
+        if (it != pending_.end()) {
+            if (uint64_t completed = ctx_->uploadContext().completedValue();
+                it->value <= completed) {
+                // we completed the upload to the gpu
+                vmaDestroyBuffer(ctx_->allocator(), it->staging, it->alloc);
+                pending_.erase(it);
+                return Ready;
+            }
+            return Uploading;
+        }
+
+        return Failed;
+    }
+
+} // namespace chai::gfx

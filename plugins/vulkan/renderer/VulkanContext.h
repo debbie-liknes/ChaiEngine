@@ -7,6 +7,7 @@
 #include "VkBootstrap.h"
 #include <vk_mem_alloc.h>
 #include <Rendering/IRenderer.h>
+#include "../resources/UploadContext.h"
 
 namespace chai
 {
@@ -39,8 +40,8 @@ namespace chai::gfx
         uint32_t graphicsFamily() const { return graphicsFamily_; }
         uint32_t presentFamily() const { return presentFamily_; }
         VmaAllocator allocator() const { return allocator_; }
+        UploadContext& uploadContext() { return uploadCtx_; }
 
-        VkCommandPool immediatePool() { return immediatePool_; }
         VkCommandBuffer immediateCmd() const { return immediateCmd_; }
         VkFence immediateFence() const { return immediateFence_; }
 
@@ -66,6 +67,7 @@ namespace chai::gfx
         VkQueue presentQueue_ = VK_NULL_HANDLE;
         uint32_t graphicsFamily_ = 0;
         uint32_t presentFamily_ = 0;
+        UploadContext uploadCtx_;
 
         VmaAllocator allocator_;
 
@@ -73,7 +75,7 @@ namespace chai::gfx
         VkCommandBuffer immediateCmd_ = VK_NULL_HANDLE;
         VkFence immediateFence_ = VK_NULL_HANDLE;
 
-        //descriptor stuff - may move this later and keep this class pure
+        //descriptor stuff. may move this later and keep this class pure
         VkDescriptorPool descriptorPool_ = VK_NULL_HANDLE;
         VkDescriptorSetLayout cameraSetLayout_ = VK_NULL_HANDLE;
         VkDescriptorSetLayout materialSetLayout_ = VK_NULL_HANDLE;

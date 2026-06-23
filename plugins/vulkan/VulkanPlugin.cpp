@@ -43,10 +43,14 @@ namespace chai::gfx
                 *texFactory_, resources_->graveyard(), &ctx.services);
             matRegistry_ = std::make_shared<MaterialRegistry>(
                 *vulkCtx_, texRegistry_->cache(), resources_->graveyard());
-            renderer_ =
-                std::make_shared<VulkanRenderer>(*window, meshRegistry_->cache(), texRegistry_->cache(), matRegistry_->cache(), *vulkCtx_);
             modelRegistry_ = std::make_shared<ModelRegistry>(
                 *meshRegistry_, *texRegistry_, *matRegistry_, &ctx.services);
+            renderer_ = std::make_shared<VulkanRenderer>(*window,
+                                                         meshRegistry_->cache(),
+                                                         texRegistry_->cache(),
+                                                         matRegistry_->cache(),
+                                                         modelRegistry_,
+                                                         *vulkCtx_);
 
 
             //register services, but make sure to UN-register them on unload
