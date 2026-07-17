@@ -2,16 +2,16 @@
 
 int main()
 {
-    AudioEngine engine;
-    engine.Init();
+    audio::AudioEngine engine;
+    engine.init();
 
-    engine.PlaySound("/path/to/wav", chai::math::Vec3{5, 0, 0});
+    engine.playSound("/path/to/wav", chai::math::Vec3{5, 0, 0});
     while (true)
     {
-        engine.Update();
+        engine.update();
     }
 
-    engine.Shutdown();
+    engine.shutdown();
 
     return 0;
 }
