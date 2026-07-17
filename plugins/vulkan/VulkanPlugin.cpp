@@ -50,7 +50,9 @@ namespace chai::gfx
                                                          texRegistry_->cache(),
                                                          matRegistry_->cache(),
                                                          modelRegistry_,
-                                                         *vulkCtx_);
+                                                         *vulkCtx_,
+                                                         ctx.services);
+            renderer_->initializeUI();
 
 
             //register services, but make sure to UN-register them on unload
@@ -69,6 +71,8 @@ namespace chai::gfx
         {
             if (renderer_)
                 renderer_->waitIdle(); // probably unnecessary here
+
+            renderer_->shutdownUI();
 
             //remove services
             ctx.services.remove<TextureFactory>();

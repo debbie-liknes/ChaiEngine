@@ -30,12 +30,22 @@ namespace chai
         void updateKeyPress(const KeyEvent& key);
         void updateMousePress(const MouseButtonEvent& mouse);
         void updateMouseMove(const MouseMoveEvent& mouse);
+        void updateCharInput(const CharEvent& input);
+
+        void consumeKeyboardEvents() override;
+        void consumeMouseEvents() override;
+
+        const std::vector<unsigned int>& getTypedCharactersThisFrame() const override;
 
     private:
         std::set<Key> keys_;
         std::set<MouseButton> mouseButtons_;
         float mouseX, mouseY;
         float deltaX, deltaY;
+
+        bool keyboardCaptured_ = false;
+        bool mouseCaptured_ = false;
+        std::vector<unsigned int> typedChars_;
 	};
 
     Key toChaiKey(int glfwKey);

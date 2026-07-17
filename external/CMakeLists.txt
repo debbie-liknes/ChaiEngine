@@ -3,6 +3,7 @@
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_LIBRARY_TYPE "SHARED" CACHE STRING "" FORCE)
 add_subdirectory(glfw)
 
 add_library(glad STATIC ${CMAKE_CURRENT_SOURCE_DIR}/glad/src/gl.c)
@@ -19,3 +20,5 @@ set_target_properties(gmock PROPERTIES FOLDER "external/GoogleTest")
 set_target_properties(gmock_main PROPERTIES FOLDER "external/GoogleTest")
 set_target_properties(gtest PROPERTIES FOLDER "external/GoogleTest")
 set_target_properties(gtest_main PROPERTIES FOLDER "external/GoogleTest")
+
+add_subdirectory(imgui)

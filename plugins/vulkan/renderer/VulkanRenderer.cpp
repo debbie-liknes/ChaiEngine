@@ -16,6 +16,10 @@
 #include <Rendering/CameraData.h>
 #include <Window/Window.h>
 #include <numeric>
+#include <imgui.h>
+#include <backends/imgui_impl_vulkan.h>
+#include <backends/imgui_impl_glfw.h>
+#include <Core/IInput.h>
 
 namespace chai::gfx
 {
@@ -29,7 +33,8 @@ namespace chai::gfx
                                    std::shared_ptr<AssetCache<Texture>> texCache,
                                    std::shared_ptr<AssetCache<Material>> matCache,
                                    std::shared_ptr<ModelRegistry> texReg,
-                                   VulkanContext& context)
+                                   VulkanContext& context,
+                                   chai::ServiceLocator& locator)
         : window_(window), ctx_(context),
           swapchain_(ctx_,
                      [&] {
@@ -37,7 +42,8 @@ namespace chai::gfx
                          window.framebufferSize(w, h);
                          return VkExtent2D{uint32_t(w), uint32_t(h)};
                      }()),
-          meshCache_(meshCache), texCache_(texCache), materialCache_(matCache), modelReg_(texReg)
+          locator_(locator), meshCache_(meshCache), texCache_(texCache), materialCache_(matCache),
+          modelReg_(texReg)
     {
         init();
         CHAI_LOG_INFO("VulkanRenderer initialized");
@@ -246,6 +252,69 @@ namespace chai::gfx
         iblBaked_ = true;
     }
 
+    void VulkanRenderer::startFrame()
+    {
+        //sync input to imgui
+        ImGuiIO& io = ImGui::GetIO();
+
+        auto input = locator_.tryResolve<IInput>();
+        if (input) {
+            auto mousePos = input->mousePosition();
+            io.AddMousePosEvent(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y));
+
+            io.AddMouseButtonEvent(ImGuiMouseButton_Left, input->mouseDown(MouseButton::Left));
+            io.AddMouseButtonEvent(ImGuiMouseButton_Right, input->mouseDown(MouseButton::Right));
+            io.AddMouseButtonEvent(ImGuiMouseButton_Middle, input->mouseDown(MouseButton::Middle));
+
+            //TODO: mouse scroll
+
+            io.AddKeyEvent(ImGuiKey_Escape, input->keyDown(Key::Escape));
+            io.AddKeyEvent(ImGuiKey_A, input->keyDown(Key::A));
+            io.AddKeyEvent(ImGuiKey_B, input->keyDown(Key::B));
+            io.AddKeyEvent(ImGuiKey_C, input->keyDown(Key::C));
+            io.AddKeyEvent(ImGuiKey_D, input->keyDown(Key::D));
+            io.AddKeyEvent(ImGuiKey_E, input->keyDown(Key::E));
+            io.AddKeyEvent(ImGuiKey_F, input->keyDown(Key::F));
+            io.AddKeyEvent(ImGuiKey_G, input->keyDown(Key::G));
+            io.AddKeyEvent(ImGuiKey_H, input->keyDown(Key::H));
+            io.AddKeyEvent(ImGuiKey_I, input->keyDown(Key::I));
+            io.AddKeyEvent(ImGuiKey_J, input->keyDown(Key::J));
+            io.AddKeyEvent(ImGuiKey_K, input->keyDown(Key::K));
+            io.AddKeyEvent(ImGuiKey_L, input->keyDown(Key::L));
+            io.AddKeyEvent(ImGuiKey_M, input->keyDown(Key::M));
+            io.AddKeyEvent(ImGuiKey_N, input->keyDown(Key::N));
+            io.AddKeyEvent(ImGuiKey_O, input->keyDown(Key::O));
+            io.AddKeyEvent(ImGuiKey_P, input->keyDown(Key::P));
+            io.AddKeyEvent(ImGuiKey_Q, input->keyDown(Key::Q));
+            io.AddKeyEvent(ImGuiKey_R, input->keyDown(Key::R));
+            io.AddKeyEvent(ImGuiKey_S, input->keyDown(Key::S));
+            io.AddKeyEvent(ImGuiKey_T, input->keyDown(Key::T));
+            io.AddKeyEvent(ImGuiKey_U, input->keyDown(Key::U));
+            io.AddKeyEvent(ImGuiKey_V, input->keyDown(Key::V));
+            io.AddKeyEvent(ImGuiKey_W, input->keyDown(Key::W));
+            io.AddKeyEvent(ImGuiKey_X, input->keyDown(Key::X));
+            io.AddKeyEvent(ImGuiKey_Y, input->keyDown(Key::Y));
+            io.AddKeyEvent(ImGuiKey_Z, input->keyDown(Key::Z));
+            io.AddKeyEvent(ImGuiKey_Backspace, input->keyDown(Key::Backspace));
+
+            for (auto c : input->getTypedCharactersThisFrame())
+                io.AddInputCharacter(c);
+
+            if (io.WantCaptureKeyboard)
+                input->consumeKeyboardEvents();
+
+            if (io.WantCaptureMouse)
+                input->consumeMouseEvents();
+        }
+
+        beginUIFrame();
+    }
+
+    void VulkanRenderer::endFrame() 
+    {
+        //nothing to do for now
+    }
+
     void VulkanRenderer::renderFrame(const FrameRenderData& renderData)
     {
         if (needsResize_)
@@ -260,6 +329,10 @@ namespace chai::gfx
         texCache_->tick();
         materialCache_->tick();
         modelReg_->tick();
+
+        //TODO: move this to the engine and provide interface as service
+        ImGui::ShowDemoWindow();
+        endUIFrame();
 
 
         if (!iblBaked_ || (renderData.environment.skyboxCube != skyboxCube_)) {
@@ -345,6 +418,9 @@ namespace chai::gfx
         vkCmdBeginRendering(cmd, &rendering);
         renderScene(cmd, view, renderData, order);
         vkCmdEndRendering(cmd);
+
+        //Render UI
+        renderUI(cmd, view.colorView);
 
         transitionImage(cmd, view.image, ImageState::ColorAttachment, ImageState::Present);
 
@@ -1076,4 +1152,72 @@ namespace chai::gfx
                      1);
     }
 
+    bool VulkanRenderer::initializeUI()
+    {
+        ImGui::CreateContext();
+        //TODO: not ideal, i dont want glfw here at all
+        ImGui_ImplGlfw_InitForVulkan(static_cast<GLFWwindow*>(window_.nativeHandle()), false);
+
+        const auto format = swapchain_.format();
+
+        ImGui_ImplVulkan_InitInfo initInfo{};
+        initInfo.Instance = ctx_.instance();
+        initInfo.PhysicalDevice = ctx_.physicalDevice();
+        initInfo.Device = ctx_.device();
+        initInfo.QueueFamily = ctx_.graphicsFamily();
+        initInfo.Queue = ctx_.graphicsQueue();
+        initInfo.DescriptorPool = VK_NULL_HANDLE;
+        initInfo.DescriptorPoolSize = 8;
+        initInfo.MinImageCount = kFramesInFlight;
+        initInfo.ImageCount = kFramesInFlight;
+        initInfo.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+        initInfo.UseDynamicRendering = true;
+        initInfo.PipelineInfoMain.PipelineRenderingCreateInfo.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+        initInfo.PipelineInfoMain.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
+        initInfo.PipelineInfoMain.PipelineRenderingCreateInfo.pColorAttachmentFormats = &format;
+        ImGui_ImplVulkan_Init(&initInfo);
+
+        return true;
+    }
+
+    void VulkanRenderer::shutdownUI()
+    {
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+    }
+
+    void VulkanRenderer::beginUIFrame()
+    {
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+    }
+
+    void VulkanRenderer::endUIFrame()
+    {
+        ImGui::Render();
+    }
+
+    void VulkanRenderer::renderUI(VkCommandBuffer cmd, VkImageView imageView)
+    {
+        VkRenderingAttachmentInfo uiColorAttachment{};
+        uiColorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        uiColorAttachment.imageView = imageView; // whatever your accessor is
+        uiColorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        uiColorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+        uiColorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+        VkRenderingInfo uiRenderingInfo{};
+        uiRenderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+        uiRenderingInfo.renderArea = {{0, 0}, swapchain_.extent()};
+        uiRenderingInfo.layerCount = 1;
+        uiRenderingInfo.colorAttachmentCount = 1;
+        uiRenderingInfo.pColorAttachments = &uiColorAttachment;
+
+        vkCmdBeginRendering(cmd, &uiRenderingInfo);
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
+        vkCmdEndRendering(cmd);
+    }
 } // namespace chai::gfx

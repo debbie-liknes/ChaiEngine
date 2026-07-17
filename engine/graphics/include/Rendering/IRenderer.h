@@ -24,6 +24,16 @@ namespace chai
             virtual ~IRenderer() = default;
 
             /**
+             * @brief Give the renderer the chance to do frame setup
+             */
+            virtual void startFrame() = 0;
+
+            /**
+             * @brief Give the renderer the chance to do frame cleanup
+             */
+            virtual void endFrame() = 0;
+
+            /**
              * @brief Produces one frame.
              * Acquire a target, render to it, present it
              */

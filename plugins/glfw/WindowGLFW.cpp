@@ -66,6 +66,15 @@ namespace chai
 
     }
 
+    void onCharInput(GLFWwindow* window, unsigned int codepoint) 
+    {
+        auto* windowService = static_cast<WindowGLFW*>(glfwGetWindowUserPointer(window));
+        CharEvent event;
+        event.type = InputEventType::Char;
+        event.input = codepoint;
+        windowService->input_->updateCharInput(event);
+    }
+
     WindowGLFW::WindowGLFW(const WindowDesc& desc, class InputHandler* input) : input_(input)
     {
         // TODO: There might be a more graphics api agnostic way to do this
@@ -86,6 +95,7 @@ namespace chai
         glfwSetKeyCallback(window_, onKeyPress);
         glfwSetMouseButtonCallback(window_, onMouseButton);
         glfwSetCursorPosCallback(window_, onCursorMove);
+        glfwSetCharCallback(window_, onCharInput);
 
         events_.reserve(16);
 

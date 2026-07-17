@@ -62,6 +62,7 @@ namespace chai
         while (!window->shouldClose()) {
             input->newFrame();  //tell input to clear deltas FIRST
             window->pollEvents();
+            renderer->startFrame();
             float dt = clock_.tick();
 
             updateActiveCameraAspect();
@@ -71,6 +72,7 @@ namespace chai
             gfx::FrameRenderData frame;
             scene_->extract(frame);
             renderer->renderFrame(frame);
+            renderer->endFrame();
         }
     }
 
