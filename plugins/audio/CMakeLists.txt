@@ -8,6 +8,7 @@ endif ()
 add_library(${PROJECT_NAME}
         AudioEngine.h
         AudioEngine.cpp
+        FmodAudioPlugin.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -21,6 +22,8 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
         PUBLIC
         ChaiMath
+        Audio
+        Core
 
         PRIVATE
         "${FMOD_LIBRARY}"

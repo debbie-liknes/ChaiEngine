@@ -1,15 +1,36 @@
 #pragma once
 #include <ChaiMath.h>
+#include <vector>
 
 namespace chai
 {
     enum class Key {
-        W,
         A,
-        S,
+        B,
+        C,
         D,
-        Q,
         E,
+        F,
+        G,
+        H,
+        I,
+        J,
+        K,
+        L,
+        M,
+        N,
+        O,
+        P,
+        Q,
+        R,
+        S,
+        T,
+        U,
+        V,
+        W,
+        X,
+        Y,
+        Z,
         Space,
         LeftShift,
         LeftCtrl,
@@ -18,6 +39,7 @@ namespace chai
         Left,
         Right,
         Escape,
+        Backspace,
 
         Invalid
     };
@@ -29,6 +51,7 @@ namespace chai
         KeyPress,
         KeyRelease,
         KeyRepeat,
+        Char,
         MouseButtonDown,
         MouseButtonUp,
         MouseMove,
@@ -48,11 +71,19 @@ namespace chai
         Key key;
     };
 
+    struct CharEvent : public InputEvent {
+        unsigned int input;
+    };
+
     struct MouseButtonEvent : public InputEvent {
         MouseButton mouse;
     };
 
     struct MouseMoveEvent : public InputEvent {
+        float x, y;
+    };
+
+    struct MouseScrollEvent : public InputEvent {
         float x, y;
     };
 
@@ -69,11 +100,16 @@ namespace chai
 
         [[nodiscard]] virtual math::Vec2 mousePosition() const = 0;
         [[nodiscard]] virtual math::Vec2 mouseDelta() const = 0; // since last newFrame()
-        [[nodiscard]] virtual float scrollDelta() const = 0;
+        [[nodiscard]] virtual math::Vec2 scrollDelta() const = 0;
+
+        virtual void consumeKeyboardEvents() = 0;
+        virtual void consumeMouseEvents() = 0;
 
         virtual void setCursorMode(CursorMode mode) = 0;
 
         virtual void newFrame() = 0;
+
+        virtual const std::vector<unsigned int>& getTypedCharactersThisFrame() const = 0;
     };
 
     /**

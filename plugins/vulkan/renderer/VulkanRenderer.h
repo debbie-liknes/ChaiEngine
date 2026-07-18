@@ -11,7 +11,6 @@
 #include "../resources/RenderTargetView.h"
 #include "../resources/VulkanRenderTarget.h"
 
-
 #include <Plugin/ServiceLocator.h>
 
 #include <vulkan/vulkan.h>
@@ -19,6 +18,8 @@
 #include <cstdint>
 #include "../resources/TextureRegistry.h"
 #include <Scene/ModelRegistry.h>
+#include <UI/Tools/InternalChaiUi.h>
+#include "../utils/GpuProfiler.h"
 
 namespace chai
 {
@@ -27,10 +28,27 @@ namespace chai
 
 namespace chai::gfx
 {
+    struct PassStats {
+        uint32_t drawCalls;
+        float gpuTimeMs;
+    };
+
+    struct VulkanStats {
+        float gpuTimeMs;
+        PassStats mainPass;
+        PassStats shadowPass;
+
+        void clear()
+        {
+            mainPass.drawCalls = 0;
+            shadowPass.drawCalls = 0;
+        }
+    };
+
     /**
      * @brief Concrete vulkan implementation of the Renderer interface.
      */
-	class VulkanRenderer : public IRenderer
+    class VulkanRenderer : public IRenderer, public ui::IInternalChaiUi
 	{
     public:
         VulkanRenderer(chai::IWindow& window,
@@ -38,12 +56,21 @@ namespace chai::gfx
                        std::shared_ptr<AssetCache<Texture>> texCache,
                        std::shared_ptr<AssetCache<Material>> matCache,
                        std::shared_ptr<ModelRegistry> texReg,
-                       VulkanContext& context);
+                       VulkanContext& context,
+                       chai::ServiceLocator& locator);
         ~VulkanRenderer() override;
 
         void renderFrame(const FrameRenderData& renderData) override;
         void onResize(int width, int height) override;
         void waitIdle() override;
+
+        bool initializeUI() override;
+        void shutdownUI() override;
+
+        void startFrame() override;
+        void endFrame() override;
+
+        VulkanStats& getStats() { return stats_; }
 
     private:
         /**
@@ -93,9 +120,17 @@ namespace chai::gfx
         void writeEnvironmentSet(const GpuTexture& skybox);
         void shadowMapping(VkCommandBuffer cmd, const std::vector<uint32_t>&, const FrameRenderData&);
 
+        void beginUIFrame();
+        void endUIFrame();
+        void renderUI(VkCommandBuffer cmd, VkImageView imageView);
+
+        VulkanStats stats_{};
+        GpuProfiler profiler_{};
+
         chai::IWindow& window_;
         VulkanContext& ctx_;
         Swapchain swapchain_;
+        chai::ServiceLocator& locator_;
 
         VkCommandPool cmdPool_ = VK_NULL_HANDLE;
         std::array<FrameData, kFramesInFlight> frames_{};

@@ -16,6 +16,10 @@
 #include <Rendering/CameraData.h>
 #include <Window/Window.h>
 #include <numeric>
+#include <imgui.h>
+#include <backends/imgui_impl_vulkan.h>
+#include <backends/imgui_impl_glfw.h>
+#include <Core/IInput.h>
 
 namespace chai::gfx
 {
@@ -29,7 +33,8 @@ namespace chai::gfx
                                    std::shared_ptr<AssetCache<Texture>> texCache,
                                    std::shared_ptr<AssetCache<Material>> matCache,
                                    std::shared_ptr<ModelRegistry> texReg,
-                                   VulkanContext& context)
+                                   VulkanContext& context,
+                                   chai::ServiceLocator& locator)
         : window_(window), ctx_(context),
           swapchain_(ctx_,
                      [&] {
@@ -37,7 +42,8 @@ namespace chai::gfx
                          window.framebufferSize(w, h);
                          return VkExtent2D{uint32_t(w), uint32_t(h)};
                      }()),
-          meshCache_(meshCache), texCache_(texCache), materialCache_(matCache), modelReg_(texReg)
+          locator_(locator), meshCache_(meshCache), texCache_(texCache), materialCache_(matCache),
+          modelReg_(texReg)
     {
         init();
         CHAI_LOG_INFO("VulkanRenderer initialized");
@@ -46,6 +52,8 @@ namespace chai::gfx
     VulkanRenderer::~VulkanRenderer()
     {
         waitIdle();
+
+        profiler_.shutdown(ctx_.device());
 
         for (int i = 0; i < kFramesInFlight; i++) {
             vmaDestroyBuffer(ctx_.allocator(), frames_[i].cameraBuffer, frames_[i].cameraAlloc);
@@ -208,6 +216,8 @@ namespace chai::gfx
             }
         }
 
+        profiler_.initialize(ctx_.device(), ctx_.physicalDevice(), kFramesInFlight);
+
         // only need this one, because its environment
         irradianceTarget_ = createCube(ctx_, kIrradianceSize, VK_FORMAT_R16G16B16A16_SFLOAT, 1);
         brdfLut_ = createColor2D(ctx_, kBRDFLUT, kBRDFLUT, VK_FORMAT_R16G16B16A16_SFLOAT);
@@ -246,6 +256,70 @@ namespace chai::gfx
         iblBaked_ = true;
     }
 
+    void VulkanRenderer::startFrame()
+    {
+        //sync input to imgui
+        ImGuiIO& io = ImGui::GetIO();
+
+        auto input = locator_.tryResolve<IInput>();
+        if (input) {
+            auto mousePos = input->mousePosition();
+            io.AddMousePosEvent(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y));
+
+            io.AddMouseButtonEvent(ImGuiMouseButton_Left, input->mouseDown(MouseButton::Left));
+            io.AddMouseButtonEvent(ImGuiMouseButton_Right, input->mouseDown(MouseButton::Right));
+            io.AddMouseButtonEvent(ImGuiMouseButton_Middle, input->mouseDown(MouseButton::Middle));
+
+            io.AddMouseWheelEvent(static_cast<float>(input->scrollDelta().x),
+                                  static_cast<float>(input->scrollDelta().y));
+
+            io.AddKeyEvent(ImGuiKey_Escape, input->keyDown(Key::Escape));
+            io.AddKeyEvent(ImGuiKey_A, input->keyDown(Key::A));
+            io.AddKeyEvent(ImGuiKey_B, input->keyDown(Key::B));
+            io.AddKeyEvent(ImGuiKey_C, input->keyDown(Key::C));
+            io.AddKeyEvent(ImGuiKey_D, input->keyDown(Key::D));
+            io.AddKeyEvent(ImGuiKey_E, input->keyDown(Key::E));
+            io.AddKeyEvent(ImGuiKey_F, input->keyDown(Key::F));
+            io.AddKeyEvent(ImGuiKey_G, input->keyDown(Key::G));
+            io.AddKeyEvent(ImGuiKey_H, input->keyDown(Key::H));
+            io.AddKeyEvent(ImGuiKey_I, input->keyDown(Key::I));
+            io.AddKeyEvent(ImGuiKey_J, input->keyDown(Key::J));
+            io.AddKeyEvent(ImGuiKey_K, input->keyDown(Key::K));
+            io.AddKeyEvent(ImGuiKey_L, input->keyDown(Key::L));
+            io.AddKeyEvent(ImGuiKey_M, input->keyDown(Key::M));
+            io.AddKeyEvent(ImGuiKey_N, input->keyDown(Key::N));
+            io.AddKeyEvent(ImGuiKey_O, input->keyDown(Key::O));
+            io.AddKeyEvent(ImGuiKey_P, input->keyDown(Key::P));
+            io.AddKeyEvent(ImGuiKey_Q, input->keyDown(Key::Q));
+            io.AddKeyEvent(ImGuiKey_R, input->keyDown(Key::R));
+            io.AddKeyEvent(ImGuiKey_S, input->keyDown(Key::S));
+            io.AddKeyEvent(ImGuiKey_T, input->keyDown(Key::T));
+            io.AddKeyEvent(ImGuiKey_U, input->keyDown(Key::U));
+            io.AddKeyEvent(ImGuiKey_V, input->keyDown(Key::V));
+            io.AddKeyEvent(ImGuiKey_W, input->keyDown(Key::W));
+            io.AddKeyEvent(ImGuiKey_X, input->keyDown(Key::X));
+            io.AddKeyEvent(ImGuiKey_Y, input->keyDown(Key::Y));
+            io.AddKeyEvent(ImGuiKey_Z, input->keyDown(Key::Z));
+            io.AddKeyEvent(ImGuiKey_Backspace, input->keyDown(Key::Backspace));
+
+            for (auto c : input->getTypedCharactersThisFrame())
+                io.AddInputCharacter(c);
+
+            if (io.WantCaptureKeyboard)
+                input->consumeKeyboardEvents();
+
+            if (io.WantCaptureMouse)
+                input->consumeMouseEvents();
+        }
+
+        beginUIFrame();
+    }
+
+    void VulkanRenderer::endFrame() 
+    {
+        //nothing to do for now
+    }
+
     void VulkanRenderer::renderFrame(const FrameRenderData& renderData)
     {
         if (needsResize_)
@@ -260,6 +334,9 @@ namespace chai::gfx
         texCache_->tick();
         materialCache_->tick();
         modelReg_->tick();
+
+        endUIFrame();
+        stats_.clear();
 
 
         if (!iblBaked_ || (renderData.environment.skyboxCube != skyboxCube_)) {
@@ -300,6 +377,8 @@ namespace chai::gfx
         VkCommandBufferBeginInfo begin{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
         begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         VK_CHECK(vkBeginCommandBuffer(cmd, &begin));
+
+        profiler_.beginFrame(frame.cmd, currentFrame_);
 
         transitionImage(cmd, view.image, ImageState::Undefined, ImageState::ColorAttachment);
         transitionImage(cmd, view.depthImage, ImageState::Undefined, ImageState::DepthAttachment);
@@ -342,9 +421,14 @@ namespace chai::gfx
         // DRAW
         shadowMapping(cmd, order, renderData);
 
+        profiler_.beginRegion(cmd, "Main Pass");
         vkCmdBeginRendering(cmd, &rendering);
         renderScene(cmd, view, renderData, order);
         vkCmdEndRendering(cmd);
+        profiler_.endRegion(cmd, "Main Pass");
+
+        //Render UI
+        renderUI(cmd, view.colorView);
 
         transitionImage(cmd, view.image, ImageState::ColorAttachment, ImageState::Present);
 
@@ -373,6 +457,16 @@ namespace chai::gfx
 
         if (!swapchain_.present(imageIndex))
             needsResize_ = true;
+
+        profiler_.endFrame(currentFrame_, ctx_.device());
+        stats_.gpuTimeMs = profiler_.getTotalFrameTimeMs();
+        auto allRegions = profiler_.getAllRegionTimes();
+        for (auto region : allRegions) {
+            if (region.first == "Main Pass")
+                stats_.mainPass.gpuTimeMs = region.second;
+            else if (region.first == "Shadow Pass")
+                stats_.shadowPass.gpuTimeMs = region.second;
+        }
 
         currentFrame_ = (currentFrame_ + 1) % kFramesInFlight;
     }
@@ -501,6 +595,7 @@ namespace chai::gfx
             vkCmdBindVertexBuffers(cmd, 0, 1, &vb, &offset);
             vkCmdBindIndexBuffer(cmd, mesh->indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
             vkCmdDrawIndexed(cmd, mesh->indexCount, 1, 0, 0, 0);
+            stats_.mainPass.drawCalls++;
         }
 
         // skybox render
@@ -1030,6 +1125,7 @@ namespace chai::gfx
         ri.layerCount = 1;
         ri.pDepthAttachment = &depth;
 
+        profiler_.beginRegion(cmd, "Shadow Pass");
         vkCmdBeginRendering(cmd, &ri);
         VkViewport vp{0, 0, float(kShadowMapSize), float(kShadowMapSize), 0.f, 1.f};
         vkCmdSetViewport(cmd, 0, 1, &vp);
@@ -1059,9 +1155,11 @@ namespace chai::gfx
             vkCmdBindVertexBuffers(cmd, 0, 1, &vb, &offset);
             vkCmdBindIndexBuffer(cmd, mesh->indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
             vkCmdDrawIndexed(cmd, mesh->indexCount, 1, 0, 0, 0);
+            stats_.shadowPass.drawCalls++;
         }
 
         vkCmdEndRendering(cmd);
+        profiler_.endRegion(cmd, "Shadow Pass");
 
         imageBarrier(cmd,
                      target.image,
@@ -1076,4 +1174,169 @@ namespace chai::gfx
                      1);
     }
 
+    void applyCustomStyle()
+    {
+        ImGuiStyle& style = ImGui::GetStyle();
+        ImVec4* colors = style.Colors;
+
+        // ---- Palette: cool dark neutrals, single accent, no default ImGui blue/gray ----
+        ImVec4 bg = ImVec4(0.10f, 0.10f, 0.12f, 1.00f);
+        ImVec4 bgLight = ImVec4(0.14f, 0.14f, 0.17f, 1.00f);
+        ImVec4 bgLighter = ImVec4(0.18f, 0.18f, 0.22f, 1.00f);
+        ImVec4 border = ImVec4(0.22f, 0.22f, 0.26f, 1.00f);
+        ImVec4 text = ImVec4(0.90f, 0.90f, 0.92f, 1.00f);
+        ImVec4 textDim = ImVec4(0.55f, 0.55f, 0.60f, 1.00f);
+        ImVec4 accent = ImVec4(0.35f, 0.65f, 0.95f, 1.00f);
+        ImVec4 accentHover = ImVec4(0.45f, 0.72f, 1.00f, 1.00f);
+        ImVec4 accentActive = ImVec4(0.28f, 0.55f, 0.85f, 1.00f);
+
+        colors[ImGuiCol_Text] = text;
+        colors[ImGuiCol_TextDisabled] = textDim;
+        colors[ImGuiCol_WindowBg] = bg;
+        colors[ImGuiCol_ChildBg] = bg;
+        colors[ImGuiCol_PopupBg] = bgLight;
+        colors[ImGuiCol_Border] = border;
+        colors[ImGuiCol_BorderShadow] = ImVec4(0, 0, 0, 0);
+        colors[ImGuiCol_FrameBg] = bgLight;
+        colors[ImGuiCol_FrameBgHovered] = bgLighter;
+        colors[ImGuiCol_FrameBgActive] = bgLighter;
+        colors[ImGuiCol_TitleBg] = bg;
+        colors[ImGuiCol_TitleBgActive] = bg;
+        colors[ImGuiCol_TitleBgCollapsed] = bg;
+        colors[ImGuiCol_MenuBarBg] = bgLight;
+        colors[ImGuiCol_ScrollbarBg] = bg;
+        colors[ImGuiCol_ScrollbarGrab] = bgLighter;
+        colors[ImGuiCol_ScrollbarGrabHovered] = border;
+        colors[ImGuiCol_ScrollbarGrabActive] = accent;
+        colors[ImGuiCol_CheckMark] = accent;
+        colors[ImGuiCol_SliderGrab] = accent;
+        colors[ImGuiCol_SliderGrabActive] = accentActive;
+        colors[ImGuiCol_Button] = bgLighter;
+        colors[ImGuiCol_ButtonHovered] = accentHover;
+        colors[ImGuiCol_ButtonActive] = accentActive;
+        colors[ImGuiCol_Header] = bgLighter;
+        colors[ImGuiCol_HeaderHovered] = accentHover;
+        colors[ImGuiCol_HeaderActive] = accentActive;
+        colors[ImGuiCol_Separator] = border;
+        colors[ImGuiCol_ResizeGrip] = ImVec4(0, 0, 0, 0);
+        colors[ImGuiCol_ResizeGripHovered] = accent;
+        colors[ImGuiCol_ResizeGripActive] = accentActive;
+        colors[ImGuiCol_TabDimmed] = bgLight;
+        colors[ImGuiCol_TabDimmedSelected] = bgLighter;
+        colors[ImGuiCol_DockingPreview] =
+            ImVec4(accent.x, accent.y, accent.z, 0.35f);
+        colors[ImGuiCol_DockingEmptyBg] = bg;
+        colors[ImGuiCol_Tab] = bgLight;
+        colors[ImGuiCol_TabHovered] = accentHover;
+        colors[ImGuiCol_TabSelected] = accent;
+        colors[ImGuiCol_PlotLines] = accent;
+        colors[ImGuiCol_PlotHistogram] = accent;
+        colors[ImGuiCol_TextSelectedBg] = ImVec4(accent.x, accent.y, accent.z, 0.35f);
+        colors[ImGuiCol_NavCursor] = accent;
+
+        style.WindowRounding = 8.0f;
+        style.ChildRounding = 6.0f;
+        style.FrameRounding = 6.0f;
+        style.PopupRounding = 6.0f;
+        style.ScrollbarRounding = 8.0f;
+        style.GrabRounding = 6.0f;
+        style.TabRounding = 6.0f;
+
+        style.WindowBorderSize = 1.0f; // no visible border because its gross
+        style.FrameBorderSize = 0.0f;
+        style.PopupBorderSize = 0.0f;
+        style.ChildBorderSize = 1.0f;
+
+        style.WindowPadding = ImVec2(17, 17);
+        style.FramePadding = ImVec2(12, 8);
+        style.ItemSpacing = ImVec2(10, 8);
+        style.ItemInnerSpacing = ImVec2(8, 6);
+        style.IndentSpacing = 18.0f;
+
+        style.GrabMinSize =
+            12.0f;
+        style.ScrollbarSize = 12.0f;
+    }
+
+    bool VulkanRenderer::initializeUI()
+    {
+        ImGui::CreateContext();
+        //TODO: not ideal, i dont want glfw here at all
+        ImGui_ImplGlfw_InitForVulkan(static_cast<GLFWwindow*>(window_.nativeHandle()), false);
+
+        const auto format = swapchain_.format();
+
+        ImGui_ImplVulkan_InitInfo initInfo{};
+        initInfo.Instance = ctx_.instance();
+        initInfo.PhysicalDevice = ctx_.physicalDevice();
+        initInfo.Device = ctx_.device();
+        initInfo.QueueFamily = ctx_.graphicsFamily();
+        initInfo.Queue = ctx_.graphicsQueue();
+        initInfo.DescriptorPool = VK_NULL_HANDLE;
+        initInfo.DescriptorPoolSize = 8;
+        initInfo.MinImageCount = kFramesInFlight;
+        initInfo.ImageCount = kFramesInFlight;
+        initInfo.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+        initInfo.UseDynamicRendering = true;
+        initInfo.PipelineInfoMain.PipelineRenderingCreateInfo.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+        initInfo.PipelineInfoMain.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
+        initInfo.PipelineInfoMain.PipelineRenderingCreateInfo.pColorAttachmentFormats = &format;
+        ImGui_ImplVulkan_Init(&initInfo);
+
+        //make ImGui not look terrible
+        ImGuiIO& io = ImGui::GetIO();
+
+        ImFontConfig config;
+        config.OversampleH = 4;
+        config.OversampleV = 4;
+
+        applyCustomStyle();
+
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+        return true;
+    }
+
+    void VulkanRenderer::shutdownUI()
+    {
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+    }
+
+    void VulkanRenderer::beginUIFrame()
+    {
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+    }
+
+    void VulkanRenderer::endUIFrame()
+    {
+        ImGui::Render();
+    }
+
+    void VulkanRenderer::renderUI(VkCommandBuffer cmd, VkImageView imageView)
+    {
+        VkRenderingAttachmentInfo uiColorAttachment{};
+        uiColorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        uiColorAttachment.imageView = imageView; // whatever your accessor is
+        uiColorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        uiColorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+        uiColorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+        VkRenderingInfo uiRenderingInfo{};
+        uiRenderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+        uiRenderingInfo.renderArea = {{0, 0}, swapchain_.extent()};
+        uiRenderingInfo.layerCount = 1;
+        uiRenderingInfo.colorAttachmentCount = 1;
+        uiRenderingInfo.pColorAttachments = &uiColorAttachment;
+
+        profiler_.beginRegion(cmd, "UI Rendering");
+        vkCmdBeginRendering(cmd, &uiRenderingInfo);
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
+        vkCmdEndRendering(cmd);
+        profiler_.endRegion(cmd, "UI Rendering");
+    }
 } // namespace chai::gfx

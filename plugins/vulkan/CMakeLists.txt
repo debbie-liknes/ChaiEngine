@@ -25,6 +25,9 @@ set(${PROJECT_NAME}_headers
         resources/VulkanRenderTarget.h
         utils/VkCheck.h
         utils/VkUtils.h
+        utils/GpuProfiler.h
+
+        VulkanPluginStatsPanel.h
 )
 
 set(${PROJECT_NAME}_source
@@ -45,6 +48,7 @@ set(${PROJECT_NAME}_source
         resources/VulkanRenderTarget.cpp
         swapchain/Swapchain.cpp
         utils/VkCheck.cpp
+        utils/GpuProfiler.cpp
 
         VulkanMemoryAllocator.cpp
         VulkanPlugin.cpp
@@ -120,7 +124,7 @@ add_custom_target(Shaders ALL
     DEPENDS ${SPIRV_FILES}
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC Core Graphics Vulkan::Vulkan PRIVATE vk-bootstrap::vk-bootstrap GPUOpen::VulkanMemoryAllocator)
+target_link_libraries(${PROJECT_NAME} PUBLIC Core Graphics UI Vulkan::Vulkan glfw PRIVATE ImGui vk-bootstrap::vk-bootstrap GPUOpen::VulkanMemoryAllocator)
 #set_target_properties(vkbootstrap PROPERTIES FOLDER "external")
 
 ChaiPluginDefaults(${PROJECT_NAME} "Plugins")

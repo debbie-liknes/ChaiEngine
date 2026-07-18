@@ -24,6 +24,8 @@
 #include <Scene/SpawnPrefab.h>
 #include <SpdLogSink.h>
 #include <Window/Window.h>
+#include <LogPanel.h>
+#include <UI/Tools/InternalPanels.h>
 
 std::filesystem::path assetDir()
 {
@@ -37,8 +39,13 @@ int main()
 
     // setup logging
     SpdlogSink logSink;
-    setLogSink(&logSink);
+    addLogSink(&logSink);
     setLogLevel(chai::LogLevel::Info);
+
+    diagnostics::GuiLogSink guiSink;
+    addLogSink(&guiSink);
+
+    chai::ui::registerPanel("Logger", [&]() { diagnostics::drawLogPanel(guiSink); }, false);
 
     Engine engine;
     PluginLoader loader;

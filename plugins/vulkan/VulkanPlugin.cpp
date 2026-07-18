@@ -2,22 +2,25 @@
  * @file VulkanPlugin.h
  * @brief Plugin setup and registration of services
  */
+#include "VulkanPluginStatsPanel.h"
+#include "renderer/VulkanRenderer.h"
+#include "resources/MaterialFactory.h"
+#include "resources/MaterialRegistry.h"
+#include "resources/Mesh.h"
+#include "resources/MeshFactory.h"
+#include "resources/MeshRegistry.h"
+#include "resources/TextureFactory.h"
+#include "resources/TextureRegistry.h"
+
+#include <Assets/IMeshRegistry.h>
 #include <Log.h>
 #include <Plugin/PluginBase.h>
 #include <Plugin/PluginMacros.h>
 #include <Plugin/ServiceLocator.h>
+#include <Scene/ModelRegistry.h>
+#include <UI/Tools/InternalPanels.h>
 #include <Window/Window.h>
 #include <memory>
-#include "renderer/VulkanRenderer.h"
-#include "resources/Mesh.h"
-#include <Assets/IMeshRegistry.h>
-#include <Scene/ModelRegistry.h>
-#include "resources/MaterialFactory.h"
-#include "resources/MaterialRegistry.h"
-#include "resources/TextureFactory.h"
-#include "resources/TextureRegistry.h"
-#include "resources/MeshRegistry.h"
-#include "resources/MeshFactory.h"
 
 namespace chai::gfx
 {
@@ -50,10 +53,11 @@ namespace chai::gfx
                                                          texRegistry_->cache(),
                                                          matRegistry_->cache(),
                                                          modelRegistry_,
-                                                         *vulkCtx_);
+                                                         *vulkCtx_,
+                                                         ctx.services);
+            renderer_->initializeUI();
 
-
-            //register services, but make sure to UN-register them on unload
+            // register services, but make sure to UN-register them on unload
             ctx.services.provide<AssetCache<Mesh>>(meshRegistry_->cache());
             ctx.services.provide<IRenderer>(renderer_);
             ctx.services.provide<IMeshRegistry>(meshRegistry_);
@@ -61,6 +65,9 @@ namespace chai::gfx
             ctx.services.provide<TextureFactory>(texFactory_);
             ctx.services.provide<IMaterialRegistry>(matRegistry_);
             ctx.services.provide<IModelRegistry>(modelRegistry_);
+
+            chai::ui::registerPanel(
+                "Vulkan Stats", [&]() { ui::drawVulkanStatsPanel(renderer_->getStats()); }, false);
 
             CHAI_LOG_INFO("Renderer service provided");
         }
@@ -70,7 +77,10 @@ namespace chai::gfx
             if (renderer_)
                 renderer_->waitIdle(); // probably unnecessary here
 
-            //remove services
+            chai::ui::unregisterPanel("Vulkan Stats");
+            renderer_->shutdownUI();
+
+            // remove services
             ctx.services.remove<TextureFactory>();
             ctx.services.remove<ITextureRegistry>();
             ctx.services.remove<IMeshRegistry>();
@@ -79,7 +89,7 @@ namespace chai::gfx
             ctx.services.remove<IMaterialRegistry>();
             ctx.services.remove<IModelRegistry>();
 
-            //release all our resources and pointers
+            // release all our resources and pointers
             meshRegistry_->cache()->releaseAll();
             texRegistry_->cache()->releaseAll();
             modelRegistry_->releaseAll();
@@ -91,7 +101,6 @@ namespace chai::gfx
 
             meshRegistry_.reset();
             texRegistry_.reset();
-
 
             texFactory_.reset();
             resources_.reset();
@@ -105,19 +114,19 @@ namespace chai::gfx
         std::shared_ptr<GpuResources> resources_;
         std::shared_ptr<VulkanRenderer> renderer_;
 
-        //Mesh
+        // Mesh
         std::shared_ptr<MeshRegistry> meshRegistry_;
 
-        //textures
+        // textures
         std::shared_ptr<TextureFactory> texFactory_;
         std::shared_ptr<TextureRegistry> texRegistry_;
 
-        //Models
+        // Models
         std::shared_ptr<ModelRegistry> modelRegistry_;
 
-        //Materials
+        // Materials
         std::shared_ptr<MaterialRegistry> matRegistry_;
     };
 
     CHAI_PLUGIN(VulkanPlugin);
-} // namespace chai
+} // namespace chai::gfx

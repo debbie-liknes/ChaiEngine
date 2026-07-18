@@ -3,6 +3,9 @@
 #include <Window/Window.h>
 #include <Rendering/FrameRenderData.h>
 #include <Core/IInput.h>
+#include <UI/Tools/InternalChaiUi.h>
+#include <UI/Tools/InternalPanels.h>
+#include <Core/SystemPaths.h>
 
 namespace chai
 {
@@ -17,6 +20,8 @@ namespace chai
             p->onLoad(ctx_);
             active_.push_back(p);
         }
+
+        ui::loadFonts(executableDir().string() + "/assets/editor/fonts");
     }
 
     void Engine::shutdown()
@@ -62,15 +67,20 @@ namespace chai
         while (!window->shouldClose()) {
             input->newFrame();  //tell input to clear deltas FIRST
             window->pollEvents();
+            renderer->startFrame();
             float dt = clock_.tick();
 
             updateActiveCameraAspect();
             UpdateContext ctx{dt, *input};
             scene_->update(ctx);
 
+            //tools panels, NOT the main UI
+            chai::ui::drawRegisteredPanels();
+
             gfx::FrameRenderData frame;
             scene_->extract(frame);
             renderer->renderFrame(frame);
+            renderer->endFrame();
         }
     }
 

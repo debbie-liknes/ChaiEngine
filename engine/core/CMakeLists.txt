@@ -34,7 +34,7 @@ add_library(${PROJECT_NAME} SHARED
 )
 
 target_include_directories(Core PUBLIC ${CMAKE_BINARY_DIR}/exports/Core include)
-target_link_libraries(Core PUBLIC TypeReflection Logger Asset Graphics)
+target_link_libraries(Core PUBLIC TypeReflection Logger Asset Graphics UI)
 
 add_subdirectory(tests)
 

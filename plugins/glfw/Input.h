@@ -21,7 +21,7 @@ namespace chai
 
         [[nodiscard]] math::Vec2 mousePosition() const override;
         [[nodiscard]] math::Vec2 mouseDelta() const override;
-        [[nodiscard]] float scrollDelta() const override;
+        [[nodiscard]] math::Vec2 scrollDelta() const override;
 
         void setCursorMode(CursorMode mode) override;
 
@@ -30,12 +30,24 @@ namespace chai
         void updateKeyPress(const KeyEvent& key);
         void updateMousePress(const MouseButtonEvent& mouse);
         void updateMouseMove(const MouseMoveEvent& mouse);
+        void updateCharInput(const CharEvent& input);
+        void updateScrollInput(const MouseScrollEvent& input);
+
+        void consumeKeyboardEvents() override;
+        void consumeMouseEvents() override;
+
+        const std::vector<unsigned int>& getTypedCharactersThisFrame() const override;
 
     private:
         std::set<Key> keys_;
         std::set<MouseButton> mouseButtons_;
         float mouseX, mouseY;
         float deltaX, deltaY;
+        float scrollX, scrollY;
+
+        bool keyboardCaptured_ = false;
+        bool mouseCaptured_ = false;
+        std::vector<unsigned int> typedChars_;
 	};
 
     Key toChaiKey(int glfwKey);
