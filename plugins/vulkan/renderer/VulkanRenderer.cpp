@@ -53,6 +53,8 @@ namespace chai::gfx
     {
         waitIdle();
 
+        profiler_.shutdown(ctx_.device());
+
         for (int i = 0; i < kFramesInFlight; i++) {
             vmaDestroyBuffer(ctx_.allocator(), frames_[i].cameraBuffer, frames_[i].cameraAlloc);
             vmaDestroyBuffer(ctx_.allocator(), frames_[i].lightBuffer, frames_[i].lightAlloc);
@@ -214,6 +216,8 @@ namespace chai::gfx
             }
         }
 
+        profiler_.initialize(ctx_.device(), ctx_.physicalDevice(), kFramesInFlight);
+
         // only need this one, because its environment
         irradianceTarget_ = createCube(ctx_, kIrradianceSize, VK_FORMAT_R16G16B16A16_SFLOAT, 1);
         brdfLut_ = createColor2D(ctx_, kBRDFLUT, kBRDFLUT, VK_FORMAT_R16G16B16A16_SFLOAT);
@@ -330,9 +334,8 @@ namespace chai::gfx
         materialCache_->tick();
         modelReg_->tick();
 
-        //TODO: move this to the engine and provide interface as service
-        ImGui::ShowDemoWindow();
         endUIFrame();
+        stats_.clear();
 
 
         if (!iblBaked_ || (renderData.environment.skyboxCube != skyboxCube_)) {
@@ -373,6 +376,8 @@ namespace chai::gfx
         VkCommandBufferBeginInfo begin{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
         begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         VK_CHECK(vkBeginCommandBuffer(cmd, &begin));
+
+        profiler_.beginFrame(frame.cmd, currentFrame_);
 
         transitionImage(cmd, view.image, ImageState::Undefined, ImageState::ColorAttachment);
         transitionImage(cmd, view.depthImage, ImageState::Undefined, ImageState::DepthAttachment);
@@ -415,9 +420,11 @@ namespace chai::gfx
         // DRAW
         shadowMapping(cmd, order, renderData);
 
+        profiler_.beginRegion(cmd, "Main Pass");
         vkCmdBeginRendering(cmd, &rendering);
         renderScene(cmd, view, renderData, order);
         vkCmdEndRendering(cmd);
+        profiler_.endRegion(cmd, "Main Pass");
 
         //Render UI
         renderUI(cmd, view.colorView);
@@ -449,6 +456,16 @@ namespace chai::gfx
 
         if (!swapchain_.present(imageIndex))
             needsResize_ = true;
+
+        profiler_.endFrame(currentFrame_, ctx_.device());
+        stats_.gpuTimeMs = profiler_.getTotalFrameTimeMs();
+        auto allRegions = profiler_.getAllRegionTimes();
+        for (auto region : allRegions) {
+            if (region.first == "Main Pass")
+                stats_.mainPass.gpuTimeMs = region.second;
+            else if (region.first == "Shadow Pass")
+                stats_.shadowPass.gpuTimeMs = region.second;
+        }
 
         currentFrame_ = (currentFrame_ + 1) % kFramesInFlight;
     }
@@ -577,6 +594,7 @@ namespace chai::gfx
             vkCmdBindVertexBuffers(cmd, 0, 1, &vb, &offset);
             vkCmdBindIndexBuffer(cmd, mesh->indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
             vkCmdDrawIndexed(cmd, mesh->indexCount, 1, 0, 0, 0);
+            stats_.mainPass.drawCalls++;
         }
 
         // skybox render
@@ -1106,6 +1124,7 @@ namespace chai::gfx
         ri.layerCount = 1;
         ri.pDepthAttachment = &depth;
 
+        profiler_.beginRegion(cmd, "Shadow Pass");
         vkCmdBeginRendering(cmd, &ri);
         VkViewport vp{0, 0, float(kShadowMapSize), float(kShadowMapSize), 0.f, 1.f};
         vkCmdSetViewport(cmd, 0, 1, &vp);
@@ -1135,9 +1154,11 @@ namespace chai::gfx
             vkCmdBindVertexBuffers(cmd, 0, 1, &vb, &offset);
             vkCmdBindIndexBuffer(cmd, mesh->indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
             vkCmdDrawIndexed(cmd, mesh->indexCount, 1, 0, 0, 0);
+            stats_.shadowPass.drawCalls++;
         }
 
         vkCmdEndRendering(cmd);
+        profiler_.endRegion(cmd, "Shadow Pass");
 
         imageBarrier(cmd,
                      target.image,
@@ -1216,8 +1237,10 @@ namespace chai::gfx
         uiRenderingInfo.colorAttachmentCount = 1;
         uiRenderingInfo.pColorAttachments = &uiColorAttachment;
 
+        profiler_.beginRegion(cmd, "UI Rendering");
         vkCmdBeginRendering(cmd, &uiRenderingInfo);
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
         vkCmdEndRendering(cmd);
+        profiler_.endRegion(cmd, "UI Rendering");
     }
 } // namespace chai::gfx

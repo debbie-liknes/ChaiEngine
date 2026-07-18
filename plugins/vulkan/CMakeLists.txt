@@ -25,6 +25,9 @@ set(${PROJECT_NAME}_headers
         resources/VulkanRenderTarget.h
         utils/VkCheck.h
         utils/VkUtils.h
+        utils/GpuProfiler.h
+
+        VulkanPluginStatsPanel.h
 )
 
 set(${PROJECT_NAME}_source
@@ -45,6 +48,7 @@ set(${PROJECT_NAME}_source
         resources/VulkanRenderTarget.cpp
         swapchain/Swapchain.cpp
         utils/VkCheck.cpp
+        utils/GpuProfiler.cpp
 
         VulkanMemoryAllocator.cpp
         VulkanPlugin.cpp

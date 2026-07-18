@@ -3,6 +3,8 @@
 #include <Window/Window.h>
 #include <Rendering/FrameRenderData.h>
 #include <Core/IInput.h>
+#include <UI/Tools/InternalChaiUi.h>
+#include <UI/Tools/InternalPanels.h>
 
 namespace chai
 {
@@ -68,6 +70,9 @@ namespace chai
             updateActiveCameraAspect();
             UpdateContext ctx{dt, *input};
             scene_->update(ctx);
+
+            //tools panels, NOT the main UI
+            chai::ui::drawRegisteredPanels();
 
             gfx::FrameRenderData frame;
             scene_->extract(frame);

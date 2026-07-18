@@ -19,6 +19,7 @@
 #include "../resources/TextureRegistry.h"
 #include <Scene/ModelRegistry.h>
 #include <UI/Tools/InternalChaiUi.h>
+#include "../utils/GpuProfiler.h"
 
 namespace chai
 {
@@ -27,6 +28,23 @@ namespace chai
 
 namespace chai::gfx
 {
+    struct PassStats {
+        uint32_t drawCalls;
+        float gpuTimeMs;
+    };
+
+    struct VulkanStats {
+        float gpuTimeMs;
+        PassStats mainPass;
+        PassStats shadowPass;
+
+        void clear()
+        {
+            mainPass.drawCalls = 0;
+            shadowPass.drawCalls = 0;
+        }
+    };
+
     /**
      * @brief Concrete vulkan implementation of the Renderer interface.
      */
@@ -51,6 +69,8 @@ namespace chai::gfx
 
         void startFrame() override;
         void endFrame() override;
+
+        VulkanStats& getStats() { return stats_; }
 
     private:
         /**
@@ -103,6 +123,9 @@ namespace chai::gfx
         void beginUIFrame();
         void endUIFrame();
         void renderUI(VkCommandBuffer cmd, VkImageView imageView);
+
+        VulkanStats stats_{};
+        GpuProfiler profiler_{};
 
         chai::IWindow& window_;
         VulkanContext& ctx_;

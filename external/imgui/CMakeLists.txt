@@ -20,7 +20,7 @@ set(${PROJECT_NAME}_source
 
 find_package(Vulkan REQUIRED)
 
-add_library(${PROJECT_NAME} STATIC
+add_library(${PROJECT_NAME} SHARED
         ${${PROJECT_NAME}_headers}
         ${${PROJECT_NAME}_source}
 )
