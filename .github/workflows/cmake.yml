@@ -7,7 +7,8 @@ on:
 jobs:
   build-windows-vs2026:
     name: Windows (VS2026)
-    runs-on: windows-2026
+    # See https://github.com/actions/runner-images/tree/main#available-images
+    runs-on: windows-2025-vs2026
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
