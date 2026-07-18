@@ -75,6 +75,16 @@ namespace chai
         windowService->input_->updateCharInput(event);
     }
 
+    void OnScroll(GLFWwindow* window, double xoffset, double yoffset)
+    {
+        auto* windowService = static_cast<WindowGLFW*>(glfwGetWindowUserPointer(window));
+        MouseScrollEvent event;
+        event.type = InputEventType::Char;
+        event.x = xoffset;
+        event.y = yoffset;
+        windowService->input_->updateScrollInput(event);
+    }
+
     WindowGLFW::WindowGLFW(const WindowDesc& desc, class InputHandler* input) : input_(input)
     {
         // TODO: There might be a more graphics api agnostic way to do this
@@ -96,6 +106,7 @@ namespace chai
         glfwSetMouseButtonCallback(window_, onMouseButton);
         glfwSetCursorPosCallback(window_, onCursorMove);
         glfwSetCharCallback(window_, onCharInput);
+        glfwSetScrollCallback(window_, OnScroll);
 
         events_.reserve(16);
 

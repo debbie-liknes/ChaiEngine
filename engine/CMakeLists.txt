@@ -1,6 +1,7 @@
 add_subdirectory(asset)
 add_subdirectory(audio)
 add_subdirectory(core)
+add_subdirectory(diagnostics)
 add_subdirectory(graphics)
 add_subdirectory(logger)
 add_subdirectory(math)

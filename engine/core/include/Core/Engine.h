@@ -13,6 +13,7 @@
 #include <span>
 #include <Scene/IScene.h>
 #include <Rendering/IRenderer.h>
+#include <UI/Tools/FontManager.h>
 
 namespace chai
 {

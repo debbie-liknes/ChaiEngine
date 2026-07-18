@@ -1,24 +1,33 @@
 #include <Log.h>
 #include <atomic>
+#include <mutex>
+#include <vector>
 
 namespace chai
 {
     namespace
     {
-        std::atomic<ILogSink*> g_sink{nullptr};
+        std::mutex g_sinkMutex;
+        std::vector<ILogSink*> g_sinks;
         std::atomic<LogLevel> g_level{LogLevel::Info};
     } // namespace
 
-    void setLogSink(ILogSink* sink)
+    void addLogSink(ILogSink* sink)
     {
-        g_sink.store(sink, std::memory_order_release);
+        std::lock_guard lock(g_sinkMutex);
+        g_sinks.push_back(sink);
+    }
+
+    void removeLogSink(ILogSink* sink)
+    {
+        std::lock_guard lock(g_sinkMutex);
+        std::erase(g_sinks, sink);
     }
 
     void setLogLevel(LogLevel level)
     {
         g_level.store(level, std::memory_order_relaxed);
     }
-
     LogLevel getLogLevel()
     {
         return g_level.load(std::memory_order_relaxed);
@@ -26,8 +35,8 @@ namespace chai
 
     void logRecord(const LogRecord& record)
     {
-        if (auto* sink = g_sink.load(std::memory_order_acquire))
+        std::lock_guard lock(g_sinkMutex);
+        for (auto* sink : g_sinks)
             sink->write(record);
-        // No sink yet, just drop it
     }
 } // namespace chai

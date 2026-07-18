@@ -83,6 +83,10 @@ namespace chai
         float x, y;
     };
 
+    struct MouseScrollEvent : public InputEvent {
+        float x, y;
+    };
+
     /**
      * @brief Interface to be implemented in (likely a window) plugin
      */
@@ -96,7 +100,7 @@ namespace chai
 
         [[nodiscard]] virtual math::Vec2 mousePosition() const = 0;
         [[nodiscard]] virtual math::Vec2 mouseDelta() const = 0; // since last newFrame()
-        [[nodiscard]] virtual float scrollDelta() const = 0;
+        [[nodiscard]] virtual math::Vec2 scrollDelta() const = 0;
 
         virtual void consumeKeyboardEvents() = 0;
         virtual void consumeMouseEvents() = 0;

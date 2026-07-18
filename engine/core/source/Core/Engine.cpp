@@ -5,6 +5,7 @@
 #include <Core/IInput.h>
 #include <UI/Tools/InternalChaiUi.h>
 #include <UI/Tools/InternalPanels.h>
+#include <Core/SystemPaths.h>
 
 namespace chai
 {
@@ -19,6 +20,8 @@ namespace chai
             p->onLoad(ctx_);
             active_.push_back(p);
         }
+
+        ui::loadFonts(executableDir().string() + "/assets/editor/fonts");
     }
 
     void Engine::shutdown()

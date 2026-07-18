@@ -77,5 +77,7 @@ namespace chai
         friend void onMouseButton(GLFWwindow* window, int button, int action, int mods);
         friend void onCursorMove(GLFWwindow* window, double xpos, double ypos);
         friend void onCharInput(GLFWwindow* window, unsigned int codepoint);
+        friend void OnScroll(GLFWwindow* window, double xoffset, double yoffset);
+
     };
 }

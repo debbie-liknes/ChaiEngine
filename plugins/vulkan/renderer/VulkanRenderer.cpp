@@ -270,7 +270,8 @@ namespace chai::gfx
             io.AddMouseButtonEvent(ImGuiMouseButton_Right, input->mouseDown(MouseButton::Right));
             io.AddMouseButtonEvent(ImGuiMouseButton_Middle, input->mouseDown(MouseButton::Middle));
 
-            //TODO: mouse scroll
+            io.AddMouseWheelEvent(static_cast<float>(input->scrollDelta().x),
+                                  static_cast<float>(input->scrollDelta().y));
 
             io.AddKeyEvent(ImGuiKey_Escape, input->keyDown(Key::Escape));
             io.AddKeyEvent(ImGuiKey_A, input->keyDown(Key::A));
@@ -1173,6 +1174,90 @@ namespace chai::gfx
                      1);
     }
 
+    void applyCustomStyle()
+    {
+        ImGuiStyle& style = ImGui::GetStyle();
+        ImVec4* colors = style.Colors;
+
+        // ---- Palette: cool dark neutrals, single accent, no default ImGui blue/gray ----
+        ImVec4 bg = ImVec4(0.10f, 0.10f, 0.12f, 1.00f);
+        ImVec4 bgLight = ImVec4(0.14f, 0.14f, 0.17f, 1.00f);
+        ImVec4 bgLighter = ImVec4(0.18f, 0.18f, 0.22f, 1.00f);
+        ImVec4 border = ImVec4(0.22f, 0.22f, 0.26f, 1.00f);
+        ImVec4 text = ImVec4(0.90f, 0.90f, 0.92f, 1.00f);
+        ImVec4 textDim = ImVec4(0.55f, 0.55f, 0.60f, 1.00f);
+        ImVec4 accent = ImVec4(0.35f, 0.65f, 0.95f, 1.00f);
+        ImVec4 accentHover = ImVec4(0.45f, 0.72f, 1.00f, 1.00f);
+        ImVec4 accentActive = ImVec4(0.28f, 0.55f, 0.85f, 1.00f);
+
+        colors[ImGuiCol_Text] = text;
+        colors[ImGuiCol_TextDisabled] = textDim;
+        colors[ImGuiCol_WindowBg] = bg;
+        colors[ImGuiCol_ChildBg] = bg;
+        colors[ImGuiCol_PopupBg] = bgLight;
+        colors[ImGuiCol_Border] = border;
+        colors[ImGuiCol_BorderShadow] = ImVec4(0, 0, 0, 0);
+        colors[ImGuiCol_FrameBg] = bgLight;
+        colors[ImGuiCol_FrameBgHovered] = bgLighter;
+        colors[ImGuiCol_FrameBgActive] = bgLighter;
+        colors[ImGuiCol_TitleBg] = bg;
+        colors[ImGuiCol_TitleBgActive] = bg;
+        colors[ImGuiCol_TitleBgCollapsed] = bg;
+        colors[ImGuiCol_MenuBarBg] = bgLight;
+        colors[ImGuiCol_ScrollbarBg] = bg;
+        colors[ImGuiCol_ScrollbarGrab] = bgLighter;
+        colors[ImGuiCol_ScrollbarGrabHovered] = border;
+        colors[ImGuiCol_ScrollbarGrabActive] = accent;
+        colors[ImGuiCol_CheckMark] = accent;
+        colors[ImGuiCol_SliderGrab] = accent;
+        colors[ImGuiCol_SliderGrabActive] = accentActive;
+        colors[ImGuiCol_Button] = bgLighter;
+        colors[ImGuiCol_ButtonHovered] = accentHover;
+        colors[ImGuiCol_ButtonActive] = accentActive;
+        colors[ImGuiCol_Header] = bgLighter;
+        colors[ImGuiCol_HeaderHovered] = accentHover;
+        colors[ImGuiCol_HeaderActive] = accentActive;
+        colors[ImGuiCol_Separator] = border;
+        colors[ImGuiCol_ResizeGrip] = ImVec4(0, 0, 0, 0);
+        colors[ImGuiCol_ResizeGripHovered] = accent;
+        colors[ImGuiCol_ResizeGripActive] = accentActive;
+        colors[ImGuiCol_TabDimmed] = bgLight;
+        colors[ImGuiCol_TabDimmedSelected] = bgLighter;
+        colors[ImGuiCol_DockingPreview] =
+            ImVec4(accent.x, accent.y, accent.z, 0.35f);
+        colors[ImGuiCol_DockingEmptyBg] = bg;
+        colors[ImGuiCol_Tab] = bgLight;
+        colors[ImGuiCol_TabHovered] = accentHover;
+        colors[ImGuiCol_TabSelected] = accent;
+        colors[ImGuiCol_PlotLines] = accent;
+        colors[ImGuiCol_PlotHistogram] = accent;
+        colors[ImGuiCol_TextSelectedBg] = ImVec4(accent.x, accent.y, accent.z, 0.35f);
+        colors[ImGuiCol_NavCursor] = accent;
+
+        style.WindowRounding = 8.0f;
+        style.ChildRounding = 6.0f;
+        style.FrameRounding = 6.0f;
+        style.PopupRounding = 6.0f;
+        style.ScrollbarRounding = 8.0f;
+        style.GrabRounding = 6.0f;
+        style.TabRounding = 6.0f;
+
+        style.WindowBorderSize = 1.0f; // no visible border because its gross
+        style.FrameBorderSize = 0.0f;
+        style.PopupBorderSize = 0.0f;
+        style.ChildBorderSize = 1.0f;
+
+        style.WindowPadding = ImVec2(17, 17);
+        style.FramePadding = ImVec2(12, 8);
+        style.ItemSpacing = ImVec2(10, 8);
+        style.ItemInnerSpacing = ImVec2(8, 6);
+        style.IndentSpacing = 18.0f;
+
+        style.GrabMinSize =
+            12.0f;
+        style.ScrollbarSize = 12.0f;
+    }
+
     bool VulkanRenderer::initializeUI()
     {
         ImGui::CreateContext();
@@ -1198,6 +1283,17 @@ namespace chai::gfx
         initInfo.PipelineInfoMain.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
         initInfo.PipelineInfoMain.PipelineRenderingCreateInfo.pColorAttachmentFormats = &format;
         ImGui_ImplVulkan_Init(&initInfo);
+
+        //make ImGui not look terrible
+        ImGuiIO& io = ImGui::GetIO();
+
+        ImFontConfig config;
+        config.OversampleH = 4;
+        config.OversampleV = 4;
+
+        applyCustomStyle();
+
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
         return true;
     }

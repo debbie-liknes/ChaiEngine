@@ -12,7 +12,7 @@ namespace chai
     /**
      * @brief Set once at startup, the log sink is where all log records go
      */
-    void setLogSink(ILogSink* sink);
+    void addLogSink(ILogSink* sink);
     void setLogLevel(LogLevel level);
     LogLevel getLogLevel();
 

@@ -1,5 +1,6 @@
 #include <UI/Tools/InternalPanels.h>
 #include <imgui.h>
+#include <UI/Tools/InternalChaiUi.h>
 
 namespace chai::ui
 {
@@ -25,8 +26,34 @@ namespace chai::ui
             it->second.visible = visible;
     }
 
+    void beginDockspace()
+    {
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+        ImGui::SetNextWindowViewport(viewport->ID);
+
+        ImGuiWindowFlags hostFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+                                     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                                     ImGuiWindowFlags_NoBringToFrontOnFocus |
+                                     ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoBackground;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+        ImGui::Begin("DockspaceHost", nullptr, hostFlags);
+        ImGui::PopStyleVar(3);
+
+        ImGuiID dockspaceId = ImGui::GetID("MainDockspace");
+        ImGui::DockSpace(dockspaceId, ImVec2(0, 0), ImGuiDockNodeFlags_PassthruCentralNode);
+
+        ImGui::End();
+    }
+
     void drawRegisteredPanels()
     {
+        beginDockspace();
+
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("Panels")) {
                 for (auto& [name, panel] : s_panels)
@@ -39,7 +66,11 @@ namespace chai::ui
         for (auto& [name, panel] : s_panels) {
             if (!panel.visible)
                 continue;
-            if (ImGui::Begin(name.c_str(), &panel.visible))
+            ui::PushFont(ui::FontWeight::BoldTitle);
+            bool began = ImGui::Begin(name.c_str(), &panel.visible, ImGuiWindowFlags_NoCollapse);
+            ui::PopFont();
+
+            if (began)
                 panel.draw();
             ImGui::End();
         }

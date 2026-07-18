@@ -23,10 +23,9 @@ namespace chai
         return math::Vec2{deltaX, deltaY};
     }
 
-    float InputHandler::scrollDelta() const
+    math::Vec2 InputHandler::scrollDelta() const
     {
-        //TODO
-        return 0.f;
+        return math::Vec2{scrollX, scrollY};
     }
 
     void InputHandler::setCursorMode(CursorMode mode)
@@ -38,6 +37,8 @@ namespace chai
     {
         deltaX = 0.f;
         deltaY = 0.f;
+        scrollX = 0.f;
+        scrollY = 0.f;
         keyboardCaptured_ = false;
         mouseCaptured_ = false;
         typedChars_.clear();
@@ -90,6 +91,12 @@ namespace chai
     void InputHandler::updateCharInput(const CharEvent& input)
     {
         typedChars_.push_back(input.input);
+    }
+
+    void InputHandler::updateScrollInput(const MouseScrollEvent& input)
+    {
+        scrollX = input.x;
+        scrollY = input.y;
     }
 }
 
