@@ -82,172 +82,159 @@ void Implementation::Update()
 
 Implementation* sgpImplementation = nullptr;
 
-void AudioEngine::Init()
+namespace audio
 {
-    sgpImplementation = new Implementation;
-}
-
-void AudioEngine::Update()
-{
-    sgpImplementation->Update();
-}
-
-void AudioEngine::Shutdown()
-{
-    delete sgpImplementation;
-}
-
-void AudioEngine::LoadSound(const std::string& strSoundName, bool b3d,
-                            bool bLooping, bool bStream)
-{
-#ifdef FMOD_FOUND
-    auto tFoundIt = sgpImplementation->mSounds.find(strSoundName);
-    if (tFoundIt != sgpImplementation->mSounds.end())
-        return;
-
-    FMOD_MODE eMode = FMOD_DEFAULT;
-    eMode |= b3d ? FMOD_3D : FMOD_2D;
-    eMode |= bLooping ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
-    eMode |= bStream ? FMOD_CREATESTREAM : FMOD_CREATECOMPRESSEDSAMPLE;
-
-    FMOD::Sound* pSound = nullptr;
-    sgpImplementation->mpSystem->createSound(strSoundName.c_str(), eMode,
-                                             nullptr, &pSound);
-    if (pSound)
+    void AudioEngine::init()
     {
-        sgpImplementation->mSounds[strSoundName] = pSound;
+        sgpImplementation = new Implementation;
     }
-#endif
-}
 
-void AudioEngine::UnLoadSound(const std::string& strSoundName)
-{
-#ifdef FMOD_FOUND
-    auto tFoundIt = sgpImplementation->mSounds.find(strSoundName);
-    if (tFoundIt == sgpImplementation->mSounds.end())
-        return;
-    tFoundIt->second->release();
-    sgpImplementation->mSounds.erase(tFoundIt);
-#endif
-}
-
-int AudioEngine::PlaySound(const std::string& strSoundName,
-                           const chai::math::Vec3& vPosition, float fVolumedB)
-{
-#ifdef FMOD_FOUND
-    int nChannelId = sgpImplementation->mnNextChannelId++;
-    auto tFoundId = sgpImplementation->mSounds.find(strSoundName);
-    if (tFoundId == sgpImplementation->mSounds.end())
+    void AudioEngine::update()
     {
-        LoadSound(strSoundName);
-        tFoundId = sgpImplementation->mSounds.find(strSoundName);
-        if (tFoundId == sgpImplementation->mSounds.end())
-        {
-            return nChannelId;
+        sgpImplementation->Update();
+    }
+
+    void AudioEngine::shutdown()
+    {
+        delete sgpImplementation;
+    }
+
+    void
+    AudioEngine::loadSound(const std::string& strSoundName, bool b3d, bool bLooping, bool bStream)
+    {
+#ifdef FMOD_FOUND
+        auto tFoundIt = sgpImplementation->mSounds.find(strSoundName);
+        if (tFoundIt != sgpImplementation->mSounds.end())
+            return;
+
+        FMOD_MODE eMode = FMOD_DEFAULT;
+        eMode |= b3d ? FMOD_3D : FMOD_2D;
+        eMode |= bLooping ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
+        eMode |= bStream ? FMOD_CREATESTREAM : FMOD_CREATECOMPRESSEDSAMPLE;
+
+        FMOD::Sound* pSound = nullptr;
+        sgpImplementation->mpSystem->createSound(strSoundName.c_str(), eMode, nullptr, &pSound);
+        if (pSound) {
+            sgpImplementation->mSounds[strSoundName] = pSound;
         }
+#endif
     }
 
-    FMOD::Channel* pChannel = nullptr;
-    sgpImplementation->mpSystem->playSound(tFoundId->second, nullptr, true, &pChannel);
-    if (pChannel)
+    void AudioEngine::unLoadSound(const std::string& strSoundName)
     {
-        FMOD_VECTOR position = vec3ToFmod(vPosition);
-        pChannel->set3DAttributes(&position, nullptr);
-        pChannel->setVolume(dBToVolume(fVolumedB));
-        pChannel->setPaused(false);
-        sgpImplementation->mChannels[nChannelId] = pChannel;
-    }
-    return nChannelId;
-#else
-    return 0;
-#endif
-}
-
-void AudioEngine::Set3dListenerAndOrientation(const chai::math::Vec3& vPosition,
-                                              const chai::math::Vec3& vLook, const chai::math::Vec3& vUp)
-{
 #ifdef FMOD_FOUND
-    auto pos = vec3ToFmod(vPosition);
-    pos.x = -pos.x;
-    pos.z = -pos.z;
-    auto look = vec3ToFmod(vLook);
-    auto up = vec3ToFmod(vUp);
-
-    sgpImplementation->mpSystem->set3DListenerAttributes(
-        0,
-        &pos,
-        0,
-        &look,
-        &up);
+        auto tFoundIt = sgpImplementation->mSounds.find(strSoundName);
+        if (tFoundIt == sgpImplementation->mSounds.end())
+            return;
+        tFoundIt->second->release();
+        sgpImplementation->mSounds.erase(tFoundIt);
 #endif
-}
+    }
+
+    int AudioEngine::playSound(const std::string& strSoundName,
+                               const chai::math::Vec3& vPosition,
+                               float fVolumedB)
+    {
+#ifdef FMOD_FOUND
+        int nChannelId = sgpImplementation->mnNextChannelId++;
+        auto tFoundId = sgpImplementation->mSounds.find(strSoundName);
+        if (tFoundId == sgpImplementation->mSounds.end()) {
+            loadSound(strSoundName);
+            tFoundId = sgpImplementation->mSounds.find(strSoundName);
+            if (tFoundId == sgpImplementation->mSounds.end()) {
+                return nChannelId;
+            }
+        }
+
+        FMOD::Channel* pChannel = nullptr;
+        sgpImplementation->mpSystem->playSound(tFoundId->second, nullptr, true, &pChannel);
+        if (pChannel) {
+            FMOD_VECTOR position = vec3ToFmod(vPosition);
+            pChannel->set3DAttributes(&position, nullptr);
+            pChannel->setVolume(dBToVolume(fVolumedB));
+            pChannel->setPaused(false);
+            sgpImplementation->mChannels[nChannelId] = pChannel;
+        }
+        return nChannelId;
+#else
+        return 0;
+#endif
+    }
+
+    void AudioEngine::set3dListenerAndOrientation(const chai::math::Vec3& vPosition,
+                                                  const chai::math::Vec3& vLook,
+                                                  const chai::math::Vec3& vUp)
+    {
+#ifdef FMOD_FOUND
+        auto pos = vec3ToFmod(vPosition);
+        pos.x = -pos.x;
+        pos.z = -pos.z;
+        auto look = vec3ToFmod(vLook);
+        auto up = vec3ToFmod(vUp);
+
+        sgpImplementation->mpSystem->set3DListenerAttributes(0, &pos, 0, &look, &up);
+#endif
+    }
 
 #ifdef FMOD_FOUND
 // Checks that idx is 0 <= n < size and returns 'val' if failed.
 // Asserts if a failure occurs in Debug mode.
-#define CHECK_BOUNDS(idx, iterable, val) \
-    do \
-    { \
-        if (nChannelId < 0 || \
-            nChannelId >= sgpImplementation->mChannels.size()) \
-        { \
-            assert(0); \
-            return val; \
-        } \
+#define CHECK_BOUNDS(idx, iterable, val)                                                           \
+    do {                                                                                           \
+        if (nChannelId < 0 || nChannelId >= sgpImplementation->mChannels.size()) {                 \
+            assert(0);                                                                             \
+            return val;                                                                            \
+        }                                                                                          \
     } while (0)
 #endif
 
-void AudioEngine::StopChannel(int nChannelId)
-{
-#ifdef FMOD_FOUND
-    CHECK_BOUNDS(nChannelId, sgpImplementation->mChannels, );
-    sgpImplementation->mChannels[nChannelId]->stop();
-#endif
-}
-
-void AudioEngine::StopAllChannels()
-{
-#ifdef FMOD_FOUND
-    for (auto&& channel : sgpImplementation->mChannels)
+    void AudioEngine::stopChannel(int nChannelId)
     {
-        channel.second->stop();
+#ifdef FMOD_FOUND
+        CHECK_BOUNDS(nChannelId, sgpImplementation->mChannels, );
+        sgpImplementation->mChannels[nChannelId]->stop();
+#endif
     }
-#endif
-}
 
-void AudioEngine::SetChannel3dPosition(int nChannelId,
-                                       const chai::math::Vec3& vPosition)
-{
+    void AudioEngine::stopAllChannels()
+    {
 #ifdef FMOD_FOUND
-    CHECK_BOUNDS(nChannelId, sgpImplementation->mChannels, );
-
-    const FMOD_VECTOR pos = vec3ToFmod(vPosition);
-    const FMOD_VECTOR vel = FMOD_VECTOR(0, 0, 0);
-    sgpImplementation->mChannels[nChannelId]->set3DAttributes(
-        &pos,
-        &vel
-    );
+        for (auto&& channel : sgpImplementation->mChannels) {
+            channel.second->stop();
+        }
 #endif
-}
+    }
 
-void AudioEngine::SetChannelVolume(int nChannelId, float fVolumedB)
-{
+    void AudioEngine::setChannel3dPosition(int nChannelId, const chai::math::Vec3& vPosition)
+    {
 #ifdef FMOD_FOUND
-    CHECK_BOUNDS(nChannelId, sgpImplementation->mChannels, );
-    sgpImplementation->mChannels[nChannelId]->setVolume(dBToVolume(fVolumedB));
+        CHECK_BOUNDS(nChannelId, sgpImplementation->mChannels, );
+
+        const FMOD_VECTOR pos = vec3ToFmod(vPosition);
+        const FMOD_VECTOR vel = FMOD_VECTOR(0, 0, 0);
+        sgpImplementation->mChannels[nChannelId]->set3DAttributes(&pos, &vel);
 #endif
-}
+    }
 
-bool AudioEngine::IsPlaying(int nChannelId) const
-{
+    void AudioEngine::setChannelVolume(int nChannelId, float fVolumedB)
+    {
 #ifdef FMOD_FOUND
-    CHECK_BOUNDS(nChannelId, sgpImplementation->mChannels, false);
+        CHECK_BOUNDS(nChannelId, sgpImplementation->mChannels, );
+        sgpImplementation->mChannels[nChannelId]->setVolume(dBToVolume(fVolumedB));
+#endif
+    }
 
-    bool isPlaying = false;
+    bool AudioEngine::isPlaying(int nChannelId) const
+    {
+#ifdef FMOD_FOUND
+        CHECK_BOUNDS(nChannelId, sgpImplementation->mChannels, false);
 
-    sgpImplementation->mChannels[nChannelId]->isPlaying(&isPlaying);
-    return isPlaying;
+        bool isPlaying = false;
+
+        sgpImplementation->mChannels[nChannelId]->isPlaying(&isPlaying);
+        return isPlaying;
 #else
-    return false;
+        return false;
 #endif
+    }
 }
