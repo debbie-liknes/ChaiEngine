@@ -22,7 +22,7 @@ namespace chai::scene
 
     GameObject* Scene::createObject(const std::string& name) 
     {
-        return m_objects.emplace_back(std::make_unique<GameObject>(name)).get();
+        return m_objects.emplace_back(std::make_unique<GameObject>(name, gameObjAllocator_.allocate())).get();
     }
 
     void Scene::setCamera(GameObject* cam)
@@ -33,10 +33,5 @@ namespace chai::scene
     void Scene::setLight(GameObject* sun)
     {
         sun_ = sun;
-    }
-
-    void Scene::setCameraAspect(float aspect)
-    {
-        camera_->getComponent<CameraComponent>()->setAspectRatio(aspect);
     }
 }

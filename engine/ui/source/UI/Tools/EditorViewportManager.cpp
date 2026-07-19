@@ -1,12 +1,12 @@
 #include <UI/Tools/EditorViewportManager.h>
 #include <UI/Editor/PanelRegistry.h>
 #include <imgui.h>
-#include <Rendering/Viewport.h>
 
 namespace chai::ui
 {
     EditorViewportManager::EditorViewportManager(gfx::IRenderer& renderer,
-                                                      PanelRegistry& panelRegistry): panelRegistry_(panelRegistry)
+                                                 PanelRegistry& panelRegistry)
+        : panelRegistry_(panelRegistry), renderer_(renderer)
     {
     }
 
@@ -18,18 +18,16 @@ namespace chai::ui
         renderer.setViewportHovered(handle, ImGui::IsItemHovered());
     }
 
-    std::string EditorViewportManager::addPane(gfx::IRenderer& renderer,
-                                      const std::string& name,
-                                      uint32_t cameraViewIndex)
+    std::string EditorViewportManager::addViewport(const std::string& name, uint32_t cameraViewId)
     {
         //create the handle
-        auto handle = renderer.addViewport(name, cameraViewIndex);
+        auto handle = renderer_.addViewport(name, cameraViewId);
 
         //tell the system about the panel
         ui::PanelDesc panelInfo;
         panelInfo.displayName = name;
-        panelInfo.id = name + "##Viewport_" + std::to_string(renderer.getViewportTextureId(handle));
-        panelInfo.draw = [this, &renderer, handle] { drawViewportPanel(renderer, handle); };
+        panelInfo.id = name + "##Viewport_" + std::to_string(renderer_.getViewportTextureId(handle));
+        panelInfo.draw = [this, handle] { drawViewportPanel(renderer_, handle); };
         panelInfo.visible = true;
         panelRegistry_.registerPanel(panelInfo);
 

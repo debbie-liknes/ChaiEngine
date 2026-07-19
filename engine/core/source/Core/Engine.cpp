@@ -43,26 +43,6 @@ namespace chai
         auto vpManager = std::make_shared<ui::EditorViewportManager>(*renderer, *panelRegistry);
         ctx_.services.provide<ui::EditorViewportManager>(vpManager);
 
-        std::string mainPanelId = vpManager->addPane(*renderer, "Main Scene", 0);
-
-        std::string hierarchy = "Hierarchy";
-        panelRegistry->registerPanel({.id = hierarchy, .displayName = "Hierarchy", .draw = [] {
-                                          ui::Text("Scene hierarchy tree goes here");
-                                      }});
-
-        ui::DockSplit horizontalSplit;
-        horizontalSplit.ratio = 0.25f;
-        horizontalSplit.side = ui::DockSplit::Side::Left;
-        horizontalSplit.windowId = hierarchy;
-
-        ui::DockSplit split;
-        split.side = ui::DockSplit::Side::Bottom;
-        split.ratio = 0.25f;
-        split.windowId = "Logger";
-
-        dockspace->setDefaultLayout({horizontalSplit, split}, mainPanelId);
-
-
         ui::loadFonts(executableDir().string() + "/assets/editor/fonts");
     }
 
@@ -91,12 +71,40 @@ namespace chai
         scene_ = std::move(scene);
     }
 
+    void Engine::setupDockspace()
+    {
+        auto& panelRegistry = services_.resolve<ui::PanelRegistry>();
+        auto& vpManager = services_.resolve<ui::EditorViewportManager>();
+        auto& dockspace = services_.resolve<ui::DockspaceService>();
+
+        std::string mainPanelId = vpManager.addViewport("Main Scene", scene_->getCameraId());
+
+        std::string hierarchy = "Hierarchy";
+        panelRegistry.registerPanel({.id = hierarchy, .displayName = "Hierarchy", .draw = [] {
+                                          ui::Text("Scene hierarchy tree goes here");
+                                      }});
+
+        ui::DockSplit horizontalSplit;
+        horizontalSplit.ratio = 0.25f;
+        horizontalSplit.side = ui::DockSplit::Side::Left;
+        horizontalSplit.windowId = hierarchy;
+
+        ui::DockSplit split;
+        split.side = ui::DockSplit::Side::Bottom;
+        split.ratio = 0.25f;
+        split.windowId = "Logger";
+
+        dockspace.setDefaultLayout({horizontalSplit, split}, mainPanelId);
+    }
+
     void Engine::run()
     {
         //these dont come from a plugin, guaranteed
         auto& panelRegistry = services_.resolve<ui::PanelRegistry>();
         auto& panelHost = services_.resolve<ui::PanelHost>();
         auto& dockingService = services_.resolve<ui::DockspaceService>();
+
+        setupDockspace();
 
         //These come from plugins, check that they exist
         auto window = services_.tryResolve<IWindow>();
@@ -121,7 +129,6 @@ namespace chai
             renderer->startFrame();
             float dt = clock_.tick();
 
-            updateActiveCameraAspect();
             UpdateContext ctx{dt, *input};
             scene_->update(ctx);
 
@@ -133,21 +140,5 @@ namespace chai
             renderer->renderFrame(frame);
             renderer->endFrame();
         }
-    }
-
-    void Engine::updateActiveCameraAspect()
-    {
-        auto window = services().tryResolve<IWindow>();
-        if (!window || !scene_)
-            return; // headless?
-
-        //get framebuffer size
-        int w = 0, h = 0;
-        window->framebufferSize(w, h);
-        if (w == 0 || h == 0)
-            return; // minimized
-
-        float aspect = float(w) / float(h);
-        scene_->setCameraAspect(aspect);
     }
 }

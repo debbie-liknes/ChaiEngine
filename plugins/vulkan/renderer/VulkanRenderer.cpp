@@ -55,8 +55,17 @@ namespace chai::gfx
 
         profiler_.shutdown(ctx_.device());
 
+        for (auto& slot : viewportSlots_) {
+            for (int i = 0; i < kFramesInFlight; i++) {
+                vmaDestroyBuffer(
+                    ctx_.allocator(), slot.viewport.cameraBuffer[i], slot.viewport.cameraAlloc[i]);
+                slot.viewport.targets[i].destroy(ctx_);
+            }
+        }
+
+        vkDestroySampler(ctx_.device(), linearSampler_, nullptr);
+
         for (int i = 0; i < kFramesInFlight; i++) {
-            //vmaDestroyBuffer(ctx_.allocator(), frames_[i].cameraBuffer, frames_[i].cameraAlloc);
             vmaDestroyBuffer(ctx_.allocator(), frames_[i].lightBuffer, frames_[i].lightAlloc);
             vkDestroyFence(ctx_.device(), frames_[i].inFlight, nullptr);
             vkDestroySemaphore(ctx_.device(), frames_[i].imageAvailable, nullptr);
@@ -124,47 +133,6 @@ namespace chai::gfx
 
             VK_CHECK(vkCreateSemaphore(
                 ctx_.device(), &semaphoreCreateInfo, nullptr, &frames_[i].imageAvailable));
-
-            // camera
-            {
-                VkBufferCreateInfo bufInfo{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
-                bufInfo.size = sizeof(CameraData);
-                bufInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-
-                VmaAllocationCreateInfo aci{};
-                aci.usage = VMA_MEMORY_USAGE_AUTO;
-                aci.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-                            VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
- /*               VmaAllocationInfo allocInfo{};
-                VK_CHECK(vmaCreateBuffer(ctx_.allocator(),
-                                         &bufInfo,
-                                         &aci,
-                                         &frames_[i].cameraBuffer,
-                                         &frames_[i].cameraAlloc,
-                                         &allocInfo));
-                frames_[i].cameraMapped = allocInfo.pMappedData;
-
-                VkDescriptorSetLayout camLayout = ctx_.cameraSetLayout();
-                VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
-                dsai.descriptorPool = ctx_.descriptorPool();
-                dsai.descriptorSetCount = 1;
-                dsai.pSetLayouts = &camLayout;
-                VK_CHECK(vkAllocateDescriptorSets(ctx_.device(), &dsai, &frames_[i].cameraSet));
-
-                VkDescriptorBufferInfo dbi{};
-                dbi.buffer = frames_[i].cameraBuffer;
-                dbi.offset = 0;
-                dbi.range = sizeof(CameraData);
-
-                VkWriteDescriptorSet write{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
-                write.dstSet = frames_[i].cameraSet;
-                write.dstBinding = 0;
-                write.descriptorCount = 1;
-                write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                write.pBufferInfo = &dbi;
-                vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);*/
-            }
 
             frames_[i].shadowTarget =
                 createDepth2D(ctx_, kShadowMapSize, kShadowMapSize, VK_FORMAT_D32_SFLOAT, true);
@@ -336,12 +304,21 @@ namespace chai::gfx
 
             for (auto c : input->getTypedCharactersThisFrame())
                 io.AddInputCharacter(c);
+        }
 
-            if (io.WantCaptureKeyboard)
-                input->consumeKeyboardEvents();
-
-            if (io.WantCaptureMouse)
-                input->consumeMouseEvents();
+        std::optional<uint32_t> hoveredCameraIndex;
+        for (auto& slot : viewportSlots_) {
+            if (!slot.alive)
+                continue;
+            if (slot.viewport.hovered) {
+                hoveredCameraIndex = slot.viewport.cameraViewId;
+                break;
+            }
+        }
+        if (hoveredCameraIndex.has_value())
+            input->setHoveredCamera(hoveredCameraIndex.value());
+        else {
+            input->setHoveredCamera(-1);
         }
 
         beginUIFrame();
@@ -433,12 +410,28 @@ namespace chai::gfx
                 continue;
             auto& viewport = slot.viewport;
             ViewportTarget& target = viewport.targets[currentFrame_];
-            const auto& camView = renderData.views[viewport.cameraViewIndex];
+            auto viewIt = std::find_if(renderData.views.begin(),
+                                               renderData.views.end(),
+                [camId = viewport.cameraViewId](const RenderView& data) {
+                                           return data.cameraId == camId;
+                                               });
+            if (viewIt == renderData.views.end()) {
+                CHAI_LOG_WARN("Invalid Camera Id for Viewport {}", slot.viewport.id);
+                continue;
+            }
+
+            const auto& camView = *viewIt;
+
+            float aspect = static_cast<float>(target.view.extent.width) /
+                           static_cast<float>(target.view.extent.height);
+
+            math::Mat4 proj = math::perspectiveVK(
+                camView.fovYRadians, aspect, camView.nearPlane, camView.farPlane);
 
             CameraData camUBO{};
             camUBO.view = camView.view;
-            camUBO.proj = camView.proj;
-            camUBO.viewProj = camView.proj * camView.view;
+            camUBO.proj = proj;
+            camUBO.viewProj = proj * camView.view;
             camUBO.position = camView.position;
             std::memcpy(viewport.cameraMapped[currentFrame_], &camUBO, sizeof(camUBO));
 
@@ -1347,21 +1340,20 @@ namespace chai::gfx
     }
 
     VulkanRenderer::Viewport VulkanRenderer::createViewport(const std::string& id,
-                                                            uint32_t cameraViewIndex)
+                                                            uint32_t cameraViewId)
     {
         Viewport vp;
         vp.id = id;
-        vp.cameraViewIndex = cameraViewIndex;
+        vp.cameraViewId = cameraViewId;
 
         for (int i = 0; i < kFramesInFlight; i++) {
             vp.targets[i] = createViewportTarget(
-                swapchain_.extent()); // color+depth, sized to something reasonable initially
+                swapchain_.extent());
             vp.targets[i].imguiTextureId =
                 (ImTextureID)ImGui_ImplVulkan_AddTexture(linearSampler_,
                                                          vp.targets[i].view.colorView,
                                                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-            // camera buffer + set, mirroring init()'s frames_[i].cameraBuffer setup
             createCameraUBO(
                 vp.cameraBuffer[i], vp.cameraAlloc[i], vp.cameraMapped[i], vp.cameraSet[i]);
         }
@@ -1383,7 +1375,7 @@ namespace chai::gfx
         }
     }
 
-    ViewportHandle VulkanRenderer::addViewport(const std::string& id, uint32_t cameraViewIndex)
+    ViewportHandle VulkanRenderer::addViewport(const std::string& id, uint32_t cameraViewId)
     {
         uint32_t index;
         if (!freeViewportSlots_.empty()) {
@@ -1396,7 +1388,7 @@ namespace chai::gfx
 
         ViewportSlot& slot = viewportSlots_[index];
         slot.viewport = createViewport(
-            id, cameraViewIndex);
+            id, cameraViewId);
         slot.alive = true;
 
         return ViewportHandle{index, slot.generation};
@@ -1405,14 +1397,13 @@ namespace chai::gfx
     void VulkanRenderer::removeViewport(ViewportHandle handle)
     {
         if (!isValidHandle(handle))
-            return; // no-op on a stale/bad handle, not a crash
+            return;
 
         ViewportSlot& slot = viewportSlots_[handle.index];
-        destroyViewport(slot.viewport); // waitIdle-gated teardown: RemoveTexture, destroy targets,
-                                        // camera buffers
+        destroyViewport(slot.viewport);
 
         slot.alive = false;
-        slot.generation++; // any handle issued before this point now fails the generation check
+        slot.generation++;
         freeViewportSlots_.push_back(handle.index);
     }
 

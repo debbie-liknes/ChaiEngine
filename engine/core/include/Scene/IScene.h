@@ -3,6 +3,7 @@
  */
 #pragma once
 #include <Core/Updatable.h>
+#include <cstdint>
 
 namespace chai
 {
@@ -17,6 +18,7 @@ namespace chai
 
         virtual void update(const struct UpdateContext&) = 0;
         virtual void extract(gfx::FrameRenderData& frame) const = 0;
-        virtual void setCameraAspect(float aspect) = 0;
+        virtual uint32_t getCameraId() const = 0;
+
 	};
 }

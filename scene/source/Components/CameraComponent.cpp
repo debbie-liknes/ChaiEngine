@@ -34,7 +34,11 @@ namespace chai::scene
         auto const* t = getGameObject()->getComponent<TransformComponent>();
         const math::Mat4 world = t ? t->getWorldMatrix() : math::Mat4::identity();
         const math::Mat4 view = world.inverse();
-        const math::Mat4 proj = cam_.getProjectionMatrix();
-        frame.views.emplace_back(view, proj, proj * view, t->getWorldPosition());
+        frame.views.emplace_back(view,
+                                 t->getWorldPosition(),
+                                 cam_.getFovY(),
+                                 cam_.getNearPlane(),
+                                 cam_.getFarPlane(),
+                                 getGameObject()->getObjectId());
     }
 }

@@ -83,6 +83,16 @@ namespace chai
         mouseCaptured_ = true;
     }
 
+    void InputHandler::setHoveredCamera(int32_t cameraId) 
+    {
+        activeCamera_ = cameraId;
+    }
+
+    int32_t InputHandler::getHoveredCamera() const
+    {
+        return activeCamera_;
+    }
+
     const std::vector<unsigned int>& InputHandler::getTypedCharactersThisFrame() const
     {
         return typedChars_;

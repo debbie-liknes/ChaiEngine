@@ -89,11 +89,6 @@ namespace chai::gfx
             VkSemaphore imageAvailable = VK_NULL_HANDLE;
             VkFence inFlight = VK_NULL_HANDLE;
 
-            //VkBuffer cameraBuffer = VK_NULL_HANDLE;
-            //VmaAllocation cameraAlloc = VK_NULL_HANDLE;
-            //void* cameraMapped = nullptr;
-            //VkDescriptorSet cameraSet = VK_NULL_HANDLE;
-
             VkDescriptorSet lightSet = VK_NULL_HANDLE;
             void* lightMapped = nullptr;
             VkBuffer lightBuffer = VK_NULL_HANDLE;
@@ -114,7 +109,7 @@ namespace chai::gfx
             VkExtent2D pendingExtent{};
             bool needsResize = false;
             bool hovered = false;
-            uint32_t cameraViewIndex = 0;
+            uint32_t cameraViewId = 0;
         };
 
         struct ViewportSlot {

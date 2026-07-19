@@ -2,6 +2,7 @@
 #include <Rendering/IRenderer.h>
 #include <UI/Editor/PanelRegistry.h>
 #include <string>
+#include <Rendering/Viewport.h>
 
 namespace chai::ui
 {
@@ -10,9 +11,10 @@ namespace chai::ui
     public:
         EditorViewportManager(gfx::IRenderer& renderer, PanelRegistry& panelRegistry);
 
-        std::string addPane(gfx::IRenderer & renderer, const std::string& name, uint32_t cameraViewIndex);
+        std::string addViewport(const std::string& name, uint32_t cameraViewId);
 	private:
 
 		PanelRegistry& panelRegistry_;
+        gfx::IRenderer& renderer_;
 	};
 }

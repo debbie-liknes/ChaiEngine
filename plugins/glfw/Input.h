@@ -35,6 +35,8 @@ namespace chai
 
         void consumeKeyboardEvents() override;
         void consumeMouseEvents() override;
+        void setHoveredCamera(int32_t cameraId) override;
+        int32_t getHoveredCamera() const override;
 
         const std::vector<unsigned int>& getTypedCharactersThisFrame() const override;
 
@@ -48,6 +50,7 @@ namespace chai
         bool keyboardCaptured_ = false;
         bool mouseCaptured_ = false;
         std::vector<unsigned int> typedChars_;
+        int32_t activeCamera_ = 0;
 	};
 
     Key toChaiKey(int glfwKey);

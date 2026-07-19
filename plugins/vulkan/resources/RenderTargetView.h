@@ -43,7 +43,11 @@ namespace chai::gfx
 
         void destroy(VulkanContext& ctx)
         {
+            vmaDestroyImage(ctx.allocator(), view.image, colorAlloc);
+            vmaDestroyImage(ctx.allocator(), view.depthImage, depthAlloc);
 
+            vkDestroyImageView(ctx.device(), view.colorView, nullptr);
+            vkDestroyImageView(ctx.device(), view.depthView, nullptr);
         }
     };
 } // namespace chai

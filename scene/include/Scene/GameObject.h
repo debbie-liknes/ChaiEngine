@@ -8,17 +8,20 @@
 
 namespace chai::scene
 {
+    using GameObjectId = int32_t;
+
     class GameObject : public IUpdatable
     {
     public:
         GameObject();
         GameObject(const std::string& name);
+        GameObject(const std::string& name, GameObjectId id);
         ~GameObject() = default;
 
+        GameObjectId getObjectId() const { return objectId_; }
         void setParent(GameObject* parent);
         GameObject* getParent() const;
         void addChild(std::unique_ptr<GameObject> child);
-        //std::span<GameObject const*>& getChildren() const;
 
         template <typename T>
         T* addComponent()
@@ -106,5 +109,7 @@ namespace chai::scene
         //hierarchy
         GameObject* parent_ = nullptr;
         std::vector<GameObject*> children_;
+
+        int32_t objectId_ = -1;
     };
 }
