@@ -55,7 +55,7 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v1
 
       - name: Configure CMake
-        run: cmake -S . -B build -G Makefile -A x64
+        run: cmake -S . -B build -G "Unix Makefiles" -A x64
 
       - name: Build
         run: cmake --build build --config Debug
