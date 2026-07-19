@@ -33,3 +33,32 @@ jobs:
 
       - name: Run tests via CTest
         run: ctest --test-dir build --output-on-failure -C Debug
+  
+  build-ubuntu-gcc15:
+    name: Ubuntu (gcc15)
+    # See https://github.com/actions/runner-images/tree/main#available-images
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Vulkan SDK
+        uses: jakoch/install-vulkan-sdk-action@v1
+        with:
+          vulkan_version: latest
+          install_runtime: true
+          cache: true
+
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v1
+
+      - name: Configure CMake
+        run: cmake -S . -B build -G Makefile -A x64
+
+      - name: Build
+        run: cmake --build build --config Debug
+
+      - name: Run tests via CTest
+        run: ctest --test-dir build --output-on-failure -C Debug
