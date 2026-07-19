@@ -4,6 +4,9 @@
  */
 #pragma once
 #include <vulkan/vulkan.h>
+#include <vk_mem_alloc.h>
+#include <imgui.h>
+#include "../renderer/VulkanContext.h"
 
 namespace chai::gfx
 {
@@ -23,5 +26,24 @@ namespace chai::gfx
         VkFormat depthFormat = VK_FORMAT_UNDEFINED;
 
         VkClearValue clearColor{};
+    };
+
+    /**
+     * @brief Support multi viewports
+     */
+    struct ViewportTarget 
+    {
+        RenderTargetView view;
+
+        VmaAllocation colorAlloc = VK_NULL_HANDLE;
+        VmaAllocation depthAlloc = VK_NULL_HANDLE;
+
+        //TODO: another place where ImGui is sneaking in
+        ImTextureID imguiTextureId = 0;
+
+        void destroy(VulkanContext& ctx)
+        {
+
+        }
     };
 } // namespace chai

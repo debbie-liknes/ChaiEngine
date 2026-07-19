@@ -24,6 +24,7 @@ set(${PROJECT_NAME}_headers
         include/Rendering/FrameRenderData.h
         include/Rendering/IRenderer.h
         include/Rendering/LightData.h
+        include/Rendering/Viewport.h
 )
 
 set(${PROJECT_NAME}_source

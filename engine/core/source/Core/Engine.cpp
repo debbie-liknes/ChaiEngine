@@ -4,8 +4,11 @@
 #include <Rendering/FrameRenderData.h>
 #include <Core/IInput.h>
 #include <UI/Tools/InternalChaiUi.h>
-#include <UI/Tools/InternalPanels.h>
+#include <UI/Editor/PanelRegistry.h>
+#include <UI/Editor/PanelHost.h>
+#include <UI/Editor/DockspaceService.h>
 #include <Core/SystemPaths.h>
+#include <LogPanel.h>
 
 namespace chai
 {
@@ -15,11 +18,50 @@ namespace chai
 
     void Engine::startup()
     {
+        // Register panel management and docking services
+        auto panelRegistry = std::make_shared<ui::PanelRegistry>();
+        ctx_.services.provide<ui::PanelRegistry>(panelRegistry);
+
+        auto panelHost = std::make_shared<ui::PanelHost>();
+        ctx_.services.provide<ui::PanelHost>(panelHost);
+
+        auto dockspace = std::make_shared<ui::DockspaceService>();
+        ctx_.services.provide<ui::DockspaceService>(dockspace);
+
+        //Load plugins
         CHAI_LOG_INFO("Engine starting");
         for (auto& p : plugins_) {
             p->onLoad(ctx_);
             active_.push_back(p);
         }
+
+        auto renderer = services_.tryResolve<gfx::IRenderer>();
+        if (!renderer) {
+            CHAI_LOG_CRITICAL("Could not locate Window Service.");
+        }
+
+        auto vpManager = std::make_shared<ui::EditorViewportManager>(*renderer, *panelRegistry);
+        ctx_.services.provide<ui::EditorViewportManager>(vpManager);
+
+        std::string mainPanelId = vpManager->addPane(*renderer, "Main Scene", 0);
+
+        std::string hierarchy = "Hierarchy";
+        panelRegistry->registerPanel({.id = hierarchy, .displayName = "Hierarchy", .draw = [] {
+                                          ui::Text("Scene hierarchy tree goes here");
+                                      }});
+
+        ui::DockSplit horizontalSplit;
+        horizontalSplit.ratio = 0.25f;
+        horizontalSplit.side = ui::DockSplit::Side::Left;
+        horizontalSplit.windowId = hierarchy;
+
+        ui::DockSplit split;
+        split.side = ui::DockSplit::Side::Bottom;
+        split.ratio = 0.25f;
+        split.windowId = "Logger";
+
+        dockspace->setDefaultLayout({horizontalSplit, split}, mainPanelId);
+
 
         ui::loadFonts(executableDir().string() + "/assets/editor/fonts");
     }
@@ -29,6 +71,9 @@ namespace chai
         CHAI_LOG_INFO("Engine shutdown");
         for (auto it = active_.rbegin(); it != active_.rend(); ++it)
             (*it)->onUnload(ctx_);
+
+        ctx_.services.remove<ui::PanelRegistry>();
+        ctx_.services.remove<ui::EditorViewportManager>();
     }
 
     void Engine::requestStop()
@@ -48,6 +93,12 @@ namespace chai
 
     void Engine::run()
     {
+        //these dont come from a plugin, guaranteed
+        auto& panelRegistry = services_.resolve<ui::PanelRegistry>();
+        auto& panelHost = services_.resolve<ui::PanelHost>();
+        auto& dockingService = services_.resolve<ui::DockspaceService>();
+
+        //These come from plugins, check that they exist
         auto window = services_.tryResolve<IWindow>();
         if (!window) {
             CHAI_LOG_CRITICAL("Could not locate Window Service.");
@@ -55,7 +106,7 @@ namespace chai
 
         auto renderer = services_.tryResolve<gfx::IRenderer>();
         if (!renderer) {
-            CHAI_LOG_CRITICAL("Could not locate Window Service.");
+            CHAI_LOG_CRITICAL("Could not locate Renderer Service.");
         }
 
         auto input = services_.tryResolve<IInput>();
@@ -74,8 +125,8 @@ namespace chai
             UpdateContext ctx{dt, *input};
             scene_->update(ctx);
 
-            //tools panels, NOT the main UI
-            chai::ui::drawRegisteredPanels();
+            //draw internal uis
+            panelHost.draw(panelRegistry, dockingService);
 
             gfx::FrameRenderData frame;
             scene_->extract(frame);

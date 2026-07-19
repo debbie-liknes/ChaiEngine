@@ -25,7 +25,6 @@
 #include <SpdLogSink.h>
 #include <Window/Window.h>
 #include <LogPanel.h>
-#include <UI/Tools/InternalPanels.h>
 
 std::filesystem::path assetDir()
 {
@@ -45,8 +44,6 @@ int main()
     diagnostics::GuiLogSink guiSink;
     addLogSink(&guiSink);
 
-    chai::ui::registerPanel("Logger", [&]() { diagnostics::drawLogPanel(guiSink); }, false);
-
     Engine engine;
     PluginLoader loader;
     auto exeDir = executableDir();
@@ -55,6 +52,14 @@ int main()
     loader.loadDirectory(exeDir / "plugins");
     engine.setPlugins(loader.plugins());
     engine.startup();
+
+    ui::PanelDesc panelInfo;
+    panelInfo.displayName = "Logger";
+    panelInfo.id = "Logger";
+    panelInfo.draw = [&]() { diagnostics::drawLogPanel(guiSink); };
+    panelInfo.visible = true;
+    auto& panelReg = engine.services().resolve<ui::PanelRegistry>();
+    panelReg.registerPanel(panelInfo);
 
     auto meshes = engine.services().tryResolve<gfx::IMeshRegistry>();
     auto textures = engine.services().tryResolve<gfx::ITextureRegistry>();

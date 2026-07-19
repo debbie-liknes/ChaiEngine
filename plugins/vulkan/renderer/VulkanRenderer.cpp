@@ -56,7 +56,7 @@ namespace chai::gfx
         profiler_.shutdown(ctx_.device());
 
         for (int i = 0; i < kFramesInFlight; i++) {
-            vmaDestroyBuffer(ctx_.allocator(), frames_[i].cameraBuffer, frames_[i].cameraAlloc);
+            //vmaDestroyBuffer(ctx_.allocator(), frames_[i].cameraBuffer, frames_[i].cameraAlloc);
             vmaDestroyBuffer(ctx_.allocator(), frames_[i].lightBuffer, frames_[i].lightAlloc);
             vkDestroyFence(ctx_.device(), frames_[i].inFlight, nullptr);
             vkDestroySemaphore(ctx_.device(), frames_[i].imageAvailable, nullptr);
@@ -100,6 +100,15 @@ namespace chai::gfx
         VkFenceCreateInfo fenceCreateInfo = fenceCreate(VK_FENCE_CREATE_SIGNALED_BIT);
         VkSemaphoreCreateInfo semaphoreCreateInfo = semaphoreCreate();
 
+        VkSamplerCreateInfo samplerInfo{VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.maxLod = VK_LOD_CLAMP_NONE;
+        VK_CHECK(vkCreateSampler(ctx_.device(), &samplerInfo, nullptr, &linearSampler_));
+
         for (int i = 0; i < kFramesInFlight; i++) {
             // allocate the default command buffer that we will use for rendering
             VkCommandBufferAllocateInfo cmdAllocInfo = {};
@@ -127,7 +136,7 @@ namespace chai::gfx
                 aci.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
                             VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-                VmaAllocationInfo allocInfo{};
+ /*               VmaAllocationInfo allocInfo{};
                 VK_CHECK(vmaCreateBuffer(ctx_.allocator(),
                                          &bufInfo,
                                          &aci,
@@ -154,7 +163,7 @@ namespace chai::gfx
                 write.descriptorCount = 1;
                 write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 write.pBufferInfo = &dbi;
-                vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);
+                vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);*/
             }
 
             frames_[i].shadowTarget =
@@ -256,8 +265,31 @@ namespace chai::gfx
         iblBaked_ = true;
     }
 
+    void VulkanRenderer::applyPendingViewportResizes()
+    {
+        for (auto& slot : viewportSlots_) {
+            if (!slot.alive)
+                continue;
+            auto& viewport = slot.viewport;
+            ViewportTarget& target = viewport.targets[currentFrame_];
+
+            if (viewport.pendingExtent.width > 0 && viewport.pendingExtent.height > 0 &&
+                (target.view.extent.width != viewport.pendingExtent.width ||
+                 target.view.extent.height != viewport.pendingExtent.height)) {
+                recreateViewportTarget(viewport, currentFrame_);
+            }
+        }
+    }
+
     void VulkanRenderer::startFrame()
     {
+        FrameData& frame = frames_[currentFrame_];
+
+        // Wait until this frame slots previous work is done.
+        VK_CHECK(vkWaitForFences(ctx_.device(), 1, &frame.inFlight, VK_TRUE, UINT64_MAX));
+
+        applyPendingViewportResizes();
+
         //sync input to imgui
         ImGuiIO& io = ImGui::GetIO();
 
@@ -320,6 +352,15 @@ namespace chai::gfx
         //nothing to do for now
     }
 
+    math::Vec2 VulkanRenderer::getViewportExtent(ViewportHandle handle) const
+    {
+        auto* vp = const_cast<VulkanRenderer*>(this)->getViewport(handle);
+        if (!vp)
+            return {0, 0};
+        auto& t = vp->targets[currentFrame_];
+        return {t.view.extent.width, t.view.extent.height};
+    }
+
     void VulkanRenderer::renderFrame(const FrameRenderData& renderData)
     {
         if (needsResize_)
@@ -327,17 +368,12 @@ namespace chai::gfx
 
         FrameData& frame = frames_[currentFrame_];
 
-        // Wait until this frame slots previous work is done.
-        VK_CHECK(vkWaitForFences(ctx_.device(), 1, &frame.inFlight, VK_TRUE, UINT64_MAX));
-
         meshCache_->tick();
         texCache_->tick();
         materialCache_->tick();
         modelReg_->tick();
 
-        endUIFrame();
         stats_.clear();
-
 
         if (!iblBaked_ || (renderData.environment.skyboxCube != skyboxCube_)) {
             if (const GpuTexture* sky = texCache_->resource(renderData.environment.skyboxCube)) {
@@ -347,14 +383,6 @@ namespace chai::gfx
                 iblBaked_ = true;
             }
         }
-
-        // TODO: should undo this hardcode index, might have more view later
-        CameraData camUBO{};
-        camUBO.view = renderData.views[0].view;
-        camUBO.proj = renderData.views[0].proj;
-        camUBO.viewProj = renderData.views[0].proj * renderData.views[0].view;
-        camUBO.position = renderData.views[0].position;
-        std::memcpy(frame.cameraMapped, &camUBO, sizeof(camUBO));
 
         LightData lightUBO{};
         lightUBO.color = renderData.sun.color;
@@ -383,27 +411,6 @@ namespace chai::gfx
         transitionImage(cmd, view.image, ImageState::Undefined, ImageState::ColorAttachment);
         transitionImage(cmd, view.depthImage, ImageState::Undefined, ImageState::DepthAttachment);
 
-        VkRenderingAttachmentInfo color{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
-        color.imageView = view.colorView;
-        color.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        color.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        color.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        color.clearValue = view.clearColor;
-
-        VkRenderingAttachmentInfo depth{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
-        depth.imageView = view.depthView;
-        depth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-        depth.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        depth.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE; // dont need it after the frame
-        depth.clearValue.depthStencil = {1.0f, 0};
-
-        VkRenderingInfo rendering{VK_STRUCTURE_TYPE_RENDERING_INFO};
-        rendering.renderArea = VkRect2D{{0, 0}, view.extent};
-        rendering.layerCount = 1;
-        rendering.colorAttachmentCount = 1;
-        rendering.pColorAttachments = &color;
-        rendering.pDepthAttachment = &depth;
-
         // sort by opaque/blend
         std::vector<uint32_t> order(renderData.items.size());
         std::iota(order.begin(), order.end(), 0u);
@@ -421,13 +428,63 @@ namespace chai::gfx
         // DRAW
         shadowMapping(cmd, order, renderData);
 
-        profiler_.beginRegion(cmd, "Main Pass");
-        vkCmdBeginRendering(cmd, &rendering);
-        renderScene(cmd, view, renderData, order);
-        vkCmdEndRendering(cmd);
-        profiler_.endRegion(cmd, "Main Pass");
+        for (auto& slot : viewportSlots_) {
+            if (!slot.alive)
+                continue;
+            auto& viewport = slot.viewport;
+            ViewportTarget& target = viewport.targets[currentFrame_];
+            const auto& camView = renderData.views[viewport.cameraViewIndex];
+
+            CameraData camUBO{};
+            camUBO.view = camView.view;
+            camUBO.proj = camView.proj;
+            camUBO.viewProj = camView.proj * camView.view;
+            camUBO.position = camView.position;
+            std::memcpy(viewport.cameraMapped[currentFrame_], &camUBO, sizeof(camUBO));
+
+            VkRenderingAttachmentInfo vpColor{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
+            vpColor.imageView = target.view.colorView;
+            vpColor.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            vpColor.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            vpColor.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            vpColor.clearValue = target.view.clearColor;
+
+            VkRenderingAttachmentInfo vpDepth{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
+            vpDepth.imageView = target.view.depthView;
+            vpDepth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+            vpDepth.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            vpDepth.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            vpDepth.clearValue.depthStencil = {1.0f, 0};
+
+            VkRenderingInfo vpRendering{VK_STRUCTURE_TYPE_RENDERING_INFO};
+            vpRendering.renderArea = VkRect2D{{0, 0}, target.view.extent};
+            vpRendering.layerCount = 1;
+            vpRendering.colorAttachmentCount = 1;
+            vpRendering.pColorAttachments = &vpColor;
+            vpRendering.pDepthAttachment = &vpDepth;
+
+            transitionImage(cmd,
+                            target.view.image,
+                            viewport.everRendered[currentFrame_] ? ImageState::ShaderRead
+                                                                 : ImageState::Undefined,
+                            ImageState::ColorAttachment);
+            transitionImage(
+                cmd, target.view.depthImage, ImageState::Undefined, ImageState::DepthAttachment);
+
+            viewport.everRendered[currentFrame_] = true;
+
+            profiler_.beginRegion(cmd, "Main Pass: " + viewport.id);
+            vkCmdBeginRendering(cmd, &vpRendering);
+            renderScene(cmd, target.view, renderData, order, viewport.cameraSet[currentFrame_]);
+            vkCmdEndRendering(cmd);
+            profiler_.endRegion(cmd, "Main Pass: " + viewport.id);
+
+            transitionImage(
+                cmd, target.view.image, ImageState::ColorAttachment, ImageState::ShaderRead);
+        }
 
         //Render UI
+        endUIFrame();
         renderUI(cmd, view.colorView);
 
         transitionImage(cmd, view.image, ImageState::ColorAttachment, ImageState::Present);
@@ -516,7 +573,8 @@ namespace chai::gfx
     void VulkanRenderer::renderScene(VkCommandBuffer cmd,
                                      const RenderTargetView& view,
                                      const FrameRenderData& renderData,
-                                     const std::vector<uint32_t>& order)
+                                     const std::vector<uint32_t>& order,
+                                     VkDescriptorSet cameraSet)
     {
         VkViewport viewport{0, 0, float(view.extent.width), float(view.extent.height), 0.f, 1.f};
         vkCmdSetViewport(cmd, 0, 1, &viewport);
@@ -531,7 +589,7 @@ namespace chai::gfx
                                 pipelineLayout_,
                                 0,
                                 1,
-                                &frame.cameraSet,
+                                &cameraSet,
                                 0,
                                 nullptr);
         vkCmdBindDescriptorSets(cmd,
@@ -1174,6 +1232,220 @@ namespace chai::gfx
                      1);
     }
 
+    ViewportTarget VulkanRenderer::createViewportTarget(VkExtent2D extent)
+    {
+        ViewportTarget target;
+        target.view.extent = extent;
+        target.view.colorFormat = swapchain_.format();
+        target.view.depthFormat = swapchain_.depthFormat();
+        target.view.clearColor.color = {{0.02f, 0.02f, 0.03f, 1.0f}};
+
+        // --- color ---
+        VkImageCreateInfo colorInfo{VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
+        colorInfo.imageType = VK_IMAGE_TYPE_2D;
+        colorInfo.format = target.view.colorFormat;
+        colorInfo.extent = {extent.width, extent.height, 1};
+        colorInfo.mipLevels = 1;
+        colorInfo.arrayLayers = 1;
+        colorInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+
+        VmaAllocationCreateInfo colorAlloc{};
+        colorAlloc.usage = VMA_MEMORY_USAGE_AUTO;
+
+        VK_CHECK(vmaCreateImage(ctx_.allocator(),
+                                &colorInfo,
+                                &colorAlloc,
+                                &target.view.image,
+                                &target.colorAlloc,
+                                nullptr));
+
+        VkImageViewCreateInfo colorViewInfo{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+        colorViewInfo.image = target.view.image;
+        colorViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        colorViewInfo.format = target.view.colorFormat;
+        colorViewInfo.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+        VK_CHECK(vkCreateImageView(ctx_.device(), &colorViewInfo, nullptr, &target.view.colorView));
+
+        // --- depth ---
+        VkImageCreateInfo depthInfo{VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
+        depthInfo.imageType = VK_IMAGE_TYPE_2D;
+        depthInfo.format = target.view.depthFormat;
+        depthInfo.extent = {extent.width, extent.height, 1};
+        depthInfo.mipLevels = 1;
+        depthInfo.arrayLayers = 1;
+        depthInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+        VmaAllocationCreateInfo depthAlloc{};
+        depthAlloc.usage = VMA_MEMORY_USAGE_AUTO;
+
+        VK_CHECK(vmaCreateImage(ctx_.allocator(),
+                                &depthInfo,
+                                &depthAlloc,
+                                &target.view.depthImage,
+                                &target.depthAlloc,
+                                nullptr));
+
+        VkImageViewCreateInfo depthViewInfo{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+        depthViewInfo.image = target.view.depthImage;
+        depthViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        depthViewInfo.format = target.view.depthFormat;
+        depthViewInfo.subresourceRange = {VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1};
+        VK_CHECK(vkCreateImageView(ctx_.device(), &depthViewInfo, nullptr, &target.view.depthView));
+
+        return target;
+    }
+
+    void VulkanRenderer::recreateViewportTarget(Viewport& viewport, uint32_t frameIndex)
+    {
+        ViewportTarget& target = viewport.targets[frameIndex];
+
+        ImGui_ImplVulkan_RemoveTexture((VkDescriptorSet)target.imguiTextureId);
+        target.destroy(ctx_);
+
+        target = createViewportTarget(viewport.pendingExtent);
+        target.imguiTextureId = (ImTextureID)ImGui_ImplVulkan_AddTexture(
+            linearSampler_, target.view.colorView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        viewport.everRendered[frameIndex] = false; // fresh image, back to Undefined
+    }
+
+    void VulkanRenderer::createCameraUBO(VkBuffer& buffer,
+                                         VmaAllocation& alloc,
+                                         void*& mapped,
+                                         VkDescriptorSet& set)
+    {
+        VkBufferCreateInfo bufInfo{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+        bufInfo.size = sizeof(CameraData);
+        bufInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+
+        VmaAllocationCreateInfo aci{};
+        aci.usage = VMA_MEMORY_USAGE_AUTO;
+        aci.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+                    VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+        VmaAllocationInfo allocInfo{};
+        VK_CHECK(vmaCreateBuffer(ctx_.allocator(), &bufInfo, &aci, &buffer, &alloc, &allocInfo));
+        mapped = allocInfo.pMappedData;
+
+        VkDescriptorSetLayout camLayout = ctx_.cameraSetLayout();
+        VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
+        dsai.descriptorPool = ctx_.descriptorPool();
+        dsai.descriptorSetCount = 1;
+        dsai.pSetLayouts = &camLayout;
+        VK_CHECK(vkAllocateDescriptorSets(ctx_.device(), &dsai, &set));
+
+        VkDescriptorBufferInfo dbi{buffer, 0, sizeof(CameraData)};
+        VkWriteDescriptorSet write{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+        write.dstSet = set;
+        write.dstBinding = 0;
+        write.descriptorCount = 1;
+        write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write.pBufferInfo = &dbi;
+        vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);
+    }
+
+    VulkanRenderer::Viewport VulkanRenderer::createViewport(const std::string& id,
+                                                            uint32_t cameraViewIndex)
+    {
+        Viewport vp;
+        vp.id = id;
+        vp.cameraViewIndex = cameraViewIndex;
+
+        for (int i = 0; i < kFramesInFlight; i++) {
+            vp.targets[i] = createViewportTarget(
+                swapchain_.extent()); // color+depth, sized to something reasonable initially
+            vp.targets[i].imguiTextureId =
+                (ImTextureID)ImGui_ImplVulkan_AddTexture(linearSampler_,
+                                                         vp.targets[i].view.colorView,
+                                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+            // camera buffer + set, mirroring init()'s frames_[i].cameraBuffer setup
+            createCameraUBO(
+                vp.cameraBuffer[i], vp.cameraAlloc[i], vp.cameraMapped[i], vp.cameraSet[i]);
+        }
+        return vp;
+    }
+
+    void VulkanRenderer::destroyViewport(Viewport& vp)
+    {
+        waitIdle(); // ehh idk
+
+        for (int i = 0; i < kFramesInFlight; i++) {
+            ImGui_ImplVulkan_RemoveTexture((VkDescriptorSet)vp.targets[i].imguiTextureId);
+            vp.targets[i].destroy(ctx_);
+
+            vkDestroyBuffer(ctx_.device(),
+                            vp.cameraBuffer[i],
+                            nullptr);
+            vmaFreeMemory(ctx_.allocator(), vp.cameraAlloc[i]);
+        }
+    }
+
+    ViewportHandle VulkanRenderer::addViewport(const std::string& id, uint32_t cameraViewIndex)
+    {
+        uint32_t index;
+        if (!freeViewportSlots_.empty()) {
+            index = freeViewportSlots_.back();
+            freeViewportSlots_.pop_back();
+        } else {
+            index = static_cast<uint32_t>(viewportSlots_.size());
+            viewportSlots_.emplace_back();
+        }
+
+        ViewportSlot& slot = viewportSlots_[index];
+        slot.viewport = createViewport(
+            id, cameraViewIndex);
+        slot.alive = true;
+
+        return ViewportHandle{index, slot.generation};
+    }
+
+    void VulkanRenderer::removeViewport(ViewportHandle handle)
+    {
+        if (!isValidHandle(handle))
+            return; // no-op on a stale/bad handle, not a crash
+
+        ViewportSlot& slot = viewportSlots_[handle.index];
+        destroyViewport(slot.viewport); // waitIdle-gated teardown: RemoveTexture, destroy targets,
+                                        // camera buffers
+
+        slot.alive = false;
+        slot.generation++; // any handle issued before this point now fails the generation check
+        freeViewportSlots_.push_back(handle.index);
+    }
+
+    bool VulkanRenderer::isValidHandle(ViewportHandle handle) const
+    {
+        return handle.valid() && handle.index < viewportSlots_.size() &&
+               viewportSlots_[handle.index].alive &&
+               viewportSlots_[handle.index].generation == handle.generation;
+    }
+
+    VulkanRenderer::Viewport* VulkanRenderer::getViewport(ViewportHandle handle)
+    {
+        return isValidHandle(handle) ? &viewportSlots_[handle.index].viewport : nullptr;
+    }
+
+    uint64_t VulkanRenderer::getViewportTextureId(ViewportHandle handle) const
+    {
+        auto* vp = const_cast<VulkanRenderer*>(this)->getViewport(handle);
+        return vp ? (uint64_t)vp->targets[currentFrame_].imguiTextureId : 0;
+    }
+    void VulkanRenderer::setViewportHovered(ViewportHandle handle, bool hovered)
+    {
+        if (auto* vp = getViewport(handle))
+            vp->hovered = hovered;
+    }
+    void VulkanRenderer::requestViewportResize(ViewportHandle handle, uint32_t w, uint32_t h)
+    {
+        if (auto* vp = getViewport(handle)) {
+            vp->pendingExtent = {w, h};
+            vp->needsResize = true;
+        }
+    }
+
     void applyCustomStyle()
     {
         ImGuiStyle& style = ImGui::GetStyle();
@@ -1323,8 +1595,9 @@ namespace chai::gfx
         uiColorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
         uiColorAttachment.imageView = imageView; // whatever your accessor is
         uiColorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        uiColorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+        uiColorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         uiColorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        uiColorAttachment.clearValue.color = {{0.0f, 0.0f, 0.0f, 1.0f}};
 
         VkRenderingInfo uiRenderingInfo{};
         uiRenderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
