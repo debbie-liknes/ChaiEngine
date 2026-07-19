@@ -3,7 +3,7 @@
 #include <span>
 #include <memory>
 
-#include "../colliders/BoxCollider.h"
+#include "../Colliders/BoxCollider.h"
 
 //
 // \brief Dynamic Bounding Volume Hierarchy

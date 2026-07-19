@@ -9,6 +9,7 @@ namespace chai
 #if defined(_WIN32)
         constexpr auto kPluginExt = ".dll";
 #else
+        constexpr auto kPluginExt = ".so";
 #endif
     } // namespace
 

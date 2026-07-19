@@ -1,4 +1,4 @@
-#include "SpdlogSink.h"
+#include "SpdLogSink.h"
 #include <LogLevel.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -46,13 +46,13 @@ namespace chai
         }
     } // namespace
 
-    SpdlogSink::SpdlogSink() : logger_(makeDefaultLogger()) {}
+    SpdLogSink::SpdLogSink() : logger_(makeDefaultLogger()) {}
 
-    SpdlogSink::SpdlogSink(std::shared_ptr<spdlog::logger> logger) : logger_(std::move(logger)) {}
+    SpdLogSink::SpdLogSink(std::shared_ptr<spdlog::logger> logger) : logger_(std::move(logger)) {}
 
-    SpdlogSink::~SpdlogSink() = default;
+    SpdLogSink::~SpdLogSink() = default;
 
-    void SpdlogSink::write(const LogRecord& record)
+    void SpdLogSink::write(const LogRecord& record)
     {
         logger_->log(spdlog::source_loc{record.file.data(), record.line, ""},
                      toSpd(record.level),
