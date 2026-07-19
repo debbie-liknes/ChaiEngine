@@ -16,8 +16,10 @@
 #include <Core/Engine.h>
 #include <Core/SystemPaths.h>
 #include <Loaders/ITextureLoader.h>
+#include <Loaders/TomlSettingsLoader.h>
 #include <Log.h>
 #include <Plugin/PluginLoader.h>
+#include <Registry/SettingsRegistry.h>
 #include <Rendering/IRenderer.h>
 #include <Scene/GameObject.h>
 #include <Scene/Scene.h>
@@ -56,11 +58,14 @@ int main()
     engine.setPlugins(loader.plugins());
     engine.startup();
 
+    engine.services().provide<settings::SettingsRegistry>(std::make_shared<settings::SettingsRegistry>());
+
     auto meshes = engine.services().tryResolve<gfx::IMeshRegistry>();
     auto textures = engine.services().tryResolve<gfx::ITextureRegistry>();
     auto models = engine.services().tryResolve<gfx::IModelRegistry>();
     auto materials = engine.services().tryResolve<gfx::IMaterialRegistry>();
-    if (!meshes || !textures || !models) {
+    auto settings = engine.services().tryResolve<settings::SettingsRegistry>();
+    if (!meshes || !textures || !models || !settings) {
         CHAI_LOG_CRITICAL("Required registries missing.");
         return 1;
     }
@@ -74,10 +79,11 @@ int main()
     // build the scene
     auto scene = std::make_unique<Scene>();
 
-    //auto prefab = models->load(makeAssetId("model:sponza"), assetDir() /
-    //"Sponza/intel/main_sponza/NewSponza_Main_glTF_003.glTF");
-    auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.gltf");
+    auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "SponzaHiRes/NewSponza_Main_glTF_003.glTF");
+    //auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.gltf");
     //auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "ABeautifulGame/glTF/ABeautifulGame.gltf");
+
+    settings->load(makeAssetId("settings:editor"), assetDir() / "editor/config/editorconfig.toml");
 
     if (prefab) {
         auto prefabInstance = scene::spawn(*scene, *prefab);
