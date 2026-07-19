@@ -1,5 +1,5 @@
 #include <UI/Editor/PanelHost.h>
-#include <UI/Tools/InternalChaiUi.h>
+#include <UI/Editor/InternalChaiUi.h>
 #include <imgui.h>
 
 namespace chai::ui

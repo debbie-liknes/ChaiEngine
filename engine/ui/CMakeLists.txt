@@ -4,18 +4,18 @@ set(${PROJECT_NAME}_headers
     include/UI/Editor/DockspaceService.h
     include/UI/Editor/PanelHost.h
     include/UI/Editor/PanelRegistry.h
-    include/UI/Tools/InternalChaiUi.h
-    include/UI/Tools/FontManager.h
-    include/UI/Tools/EditorViewportManager.h
+    include/UI/Editor/InternalChaiUi.h
+    include/UI/Editor/FontManager.h
+    include/UI/Editor/EditorViewportManager.h
 )
 
 set(${PROJECT_NAME}_source
 	source/UI/Editor/DockspaceService.cpp
 	source/UI/Editor/PanelHost.cpp
 	source/UI/Editor/PanelRegistry.cpp
-	source/UI/Tools/InternalChaiUi.cpp
-	source/UI/Tools/FontManager.cpp
-	source/UI/Tools/EditorViewportManager.cpp
+	source/UI/Editor/InternalChaiUi.cpp
+	source/UI/Editor/FontManager.cpp
+	source/UI/Editor/EditorViewportManager.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED

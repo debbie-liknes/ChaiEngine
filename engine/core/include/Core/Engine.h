@@ -13,7 +13,7 @@
 #include <span>
 #include <Scene/IScene.h>
 #include <Rendering/IRenderer.h>
-#include <UI/Tools/EditorViewportManager.h>
+#include <UI/Editor/EditorViewportManager.h>
 
 namespace chai
 {

@@ -1,5 +1,5 @@
 #pragma once
-#include <UI/Tools/InternalChaiUi.h>
+#include <UI/Editor/InternalChaiUi.h>
 #include "renderer/VulkanRenderer.h"
 
 // I know this plugin has ImGui right now because it has the vulkan impl, but DO NOT

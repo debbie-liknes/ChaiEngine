@@ -3,7 +3,7 @@
 #include <Window/Window.h>
 #include <Rendering/FrameRenderData.h>
 #include <Core/IInput.h>
-#include <UI/Tools/InternalChaiUi.h>
+#include <UI/Editor/InternalChaiUi.h>
 #include <UI/Editor/PanelRegistry.h>
 #include <UI/Editor/PanelHost.h>
 #include <UI/Editor/DockspaceService.h>

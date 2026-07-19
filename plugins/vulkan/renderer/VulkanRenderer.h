@@ -18,7 +18,7 @@
 #include <cstdint>
 #include "../resources/TextureRegistry.h"
 #include <Scene/ModelRegistry.h>
-#include <UI/Tools/InternalChaiUi.h>
+#include <UI/Editor/InternalChaiUi.h>
 #include "../utils/GpuProfiler.h"
 
 namespace chai
