@@ -1,4 +1,4 @@
-#include <UI/Tools/InternalChaiUi.h>
+#include <UI/Editor/InternalChaiUi.h>
 #include <algorithm>
 #include <imgui.h>
 #include <cstring>
@@ -60,14 +60,6 @@ namespace chai::ui
     void SetScrollHereY(float y)
     {
         ImGui::SetScrollHereY(y);
-    }
-
-    TreeNode::TreeNode(std::string_view label) : m_open(ImGui::TreeNode(label.data())) {}
-
-    TreeNode ::~TreeNode()
-    {
-        if (m_open)
-            ImGui::TreePop();
     }
 
     void loadFonts(const std::string& fontDirectory)

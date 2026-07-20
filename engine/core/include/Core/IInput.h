@@ -102,8 +102,8 @@ namespace chai
         [[nodiscard]] virtual math::Vec2 mouseDelta() const = 0; // since last newFrame()
         [[nodiscard]] virtual math::Vec2 scrollDelta() const = 0;
 
-        virtual void consumeKeyboardEvents() = 0;
-        virtual void consumeMouseEvents() = 0;
+        virtual void setHoveredCamera(int32_t cameraId) = 0;
+        virtual int32_t getHoveredCamera() const = 0;
 
         virtual void setCursorMode(CursorMode mode) = 0;
 

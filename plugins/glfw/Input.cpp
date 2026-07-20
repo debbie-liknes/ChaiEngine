@@ -5,12 +5,12 @@ namespace chai
 {
     bool InputHandler::keyDown(Key k) const
     {
-        return !keyboardCaptured_ && keys_.contains(k);
+        return keys_.contains(k);
     }
 
     bool InputHandler::mouseDown(MouseButton b) const
     {
-        return !mouseCaptured_ && mouseButtons_.contains(b);
+        return mouseButtons_.contains(b);
     }
 
     math::Vec2 InputHandler::mousePosition() const
@@ -39,8 +39,6 @@ namespace chai
         deltaY = 0.f;
         scrollX = 0.f;
         scrollY = 0.f;
-        keyboardCaptured_ = false;
-        mouseCaptured_ = false;
         typedChars_.clear();
     }
 
@@ -73,14 +71,14 @@ namespace chai
         mouseY = mouse.y;
     }
 
-    void InputHandler::consumeKeyboardEvents()
+    void InputHandler::setHoveredCamera(int32_t cameraId) 
     {
-        keyboardCaptured_ = true;
+        activeCamera_ = cameraId;
     }
 
-    void InputHandler::consumeMouseEvents()
+    int32_t InputHandler::getHoveredCamera() const
     {
-        mouseCaptured_ = true;
+        return activeCamera_;
     }
 
     const std::vector<unsigned int>& InputHandler::getTypedCharactersThisFrame() const

@@ -4,21 +4,30 @@
 #include <Core/Updatable.h>
 #include <Components/Component.h>
 #include <string>
+#include <string_view>
 #include <span>
+#include <functional>
 
 namespace chai::scene
 {
+    using GameObjectId = int32_t;
+
     class GameObject : public IUpdatable
     {
     public:
         GameObject();
         GameObject(const std::string& name);
+        GameObject(const std::string& name, GameObjectId id);
         ~GameObject() = default;
+
+        GameObjectId getObjectId() const { return objectId_; }
+        std::string_view getObjectName() const { return name_; }
 
         void setParent(GameObject* parent);
         GameObject* getParent() const;
         void addChild(std::unique_ptr<GameObject> child);
-        //std::span<GameObject const*>& getChildren() const;
+        std::vector<GameObject*>& getChildren() { return children_; }
+        void visitComponents(std::function<void(Component*)>);
 
         template <typename T>
         T* addComponent()
@@ -106,5 +115,7 @@ namespace chai::scene
         //hierarchy
         GameObject* parent_ = nullptr;
         std::vector<GameObject*> children_;
+
+        int32_t objectId_ = -1;
     };
 }

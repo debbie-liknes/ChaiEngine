@@ -14,6 +14,11 @@ namespace chai::scene
         addComponent<TransformComponent>();
     }
 
+    GameObject::GameObject(const std::string& name, GameObjectId id) : name_(name), objectId_(id)
+    {
+        addComponent<TransformComponent>();
+    }
+
     void GameObject::setParent(GameObject* parent)
     {
         parent_ = parent;
@@ -23,11 +28,6 @@ namespace chai::scene
     {
         return parent_;
     }
-
-    //std::span<GameObject const*>& GameObject::getChildren() const
-    //{
-    //    return m_children;
-    //}
 
     void GameObject::update(const UpdateContext& ctx)
     {
@@ -39,6 +39,15 @@ namespace chai::scene
 
         if (controllerComponent_) {
             controllerComponent_->update(ctx);
+        }
+    }
+
+    void GameObject::visitComponents(std::function<void(Component*)> componentCallback)
+    {
+        for (const auto& component : components_) {
+            if (componentCallback) {
+                componentCallback(component.get());
+            }
         }
     }
 

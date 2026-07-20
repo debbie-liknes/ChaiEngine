@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 #include <ChaiMath.h>
-#include <UI/Tools/FontManager.h>
+#include <UI/Editor/FontManager.h>
 
 namespace chai::ui
 {
@@ -17,18 +17,6 @@ namespace chai::ui
         virtual ~IInternalChaiUi() = default;
         virtual bool initializeUI() = 0;
         virtual void shutdownUI() = 0;
-    };
-
-    class TreeNode
-    {
-    public:
-        explicit TreeNode(std::string_view label);
-        ~TreeNode();
-
-        operator bool() const { return m_open; }
-
-    private:
-        bool m_open;
     };
 
     class TextFilter

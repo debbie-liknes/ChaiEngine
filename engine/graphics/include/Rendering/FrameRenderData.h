@@ -16,8 +16,12 @@ namespace chai::gfx
     struct Material;
 
     struct RenderView {
-        math::Mat4 view, proj, viewProj;
+        math::Mat4 view;
         math::Vec3 position;
+        float fovYRadians;
+        float nearPlane;
+        float farPlane;
+        uint32_t cameraId;
     };
 
     /**

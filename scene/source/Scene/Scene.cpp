@@ -1,11 +1,27 @@
-#include <Scene/Scene.h>
-#include <Components/LightComponent.h>
-#include <Components/TransformComponent.h>
-#include <Components/MeshComponent.h>
 #include <Components/CameraComponent.h>
+#include <Components/LightComponent.h>
+#include <Components/MeshComponent.h>
+#include <Components/TransformComponent.h>
+#include <Scene/Scene.h>
+#include <UI/Editor/PanelRegistry.h>
+#include <UI/Editor/InternalChaiUi.h>
+#include <EditorUI/SceneHierarchy.h>
 
 namespace chai::scene
 {
+    Scene::Scene() {}
+
+    ScenePanelIds Scene::registerPanels(ServiceLocator& locator)
+    {
+        std::string hierarchy = "Hierarchy";
+        auto& panelRegistry = locator.resolve<ui::PanelRegistry>();
+        panelRegistry.registerPanel({.id = hierarchy, .displayName = "Hierarchy", .draw = [&] {
+                                         ui::drawSceneHierarchy(*this);
+                                     }});
+
+        return ScenePanelIds{hierarchy};
+    }
+
     void Scene::update(const UpdateContext& ctx)
     {
         for (auto const& object : m_objects) {
@@ -20,9 +36,11 @@ namespace chai::scene
         }
     }
 
-    GameObject* Scene::createObject(const std::string& name) 
+    GameObject* Scene::createObject(const std::string& name)
     {
-        return m_objects.emplace_back(std::make_unique<GameObject>(name)).get();
+        return m_objects
+            .emplace_back(std::make_unique<GameObject>(name, gameObjAllocator_.allocate()))
+            .get();
     }
 
     void Scene::setCamera(GameObject* cam)
@@ -34,9 +52,4 @@ namespace chai::scene
     {
         sun_ = sun;
     }
-
-    void Scene::setCameraAspect(float aspect)
-    {
-        camera_->getComponent<CameraComponent>()->setAspectRatio(aspect);
-    }
-}
+} // namespace chai::scene

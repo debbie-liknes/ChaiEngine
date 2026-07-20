@@ -13,6 +13,10 @@ namespace chai::scene
     {
         IInput& in = ctx.input;
 
+        if (in.getHoveredCamera() != gameObject_->getObjectId()) {
+            return;
+        }
+
         // Hold right mouse to look
         const bool looking = in.mouseDown(MouseButton::Right);
         in.setCursorMode(looking ? CursorMode::Disabled : CursorMode::Normal);

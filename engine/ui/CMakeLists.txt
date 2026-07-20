@@ -1,15 +1,25 @@
 project(UI)
 
 set(${PROJECT_NAME}_headers
-        include/UI/Tools/InternalChaiUi.h
-        include/UI/Tools/InternalPanels.h
-        include/UI/Tools/FontManager.h
+    include/UI/Editor/DockspaceService.h
+    include/UI/Editor/PanelHost.h
+    include/UI/Editor/PanelRegistry.h
+    include/UI/Editor/InternalChaiUi.h
+    include/UI/Editor/FontManager.h
+    include/UI/Editor/EditorViewportManager.h
+    include/UI/Editor/MenuService.h
+    include/UI/Editor/TreeNode.h
 )
 
 set(${PROJECT_NAME}_source
-	source/UI/Tools/InternalChaiUi.cpp
-	source/UI/Tools/InternalPanels.cpp
-	source/UI/Tools/FontManager.cpp
+	source/UI/Editor/DockspaceService.cpp
+	source/UI/Editor/PanelHost.cpp
+	source/UI/Editor/PanelRegistry.cpp
+	source/UI/Editor/InternalChaiUi.cpp
+	source/UI/Editor/FontManager.cpp
+	source/UI/Editor/EditorViewportManager.cpp
+	source/UI/Editor/MenuService.cpp
+	source/UI/Editor/TreeNode.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED
@@ -18,6 +28,6 @@ add_library(${PROJECT_NAME} SHARED
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
-target_link_libraries(${PROJECT_NAME} PUBLIC ChaiMath Logger PRIVATE ImGui)
+target_link_libraries(${PROJECT_NAME} PUBLIC ChaiMath Logger Graphics PRIVATE ImGui)
 
 ChaiLibDefaults(${PROJECT_NAME} "Engine")

@@ -18,7 +18,8 @@
 #include <Plugin/PluginMacros.h>
 #include <Plugin/ServiceLocator.h>
 #include <Scene/ModelRegistry.h>
-#include <UI/Tools/InternalPanels.h>
+#include <UI/Editor/PanelRegistry.h>
+#include <UI/Editor/MenuService.h>
 #include <Window/Window.h>
 #include <memory>
 
@@ -66,8 +67,15 @@ namespace chai::gfx
             ctx.services.provide<IMaterialRegistry>(matRegistry_);
             ctx.services.provide<IModelRegistry>(modelRegistry_);
 
-            chai::ui::registerPanel(
-                "Vulkan Stats", [&]() { ui::drawVulkanStatsPanel(renderer_->getStats()); }, false);
+            ui::PanelDesc panelInfo;
+            panelInfo.displayName = "Vulkan Stats";
+            panelInfo.draw = [&]() { ui::drawVulkanStatsPanel(renderer_->getStats()); };
+            panelInfo.visible = false;
+
+            auto& panelReg = ctx.services.resolve<ui::PanelRegistry>();
+            panelReg.registerPanel(panelInfo);
+            auto& menuService = ctx.services.resolve<ui::MenuService>();
+            menuService.registerItem("Windows/Plugins/Vulkan", ui::TogglePanel{panelInfo.displayName});
 
             CHAI_LOG_INFO("Renderer service provided");
         }
@@ -77,7 +85,8 @@ namespace chai::gfx
             if (renderer_)
                 renderer_->waitIdle(); // probably unnecessary here
 
-            chai::ui::unregisterPanel("Vulkan Stats");
+            auto panelReg = ctx.services.resolve<ui::PanelRegistry>();
+            panelReg.unregisterPanel("Vulkan Stats");
             renderer_->shutdownUI();
 
             // remove services

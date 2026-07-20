@@ -13,7 +13,7 @@
 #include <span>
 #include <Scene/IScene.h>
 #include <Rendering/IRenderer.h>
-#include <UI/Tools/FontManager.h>
+#include <UI/Editor/EditorViewportManager.h>
 
 namespace chai
 {
@@ -46,6 +46,5 @@ namespace chai
         Clock                   clock_;
         std::unique_ptr<IScene> scene_;
 
-        void updateActiveCameraAspect();
     };
 }
