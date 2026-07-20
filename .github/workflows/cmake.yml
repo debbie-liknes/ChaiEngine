@@ -32,3 +32,37 @@ jobs:
 
       - name: Run tests via CTest
         run: ctest --test-dir build --output-on-failure -C Debug
+
+  build-ubuntu-gcc15:
+    name: Ubuntu (gcc15)
+    # See https://github.com/actions/runner-images/tree/main#available-images
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ libwayland-dev libwayland-bin wayland-protocols        \
+                                  pkg-config libxkbcommon-dev libxkbcommon-x11-dev libx11-dev      \
+                                  x11-xserver-utils libxrandr-dev libxinerama-dev libxcursor-dev   \
+                                  libxi-dev libgl-dev
+
+      - name: Install Vulkan SDK
+        uses: jakoch/install-vulkan-sdk-action@v1
+        with:
+          vulkan_version: latest
+          install_runtime: true
+          cache: true
+
+      - name: Configure CMake
+        run: cmake -S . -B build
+
+      - name: Build
+        run: cmake --build build --config Debug
+
+      - name: Run tests via CTest
+        run: ctest --test-dir build --output-on-failure -C Debug

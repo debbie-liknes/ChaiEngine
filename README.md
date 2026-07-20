@@ -56,9 +56,15 @@ The engine is organized into layers, so the renderer can evolve without the rest
 - **Graphics API:** Vulkan
 - **Key dependencies:** Vulkan SDK, Vulkan Memory Allocator (VMA), GLFW, cgltf, spdlog
 - **Build system:** CMake
-- **Platform:** Windows (linux support planned)
+- **Platform:** Windows / Linux
 
 ## Building
+
+### Required Linux dependencies
+
+```bash
+sudo apt install cmake g++ libwayland-dev libwayland-bin wayland-protocols pkg-config libxkbcommon-dev libxkbcommon-x11-dev libx11-dev x11-xserver-utils libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl-dev
+```
 
 ### Steps
 ```bash
