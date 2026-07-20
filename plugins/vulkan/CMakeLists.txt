@@ -56,6 +56,8 @@ set(${PROJECT_NAME}_source
 
 include(FetchContent)
 
+set(VK_BOOTSTRAP_POSITION_INDEPENDENT_CODE ON)
+
 FetchContent_Declare(
     vkbootstrap
     GIT_REPOSITORY https://github.com/charles-lunarg/vk-bootstrap.git

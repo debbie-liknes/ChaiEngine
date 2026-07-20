@@ -17,6 +17,8 @@ add_library(${PROJECT_NAME} SHARED
 
 include(FetchContent)
 
+set(SPDLOG_BUILD_PIC ON)
+
 FetchContent_Declare(
     spdlog
     GIT_REPOSITORY https://github.com/gabime/spdlog.git

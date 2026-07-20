@@ -18,7 +18,11 @@ namespace chai
             CHAI_LOG_ERROR(
                 "LoadLibrary failed for '{}' (error {})", path.string(), ::GetLastError());
 #else
-        //TODO: do something else for linux
+        // RTLD_LAZY loads symbols only as they are executed.
+        handle_ = dlopen(path.c_str(), RTLD_LAZY);
+        if (!handle_)
+            CHAI_LOG_ERROR(
+                "dlopen failed for '{}' (error {})", path.string(), dlerror());
 #endif
     }
 
@@ -49,7 +53,7 @@ namespace chai
 #if defined(_WIN32)
         return reinterpret_cast<void*>(::GetProcAddress(static_cast<HMODULE>(handle_), name));
 #else
-        //TODO
+        return dlsym(handle_, name);
 #endif
     }
 
@@ -60,7 +64,7 @@ namespace chai
 #if defined(_WIN32)
         ::FreeLibrary(static_cast<HMODULE>(handle_));
 #else
-        //TODO
+        dlclose(handle_);
 #endif
         handle_ = nullptr;
     }

@@ -5,6 +5,7 @@
 #include <TypeRegistry.h>
 #include <UI/Editor/FontManager.h>
 #include <IconsFontAwesome7.h>
+#include <Scene/GameObject.h>
 
 namespace chai::ui
 {

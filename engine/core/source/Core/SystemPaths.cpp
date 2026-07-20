@@ -33,6 +33,17 @@ namespace chai
         return std::filesystem::path(buf).parent_path();
 
 #else // Linux and other /proc systems
+        try {
+            // /proc/self/exe is a symlink to the currently running executable
+            std::filesystem::path exePath = std::filesystem::read_symlink("/proc/self/exe");
+            
+            // Return just the parent directory path
+            return exePath.parent_path();
+        } 
+        catch (const std::filesystem::filesystem_error& e) {
+            CHAI_LOG_ERROR("Filesystem error: {}", e.what());
+            return "";
+        }
 #endif
     }
 } // namespace chai
