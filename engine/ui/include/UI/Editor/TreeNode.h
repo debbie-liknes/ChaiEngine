@@ -11,6 +11,7 @@ namespace chai::ui
         Selected = 1 << 1,      // draw as currently selected
         DefaultOpen = 1 << 2,   // open on first appearance
         SpanFullWidth = 1 << 3, // row highlight spans the whole available width
+        DrawGuideLine = 1 << 4,
     };
     inline TreeNodeFlags operator|(TreeNodeFlags a, TreeNodeFlags b)
     {
@@ -26,6 +27,7 @@ namespace chai::ui
     public:
         TreeNode(std::string_view label,
                  std::string_view id,
+                 std::string_view icon = "",
                  TreeNodeFlags flags = TreeNodeFlags::None);
         ~TreeNode();
 

@@ -30,6 +30,16 @@ namespace chai::ui
         ImGui::SameLine();
     }
 
+    void Indent()
+    {
+        ImGui::Indent();
+    }
+
+    void Unindent()
+    {
+        ImGui::Unindent();
+    }
+
     bool Checkbox(const std::string& label, bool& value)
     {
         return ImGui::Checkbox(label.c_str(), &value);

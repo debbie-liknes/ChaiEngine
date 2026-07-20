@@ -165,6 +165,10 @@ namespace chai::gfx
         blendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
         blendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
+        blendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        blendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        blendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+
         VkPipelineColorBlendStateCreateInfo colorBlend{
             VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO};
         colorBlend.attachmentCount = 1;

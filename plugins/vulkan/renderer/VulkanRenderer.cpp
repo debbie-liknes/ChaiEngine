@@ -1235,6 +1235,9 @@ namespace chai::gfx
 
         // --- color ---
         VkImageCreateInfo colorInfo{VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
+        colorInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+        colorInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         colorInfo.imageType = VK_IMAGE_TYPE_2D;
         colorInfo.format = target.view.colorFormat;
         colorInfo.extent = {extent.width, extent.height, 1};
@@ -1524,7 +1527,7 @@ namespace chai::gfx
         style.FramePadding = ImVec2(10, 6);
         style.ItemSpacing = ImVec2(10, 8);
         style.ItemInnerSpacing = ImVec2(8, 6);
-        style.IndentSpacing = 18.0f;
+        style.IndentSpacing = 14.0f;
 
         style.GrabMinSize =
             12.0f;
