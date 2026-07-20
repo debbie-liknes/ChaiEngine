@@ -1,5 +1,8 @@
 #include <ChaiPhysics/ChaiPhysics.h>
 
+#include <chrono>
+#include <thread>
+
 namespace chai
 {
     ChaiPhysics::ChaiPhysics() {}
@@ -25,7 +28,7 @@ namespace chai
     void ChaiPhysics::run()
     {
         while (!isDone()) {
-            _sleep(1000.0 / 30.0);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 30));
         }
     }
 }

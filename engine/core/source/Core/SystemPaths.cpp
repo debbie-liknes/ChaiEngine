@@ -33,6 +33,7 @@ namespace chai
         return std::filesystem::path(buf).parent_path();
 
 #else // Linux and other /proc systems
+        return std::filesystem::path();
 #endif
     }
 } // namespace chai

@@ -18,15 +18,15 @@ namespace chai
     /**
      * @brief An ILogSink implementation backed by spdlog
      */
-    class SpdlogSink : public ILogSink
+    class SpdLogSink : public ILogSink
     {
     public:
-        SpdlogSink();
+        SpdLogSink();
 
         // Probably dont need this, but just in case someone wants to use an existing spdlog logger
-        explicit SpdlogSink(std::shared_ptr<spdlog::logger> logger);
+        explicit SpdLogSink(std::shared_ptr<spdlog::logger> logger);
 
-        ~SpdlogSink() override;
+        ~SpdLogSink() override;
 
         /**
          * @brief Write a log record to the sink. This will be called by the CHAI_LOG macros after

@@ -1,4 +1,5 @@
 #include <Assets/DecodePool.h>
+#include <condition_variable>
 
 namespace chai::gfx
 {

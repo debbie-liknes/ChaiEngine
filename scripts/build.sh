@@ -69,6 +69,13 @@ if [ "${CONFIGURE_ONLY}" == "false" ]; then
 
     cd "${BUILD_DIR}"
     case "$(uname -s)" in
+        Linux*)
+            CMAKE_CONFIGURATION=Release
+            if [ "${DEBUG}" == "true" ]; then
+                CMAKE_CONFIGURATION=Debug
+            fi
+            time_step "Building solution" cmake --build . --config ${CMAKE_CONFIGURATION} 
+            ;;
         MINGW64_NT*)
             # Use MSBuild directly if available for MSVC builds. Faster build times
             MSBUILD_PATH=$("/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe" -latest -requires Microsoft.Component.MSBuild -find MSBuild/**/Bin/MSBuild.exe | xargs -0 cygpath )

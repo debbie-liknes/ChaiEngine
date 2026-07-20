@@ -20,3 +20,4 @@ if (_vk_r != VK_SUCCESS) {                                                      
     std::abort();                                                                                  \
 }                                                                                                  \
 }
+
