@@ -25,6 +25,7 @@
 #include <SpdLogSink.h>
 #include <Window/Window.h>
 #include <LogPanel.h>
+#include <UI/Editor/MenuService.h>
 
 std::filesystem::path assetDir()
 {
@@ -60,6 +61,8 @@ int main()
     panelInfo.visible = true;
     auto& panelReg = engine.services().resolve<ui::PanelRegistry>();
     panelReg.registerPanel(panelInfo);
+    auto& menuService = engine.services().resolve<ui::MenuService>();
+    menuService.registerItem("Windows/Logger", ui::TogglePanel{panelInfo.id});
 
     auto meshes = engine.services().tryResolve<gfx::IMeshRegistry>();
     auto textures = engine.services().tryResolve<gfx::ITextureRegistry>();

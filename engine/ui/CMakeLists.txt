@@ -7,6 +7,7 @@ set(${PROJECT_NAME}_headers
     include/UI/Editor/InternalChaiUi.h
     include/UI/Editor/FontManager.h
     include/UI/Editor/EditorViewportManager.h
+    include/UI/Editor/MenuService.h
 )
 
 set(${PROJECT_NAME}_source
@@ -16,6 +17,7 @@ set(${PROJECT_NAME}_source
 	source/UI/Editor/InternalChaiUi.cpp
 	source/UI/Editor/FontManager.cpp
 	source/UI/Editor/EditorViewportManager.cpp
+	source/UI/Editor/MenuService.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED

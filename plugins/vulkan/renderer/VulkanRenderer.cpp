@@ -1455,12 +1455,12 @@ namespace chai::gfx
 
         colors[ImGuiCol_Text] = text;
         colors[ImGuiCol_TextDisabled] = textDim;
-        colors[ImGuiCol_WindowBg] = bg;
-        colors[ImGuiCol_ChildBg] = bg;
+        colors[ImGuiCol_WindowBg] = bgLight;
+        colors[ImGuiCol_ChildBg] = bgLight;
         colors[ImGuiCol_PopupBg] = bgLight;
         colors[ImGuiCol_Border] = border;
         colors[ImGuiCol_BorderShadow] = ImVec4(0, 0, 0, 0);
-        colors[ImGuiCol_FrameBg] = bgLight;
+        colors[ImGuiCol_FrameBg] = bg;
         colors[ImGuiCol_FrameBgHovered] = bgLighter;
         colors[ImGuiCol_FrameBgActive] = bgLighter;
         colors[ImGuiCol_TitleBg] = bg;
@@ -1484,14 +1484,19 @@ namespace chai::gfx
         colors[ImGuiCol_ResizeGrip] = ImVec4(0, 0, 0, 0);
         colors[ImGuiCol_ResizeGripHovered] = accent;
         colors[ImGuiCol_ResizeGripActive] = accentActive;
-        colors[ImGuiCol_TabDimmed] = bgLight;
-        colors[ImGuiCol_TabDimmedSelected] = bgLighter;
         colors[ImGuiCol_DockingPreview] =
             ImVec4(accent.x, accent.y, accent.z, 0.35f);
         colors[ImGuiCol_DockingEmptyBg] = bg;
         colors[ImGuiCol_Tab] = bgLight;
         colors[ImGuiCol_TabHovered] = accentHover;
         colors[ImGuiCol_TabSelected] = accent;
+        colors[ImGuiCol_TabDimmed] = bgLight;
+        colors[ImGuiCol_TabSelectedOverline] = accent;
+        colors[ImGuiCol_TabDimmedSelected] = bgLight;
+        colors[ImGuiCol_TabDimmedSelectedOverline] = ImVec4(accent.x, accent.y, accent.z, 0.5f);
+        colors[ImGuiCol_TabActive] = bgLight;
+        //colors[ImGuiCol_TabUnfocused] = ImVec4(accent.x, accent.y, accent.z, 0.5f);
+        //colors[ImGuiCol_TabUnfocusedActive] = ImVec4(accent.x, accent.y, accent.z, 0.5f);
         colors[ImGuiCol_PlotLines] = accent;
         colors[ImGuiCol_PlotHistogram] = accent;
         colors[ImGuiCol_TextSelectedBg] = ImVec4(accent.x, accent.y, accent.z, 0.35f);
@@ -1503,15 +1508,19 @@ namespace chai::gfx
         style.PopupRounding = 6.0f;
         style.ScrollbarRounding = 8.0f;
         style.GrabRounding = 6.0f;
-        style.TabRounding = 6.0f;
+        style.TabRounding = 1.0f;
+        style.TabBarBorderSize = 0.0f;
+        style.TabBorderSize = 0.0f;
+        style.TabBarOverlineSize = 2.0f;
+        style.TabCloseButtonMinWidthSelected = -1.0f;
 
-        style.WindowBorderSize = 1.0f; // no visible border because its gross
+        style.WindowBorderSize = 1.0f;
         style.FrameBorderSize = 0.0f;
         style.PopupBorderSize = 0.0f;
         style.ChildBorderSize = 1.0f;
 
-        style.WindowPadding = ImVec2(17, 17);
-        style.FramePadding = ImVec2(12, 8);
+        style.WindowPadding = ImVec2(13, 13);
+        style.FramePadding = ImVec2(10, 6);
         style.ItemSpacing = ImVec2(10, 8);
         style.ItemInnerSpacing = ImVec2(8, 6);
         style.IndentSpacing = 18.0f;

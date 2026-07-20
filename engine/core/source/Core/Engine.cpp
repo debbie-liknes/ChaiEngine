@@ -7,6 +7,7 @@
 #include <UI/Editor/PanelRegistry.h>
 #include <UI/Editor/PanelHost.h>
 #include <UI/Editor/DockspaceService.h>
+#include <UI/Editor/MenuService.h>
 #include <Core/SystemPaths.h>
 #include <LogPanel.h>
 
@@ -27,6 +28,9 @@ namespace chai
 
         auto dockspace = std::make_shared<ui::DockspaceService>();
         ctx_.services.provide<ui::DockspaceService>(dockspace);
+
+        auto menuService = std::make_shared<ui::MenuService>();
+        ctx_.services.provide<ui::MenuService>(menuService);
 
         //Load plugins
         CHAI_LOG_INFO("Engine starting");
@@ -54,6 +58,9 @@ namespace chai
 
         ctx_.services.remove<ui::PanelRegistry>();
         ctx_.services.remove<ui::EditorViewportManager>();
+        ctx_.services.remove<ui::PanelHost>();
+        ctx_.services.remove<ui::DockspaceService>();
+        ctx_.services.remove<ui::MenuService>();
     }
 
     void Engine::requestStop()
@@ -103,6 +110,7 @@ namespace chai
         auto& panelRegistry = services_.resolve<ui::PanelRegistry>();
         auto& panelHost = services_.resolve<ui::PanelHost>();
         auto& dockingService = services_.resolve<ui::DockspaceService>();
+        auto& menuService = services_.resolve<ui::MenuService>();
 
         setupDockspace();
 
@@ -133,7 +141,7 @@ namespace chai
             scene_->update(ctx);
 
             //draw internal uis
-            panelHost.draw(panelRegistry, dockingService);
+            panelHost.draw(panelRegistry, dockingService, menuService);
 
             gfx::FrameRenderData frame;
             scene_->extract(frame);

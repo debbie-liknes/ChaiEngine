@@ -20,4 +20,12 @@ namespace chai::ui
         if (auto it = panels_.find(id); it != panels_.end())
             it->second.visible = visible;
     }
+
+    bool PanelRegistry::isVisible(const std::string& id)
+    {
+        if (auto it = panels_.find(id); it != panels_.end())
+            return it->second.visible;
+
+        return false;
+    }
 }
