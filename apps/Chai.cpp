@@ -40,7 +40,7 @@ int main()
     using namespace scene;
 
     // setup logging
-    SpdlogSink logSink;
+    SpdLogSink logSink;
     addLogSink(&logSink);
     setLogLevel(chai::LogLevel::Info);
 

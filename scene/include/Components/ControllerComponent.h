@@ -7,6 +7,7 @@
 #include <Core/Updatable.h>
 #include <Components/Component.h>
 #include <unordered_map>
+#include <algorithm>
 
 namespace chai::scene
 {

@@ -1,6 +1,7 @@
 #include <UI/Tools/InternalChaiUi.h>
 #include <algorithm>
 #include <imgui.h>
+#include <cstring>
 
 namespace
 {

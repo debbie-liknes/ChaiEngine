@@ -50,6 +50,7 @@ namespace chai
         return reinterpret_cast<void*>(::GetProcAddress(static_cast<HMODULE>(handle_), name));
 #else
         //TODO
+	return nullptr;
 #endif
     }
 
