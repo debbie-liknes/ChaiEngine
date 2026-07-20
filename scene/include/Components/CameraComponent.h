@@ -28,4 +28,9 @@ namespace chai::scene
     private:
         Camera cam_;
     };
+
+    CHAI_REFLECT(CameraComponent, "CameraComponent")
+    {
+
+    }
 }

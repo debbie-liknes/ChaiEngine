@@ -46,6 +46,5 @@ namespace chai
         Clock                   clock_;
         std::unique_ptr<IScene> scene_;
 
-        void setupDockspace();
     };
 }

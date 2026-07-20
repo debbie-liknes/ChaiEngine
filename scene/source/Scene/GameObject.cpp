@@ -42,6 +42,15 @@ namespace chai::scene
         }
     }
 
+    void GameObject::visitComponents(std::function<void(Component*)> componentCallback)
+    {
+        for (const auto& component : components_) {
+            if (componentCallback) {
+                componentCallback(component.get());
+            }
+        }
+    }
+
     void GameObject::extract(gfx::FrameRenderData& frame) const
     {
         for (const auto& c : components_)

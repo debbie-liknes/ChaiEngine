@@ -1,5 +1,8 @@
 #pragma once
 #include <SceneExport.h>
+#include <ChaiReflect.h>
+#include <TypeRegistry.h>
+#include <TypeInfo.h>
 
 namespace chai::scene
 {
@@ -16,4 +19,5 @@ namespace chai::scene
     private:
         GameObject* owner_;
     };
+
 } // namespace chai::scene

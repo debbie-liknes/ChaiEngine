@@ -78,32 +78,6 @@ namespace chai
         scene_ = std::move(scene);
     }
 
-    void Engine::setupDockspace()
-    {
-        auto& panelRegistry = services_.resolve<ui::PanelRegistry>();
-        auto& vpManager = services_.resolve<ui::EditorViewportManager>();
-        auto& dockspace = services_.resolve<ui::DockspaceService>();
-
-        std::string mainPanelId = vpManager.addViewport("Main Scene", scene_->getCameraId());
-
-        std::string hierarchy = "Hierarchy";
-        panelRegistry.registerPanel({.id = hierarchy, .displayName = "Hierarchy", .draw = [] {
-                                          ui::Text("Scene hierarchy tree goes here");
-                                      }});
-
-        ui::DockSplit horizontalSplit;
-        horizontalSplit.ratio = 0.25f;
-        horizontalSplit.side = ui::DockSplit::Side::Left;
-        horizontalSplit.windowId = hierarchy;
-
-        ui::DockSplit split;
-        split.side = ui::DockSplit::Side::Bottom;
-        split.ratio = 0.25f;
-        split.windowId = "Logger";
-
-        dockspace.setDefaultLayout({horizontalSplit, split}, mainPanelId);
-    }
-
     void Engine::run()
     {
         //these dont come from a plugin, guaranteed
@@ -111,8 +85,6 @@ namespace chai
         auto& panelHost = services_.resolve<ui::PanelHost>();
         auto& dockingService = services_.resolve<ui::DockspaceService>();
         auto& menuService = services_.resolve<ui::MenuService>();
-
-        setupDockspace();
 
         //These come from plugins, check that they exist
         auto window = services_.tryResolve<IWindow>();

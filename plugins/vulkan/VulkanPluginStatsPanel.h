@@ -1,5 +1,6 @@
 #pragma once
 #include <UI/Editor/InternalChaiUi.h>
+#include <UI/Editor/TreeNode.h>
 #include "renderer/VulkanRenderer.h"
 
 // I know this plugin has ImGui right now because it has the vulkan impl, but DO NOT
@@ -10,14 +11,20 @@ namespace chai::ui
 	{
         Text("Total GPU Frame Time: " + std::to_string(stats.gpuTimeMs) + " ms");
 
-		if (TreeNode main{"Main Pass"}) {
-            Text("Draw Calls: " + std::to_string(stats.mainPass.drawCalls));
-            Text("GPU Time: " + std::to_string(stats.mainPass.gpuTimeMs) + " ms");
+        {
+            TreeNode main("Main Pass", "mainPassNode");
+            if (main) {
+                Text("Draw Calls: " + std::to_string(stats.mainPass.drawCalls));
+                Text("GPU Time: " + std::to_string(stats.mainPass.gpuTimeMs) + " ms");
+            }
         }
 
-		if (TreeNode main{"Shadow Pass"}) {
-            Text("Draw Calls: " + std::to_string(stats.shadowPass.drawCalls));
-            Text("GPU Time: " + std::to_string(stats.shadowPass.gpuTimeMs) + " ms");
+        {
+            TreeNode shadow("Shadow Pass", "shadowPassNode");
+            if (shadow) {
+                Text("Draw Calls: " + std::to_string(stats.shadowPass.drawCalls));
+                Text("GPU Time: " + std::to_string(stats.shadowPass.gpuTimeMs) + " ms");
+            }
         }
 	}
 } // namespace chai::ui

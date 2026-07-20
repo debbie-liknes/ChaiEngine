@@ -1513,6 +1513,7 @@ namespace chai::gfx
         style.TabBorderSize = 0.0f;
         style.TabBarOverlineSize = 2.0f;
         style.TabCloseButtonMinWidthSelected = -1.0f;
+        style.DockingNodeHasCloseButton = false;
 
         style.WindowBorderSize = 1.0f;
         style.FrameBorderSize = 0.0f;

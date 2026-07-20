@@ -4,7 +4,9 @@
 #include <Core/Updatable.h>
 #include <Components/Component.h>
 #include <string>
+#include <string_view>
 #include <span>
+#include <functional>
 
 namespace chai::scene
 {
@@ -19,9 +21,13 @@ namespace chai::scene
         ~GameObject() = default;
 
         GameObjectId getObjectId() const { return objectId_; }
+        std::string_view getObjectName() const { return name_; }
+
         void setParent(GameObject* parent);
         GameObject* getParent() const;
         void addChild(std::unique_ptr<GameObject> child);
+        std::vector<GameObject*>& getChildren() { return children_; }
+        void visitComponents(std::function<void(Component*)>);
 
         template <typename T>
         T* addComponent()

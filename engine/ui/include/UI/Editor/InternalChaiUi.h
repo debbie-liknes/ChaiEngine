@@ -19,18 +19,6 @@ namespace chai::ui
         virtual void shutdownUI() = 0;
     };
 
-    class TreeNode
-    {
-    public:
-        explicit TreeNode(std::string_view label);
-        ~TreeNode();
-
-        operator bool() const { return m_open; }
-
-    private:
-        bool m_open;
-    };
-
     class TextFilter
     {
     public:

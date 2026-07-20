@@ -65,6 +65,12 @@ namespace chai
             return (it != typesByIndex_.end()) ? it->second : nullptr;
         }
 
+        std::shared_ptr<TypeInfo> getType(std::type_index index) const
+        {
+            auto it = typesByIndex_.find(index);
+            return (it != typesByIndex_.end()) ? it->second : nullptr;
+        }
+
         /**
          * @brief Creates an instance of a type by its name using the stored constructor. Returns a
          * shared pointer to the created instance, or nullptr if the type is not found

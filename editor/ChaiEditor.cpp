@@ -26,10 +26,41 @@
 #include <Window/Window.h>
 #include <LogPanel.h>
 #include <UI/Editor/MenuService.h>
+#include <UI/Editor/PanelRegistry.h>
+#include <UI/Editor/EditorViewportManager.h>
+#include <UI/Editor/DockspaceService.h>
 
 std::filesystem::path assetDir()
 {
     return CHAI_ASSET_DIR;
+}
+
+void setupDockspace(chai::ServiceLocator& locator, chai::scene::Scene& scene)
+{
+    using namespace chai;
+    using namespace ui;
+    using namespace scene;
+
+
+    auto& panelRegistry = locator.resolve<PanelRegistry>();
+    auto& vpManager = locator.resolve<EditorViewportManager>();
+    auto& dockspace = locator.resolve<DockspaceService>();
+
+    std::string mainPanelId = vpManager.addViewport("Main Scene", scene.getCameraId());
+
+    auto sceneIds = scene.registerPanels(locator);
+
+    ui::DockSplit horizontalSplit;
+    horizontalSplit.ratio = 0.25f;
+    horizontalSplit.side = ui::DockSplit::Side::Left;
+    horizontalSplit.windowId = sceneIds.hierarchy;
+
+    ui::DockSplit split;
+    split.side = ui::DockSplit::Side::Bottom;
+    split.ratio = 0.25f;
+    split.windowId = "Logger";
+
+    dockspace.setDefaultLayout({horizontalSplit, split}, mainPanelId);
 }
 
 int main()
@@ -82,6 +113,7 @@ int main()
     // build the scene
     auto scene = std::make_unique<Scene>();
 
+
     //auto prefab = models->load(makeAssetId("model:sponza"), assetDir() /
     //"Sponza/intel/main_sponza/NewSponza_Main_glTF_003.glTF");
     auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.gltf");
@@ -118,6 +150,7 @@ int main()
     auto skyBoxTex = textures->loadCubemap(makeAssetId("component:skybox"), skyTextures);
     skyboxComp->setTexture(skyBoxTex);
 
+    setupDockspace(engine.services(), *scene);
     engine.setScene(std::move(scene));
     engine.run();
 

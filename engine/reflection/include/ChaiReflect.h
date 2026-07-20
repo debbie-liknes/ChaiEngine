@@ -11,7 +11,7 @@
  * TypeRegistry and provides a describe function to add properties and methods to the
  * TypeInfo.
  */
-#define CHAI_REFLECT(Type)                                                                         \
+#define CHAI_REFLECT(Type, TypeName)                                                               \
     namespace                                                                                      \
     {                                                                                              \
         struct ChaiReflect_##Type {                                                                \
@@ -20,7 +20,7 @@
             ChaiReflect_##Type()                                                                   \
             {                                                                                      \
                 auto& reg = ::chai::TypeRegistry::instance();                                      \
-                reg.registerType<Type>(#Type);                                                     \
+                reg.registerType<Type>(TypeName);                                                  \
                 describe(*reg.getType<Type>());                                                    \
             }                                                                                      \
         };                                                                                         \

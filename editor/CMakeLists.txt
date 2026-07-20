@@ -1,6 +1,6 @@
-﻿project(Chai)
+﻿project(ChaiEditor)
 
-add_executable(${PROJECT_NAME} "Chai.cpp")
+add_executable(${PROJECT_NAME} "ChaiEditor.cpp")
 
 #just use the OpenGL Renderer for now
 target_link_libraries(${PROJECT_NAME} 
