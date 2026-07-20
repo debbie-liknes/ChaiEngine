@@ -1,5 +1,5 @@
 #include <EditorUI/SceneHierarchy.h>
-#include <UI/Editor/InternalChaiUi.h>
+#include <UI/Editor/InternalChaiUI.h>
 #include <UI/Editor/TreeNode.h>
 #include <Scene/Scene.h>
 #include <TypeRegistry.h>

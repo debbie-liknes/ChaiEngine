@@ -1,6 +1,6 @@
 #include <LogPanel.h>
 #include <imgui.h>
-#include <UI/Editor/InternalChaiUi.h>
+#include <UI/Editor/InternalChaiUI.h>
 #include <UI/Editor/FontManager.h>
 
 namespace chai::diagnostics

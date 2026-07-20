@@ -4,7 +4,7 @@
 #include <Components/TransformComponent.h>
 #include <Scene/Scene.h>
 #include <UI/Editor/PanelRegistry.h>
-#include <UI/Editor/InternalChaiUi.h>
+#include <UI/Editor/InternalChaiUI.h>
 #include <EditorUI/SceneHierarchy.h>
 
 namespace chai::scene

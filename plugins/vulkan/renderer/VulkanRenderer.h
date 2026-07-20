@@ -18,7 +18,7 @@
 #include <cstdint>
 #include "../resources/TextureRegistry.h"
 #include <Scene/ModelRegistry.h>
-#include <UI/Editor/InternalChaiUi.h>
+#include <UI/Editor/InternalChaiUI.h>
 #include "../utils/GpuProfiler.h"
 
 namespace chai
@@ -48,7 +48,7 @@ namespace chai::gfx
     /**
      * @brief Concrete vulkan implementation of the Renderer interface.
      */
-    class VulkanRenderer : public IRenderer, public ui::IInternalChaiUi
+    class VulkanRenderer : public IRenderer, public ui::IInternalChaiUI
 	{
     public:
         VulkanRenderer(chai::IWindow& window,
