@@ -1,6 +1,7 @@
 #include <UI/Editor/MenuService.h>
 #include <imgui.h>
 #include <sstream>
+#include <algorithm>
 
 namespace chai::ui
 {

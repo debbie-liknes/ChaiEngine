@@ -74,7 +74,7 @@ if [ "${CONFIGURE_ONLY}" == "false" ]; then
             if [ "${DEBUG}" == "true" ]; then
                 CMAKE_CONFIGURATION=Debug
             fi
-            time_step "Building solution" cmake --build . --config ${CMAKE_CONFIGURATION} 
+            time_step "Building solution" cmake --build . --config ${CMAKE_CONFIGURATION} -j ${NUM_CORES}
             ;;
         MINGW64_NT*)
             # Use MSBuild directly if available for MSVC builds. Faster build times
