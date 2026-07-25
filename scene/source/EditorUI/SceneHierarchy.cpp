@@ -6,26 +6,10 @@
 #include <UI/Editor/FontManager.h>
 #include <IconsFontAwesome7.h>
 #include <Scene/GameObject.h>
+#include <UI/Editor/IconRegistry.h>
 
 namespace chai::ui
 {
-    const char* iconForComponent(const std::string& typeName)
-    {
-        if (typeName == "MeshComponent")
-            return ICON_FA_CUBE;
-        if (typeName == "TransformComponent")
-            return ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT;
-        if (typeName == "CameraComponent")
-            return ICON_FA_VIDEO;
-        if (typeName == "LightComponent")
-            return ICON_FA_LIGHTBULB;
-        if (typeName == "ControllerComponent")
-            return ICON_FA_GAMEPAD;
-        if (typeName == "SkyboxComponent")
-            return ICON_FA_CLOUD;
-        return ICON_FA_QUESTION;
-    }
-
     void drawSceneNode(scene::GameObject* obj, int& id)
     {
         TreeNode objNode(obj->getObjectName(),
@@ -46,7 +30,7 @@ namespace chai::ui
                     std::to_string(obj->getObjectId()) + "_" + std::to_string(id);
                 TreeNode compNode(typeInfo->name,
                                   componentId,
-                                  iconForComponent(typeInfo->name),
+                                  iconForComponent(*typeInfo),
                                   TreeNodeFlags::SpanFullWidth | TreeNodeFlags::Leaf |
                                       TreeNodeFlags::DrawGuideLine);
             }

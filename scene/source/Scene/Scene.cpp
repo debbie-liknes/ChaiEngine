@@ -6,20 +6,38 @@
 #include <UI/Editor/PanelRegistry.h>
 #include <UI/Editor/InternalChaiUI.h>
 #include <EditorUI/SceneHierarchy.h>
+#include <EditorUI/SceneObjectInspector.h>
+#include <EditorUI/SceneUI.h>
+#include <EditorUI/SelectionState.h>
 
 namespace chai::scene
 {
-    Scene::Scene() {}
+    Scene::Scene()
+    {
+        registerSceneIcons();
+    }
+
+    void setupEditorUI(ServiceLocator& locator)
+    {
+    }
+
 
     ScenePanelIds Scene::registerPanels(ServiceLocator& locator)
     {
-        std::string hierarchy = "Hierarchy";
         auto& panelRegistry = locator.resolve<ui::PanelRegistry>();
+        auto& state = locator.resolve<ui::SelectionState>();
+
+        std::string hierarchy = "Hierarchy";
         panelRegistry.registerPanel({.id = hierarchy, .displayName = "Hierarchy", .draw = [&] {
                                          ui::drawSceneHierarchy(*this);
                                      }});
 
-        return ScenePanelIds{hierarchy};
+        std::string inspector = "Inspector";
+        panelRegistry.registerPanel({.id = inspector, .displayName = "Inspector", .draw = [&] {
+                                         ui::drawInspectorPanel(*state.selected());
+                                     }});
+
+        return ScenePanelIds{hierarchy, inspector};
     }
 
     void Scene::update(const UpdateContext& ctx)

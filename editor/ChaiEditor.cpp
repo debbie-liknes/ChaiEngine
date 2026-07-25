@@ -55,12 +55,17 @@ void setupDockspace(chai::ServiceLocator& locator, chai::scene::Scene& scene)
     horizontalSplit.side = ui::DockSplit::Side::Left;
     horizontalSplit.windowId = sceneIds.hierarchy;
 
+    ui::DockSplit horizontalSplit2;
+    horizontalSplit2.ratio = 0.25f;
+    horizontalSplit2.side = ui::DockSplit::Side::Right;
+    horizontalSplit2.windowId = sceneIds.inspector;
+
     ui::DockSplit split;
     split.side = ui::DockSplit::Side::Bottom;
     split.ratio = 0.25f;
     split.windowId = "Logger";
 
-    dockspace.setDefaultLayout({horizontalSplit, split}, mainPanelId);
+    dockspace.setDefaultLayout({horizontalSplit, horizontalSplit2, split}, mainPanelId);
 }
 
 int main()

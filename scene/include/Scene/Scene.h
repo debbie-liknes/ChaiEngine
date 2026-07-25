@@ -10,6 +10,7 @@ namespace chai::scene
     struct ScenePanelIds
     {
         std::string hierarchy;
+        std::string inspector;
     };
 
     //Scene class that holds all the entities in the scene
@@ -24,6 +25,7 @@ namespace chai::scene
         void update(const UpdateContext&) override;
         void extract(gfx::FrameRenderData& frame) const override;
 
+        void setupEditorUI(ServiceLocator& locator);
         ScenePanelIds registerPanels(ServiceLocator& locator);
         std::vector<std::shared_ptr<GameObject>>& getObjects() { return m_objects; }
 

@@ -11,6 +11,9 @@ set(ChaiScene_headers
         include/Controllers/Controller.h
         include/Controllers/FlyCamController.h
         include/EditorUI/SceneHierarchy.h
+        include/EditorUI/SceneUI.h
+        include/EditorUI/SceneObjectInspector.h
+        include/EditorUI/SelectionState.h
         include/Scene/Camera.h
         include/Scene/GameObject.h
         include/Scene/Scene.h
@@ -29,6 +32,8 @@ set(ChaiScene_source
         source/Controllers/SpinController.cpp
         source/Controllers/FlyCamController.cpp
         source/EditorUI/SceneHierarchy.cpp
+        source/EditorUI/SceneUI.cpp
+        source/EditorUI/SceneObjectInspector.cpp
         source/Scene/Camera.cpp
         source/Scene/GameObject.cpp
         source/Scene/Scene.cpp

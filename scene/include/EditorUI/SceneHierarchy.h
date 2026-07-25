@@ -9,10 +9,5 @@ namespace chai::scene
 
 namespace chai::ui
 {
-    struct SceneHierarchyNode {
-        std::string name;
-        std::vector<SceneHierarchyNode> children;
-    };
-
     void drawSceneHierarchy(scene::Scene& scene);
 }

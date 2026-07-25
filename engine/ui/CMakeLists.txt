@@ -9,6 +9,7 @@ set(${PROJECT_NAME}_headers
     include/UI/Editor/EditorViewportManager.h
     include/UI/Editor/MenuService.h
     include/UI/Editor/TreeNode.h
+    include/UI/Editor/IconRegistry.h
 )
 
 set(${PROJECT_NAME}_source
@@ -20,6 +21,7 @@ set(${PROJECT_NAME}_source
 	source/UI/Editor/EditorViewportManager.cpp
 	source/UI/Editor/MenuService.cpp
 	source/UI/Editor/TreeNode.cpp
+	source/UI/Editor/IconRegistry.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED
@@ -28,6 +30,6 @@ add_library(${PROJECT_NAME} SHARED
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
-target_link_libraries(${PROJECT_NAME} PUBLIC ChaiMath Logger Graphics PRIVATE ImGui)
+target_link_libraries(${PROJECT_NAME} PUBLIC ChaiMath Logger Graphics TypeReflection PRIVATE ImGui)
 
 ChaiLibDefaults(${PROJECT_NAME} "Engine")
