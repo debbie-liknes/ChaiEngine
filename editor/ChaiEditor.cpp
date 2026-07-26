@@ -1,4 +1,5 @@
-﻿#include <Assets/IMaterialRegistry.h>
+﻿#include <Audio/IAudioEngine.h>
+#include <Assets/IMaterialRegistry.h>
 #include <Assets/IMeshRegistry.h>
 #include <Assets/IModelRegistry.h>
 #include <Assets/ITextureRegistry.h>
@@ -48,7 +49,7 @@ void setupDockspace(chai::ServiceLocator& locator, chai::scene::Scene& scene)
 
     std::string mainPanelId = vpManager.addViewport("Main Scene", scene.getCameraId());
 
-    auto sceneIds = scene.registerPanels(locator);
+    auto sceneIds = scene.registerPanels(panelRegistry);
 
     ui::DockSplit horizontalSplit;
     horizontalSplit.ratio = 0.25f;
@@ -99,6 +100,7 @@ int main()
     auto textures = engine.services().tryResolve<gfx::ITextureRegistry>();
     auto models = engine.services().tryResolve<gfx::IModelRegistry>();
     auto materials = engine.services().tryResolve<gfx::IMaterialRegistry>();
+    auto audio = engine.services().tryResolve<audio::IAudioEngine>();
     if (!meshes || !textures || !models) {
         CHAI_LOG_CRITICAL("Required registries missing.");
         return 1;
@@ -111,7 +113,7 @@ int main()
     }
 
     // build the scene
-    auto scene = std::make_unique<Scene>();
+    auto& scene = engine.scene();
 
 
     //auto prefab = models->load(makeAssetId("model:sponza"), assetDir() /
@@ -119,11 +121,13 @@ int main()
     auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.gltf");
     //auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "ABeautifulGame/glTF/ABeautifulGame.gltf");
 
+    audio->playSound((assetDir() / "orchestral_techno.wav").string(), {0, 0, 0}, -10);
+
     if (prefab) {
-        auto prefabInstance = scene::spawn(*scene, *prefab);
+        auto prefabInstance = scene::spawn(scene, *prefab);
     }
 
-    GameObject* cam = scene->createObject("camera");
+    GameObject* cam = scene.createObject("camera");
     auto* camComp = cam->addComponent<CameraComponent>();
     camComp->setFOV(math::radians(60.f));
     camComp->setNearPlane(0.1f);
@@ -131,15 +135,15 @@ int main()
     cam->getComponent<TransformComponent>()->setPosition({0, 0, 3});
     auto* controlCam = cam->addComponent<ControllerComponent>();
     controlCam->addController<FlyCameraController>();
-    scene->setCamera(cam);
+    scene.setCamera(cam);
 
-    GameObject* sun = scene->createObject("sun");
+    GameObject* sun = scene.createObject("sun");
     sun->addComponent<LightComponent>();
     auto sunLoc = sun->getComponent<TransformComponent>();
     sunLoc->lookAt(math::Vec3{-0.5, -1, -0.4f}, math::Vec3{0, 1, 0});
-    scene->setLight(sun);
+    scene.setLight(sun);
 
-    GameObject* sky = scene->createObject("skybox");
+    GameObject* sky = scene.createObject("skybox");
     auto skyboxComp = sky->addComponent<SkyboxComponent>();
     std::array<std::filesystem::path, 6> skyTextures{assetDir() / "skybox/cubemap_0.png",
                                                      assetDir() / "skybox/cubemap_1.png",
@@ -150,8 +154,7 @@ int main()
     auto skyBoxTex = textures->loadCubemap(makeAssetId("component:skybox"), skyTextures);
     skyboxComp->setTexture(skyBoxTex);
 
-    setupDockspace(engine.services(), *scene);
-    engine.setScene(std::move(scene));
+    setupDockspace(engine.services(), scene);
     engine.run();
 
     engine.shutdown();

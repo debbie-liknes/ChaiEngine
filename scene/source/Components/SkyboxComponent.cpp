@@ -14,9 +14,4 @@ namespace chai::scene
     {
 
     }
-
-    void SkyboxComponent::extract(gfx::FrameRenderData& frame) const
-    {
-        frame.environment = EnvironmentData{skyMap_};
-    }
 }

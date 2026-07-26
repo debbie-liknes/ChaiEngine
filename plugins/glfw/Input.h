@@ -2,7 +2,7 @@
  * @file Input.h
  */
 #pragma once
-#include <Core/IInput.h>
+#include <Input/IInput.h>
 #include <set>
 
 namespace chai

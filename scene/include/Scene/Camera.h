@@ -19,6 +19,7 @@ namespace chai::scene
         void setNearPlane(float near);
         void setFOV(float fov);
 
+        float getAspectRatio() const { return aspect_; }
         float getFovY() const { return fov_; }
         float getNearPlane() const { return nearPlane_; }
         float getFarPlane() const { return farPlane_; }

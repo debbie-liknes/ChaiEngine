@@ -4,7 +4,7 @@
 #include <Loaders/ITextureLoader.h>
 #include <Assets/TextureAsset.h>
 #include <Components/Component.h>
-#include <Core/Updatable.h>
+#include <Scene/IUpdatable.h>
 
 namespace chai::scene
 {
@@ -14,7 +14,7 @@ namespace chai::scene
         explicit SkyboxComponent(GameObject* owner = nullptr);
         ~SkyboxComponent() override;
 
-        void extract(gfx::FrameRenderData& frame) const override;
+        Handle<gfx::Texture> getTexture() const { return skyMap_; }
         void setTexture(Handle<gfx::Texture> h) { skyMap_ = h; }
 
     private:

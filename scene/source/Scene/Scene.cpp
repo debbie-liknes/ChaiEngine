@@ -3,19 +3,18 @@
 #include <Components/MeshComponent.h>
 #include <Components/TransformComponent.h>
 #include <Scene/Scene.h>
-#include <UI/Editor/PanelRegistry.h>
 #include <UI/Editor/InternalChaiUI.h>
 #include <EditorUI/SceneHierarchy.h>
+#include <Visitors/FrameRenderVisitor.h>
 
 namespace chai::scene
 {
     Scene::Scene() {}
 
-    ScenePanelIds Scene::registerPanels(ServiceLocator& locator)
+    ScenePanelIds Scene::registerPanels(ui::PanelRegistry& registry)
     {
         std::string hierarchy = "Hierarchy";
-        auto& panelRegistry = locator.resolve<ui::PanelRegistry>();
-        panelRegistry.registerPanel({.id = hierarchy, .displayName = "Hierarchy", .draw = [&] {
+        registry.registerPanel({.id = hierarchy, .displayName = "Hierarchy", .draw = [this] {
                                          ui::drawSceneHierarchy(*this);
                                      }});
 
@@ -29,10 +28,10 @@ namespace chai::scene
         }
     }
 
-    void Scene::extract(gfx::FrameRenderData& frame) const
+    void Scene::accept(Visitor* visitor)
     {
         for (auto const& object : m_objects) {
-            object->extract(frame);
+            object->accept(visitor);
         }
     }
 

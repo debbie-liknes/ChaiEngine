@@ -13,11 +13,4 @@ namespace chai::scene
     {
 
     }
-
-    void MeshComponent::extract(gfx::FrameRenderData& frame) const
-    { 
-        auto const* t = getGameObject()->getComponent<TransformComponent>();
-        const math::Mat4 model = t ? t->getWorldMatrix() : math::Mat4::identity();
-        frame.items.emplace_back(mesh_, model, material_);
-    }
 }
