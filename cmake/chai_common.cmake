@@ -20,6 +20,14 @@ function(ChaiLibDefaults target_name optional_path)
         set_target_properties(${target_name} PROPERTIES FOLDER ${optional_path})
     endif ()
 
+    # Edit and continue is disabled for tracy. See the tracy manual for more details.
+    # set_target_properties(${target_name} PROPERTIES
+    #     MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>"
+    # )
+
+    # Link all targets to tracy for profiling capability
+    target_link_libraries(${target_name} PUBLIC Tracy::TracyClient)
+
     chai_source_groups(${target_name})
 endfunction()
 
