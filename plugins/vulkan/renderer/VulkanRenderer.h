@@ -17,7 +17,7 @@
 #include <array>
 #include <cstdint>
 #include "../resources/TextureRegistry.h"
-#include <Scene/ModelRegistry.h>
+#include "../resources/ModelRegistry.h"
 #include <UI/Editor/InternalChaiUI.h>
 #include "../utils/GpuProfiler.h"
 

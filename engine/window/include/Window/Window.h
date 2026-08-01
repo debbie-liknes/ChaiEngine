@@ -3,7 +3,6 @@
  * @brief Interface for a generic window (glfw, sdl, etc)
  */
 #pragma once
-#include <CoreExport.h>
 #include <string>
 #include <memory>
 #include <span>
@@ -12,7 +11,7 @@
 
 namespace chai
 {
-    class CORE_EXPORT IWindow
+    class IWindow
     {
     public:
         virtual ~IWindow() = default;

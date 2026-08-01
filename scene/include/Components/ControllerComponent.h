@@ -4,7 +4,7 @@
 #include <typeindex>
 #include <string>
 #include <Controllers/Controller.h>
-#include <Core/Updatable.h>
+#include <Scene/IUpdatable.h>
 #include <Components/Component.h>
 #include <unordered_map>
 #include <algorithm>

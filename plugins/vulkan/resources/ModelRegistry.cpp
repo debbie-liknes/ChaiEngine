@@ -1,4 +1,4 @@
-#include <Scene/ModelRegistry.h>
+#include "ModelRegistry.h"
 #include <Log.h>
 #include <Core/FileIO.h>
 #include <Loaders/IModelLoader.h>

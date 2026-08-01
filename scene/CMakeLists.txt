@@ -16,6 +16,9 @@ set(ChaiScene_headers
         include/Scene/Scene.h
         include/Scene/SpawnPrefab.h
         include/Controllers/SpinController.h
+        include/Visitors/Visitor.h
+        include/Visitors/AudioSceneVisitor.h
+        include/Visitors/FrameRenderVisitor.h
 )
 
 set(ChaiScene_source
@@ -33,11 +36,13 @@ set(ChaiScene_source
         source/Scene/GameObject.cpp
         source/Scene/Scene.cpp
         source/Scene/SpawnPrefab.cpp
+        source/Visitors/AudioSceneVisitor.cpp
+        source/Visitors/FrameRenderVisitor.cpp
 )
 
 add_library(Scene SHARED ${ChaiScene_headers} ${ChaiScene_source})
 
 target_include_directories(Scene PUBLIC include)
-target_link_libraries(Scene PUBLIC Core Graphics)
+target_link_libraries(Scene PUBLIC Audio Graphics TypeReflection UI Window)
 
 ChaiLibDefaults(Scene "Scene")

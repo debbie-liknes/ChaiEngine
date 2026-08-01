@@ -1,6 +1,7 @@
 #include <Components/MeshComponent.h>
 #include <Components/TransformComponent.h>
 #include <Scene/GameObject.h>
+#include <Visitors/Visitor.h>
 
 namespace chai::scene
 {
@@ -17,6 +18,17 @@ namespace chai::scene
     GameObject::GameObject(const std::string& name, GameObjectId id) : name_(name), objectId_(id)
     {
         addComponent<TransformComponent>();
+    }
+
+    void GameObject::accept(Visitor* visitor)
+    {
+        visitor->visit(this);
+
+        for (const auto& c : components_)
+            c->accept(visitor);
+        for (auto* child : children_)
+            if (child->parent_ == nullptr)
+                child->accept(visitor);
     }
 
     void GameObject::setParent(GameObject* parent)
@@ -48,18 +60,6 @@ namespace chai::scene
             if (componentCallback) {
                 componentCallback(component.get());
             }
-        }
-    }
-
-    void GameObject::extract(gfx::FrameRenderData& frame) const
-    {
-        for (const auto& c : components_)
-            if (auto updatable = dynamic_cast<IUpdatable*>(c.get()))
-                updatable->extract(frame);
-        for (auto const* child : children_)
-        {
-            if (child->parent_ == nullptr)
-                child->extract(frame);
         }
     }
 } // namespace chai::cup

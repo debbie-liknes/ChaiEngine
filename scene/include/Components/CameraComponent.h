@@ -4,7 +4,7 @@
 #include <Scene/Camera.h>
 #include <memory>
 #include <ChaiMath.h>
-#include <Core/Updatable.h>
+#include <Scene/IUpdatable.h>
 #include <Scene/GameObject.h>
 
 namespace chai::scene
@@ -18,7 +18,7 @@ namespace chai::scene
         explicit CameraComponent(GameObject* owner = nullptr);
         ~CameraComponent() override = default;
 
-        void extract(gfx::FrameRenderData & frame) const override;
+        [[nodiscard]] const Camera& getCamera() const { return cam_; }
 
         void setAspectRatio(float aspect);
         void setFarPlane(float far);

@@ -4,7 +4,7 @@
 #include <Rendering/FrameRenderData.h>
 #include <Loaders/ITextureLoader.h>
 #include <Components/Component.h>
-#include <Core/Updatable.h>
+#include <Scene/IUpdatable.h>
 
 namespace chai::scene
 {
@@ -14,9 +14,10 @@ namespace chai::scene
         MeshComponent(GameObject* owner = nullptr);
         ~MeshComponent() override;
 
-        void extract(gfx::FrameRenderData& frame) const override;
-
+        Handle<gfx::Mesh> getMesh() const { return mesh_; }
         void setMesh(Handle<gfx::Mesh> m) { mesh_ = m; }
+
+        Handle<gfx::Material> getMaterial() const { return material_; }
         void setMaterial(Handle<gfx::Material> mat) { material_ = mat; }
 
     private:

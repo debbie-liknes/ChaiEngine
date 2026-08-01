@@ -1,15 +1,18 @@
 #include <Core/Engine.h>
 #include <Log.h>
 #include <Window/Window.h>
-#include <Rendering/FrameRenderData.h>
-#include <Core/IInput.h>
+#include <Scene/Scene.h>
+#include <Input/IInput.h>
 #include <UI/Editor/InternalChaiUI.h>
 #include <UI/Editor/PanelRegistry.h>
 #include <UI/Editor/PanelHost.h>
 #include <UI/Editor/DockspaceService.h>
 #include <UI/Editor/MenuService.h>
 #include <Core/SystemPaths.h>
+#include <Audio/IAudioEngine.h>
 #include <LogPanel.h>
+#include <Visitors/AudioSceneVisitor.h>
+#include <Visitors/FrameRenderVisitor.h>
 
 namespace chai
 {
@@ -48,6 +51,9 @@ namespace chai
         ctx_.services.provide<ui::EditorViewportManager>(vpManager);
 
         ui::loadFonts(executableDir().string() + "/assets/editor/fonts");
+
+        //Create scene
+        scene_ = std::make_unique<scene::Scene>();
     }
 
     void Engine::shutdown()
@@ -73,11 +79,6 @@ namespace chai
         plugins_.assign(p.begin(), p.end());
     }
 
-    void Engine::setScene(std::unique_ptr<IScene> scene)
-    {
-        scene_ = std::move(scene);
-    }
-
     void Engine::run()
     {
         //these dont come from a plugin, guaranteed
@@ -97,10 +98,18 @@ namespace chai
             CHAI_LOG_CRITICAL("Could not locate Renderer Service.");
         }
 
+        auto audio = services_.tryResolve<audio::IAudioEngine>();
+        if (!audio) {
+            CHAI_LOG_CRITICAL("Could not locate Audio Service.");
+        }
+
         auto input = services_.tryResolve<IInput>();
         if (!input) {
             CHAI_LOG_CRITICAL("Could not locate Input Service.");
         }
+
+        scene::AudioSceneVisitor audioVisitor;
+        scene::FrameRenderVisitor frameVisitor;
 
         // The main guts of the application
         while (!window->shouldClose()) {
@@ -115,10 +124,17 @@ namespace chai
             //draw internal uis
             panelHost.draw(panelRegistry, dockingService, menuService);
 
-            gfx::FrameRenderData frame;
-            scene_->extract(frame);
-            renderer->renderFrame(frame);
+            scene_->accept(&audioVisitor);
+            scene_->accept(&frameVisitor);
+
+            audio->set3dListenersAndOrientations(audioVisitor.getData());
+            audio->update();
+
+            renderer->renderFrame(frameVisitor.getData());
             renderer->endFrame();
+
+            audioVisitor.reset();
+            frameVisitor.reset();
         }
     }
 }

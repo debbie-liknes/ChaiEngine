@@ -17,6 +17,7 @@ set(${PROJECT_NAME}_headers
         resources/Mesh.h
         resources/MeshFactory.h
         resources/MeshRegistry.h
+        resources/ModelRegistry.h
         resources/TextureFactory.h
         resources/TextureRegistry.h
         resources/UploadContext.h
@@ -42,6 +43,7 @@ set(${PROJECT_NAME}_source
         resources/MaterialRegistry.cpp
         resources/MeshFactory.cpp
         resources/MeshRegistry.cpp
+        resources/ModelRegistry.cpp
         resources/UploadContext.cpp
         resources/TextureFactory.cpp
         resources/TextureRegistry.cpp

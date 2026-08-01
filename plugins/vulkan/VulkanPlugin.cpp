@@ -9,6 +9,7 @@
 #include "resources/Mesh.h"
 #include "resources/MeshFactory.h"
 #include "resources/MeshRegistry.h"
+#include "resources/ModelRegistry.h"
 #include "resources/TextureFactory.h"
 #include "resources/TextureRegistry.h"
 
@@ -17,7 +18,6 @@
 #include <Plugin/PluginBase.h>
 #include <Plugin/PluginMacros.h>
 #include <Plugin/ServiceLocator.h>
-#include <Scene/ModelRegistry.h>
 #include <UI/Editor/PanelRegistry.h>
 #include <UI/Editor/MenuService.h>
 #include <Window/Window.h>

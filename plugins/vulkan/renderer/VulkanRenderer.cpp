@@ -19,7 +19,7 @@
 #include <imgui.h>
 #include <backends/imgui_impl_vulkan.h>
 #include <backends/imgui_impl_glfw.h>
-#include <Core/IInput.h>
+#include <Input/IInput.h>
 
 namespace chai::gfx
 {

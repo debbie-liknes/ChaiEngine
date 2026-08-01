@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include <Components/ControllerComponent.h>
-#include <Core/Updatable.h>
+#include <Scene/IUpdatable.h>
 #include <Components/Component.h>
 #include <string>
 #include <string_view>
@@ -10,6 +10,8 @@
 
 namespace chai::scene
 {
+    class Visitor;
+
     using GameObjectId = int32_t;
 
     class GameObject : public IUpdatable
@@ -105,7 +107,8 @@ namespace chai::scene
         }
 
         virtual void update(const UpdateContext&) override;
-        virtual void extract(gfx::FrameRenderData& frameData) const override;
+
+        virtual void accept(Visitor* visitor);
 
     private:
         std::vector<std::unique_ptr<Component>> components_;
