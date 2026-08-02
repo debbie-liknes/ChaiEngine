@@ -2,7 +2,7 @@
  * @file Input.h
  */
 #pragma once
-#include <Core/IInput.h>
+#include <Input/IInput.h>
 #include <set>
 
 namespace chai
@@ -33,8 +33,8 @@ namespace chai
         void updateCharInput(const CharEvent& input);
         void updateScrollInput(const MouseScrollEvent& input);
 
-        void consumeKeyboardEvents() override;
-        void consumeMouseEvents() override;
+        void setHoveredCamera(int32_t cameraId) override;
+        int32_t getHoveredCamera() const override;
 
         const std::vector<unsigned int>& getTypedCharactersThisFrame() const override;
 
@@ -45,9 +45,8 @@ namespace chai
         float deltaX, deltaY;
         float scrollX, scrollY;
 
-        bool keyboardCaptured_ = false;
-        bool mouseCaptured_ = false;
         std::vector<unsigned int> typedChars_;
+        int32_t activeCamera_ = 0;
 	};
 
     Key toChaiKey(int glfwKey);

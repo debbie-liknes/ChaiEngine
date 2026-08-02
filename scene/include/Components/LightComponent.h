@@ -1,7 +1,7 @@
 #pragma once
 #include <ChaiMath.h>
 #include <Components/Component.h>
-#include <Core/Updatable.h>
+#include <Scene/IUpdatable.h>
 
 namespace chai::scene
 {
@@ -19,7 +19,9 @@ namespace chai::scene
     public:
         explicit LightComponent(GameObject* owner = nullptr);
 
-        virtual void extract(gfx::FrameRenderData& frame) const override;
+        LightType getType() const { return type_; }
+        math::Vec3 getColor() const { return color_; }
+        float getIntensity() const { return intensity_; }
 
     private:
         LightType type_ = LightType::DIRECTIONAL;
@@ -37,4 +39,6 @@ namespace chai::scene
         bool enabled_ = true;
         bool shadowsEnabled_ = true;
     };
+    CHAI_REFLECT(LightComponent, "LightComponent") {}
+
 }

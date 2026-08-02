@@ -1,18 +1,18 @@
 #pragma once
 #include <string>
+#include <vector>
 
 #include <ChaiMath.h>
+#include <Audio/AudioSceneData.h>
 
-namespace audio
+namespace chai::audio
 {
     class IAudioEngine
     {
     public:
         virtual ~IAudioEngine() = default;
 
-        virtual void init() = 0;
         virtual void update() = 0;
-        virtual void shutdown() = 0;
 
         virtual void loadSound(const std::string& strSoundName,
                        bool b3d = true,
@@ -23,9 +23,7 @@ namespace audio
                       const chai::math::Vec3& vPos = chai::math::Vec3{0, 0, 0},
                       float fVolumedB = 0.0f) = 0;
 
-        virtual void set3dListenerAndOrientation(const chai::math::Vec3& vPosition,
-                                         const chai::math::Vec3& vLook,
-                                         const chai::math::Vec3& vUp) = 0;
+        virtual void set3dListenersAndOrientations(const AudioSceneData& audioData) = 0;
         virtual void stopChannel(int nChannelId) = 0;
         virtual void stopAllChannels() = 0;
         virtual void setChannel3dPosition(int nChannelId, const chai::math::Vec3& vPosition) = 0;

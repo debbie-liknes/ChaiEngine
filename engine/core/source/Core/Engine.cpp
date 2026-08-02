@@ -1,11 +1,18 @@
 #include <Core/Engine.h>
 #include <Log.h>
 #include <Window/Window.h>
-#include <Rendering/FrameRenderData.h>
-#include <Core/IInput.h>
-#include <UI/Tools/InternalChaiUi.h>
-#include <UI/Tools/InternalPanels.h>
+#include <Scene/Scene.h>
+#include <Input/IInput.h>
+#include <UI/Editor/InternalChaiUI.h>
+#include <UI/Editor/PanelRegistry.h>
+#include <UI/Editor/PanelHost.h>
+#include <UI/Editor/DockspaceService.h>
+#include <UI/Editor/MenuService.h>
 #include <Core/SystemPaths.h>
+#include <Audio/IAudioEngine.h>
+#include <LogPanel.h>
+#include <Visitors/AudioSceneVisitor.h>
+#include <Visitors/FrameRenderVisitor.h>
 
 namespace chai
 {
@@ -15,13 +22,38 @@ namespace chai
 
     void Engine::startup()
     {
+        // Register panel management and docking services
+        auto panelRegistry = std::make_shared<ui::PanelRegistry>();
+        ctx_.services.provide<ui::PanelRegistry>(panelRegistry);
+
+        auto panelHost = std::make_shared<ui::PanelHost>();
+        ctx_.services.provide<ui::PanelHost>(panelHost);
+
+        auto dockspace = std::make_shared<ui::DockspaceService>();
+        ctx_.services.provide<ui::DockspaceService>(dockspace);
+
+        auto menuService = std::make_shared<ui::MenuService>();
+        ctx_.services.provide<ui::MenuService>(menuService);
+
+        //Load plugins
         CHAI_LOG_INFO("Engine starting");
         for (auto& p : plugins_) {
             p->onLoad(ctx_);
             active_.push_back(p);
         }
 
+        auto renderer = services_.tryResolve<gfx::IRenderer>();
+        if (!renderer) {
+            CHAI_LOG_CRITICAL("Could not locate Window Service.");
+        }
+
+        auto vpManager = std::make_shared<ui::EditorViewportManager>(*renderer, *panelRegistry);
+        ctx_.services.provide<ui::EditorViewportManager>(vpManager);
+
         ui::loadFonts(executableDir().string() + "/assets/editor/fonts");
+
+        //Create scene
+        scene_ = std::make_unique<scene::Scene>();
     }
 
     void Engine::shutdown()
@@ -29,6 +61,12 @@ namespace chai
         CHAI_LOG_INFO("Engine shutdown");
         for (auto it = active_.rbegin(); it != active_.rend(); ++it)
             (*it)->onUnload(ctx_);
+
+        ctx_.services.remove<ui::PanelRegistry>();
+        ctx_.services.remove<ui::EditorViewportManager>();
+        ctx_.services.remove<ui::PanelHost>();
+        ctx_.services.remove<ui::DockspaceService>();
+        ctx_.services.remove<ui::MenuService>();
     }
 
     void Engine::requestStop()
@@ -41,13 +79,15 @@ namespace chai
         plugins_.assign(p.begin(), p.end());
     }
 
-    void Engine::setScene(std::unique_ptr<IScene> scene)
-    {
-        scene_ = std::move(scene);
-    }
-
     void Engine::run()
     {
+        //these dont come from a plugin, guaranteed
+        auto& panelRegistry = services_.resolve<ui::PanelRegistry>();
+        auto& panelHost = services_.resolve<ui::PanelHost>();
+        auto& dockingService = services_.resolve<ui::DockspaceService>();
+        auto& menuService = services_.resolve<ui::MenuService>();
+
+        //These come from plugins, check that they exist
         auto window = services_.tryResolve<IWindow>();
         if (!window) {
             CHAI_LOG_CRITICAL("Could not locate Window Service.");
@@ -55,13 +95,21 @@ namespace chai
 
         auto renderer = services_.tryResolve<gfx::IRenderer>();
         if (!renderer) {
-            CHAI_LOG_CRITICAL("Could not locate Window Service.");
+            CHAI_LOG_CRITICAL("Could not locate Renderer Service.");
+        }
+
+        auto audio = services_.tryResolve<audio::IAudioEngine>();
+        if (!audio) {
+            CHAI_LOG_CRITICAL("Could not locate Audio Service.");
         }
 
         auto input = services_.tryResolve<IInput>();
         if (!input) {
             CHAI_LOG_CRITICAL("Could not locate Input Service.");
         }
+
+        scene::AudioSceneVisitor audioVisitor;
+        scene::FrameRenderVisitor frameVisitor;
 
         // The main guts of the application
         while (!window->shouldClose()) {
@@ -70,33 +118,23 @@ namespace chai
             renderer->startFrame();
             float dt = clock_.tick();
 
-            updateActiveCameraAspect();
             UpdateContext ctx{dt, *input};
             scene_->update(ctx);
 
-            //tools panels, NOT the main UI
-            chai::ui::drawRegisteredPanels();
+            //draw internal uis
+            panelHost.draw(panelRegistry, dockingService, menuService);
 
-            gfx::FrameRenderData frame;
-            scene_->extract(frame);
-            renderer->renderFrame(frame);
+            scene_->accept(&audioVisitor);
+            scene_->accept(&frameVisitor);
+
+            audio->set3dListenersAndOrientations(audioVisitor.getData());
+            audio->update();
+
+            renderer->renderFrame(frameVisitor.getData());
             renderer->endFrame();
+
+            audioVisitor.reset();
+            frameVisitor.reset();
         }
-    }
-
-    void Engine::updateActiveCameraAspect()
-    {
-        auto window = services().tryResolve<IWindow>();
-        if (!window || !scene_)
-            return; // headless?
-
-        //get framebuffer size
-        int w = 0, h = 0;
-        window->framebufferSize(w, h);
-        if (w == 0 || h == 0)
-            return; // minimized
-
-        float aspect = float(w) / float(h);
-        scene_->setCameraAspect(aspect);
     }
 }

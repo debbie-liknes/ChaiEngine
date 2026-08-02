@@ -1,7 +1,6 @@
 #include <Components/CameraComponent.h>
 #include <Scene/GameObject.h>
 #include <Components/TransformComponent.h>
-#include <Rendering/FrameRenderData.h>
 
 namespace chai::scene
 {
@@ -27,14 +26,5 @@ namespace chai::scene
     void CameraComponent::setFOV(float fov)
     {
         cam_.setFOV(fov);
-    }
-
-    void CameraComponent::extract(gfx::FrameRenderData& frame) const
-    {
-        auto const* t = getGameObject()->getComponent<TransformComponent>();
-        const math::Mat4 world = t ? t->getWorldMatrix() : math::Mat4::identity();
-        const math::Mat4 view = world.inverse();
-        const math::Mat4 proj = cam_.getProjectionMatrix();
-        frame.views.emplace_back(view, proj, proj * view, t->getWorldPosition());
     }
 }

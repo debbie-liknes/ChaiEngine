@@ -3,13 +3,13 @@
  * @brief Plugin setup and registration of services
  */
 #include <Log.h>
-#include <AudioEngine.h>
+#include <FmodAudioEngine.h>
 #include <Plugin/PluginBase.h>
 #include <Plugin/PluginMacros.h>
 #include <Plugin/ServiceLocator.h>
 #include <memory>
 
-namespace chai
+namespace chai::audio::fmod
 {
     class FmodAudioPlugin : public IPlugin
     {
@@ -18,25 +18,22 @@ namespace chai
 
         void onLoad(PluginContext& ctx) override
         {
-            m_audioEngine = std::make_shared<audio::AudioEngine>();
-            m_audioEngine->init();
+            m_audioEngine = std::make_shared<FmodAudioEngine>();
 
             // register services, but make sure to UN-register them on unload
-            ctx.services.provide<audio::IAudioEngine>(m_audioEngine);
+            ctx.services.provide<IAudioEngine>(m_audioEngine);
 
-            CHAI_LOG_INFO("Texture Plugin loaded");
+            CHAI_LOG_INFO("FMOD Audio Plugin loaded");
         }
 
         void onUnload(PluginContext& ctx) override
         {
-            m_audioEngine->shutdown();
-
-            ctx.services.remove<audio::IAudioEngine>();
-            CHAI_LOG_INFO("Texture Plugin removed");
+            ctx.services.remove<IAudioEngine>();
+            CHAI_LOG_INFO("FMOD Audio Plugin removed");
         }
 
     private:
-        std::shared_ptr<audio::AudioEngine> m_audioEngine;
+        std::shared_ptr<IAudioEngine> m_audioEngine;
     };
 
     CHAI_PLUGIN(FmodAudioPlugin);

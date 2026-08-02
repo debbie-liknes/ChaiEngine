@@ -1,6 +1,7 @@
 #include <Components/MeshComponent.h>
 #include <Components/TransformComponent.h>
 #include <Scene/GameObject.h>
+#include <Visitors/Visitor.h>
 
 namespace chai::scene
 {
@@ -14,6 +15,22 @@ namespace chai::scene
         addComponent<TransformComponent>();
     }
 
+    GameObject::GameObject(const std::string& name, GameObjectId id) : name_(name), objectId_(id)
+    {
+        addComponent<TransformComponent>();
+    }
+
+    void GameObject::accept(Visitor* visitor)
+    {
+        visitor->visit(this);
+
+        for (const auto& c : components_)
+            c->accept(visitor);
+        for (auto* child : children_)
+            if (child->parent_ == nullptr)
+                child->accept(visitor);
+    }
+
     void GameObject::setParent(GameObject* parent)
     {
         parent_ = parent;
@@ -23,11 +40,6 @@ namespace chai::scene
     {
         return parent_;
     }
-
-    //std::span<GameObject const*>& GameObject::getChildren() const
-    //{
-    //    return m_children;
-    //}
 
     void GameObject::update(const UpdateContext& ctx)
     {
@@ -42,15 +54,12 @@ namespace chai::scene
         }
     }
 
-    void GameObject::extract(gfx::FrameRenderData& frame) const
+    void GameObject::visitComponents(std::function<void(Component*)> componentCallback)
     {
-        for (const auto& c : components_)
-            if (auto updatable = dynamic_cast<IUpdatable*>(c.get()))
-                updatable->extract(frame);
-        for (auto const* child : children_)
-        {
-            if (child->parent_ == nullptr)
-                child->extract(frame);
+        for (const auto& component : components_) {
+            if (componentCallback) {
+                componentCallback(component.get());
+            }
         }
     }
 } // namespace chai::cup

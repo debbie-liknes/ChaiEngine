@@ -4,7 +4,7 @@
 #include <typeindex>
 #include <string>
 #include <Controllers/Controller.h>
-#include <Core/Updatable.h>
+#include <Scene/IUpdatable.h>
 #include <Components/Component.h>
 #include <unordered_map>
 #include <algorithm>
@@ -16,6 +16,7 @@ namespace chai::scene
     class ControllerComponent : public Component, public IUpdatable
     {
     public:
+        ControllerComponent() = default;
         explicit ControllerComponent(chai::scene::GameObject* owner);
 
         // Add a controller
@@ -125,4 +126,6 @@ namespace chai::scene
         std::unordered_map<std::string, IController*> controllersByName_;
         chai::scene::GameObject* m_owner;
     };
+
+    CHAI_REFLECT(ControllerComponent, "ControllerComponent") {}
 }

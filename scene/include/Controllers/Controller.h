@@ -1,6 +1,6 @@
 #pragma once
 #include <SceneExport.h>
-#include <Core/IInput.h>
+#include <Input/IInput.h>
 
 namespace chai::scene
 {

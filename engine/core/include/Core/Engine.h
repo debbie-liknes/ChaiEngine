@@ -11,9 +11,9 @@
 #include <vector>
 #include <Core/Clock.h>
 #include <span>
-#include <Scene/IScene.h>
+#include <Scene/Scene.h>
 #include <Rendering/IRenderer.h>
-#include <UI/Tools/FontManager.h>
+#include <UI/Editor/EditorViewportManager.h>
 
 namespace chai
 {
@@ -30,10 +30,10 @@ namespace chai
         void startup();
         void shutdown();
         void requestStop();
-        void setScene(std::unique_ptr<IScene> scene);
         void run();
 
         ServiceLocator& services() { return services_; }
+        scene::Scene& scene() { return *scene_; }
         void setPlugins(std::span<IPlugin* const> p);
 
     private:
@@ -44,8 +44,7 @@ namespace chai
         std::vector<IPlugin*>   active_;
         bool                    running_ = true;
         Clock                   clock_;
-        std::unique_ptr<IScene> scene_;
+        std::unique_ptr<scene::Scene> scene_;
 
-        void updateActiveCameraAspect();
     };
 }

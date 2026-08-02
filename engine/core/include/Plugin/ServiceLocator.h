@@ -8,6 +8,7 @@
 #include <memory>
 #include <unordered_map>
 #include <typeindex>
+#include <cassert>
 
 namespace chai
 {

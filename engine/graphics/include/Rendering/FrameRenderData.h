@@ -16,8 +16,12 @@ namespace chai::gfx
     struct Material;
 
     struct RenderView {
-        math::Mat4 view, proj, viewProj;
+        math::Mat4 view;
         math::Vec3 position;
+        float fovYRadians;
+        float nearPlane;
+        float farPlane;
+        uint32_t cameraId;
     };
 
     /**
@@ -35,11 +39,10 @@ namespace chai::gfx
      * @brief Extract data from the scene into this. This structure is handed to the
      * renderer every frame
      */
-    struct GRAPHICS_EXPORT FrameRenderData 
-    {
+    struct FrameRenderData {
         std::vector<RenderView> views;
         std::vector<RenderItem> items;
-        LightData sun;                  //have 1 directional light, TODO: rethink after IBL
+        LightData sun; // have 1 directional light, TODO: rethink after IBL
         EnvironmentData environment;
     };
 }

@@ -1,24 +1,35 @@
 #pragma once
 #include <memory>
 #include <Components/ControllerComponent.h>
-#include <Core/Updatable.h>
+#include <Scene/IUpdatable.h>
 #include <Components/Component.h>
 #include <string>
+#include <string_view>
 #include <span>
+#include <functional>
 
 namespace chai::scene
 {
+    class Visitor;
+
+    using GameObjectId = int32_t;
+
     class GameObject : public IUpdatable
     {
     public:
         GameObject();
         GameObject(const std::string& name);
+        GameObject(const std::string& name, GameObjectId id);
         ~GameObject() = default;
+
+        GameObjectId getObjectId() const { return objectId_; }
+        std::string_view getObjectName() const { return name_; }
 
         void setParent(GameObject* parent);
         GameObject* getParent() const;
         void addChild(std::unique_ptr<GameObject> child);
-        //std::span<GameObject const*>& getChildren() const;
+        std::vector<GameObject*>& getChildren() { return children_; }
+        void visitComponents(std::function<void(Component*)>);
 
         template <typename T>
         T* addComponent()
@@ -96,7 +107,8 @@ namespace chai::scene
         }
 
         virtual void update(const UpdateContext&) override;
-        virtual void extract(gfx::FrameRenderData& frameData) const override;
+
+        virtual void accept(Visitor* visitor);
 
     private:
         std::vector<std::unique_ptr<Component>> components_;
@@ -106,5 +118,7 @@ namespace chai::scene
         //hierarchy
         GameObject* parent_ = nullptr;
         std::vector<GameObject*> children_;
+
+        int32_t objectId_ = -1;
     };
 }
