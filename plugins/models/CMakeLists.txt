@@ -10,6 +10,6 @@ add_library(ModelLoader SHARED
         ${ModelLoaderSource}
 )
 
-target_link_libraries(ModelLoader PUBLIC Core ChaiMath Graphics)
+target_link_libraries(ModelLoader PUBLIC Core ChaiMath Graphics GLFWWindowPlugin)
 
 ChaiPluginDefaults(ModelLoader "Plugins")

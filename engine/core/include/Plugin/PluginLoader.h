@@ -35,13 +35,15 @@ namespace chai
          */
         std::size_t loadDirectory(const std::filesystem::path& dir);
 
-        std::span<IPlugin* const> plugins() const { return pluginPtrs_; }
-
-    private:
         struct Loaded {
             DynamicLibrary library;
             std::unique_ptr<IPlugin> plugin;
         };
+        std::span<const Loaded> loadedPluginInfo() const { return loaded_; }
+
+        std::span<IPlugin* const> plugins() const { return pluginPtrs_; }
+
+    private:
 
         std::vector<Loaded> loaded_;
         std::vector<IPlugin*> pluginPtrs_;
