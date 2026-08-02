@@ -30,13 +30,12 @@ At the moment, it is **rendering-focused** rather than a general-purpose game en
 - **Plugin architecture** runtime DLL discovery with a service locator
 - **ChaiMath** a header-only math library with full unit-test coverage
 - Supporting infrastructure: type reflection, a pluggable logging sink (spdlog), and GLFW windowing
+- Profiling integration via [Tracy](https://github.com/wolfpld/tracy).
 
 ### Roadmap
 - Cascaded shadow maps
 - Deferred rendering
 - Material instances
-- A 2D UI
-- Audio Engine
 - Physics Engine
 
 
@@ -54,7 +53,7 @@ The engine is organized into layers, so the renderer can evolve without the rest
  
 - **Language:** C++20
 - **Graphics API:** Vulkan
-- **Key dependencies:** Vulkan SDK, Vulkan Memory Allocator (VMA), GLFW, cgltf, spdlog
+- **Key dependencies:** Vulkan SDK, Vulkan Memory Allocator (VMA), GLFW, cgltf, spdlog, tracy
 - **Build system:** CMake
 - **Platform:** Windows / Linux
 

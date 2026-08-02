@@ -5,6 +5,7 @@
 #include <assert.h>
 
 #include <fmod.hpp>
+#include <tracy/Tracy.hpp>
 
 static inline float dBToVolume(float dB)
 {
@@ -80,6 +81,8 @@ namespace chai::audio::fmod
 
     void FmodAudioEngine::update()
     {
+        ZoneScoped
+
         sgpImplementation_->Update();
     }
 

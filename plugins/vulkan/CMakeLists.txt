@@ -129,6 +129,6 @@ add_custom_target(Shaders ALL
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC Core Graphics UI Vulkan::Vulkan glfw PRIVATE ImGui vk-bootstrap::vk-bootstrap GPUOpen::VulkanMemoryAllocator)
-#set_target_properties(vkbootstrap PROPERTIES FOLDER "external")
+set_target_properties(vk-bootstrap PROPERTIES FOLDER "external")
 
 ChaiPluginDefaults(${PROJECT_NAME} "Plugins")
