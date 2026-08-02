@@ -1,6 +1,7 @@
 project(Core)
 
 set(${PROJECT_NAME}_headers
+        include/Core/Clock.h
         include/Core/Engine.h
         include/Core/FileIO.h
         include/Core/SystemPaths.h
