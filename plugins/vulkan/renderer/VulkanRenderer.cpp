@@ -20,6 +20,7 @@
 #include <backends/imgui_impl_vulkan.h>
 #include <backends/imgui_impl_glfw.h>
 #include <Input/IInput.h>
+#include <tracy/Tracy.hpp>
 
 namespace chai::gfx
 {
@@ -340,6 +341,8 @@ namespace chai::gfx
 
     void VulkanRenderer::renderFrame(const FrameRenderData& renderData)
     {
+        ZoneScoped
+
         if (needsResize_)
             recreateSwapchain();
 

@@ -6,6 +6,7 @@
 #include <UI/Editor/InternalChaiUI.h>
 #include <EditorUI/SceneHierarchy.h>
 #include <Visitors/FrameRenderVisitor.h>
+#include <tracy/Tracy.hpp>
 
 namespace chai::scene
 {
@@ -23,6 +24,8 @@ namespace chai::scene
 
     void Scene::update(const UpdateContext& ctx)
     {
+        ZoneScoped
+
         for (auto const& object : m_objects) {
             object->update(ctx);
         }

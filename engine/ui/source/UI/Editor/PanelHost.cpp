@@ -1,11 +1,14 @@
 #include <UI/Editor/PanelHost.h>
 #include <UI/Editor/InternalChaiUI.h>
 #include <imgui.h>
+#include <tracy/Tracy.hpp>
 
 namespace chai::ui
 {
     void PanelHost::draw(PanelRegistry& registry, DockspaceService& dockspace, MenuService& menus)
     {
+        ZoneScoped
+
         menus.draw(registry);
         ImGuiID dockId = dockspace.begin();
 
