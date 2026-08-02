@@ -23,7 +23,7 @@ namespace chai::ui
                           true,
                           ImGuiWindowFlags_NoScrollbar);
 
-        static const char* kShadingNames[] = {"Lit", "Normals", "UV", "Overdraw"};
+        static const char* kShadingNames[] = {"Lit", "Normals", "UV", "Roughness", "Metallic", "Ambient Occlusion"};
         int shadingMode = static_cast<int>(registry.getViewportShadingMode(handle));
         ImGui::SetNextItemWidth(100);
         if (ImGui::Combo("##Shading", &shadingMode, kShadingNames, IM_ARRAYSIZE(kShadingNames)))

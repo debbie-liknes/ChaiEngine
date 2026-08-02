@@ -103,7 +103,9 @@ namespace chai::gfx
                          const RenderTargetView& view,
                          const FrameRenderData& renderData,
                          const std::vector<uint32_t>&,
-                         VkDescriptorSet);
+                         VkDescriptorSet,
+                         ViewportShadingMode,
+                         bool wireframe);
 
         //setup
         void init();
@@ -145,6 +147,7 @@ namespace chai::gfx
         VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
         VkPipeline pbrPipeline_ = VK_NULL_HANDLE;
         VkPipeline pbrBlendPipeline_ = VK_NULL_HANDLE;
+        VkPipeline pbrWireframePipeline_ = VK_NULL_HANDLE;
         VkPipeline skyboxPipeline_ = VK_NULL_HANDLE;
 
         //IBL
@@ -175,6 +178,6 @@ namespace chai::gfx
     //TODO: dont leave this here forever
     struct PushConstants {
         math::Mat4 model;
-        math::Vec4 color;
+        int shadingMode = 0; // 0=Lit, 1=Normals, 2=UV, 3=Roughness, 4=Metallic, 5=AO
     };
 }

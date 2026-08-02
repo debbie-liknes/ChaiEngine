@@ -11,7 +11,7 @@ namespace chai::gfx
     {
     };
 
-    enum class ViewportShadingMode : int { Lit = 0, Normals = 1, UV = 2, Overdraw = 3 };
+    enum class ViewportShadingMode : int { Lit = 0, Normals = 1, UV = 2, Roughness = 3, Metallic = 4, AmbientOcclusion = 5 };
 
     class IViewportRegistry
     {

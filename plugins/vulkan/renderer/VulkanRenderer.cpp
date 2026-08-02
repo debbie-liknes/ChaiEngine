@@ -64,6 +64,7 @@ namespace chai::gfx
         }
 
         vkDestroyPipeline(ctx_.device(), pbrPipeline_, nullptr);
+        vkDestroyPipeline(ctx_.device(), pbrWireframePipeline_, nullptr);
         vkDestroyPipeline(ctx_.device(), pbrBlendPipeline_, nullptr);
         vkDestroyPipeline(ctx_.device(), skyboxPipeline_, nullptr);
         vkDestroyPipeline(ctx_.device(), irradiancePipeline_, nullptr);
@@ -417,7 +418,7 @@ namespace chai::gfx
 
             profiler_.beginRegion(cmd, "Main Pass: " + viewport.id);
             vkCmdBeginRendering(cmd, &vpRendering);
-            renderScene(cmd, target.view, renderData, order, viewport.cameraSet[currentFrame_]);
+            renderScene(cmd, target.view, renderData, order, viewport.cameraSet[currentFrame_], viewport.shadingMode, viewport.wireframe);
             vkCmdEndRendering(cmd);
             profiler_.endRegion(cmd, "Main Pass: " + viewport.id);
 
@@ -516,7 +517,9 @@ namespace chai::gfx
                                      const RenderTargetView& view,
                                      const FrameRenderData& renderData,
                                      const std::vector<uint32_t>& order,
-                                     VkDescriptorSet cameraSet)
+                                     VkDescriptorSet cameraSet,
+                                     ViewportShadingMode shadingMode,
+                                     bool wireframe)
     {
         VkViewport viewport{0, 0, float(view.extent.width), float(view.extent.height), 0.f, 1.f};
         vkCmdSetViewport(cmd, 0, 1, &viewport);
@@ -564,7 +567,9 @@ namespace chai::gfx
                 continue;
 
             // this is not scalable, will require refactor when there are too many pipelines
-            if (mat->alphaMode == AlphaMode::Blend)
+            if (wireframe)
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrWireframePipeline_);
+            else if (mat->alphaMode == AlphaMode::Blend)
                 vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrBlendPipeline_);
             else
                 vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline_);
@@ -583,6 +588,7 @@ namespace chai::gfx
 
             PushConstants consts;
             consts.model = item.model;
+            consts.shadingMode = static_cast<int>(shadingMode);
             vkCmdPushConstants(cmd,
                                pipelineLayout_,
                                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
@@ -701,6 +707,18 @@ namespace chai::gfx
                     .enableDepthTest()
                     .enableDepthWrite()
                     .disableBlending()
+                    .setCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
+            });
+
+        pbrWireframePipeline_ = loadPipelineByName(
+            ctx_, "pbr.vert.spv", "pbr.frag.spv", pipelineLayout_, [&](PipelineBuilder& b) {
+                b.setVertexInput({attrs.begin(), attrs.end()}, bind)
+                    .setColorFormat(swapchain_.format())
+                    .setDepthFormat(swapchain_.depthFormat())
+                    .enableDepthTest()
+                    .enableDepthWrite()
+                    .disableBlending()
+                    .setPolygonMode(VK_POLYGON_MODE_LINE)
                     .setCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
             });
 
