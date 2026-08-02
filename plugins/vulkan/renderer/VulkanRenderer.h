@@ -10,6 +10,7 @@
 #include "../resources/MaterialFactory.h"
 #include "../resources/RenderTargetView.h"
 #include "../resources/VulkanRenderTarget.h"
+#include "../VulkanCommon.h"
 
 #include <Plugin/ServiceLocator.h>
 
@@ -20,6 +21,7 @@
 #include "../resources/ModelRegistry.h"
 #include <UI/Editor/InternalChaiUI.h>
 #include "../utils/GpuProfiler.h"
+#include "../registries/ViewportRegistry.h"
 
 namespace chai
 {
@@ -56,6 +58,7 @@ namespace chai::gfx
                        std::shared_ptr<AssetCache<Texture>> texCache,
                        std::shared_ptr<AssetCache<Material>> matCache,
                        std::shared_ptr<ModelRegistry> texReg,
+                       std::shared_ptr<ViewportRegistry> viewportReg,
                        VulkanContext& context,
                        chai::ServiceLocator& locator);
         ~VulkanRenderer() override;
@@ -63,14 +66,6 @@ namespace chai::gfx
         void renderFrame(const FrameRenderData& renderData) override;
         void onResize(int width, int height) override;
         void waitIdle() override;
-
-        ViewportHandle addViewport(const std::string& id, uint32_t cameraViewIndex) override;
-        void removeViewport(ViewportHandle handle) override;
-        void requestViewportResize(ViewportHandle handle, uint32_t width, uint32_t height) override;
-        uint64_t getViewportTextureId(ViewportHandle handle) const override;
-        void setViewportHovered(ViewportHandle handle, bool hovered) override;
-        math::Vec2 getViewportExtent(ViewportHandle handle) const override;
-
 
         bool initializeUI() override;
         void shutdownUI() override;
@@ -96,43 +91,6 @@ namespace chai::gfx
 
             RenderTarget shadowTarget{};
         };
-        static constexpr uint32_t kFramesInFlight = 2;
-
-        struct Viewport {
-            std::string id;
-            ViewportTarget targets[kFramesInFlight];
-            VkBuffer cameraBuffer[kFramesInFlight]{};
-            VmaAllocation cameraAlloc[kFramesInFlight]{};
-            void* cameraMapped[kFramesInFlight]{};
-            VkDescriptorSet cameraSet[kFramesInFlight]{};
-            bool everRendered[kFramesInFlight] = {false, false};
-            VkExtent2D pendingExtent{};
-            bool needsResize = false;
-            bool hovered = false;
-            uint32_t cameraViewId = 0;
-        };
-
-        struct ViewportSlot {
-            Viewport viewport;
-            uint32_t generation = 0;
-            bool alive = false;
-        };
-
-        std::vector<ViewportSlot> viewportSlots_;
-        std::vector<uint32_t> freeViewportSlots_;
-
-        bool isValidHandle(ViewportHandle handle) const;
-        Viewport* getViewport(ViewportHandle handle);
-        void applyPendingViewportResizes();
-
-        Viewport createViewport(const std::string& id, uint32_t cameraViewIndex);
-        void destroyViewport(Viewport& vp);
-        ViewportTarget createViewportTarget(VkExtent2D extent);
-        void createCameraUBO(VkBuffer& buffer,
-                                             VmaAllocation& alloc,
-                                             void*& mapped,
-                                             VkDescriptorSet& set);
-        void recreateViewportTarget(Viewport& viewport, uint32_t frameIndex);
 
         void recreateSwapchain();
 
@@ -165,6 +123,7 @@ namespace chai::gfx
 
         VulkanStats stats_{};
         GpuProfiler profiler_{};
+        ViewportRegistry& viewportReg_;
 
         chai::IWindow& window_;
         VulkanContext& ctx_;
@@ -211,9 +170,6 @@ namespace chai::gfx
 
         VkDescriptorSet skyboxSet_ = VK_NULL_HANDLE;
         Handle<Texture> skyboxCube_;
-
-        //oh god this file is getting long
-        VkSampler linearSampler_ = VK_NULL_HANDLE;
     };
 
     //TODO: dont leave this here forever

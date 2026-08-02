@@ -5,10 +5,10 @@ set(${PROJECT_NAME}_headers
         pipeline/PipelineBuilder.h
         pipeline/PipelineHelpers.h
         pipeline/ShaderModule.h
+        registries/ViewportRegistry.h
         renderer/VulkanRenderer.h
         renderer/VulkanContext.h
         resources/RenderTargetView.h
-        swapchain/Swapchain.h
         resources/Buffer.h
         resources/GpuResources.h
         resources/Material.h
@@ -24,6 +24,8 @@ set(${PROJECT_NAME}_headers
         resources/VulkanTexture.h
         resources/VulkanVertex.h
         resources/VulkanRenderTarget.h
+        resources/VulkanViewport.h
+        swapchain/Swapchain.h
         utils/VkCheck.h
         utils/VkUtils.h
         utils/GpuProfiler.h
@@ -36,6 +38,7 @@ set(${PROJECT_NAME}_source
         pipeline/PipelineBuilder.cpp
         pipeline/PipelineHelpers.cpp
         pipeline/ShaderModule.cpp
+        registries/ViewportRegistry.cpp
         renderer/VulkanContext.cpp
         renderer/VulkanRenderer.cpp
         resources/Buffer.cpp
@@ -52,6 +55,7 @@ set(${PROJECT_NAME}_source
         utils/VkCheck.cpp
         utils/GpuProfiler.cpp
 
+        VulkanCommon.h
         VulkanMemoryAllocator.cpp
         VulkanPlugin.cpp
 )
