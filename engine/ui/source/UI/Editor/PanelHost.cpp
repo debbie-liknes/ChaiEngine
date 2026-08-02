@@ -17,7 +17,7 @@ namespace chai::ui
                 continue;
             //ui::PushFont(panel.titleFont);
             bool began =
-                ImGui::Begin(panel.id.c_str(), &panel.visible, ImGuiWindowFlags_NoCollapse);
+                ImGui::Begin(panel.displayName.c_str(), &panel.visible, ImGuiWindowFlags_NoCollapse);
             //ui::PopFont();
             if (began)
                 panel.draw();
