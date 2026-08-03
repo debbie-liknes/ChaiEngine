@@ -40,6 +40,18 @@ namespace chai
         scrollX = 0.f;
         scrollY = 0.f;
         typedChars_.clear();
+
+        bool dragButtonDown =
+            mouseDown(MouseButton::Right);
+
+        if (dragButtonDown && !wasDragButtonDown_ && hoveredCamera_ != -1) {
+            capturedCamera_ =
+                hoveredCamera_; // button just went down while hovering a viewport → lock it in
+        }
+        if (!dragButtonDown) {
+            capturedCamera_ = -1; // button released anywhere → release capture
+        }
+        wasDragButtonDown_ = dragButtonDown;
     }
 
     void InputHandler::updateKeyPress(const KeyEvent& key)
@@ -73,12 +85,17 @@ namespace chai
 
     void InputHandler::setHoveredCamera(int32_t cameraId) 
     {
-        activeCamera_ = cameraId;
+        hoveredCamera_ = cameraId;
     }
 
     int32_t InputHandler::getHoveredCamera() const
     {
-        return activeCamera_;
+        return hoveredCamera_;
+    }
+
+    int InputHandler::getActiveCamera() const
+    {
+        return capturedCamera_ != -1 ? capturedCamera_ : hoveredCamera_;
     }
 
     const std::vector<unsigned int>& InputHandler::getTypedCharactersThisFrame() const

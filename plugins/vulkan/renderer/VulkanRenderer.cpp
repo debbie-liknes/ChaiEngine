@@ -44,7 +44,8 @@ namespace chai::gfx
                          return VkExtent2D{uint32_t(w), uint32_t(h)};
                      }()),
           locator_(locator), meshCache_(meshCache), texCache_(texCache), materialCache_(matCache),
-          modelReg_(texReg), viewportReg_(*viewportReg)
+          modelReg_(texReg), viewportReg_(*viewportReg),
+          pipelineCache_(context, swapchain_.format(), swapchain_.depthFormat())
     {
         init();
         CHAI_LOG_INFO("VulkanRenderer initialized");
@@ -63,9 +64,11 @@ namespace chai::gfx
             frames_[i].shadowTarget.destroy(ctx_);
         }
 
-        vkDestroyPipeline(ctx_.device(), pbrPipeline_, nullptr);
-        vkDestroyPipeline(ctx_.device(), pbrWireframePipeline_, nullptr);
-        vkDestroyPipeline(ctx_.device(), pbrBlendPipeline_, nullptr);
+        pipelineCache_.destroyAll();
+
+        //vkDestroyPipeline(ctx_.device(), pbrPipeline_, nullptr);
+        //vkDestroyPipeline(ctx_.device(), pbrWireframePipeline_, nullptr);
+        //vkDestroyPipeline(ctx_.device(), pbrBlendPipeline_, nullptr);
         vkDestroyPipeline(ctx_.device(), skyboxPipeline_, nullptr);
         vkDestroyPipeline(ctx_.device(), irradiancePipeline_, nullptr);
         vkDestroyPipeline(ctx_.device(), brdfLutPipeline_, nullptr);
@@ -567,12 +570,12 @@ namespace chai::gfx
                 continue;
 
             // this is not scalable, will require refactor when there are too many pipelines
-            if (wireframe)
-                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrWireframePipeline_);
-            else if (mat->alphaMode == AlphaMode::Blend)
-                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrBlendPipeline_);
-            else
-                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline_);
+            VkPipeline pipeline = pipelineCache_.getOrCreate(
+                {"pbr.vert.spv",
+                 "pbr.frag.spv",
+                 mat->alphaMode,
+                 wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL});
+            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
             if (item.material != lastMaterial) {
                 vkCmdBindDescriptorSets(cmd,
@@ -699,7 +702,11 @@ namespace chai::gfx
         auto attrs = vertexAttributes();
         auto bind = vertexBinding();
 
-        pbrPipeline_ = loadPipelineByName(
+        pipelineCache_.getOrCreate({"pbr.vert.spv", "pbr.frag.spv", AlphaMode::Opaque, VK_POLYGON_MODE_FILL});
+        pipelineCache_.getOrCreate({"pbr.vert.spv", "pbr.frag.spv", AlphaMode::Blend, VK_POLYGON_MODE_FILL});
+        pipelineCache_.getOrCreate({"pbr.vert.spv", "pbr.frag.spv", AlphaMode::Opaque, VK_POLYGON_MODE_LINE});  //WIREFRAME
+
+/*        pbrPipeline_ = loadPipelineByName(
             ctx_, "pbr.vert.spv", "pbr.frag.spv", pipelineLayout_, [&](PipelineBuilder& b) {
                 b.setVertexInput({attrs.begin(), attrs.end()}, bind)
                     .setColorFormat(swapchain_.format())
@@ -708,9 +715,9 @@ namespace chai::gfx
                     .enableDepthWrite()
                     .disableBlending()
                     .setCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
-            });
+            });*/
 
-        pbrWireframePipeline_ = loadPipelineByName(
+/*        pbrWireframePipeline_ = loadPipelineByName(
             ctx_, "pbr.vert.spv", "pbr.frag.spv", pipelineLayout_, [&](PipelineBuilder& b) {
                 b.setVertexInput({attrs.begin(), attrs.end()}, bind)
                     .setColorFormat(swapchain_.format())
@@ -731,7 +738,7 @@ namespace chai::gfx
                     .disableDepthWrite()
                     .enableBlending()
                     .setCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
-            });
+            });*/
 
         skyboxPipeline_ = loadPipelineByName(
             ctx_, "skybox.vert.spv", "skybox.frag.spv", pipelineLayout_, [&](PipelineBuilder& b) {

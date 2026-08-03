@@ -2,26 +2,25 @@
  * @file VulkanRenderer.h
  */
 #pragma once
-#include <Rendering/IRenderer.h>
-
-#include "VulkanContext.h"
-#include "../swapchain/Swapchain.h"
+#include "../VulkanCommon.h"
+#include "../pipeline/PipelineCache.h"
+#include "../registries/ViewportRegistry.h"
 #include "../resources/GpuResources.h"
 #include "../resources/MaterialFactory.h"
+#include "../resources/ModelRegistry.h"
 #include "../resources/RenderTargetView.h"
+#include "../resources/TextureRegistry.h"
 #include "../resources/VulkanRenderTarget.h"
-#include "../VulkanCommon.h"
+#include "../swapchain/Swapchain.h"
+#include "../utils/GpuProfiler.h"
+#include "VulkanContext.h"
 
 #include <Plugin/ServiceLocator.h>
-
-#include <vulkan/vulkan.h>
+#include <Rendering/IRenderer.h>
+#include <UI/Editor/InternalChaiUI.h>
 #include <array>
 #include <cstdint>
-#include "../resources/TextureRegistry.h"
-#include "../resources/ModelRegistry.h"
-#include <UI/Editor/InternalChaiUI.h>
-#include "../utils/GpuProfiler.h"
-#include "../registries/ViewportRegistry.h"
+#include <vulkan/vulkan.h>
 
 namespace chai
 {
@@ -51,7 +50,7 @@ namespace chai::gfx
      * @brief Concrete vulkan implementation of the Renderer interface.
      */
     class VulkanRenderer : public IRenderer, public ui::IInternalChaiUI
-	{
+    {
     public:
         VulkanRenderer(chai::IWindow& window,
                        std::shared_ptr<AssetCache<Mesh>> meshCache,
@@ -107,7 +106,7 @@ namespace chai::gfx
                          ViewportShadingMode,
                          bool wireframe);
 
-        //setup
+        // setup
         void init();
         VkFenceCreateInfo fenceCreate(VkFenceCreateFlags flags = 0);
         VkSemaphoreCreateInfo semaphoreCreate(VkSemaphoreCreateFlags flags = 0);
@@ -117,7 +116,8 @@ namespace chai::gfx
         void bakeBrdfLut();
         void bakePrefilter(const GpuTexture& envCube);
         void writeEnvironmentSet(const GpuTexture& skybox);
-        void shadowMapping(VkCommandBuffer cmd, const std::vector<uint32_t>&, const FrameRenderData&);
+        void
+        shadowMapping(VkCommandBuffer cmd, const std::vector<uint32_t>&, const FrameRenderData&);
 
         void beginUIFrame();
         void endUIFrame();
@@ -137,20 +137,22 @@ namespace chai::gfx
         uint32_t currentFrame_ = 0;
         bool needsResize_ = false;
 
-        //Caches
+        // Caches
         std::shared_ptr<AssetCache<Mesh>> meshCache_;
         std::shared_ptr<AssetCache<Texture>> texCache_;
         std::shared_ptr<AssetCache<Material>> materialCache_;
         std::shared_ptr<ModelRegistry> modelReg_;
 
-        //pipelines and layouts
+        PipelineCache pipelineCache_;
+
+        // pipelines and layouts
         VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
-        VkPipeline pbrPipeline_ = VK_NULL_HANDLE;
-        VkPipeline pbrBlendPipeline_ = VK_NULL_HANDLE;
-        VkPipeline pbrWireframePipeline_ = VK_NULL_HANDLE;
+        //VkPipeline pbrPipeline_ = VK_NULL_HANDLE;
+        //VkPipeline pbrBlendPipeline_ = VK_NULL_HANDLE;
+        //VkPipeline pbrWireframePipeline_ = VK_NULL_HANDLE;
         VkPipeline skyboxPipeline_ = VK_NULL_HANDLE;
 
-        //IBL
+        // IBL
         VkPipeline irradiancePipeline_ = VK_NULL_HANDLE;
         RenderTarget irradianceTarget_{};
         VkPipelineLayout irradianceLayout_ = VK_NULL_HANDLE;
@@ -167,17 +169,11 @@ namespace chai::gfx
         VkDescriptorSet prefilterSet_ = VK_NULL_HANDLE;
         bool iblBaked_ = false;
 
-        //shadows
+        // shadows
         VkPipeline shadowPipeline_ = VK_NULL_HANDLE;
         VkPipelineLayout shadowLayout_ = VK_NULL_HANDLE;
 
         VkDescriptorSet skyboxSet_ = VK_NULL_HANDLE;
         Handle<Texture> skyboxCube_;
     };
-
-    //TODO: dont leave this here forever
-    struct PushConstants {
-        math::Mat4 model;
-        int shadingMode = 0; // 0=Lit, 1=Normals, 2=UV, 3=Roughness, 4=Metallic, 5=AO
-    };
-}
+} // namespace chai::gfx
