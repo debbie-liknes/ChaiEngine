@@ -13,6 +13,7 @@
 #include <LogPanel.h>
 #include <Visitors/AudioSceneVisitor.h>
 #include <Visitors/FrameRenderVisitor.h>
+#include <tracy/Tracy.hpp>
 
 namespace chai
 {
@@ -113,6 +114,8 @@ namespace chai
 
         // The main guts of the application
         while (!window->shouldClose()) {
+            FrameMarkStart("Engine");
+
             input->newFrame();  //tell input to clear deltas FIRST
             window->pollEvents();
             renderer->startFrame();
@@ -135,6 +138,8 @@ namespace chai
 
             audioVisitor.reset();
             frameVisitor.reset();
+
+            FrameMarkEnd("Engine");
         }
     }
 }

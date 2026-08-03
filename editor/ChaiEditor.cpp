@@ -30,6 +30,7 @@
 #include <UI/Editor/PanelRegistry.h>
 #include <UI/Editor/EditorViewportManager.h>
 #include <UI/Editor/DockspaceService.h>
+#include <tracy/Tracy.hpp>
 
 std::filesystem::path assetDir()
 {
@@ -66,6 +67,9 @@ void setupDockspace(chai::ServiceLocator& locator, chai::scene::Scene& scene)
 
 int main()
 {
+    // Required to initialize tracy
+    TracyNoop;
+
     using namespace chai;
     using namespace scene;
 
