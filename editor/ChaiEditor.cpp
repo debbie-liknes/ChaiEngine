@@ -19,6 +19,7 @@
 #include <Loaders/ITextureLoader.h>
 #include <Log.h>
 #include <Plugin/PluginLoader.h>
+#include <Plugin/PluginManager.h>
 #include <Rendering/IRenderer.h>
 #include <Scene/GameObject.h>
 #include <Scene/Scene.h>
@@ -90,15 +91,24 @@ int main()
     engine.setPlugins(loader.plugins());
     engine.startup();
 
-    ui::PanelDesc panelInfo;
-    panelInfo.displayName = "Logger";
-    panelInfo.id = "Logger";
-    panelInfo.draw = [&]() { diagnostics::drawLogPanel(guiSink); };
-    panelInfo.visible = true;
     auto& panelReg = engine.services().resolve<ui::PanelRegistry>();
-    panelReg.registerPanel(panelInfo);
     auto& menuService = engine.services().resolve<ui::MenuService>();
-    menuService.registerItem("Windows/Logger", ui::TogglePanel{panelInfo.id});
+
+    ui::PanelDesc pluginPanel;
+    pluginPanel.displayName = "Plugin Manager";
+    pluginPanel.id = "PluginManager";
+    pluginPanel.draw = [&]() { drawPluginManager(loader); };
+    pluginPanel.visible = false;
+    panelReg.registerPanel(pluginPanel);
+    menuService.registerItem("Windows/Plugin Manager", ui::TogglePanel{pluginPanel.id});
+
+    ui::PanelDesc loggerPanel;
+    loggerPanel.displayName = "Logger";
+    loggerPanel.id = "Logger";
+    loggerPanel.draw = [&]() { diagnostics::drawLogPanel(guiSink); };
+    loggerPanel.visible = true;
+    panelReg.registerPanel(loggerPanel);
+    menuService.registerItem("Windows/Logger", ui::TogglePanel{loggerPanel.id});
 
     auto meshes = engine.services().tryResolve<gfx::IMeshRegistry>();
     auto textures = engine.services().tryResolve<gfx::ITextureRegistry>();
