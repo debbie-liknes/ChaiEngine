@@ -19,7 +19,7 @@ namespace chai::ui
 
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0, 0, 0, 0.55f));
         ImGui::BeginChild("##ViewportToolbar",
-                          ImVec2(imageSize.x - 16, ImGui::GetFontSize() * 3),
+                          ImVec2(250.f, ImGui::GetFontSize() * 3),
                           true,
                           ImGuiWindowFlags_NoScrollbar);
 
