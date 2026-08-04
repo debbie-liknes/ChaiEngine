@@ -41,15 +41,16 @@ namespace chai
         scrollY = 0.f;
         typedChars_.clear();
 
+        // TODO: This needs to go somewhere else, but for now it will do
         bool dragButtonDown =
             mouseDown(MouseButton::Right);
 
         if (dragButtonDown && !wasDragButtonDown_ && hoveredCamera_ != -1) {
             capturedCamera_ =
-                hoveredCamera_; // button just went down while hovering a viewport → lock it in
+                hoveredCamera_;
         }
         if (!dragButtonDown) {
-            capturedCamera_ = -1; // button released anywhere → release capture
+            capturedCamera_ = -1;
         }
         wasDragButtonDown_ = dragButtonDown;
     }
