@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - main
+      - add-doxygen-deploy
 
 permissions:
   contents: write
