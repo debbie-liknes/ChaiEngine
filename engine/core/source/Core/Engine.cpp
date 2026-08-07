@@ -43,12 +43,12 @@ namespace chai
             active_.push_back(p);
         }
 
-        auto renderer = services_.tryResolve<gfx::IRenderer>();
-        if (!renderer) {
-            CHAI_LOG_CRITICAL("Could not locate Window Service.");
+        auto registry = services_.tryResolve<gfx::IViewportRegistry>();
+        if (!registry) {
+            CHAI_LOG_CRITICAL("Could not locate Viewport Registry.");
         }
 
-        auto vpManager = std::make_shared<ui::EditorViewportManager>(*renderer, *panelRegistry);
+        auto vpManager = std::make_shared<ui::EditorViewportManager>(*registry, *panelRegistry);
         ctx_.services.provide<ui::EditorViewportManager>(vpManager);
 
         ui::loadFonts(executableDir().string() + "/assets/editor/fonts");
