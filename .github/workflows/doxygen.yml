@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - main
+      - add-doxygen-deploy
 
 permissions:
   contents: write
@@ -12,11 +13,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Generate and Deploy Doxygen Docs
-        uses: AgarwalSaurav/ghaction-doxygen-ghpages@release/v2
+      
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          working-directory: .
-          doxyfile-path: Doxyfile
-          html-output-folder: docs
-          branch: gh-pages
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+      
+      - name: Install dependencies
+        run: uv sync --locked
+      
+      - name: Run tests
+        run: cd docs && uv run make html
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'docs/_build/html' 
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

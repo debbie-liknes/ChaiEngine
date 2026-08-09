@@ -10,7 +10,7 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 build/
+.venv/
 .vs/
 .vscode/
-docs/
 assets/SponzaHiRes
