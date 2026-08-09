@@ -24,7 +24,8 @@ jobs:
         run: uv sync --locked
       
       - name: Run tests
-        run: cd docs && uv run make html
+        working-directory: docs
+        run: uv run make html
       
       - name: Setup Pages
         uses: actions/configure-pages@v5
