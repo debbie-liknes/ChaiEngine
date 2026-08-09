@@ -27,11 +27,12 @@ namespace chai::gfx
         VkImageAspectFlags aspect;
     };
 
-    //I almost think this wrapper is too simplistic hmm
     void transitionImage(VkCommandBuffer cmd,
                          VkImage image,
                          ImageState oldState,
-                         ImageState newState);
+                         ImageState newState,
+                         uint32_t baseMip = 0,
+                         uint32_t mipLevel = 1);
 
     void imageBarrier(VkCommandBuffer cmd,
                       VkImage image,
@@ -43,5 +44,6 @@ namespace chai::gfx
                       VkAccessFlags2 dstAccess,
                       VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT,
                       uint32_t layerCount = (~0U),
-                      uint32_t mipCount = (~0U));
-}
+                      uint32_t mipCount = 1,
+                      uint32_t baseMip = 0);
+} // namespace chai::gfx

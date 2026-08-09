@@ -17,8 +17,7 @@ namespace chai::gfx
     {
         VkDevice device = ctx.device();
         RenderTarget t;
-        t.width = w;
-        t.height = h;
+        t.extent = {w, h};
         t.format = format;
         t.mipCount = mips;
         t.layerCount = layers;
@@ -95,7 +94,8 @@ namespace chai::gfx
                                 fmt,
                                 1,
                                 1,
-                                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
+                                    VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
                                 VK_IMAGE_ASPECT_COLOR_BIT,
                                 false,
                                 VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
@@ -130,6 +130,22 @@ namespace chai::gfx
                                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                                 VK_IMAGE_ASPECT_COLOR_BIT,
                                 true,
+                                VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+                                false);
+    }
+
+    RenderTarget
+    createBloomChain(VulkanContext& ctx, uint32_t w, uint32_t h, VkFormat fmt, uint32_t mipCount)
+    {
+        return makeRenderTarget(ctx,
+                                w,
+                                h,
+                                fmt,
+                                1,
+                                mipCount,
+                                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                                VK_IMAGE_ASPECT_COLOR_BIT,
+                                false,
                                 VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
                                 false);
     }

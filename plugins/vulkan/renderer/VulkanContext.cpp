@@ -47,17 +47,21 @@ namespace chai::gfx
         setupQueues();
         setupAllocator();
         setupImmediate();
+        setupSampler();
         uploadCtx_.init(device_, graphicsQueue_, graphicsFamily_);
     }
 
     VulkanContext::~VulkanContext()
     {
+        vkDestroySampler(device_, linearSampler_, nullptr);
         vkDestroyCommandPool(device_, immediatePool_, nullptr); // cmd buffer dies with it
         vkDestroyDescriptorSetLayout(device_, lightSetLayout_, nullptr);
         vkDestroyDescriptorSetLayout(device_, materialSetLayout_, nullptr);
         vkDestroyDescriptorSetLayout(device_, cameraSetLayout_, nullptr);
         vkDestroyDescriptorSetLayout(device_, environmentSetLayout_, nullptr);
         vkDestroyDescriptorSetLayout(device_, prefilterSetLayout_, nullptr);
+        vkDestroyDescriptorSetLayout(device_, postProcessSetLayout_, nullptr);
+        vkDestroyDescriptorSetLayout(device_, bloomSetLayout_, nullptr);
         vkDestroyDescriptorPool(device_, descriptorPool_, nullptr);
         vkDestroyFence(device_, immediateFence_, nullptr);
         vmaDestroyAllocator(allocator_);
@@ -66,6 +70,18 @@ namespace chai::gfx
         vkDestroySurfaceKHR(instance_, surface_, nullptr);
         vkb::destroy_debug_utils_messenger(instance_, debugMessenger_);
         vkDestroyInstance(instance_, nullptr);
+    }
+
+    void VulkanContext::setupSampler()
+    {
+        VkSamplerCreateInfo samplerInfo{VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.maxLod = VK_LOD_CLAMP_NONE;
+        VK_CHECK(vkCreateSampler(device_, &samplerInfo, nullptr, &linearSampler_));
     }
 
     void VulkanContext::setupInstance(IWindow& window)
@@ -294,5 +310,38 @@ namespace chai::gfx
         filterLayout.pBindings = &filterBindings;
         VK_CHECK(
             vkCreateDescriptorSetLayout(device_, &filterLayout, nullptr, &prefilterSetLayout_));
+
+        // post process
+        VkDescriptorSetLayoutBinding postBindings[2]{};
+        postBindings[0].binding = 0;
+        postBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        postBindings[0].descriptorCount = 1;
+        postBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        postBindings[1].binding = 1;
+        postBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        postBindings[1].descriptorCount = 1;
+        postBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo postLayout{
+            VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+        postLayout.bindingCount = 2;
+        postLayout.pBindings = postBindings;
+        VK_CHECK(
+            vkCreateDescriptorSetLayout(device_, &postLayout, nullptr, &postProcessSetLayout_));
+
+        //bloom
+        VkDescriptorSetLayoutBinding bloomBinding{};
+        bloomBinding.binding = 0;
+        bloomBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        bloomBinding.descriptorCount = 1;
+        bloomBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo bloomLayout{
+            VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+        bloomLayout.bindingCount = 1;
+        bloomLayout.pBindings = &bloomBinding;
+        VK_CHECK(
+            vkCreateDescriptorSetLayout(device_, &bloomLayout, nullptr, &bloomSetLayout_));
     }
 } // namespace chai

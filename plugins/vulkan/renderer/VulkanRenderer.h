@@ -84,11 +84,15 @@ namespace chai::gfx
             VkFence inFlight = VK_NULL_HANDLE;
 
             VkDescriptorSet lightSet = VK_NULL_HANDLE;
+            VkDescriptorSet postProcessSet = VK_NULL_HANDLE;
+            std::vector<VkDescriptorSet> bloomSampleSets;
             void* lightMapped = nullptr;
             VkBuffer lightBuffer = VK_NULL_HANDLE;
             VmaAllocation lightAlloc = VK_NULL_HANDLE;
 
             RenderTarget shadowTarget{};
+            RenderTarget combineTarget{};
+            RenderTarget bloomChainTarget{};
         };
 
         void recreateSwapchain();
@@ -111,6 +115,13 @@ namespace chai::gfx
         VkFenceCreateInfo fenceCreate(VkFenceCreateFlags flags = 0);
         VkSemaphoreCreateInfo semaphoreCreate(VkSemaphoreCreateFlags flags = 0);
         void setupPipelines();
+        void setupPostProcess(VkImageView view);
+        void bloomPass(VkCommandBuffer cmd);
+        void combinePass(VkCommandBuffer cmd,
+                         const RenderTargetView& view,
+                         const FrameRenderData& renderData);
+        void blitCombineToViewport(VkCommandBuffer cmd,
+                                                   const RenderTargetView& view);
         void ensureSkyboxSet(FrameData& frame, const GpuTexture& cube, Handle<Texture> handle);
         void bakeIrradiance(const GpuTexture& envCube);
         void bakeBrdfLut();
@@ -118,6 +129,9 @@ namespace chai::gfx
         void writeEnvironmentSet(const GpuTexture& skybox);
         void
         shadowMapping(VkCommandBuffer cmd, const std::vector<uint32_t>&, const FrameRenderData&);
+        void postProcess(VkCommandBuffer cmd,
+                         const RenderTargetView& view,
+                         const FrameRenderData& renderData);
 
         void beginUIFrame();
         void endUIFrame();
@@ -147,9 +161,6 @@ namespace chai::gfx
 
         // pipelines and layouts
         VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
-        //VkPipeline pbrPipeline_ = VK_NULL_HANDLE;
-        //VkPipeline pbrBlendPipeline_ = VK_NULL_HANDLE;
-        //VkPipeline pbrWireframePipeline_ = VK_NULL_HANDLE;
         VkPipeline skyboxPipeline_ = VK_NULL_HANDLE;
 
         // IBL
@@ -175,5 +186,13 @@ namespace chai::gfx
 
         VkDescriptorSet skyboxSet_ = VK_NULL_HANDLE;
         Handle<Texture> skyboxCube_;
+
+        // post processing
+        VkPipeline thresholdPipeline_ = VK_NULL_HANDLE;
+        VkPipeline downsamplePipeline_ = VK_NULL_HANDLE;
+        VkPipeline upsamplePipeline_ = VK_NULL_HANDLE;
+        VkPipeline combinePipeline_ = VK_NULL_HANDLE;
+        VkPipelineLayout postProcessLayout_ = VK_NULL_HANDLE;
+        VkPipelineLayout bloomLayout_ = VK_NULL_HANDLE;
     };
 } // namespace chai::gfx

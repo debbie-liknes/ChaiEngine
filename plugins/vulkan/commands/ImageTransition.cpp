@@ -1,4 +1,5 @@
 #include "ImageTransition.h"
+
 #include <cstdlib>
 
 namespace chai::gfx
@@ -63,7 +64,8 @@ namespace chai::gfx
                       VkAccessFlags2 dstAccess,
                       VkImageAspectFlags aspect,
                       uint32_t layerCount,
-                      uint32_t mipCount)
+                      uint32_t mipCount,
+                      uint32_t baseMip)
     {
         VkImageMemoryBarrier2 barrier{VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2};
 
@@ -78,7 +80,7 @@ namespace chai::gfx
 
         barrier.image = image;
 
-        barrier.subresourceRange = {aspect, 0, mipCount, 0, layerCount};
+        barrier.subresourceRange = {aspect, baseMip, mipCount, 0, layerCount};
 
         VkDependencyInfo dep{VK_STRUCTURE_TYPE_DEPENDENCY_INFO};
 
@@ -88,7 +90,12 @@ namespace chai::gfx
         vkCmdPipelineBarrier2(cmd, &dep);
     }
 
-    void transitionImage(VkCommandBuffer cmd, VkImage image, ImageState oldState, ImageState newState)
+    void transitionImage(VkCommandBuffer cmd,
+                         VkImage image,
+                         ImageState oldState,
+                         ImageState newState,
+                         uint32_t baseMip,
+                         uint32_t mipCount)
     {
         const auto src = getStateInfo(oldState);
         const auto dst = getStateInfo(newState);
@@ -101,6 +108,9 @@ namespace chai::gfx
                      src.access,
                      dst.stage,
                      dst.access,
-                     dst.aspect);
+                     dst.aspect,
+                     (~0U),
+                     mipCount,
+                     baseMip);
     }
-}
+} // namespace chai::gfx

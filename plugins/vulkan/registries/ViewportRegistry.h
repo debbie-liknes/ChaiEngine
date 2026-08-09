@@ -56,7 +56,6 @@ namespace chai::gfx
         std::vector<ViewportSlot> viewportSlots_;
         std::vector<uint32_t> freeViewportSlots_;
         uint32_t currentFrame_ = 0;
-        VkSampler linearSampler_ = VK_NULL_HANDLE;
         VulkanContext* ctx_ = nullptr;
         const Swapchain* swapchain_ = nullptr;
     };
