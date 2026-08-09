@@ -1,11 +1,14 @@
 #include <UI/Editor/PanelHost.h>
 #include <UI/Editor/InternalChaiUI.h>
 #include <imgui.h>
+#include <tracy/Tracy.hpp>
 
 namespace chai::ui
 {
     void PanelHost::draw(PanelRegistry& registry, DockspaceService& dockspace, MenuService& menus)
     {
+        ZoneScoped
+
         menus.draw(registry);
         ImGuiID dockId = dockspace.begin();
 
@@ -14,7 +17,7 @@ namespace chai::ui
                 continue;
             //ui::PushFont(panel.titleFont);
             bool began =
-                ImGui::Begin(panel.id.c_str(), &panel.visible, ImGuiWindowFlags_NoCollapse);
+                ImGui::Begin(panel.displayName.c_str(), &panel.visible, ImGuiWindowFlags_NoCollapse);
             //ui::PopFont();
             if (began)
                 panel.draw();

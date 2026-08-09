@@ -20,6 +20,7 @@
 #include <backends/imgui_impl_vulkan.h>
 #include <backends/imgui_impl_glfw.h>
 #include <Input/IInput.h>
+#include <tracy/Tracy.hpp>
 
 namespace chai::gfx
 {
@@ -33,6 +34,7 @@ namespace chai::gfx
                                    std::shared_ptr<AssetCache<Texture>> texCache,
                                    std::shared_ptr<AssetCache<Material>> matCache,
                                    std::shared_ptr<ModelRegistry> texReg,
+                                   std::shared_ptr<ViewportRegistry> viewportReg,
                                    VulkanContext& context,
                                    chai::ServiceLocator& locator)
         : window_(window), ctx_(context),
@@ -43,7 +45,8 @@ namespace chai::gfx
                          return VkExtent2D{uint32_t(w), uint32_t(h)};
                      }()),
           locator_(locator), meshCache_(meshCache), texCache_(texCache), materialCache_(matCache),
-          modelReg_(texReg)
+          modelReg_(texReg), viewportReg_(*viewportReg),
+          pipelineCache_(context, swapchain_.format(), swapchain_.depthFormat())
     {
         init();
         CHAI_LOG_INFO("VulkanRenderer initialized");
@@ -55,16 +58,6 @@ namespace chai::gfx
 
         profiler_.shutdown(ctx_.device());
 
-        for (auto& slot : viewportSlots_) {
-            for (int i = 0; i < kFramesInFlight; i++) {
-                vmaDestroyBuffer(
-                    ctx_.allocator(), slot.viewport.cameraBuffer[i], slot.viewport.cameraAlloc[i]);
-                slot.viewport.targets[i].destroy(ctx_);
-            }
-        }
-
-        vkDestroySampler(ctx_.device(), linearSampler_, nullptr);
-
         for (int i = 0; i < kFramesInFlight; i++) {
             vmaDestroyBuffer(ctx_.allocator(), frames_[i].lightBuffer, frames_[i].lightAlloc);
             vkDestroyFence(ctx_.device(), frames_[i].inFlight, nullptr);
@@ -72,8 +65,11 @@ namespace chai::gfx
             frames_[i].shadowTarget.destroy(ctx_);
         }
 
-        vkDestroyPipeline(ctx_.device(), pbrPipeline_, nullptr);
-        vkDestroyPipeline(ctx_.device(), pbrBlendPipeline_, nullptr);
+        pipelineCache_.destroyAll();
+
+        //vkDestroyPipeline(ctx_.device(), pbrPipeline_, nullptr);
+        //vkDestroyPipeline(ctx_.device(), pbrWireframePipeline_, nullptr);
+        //vkDestroyPipeline(ctx_.device(), pbrBlendPipeline_, nullptr);
         vkDestroyPipeline(ctx_.device(), skyboxPipeline_, nullptr);
         vkDestroyPipeline(ctx_.device(), irradiancePipeline_, nullptr);
         vkDestroyPipeline(ctx_.device(), brdfLutPipeline_, nullptr);
@@ -108,15 +104,6 @@ namespace chai::gfx
 
         VkFenceCreateInfo fenceCreateInfo = fenceCreate(VK_FENCE_CREATE_SIGNALED_BIT);
         VkSemaphoreCreateInfo semaphoreCreateInfo = semaphoreCreate();
-
-        VkSamplerCreateInfo samplerInfo{VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
-        samplerInfo.magFilter = VK_FILTER_LINEAR;
-        samplerInfo.minFilter = VK_FILTER_LINEAR;
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        samplerInfo.maxLod = VK_LOD_CLAMP_NONE;
-        VK_CHECK(vkCreateSampler(ctx_.device(), &samplerInfo, nullptr, &linearSampler_));
 
         for (int i = 0; i < kFramesInFlight; i++) {
             // allocate the default command buffer that we will use for rendering
@@ -231,22 +218,8 @@ namespace chai::gfx
         bakePrefilter(*skyResource);
         writeEnvironmentSet(*skyResource);
         iblBaked_ = true;
-    }
 
-    void VulkanRenderer::applyPendingViewportResizes()
-    {
-        for (auto& slot : viewportSlots_) {
-            if (!slot.alive)
-                continue;
-            auto& viewport = slot.viewport;
-            ViewportTarget& target = viewport.targets[currentFrame_];
-
-            if (viewport.pendingExtent.width > 0 && viewport.pendingExtent.height > 0 &&
-                (target.view.extent.width != viewport.pendingExtent.width ||
-                 target.view.extent.height != viewport.pendingExtent.height)) {
-                recreateViewportTarget(viewport, currentFrame_);
-            }
-        }
+        viewportReg_.init(swapchain_);
     }
 
     void VulkanRenderer::startFrame()
@@ -256,7 +229,8 @@ namespace chai::gfx
         // Wait until this frame slots previous work is done.
         VK_CHECK(vkWaitForFences(ctx_.device(), 1, &frame.inFlight, VK_TRUE, UINT64_MAX));
 
-        applyPendingViewportResizes();
+        viewportReg_.tick(currentFrame_);
+        viewportReg_.applyPendingViewportResizes();
 
         //sync input to imgui
         ImGuiIO& io = ImGui::GetIO();
@@ -306,17 +280,9 @@ namespace chai::gfx
                 io.AddInputCharacter(c);
         }
 
-        std::optional<uint32_t> hoveredCameraIndex;
-        for (auto& slot : viewportSlots_) {
-            if (!slot.alive)
-                continue;
-            if (slot.viewport.hovered) {
-                hoveredCameraIndex = slot.viewport.cameraViewId;
-                break;
-            }
-        }
-        if (hoveredCameraIndex.has_value())
-            input->setHoveredCamera(hoveredCameraIndex.value());
+        auto focusedViewport = viewportReg_.getFocusedViewport();
+        if (focusedViewport.has_value())
+            input->setHoveredCamera(focusedViewport.value().cameraViewId);
         else {
             input->setHoveredCamera(-1);
         }
@@ -329,17 +295,10 @@ namespace chai::gfx
         //nothing to do for now
     }
 
-    math::Vec2 VulkanRenderer::getViewportExtent(ViewportHandle handle) const
-    {
-        auto* vp = const_cast<VulkanRenderer*>(this)->getViewport(handle);
-        if (!vp)
-            return {0, 0};
-        auto& t = vp->targets[currentFrame_];
-        return {t.view.extent.width, t.view.extent.height};
-    }
-
     void VulkanRenderer::renderFrame(const FrameRenderData& renderData)
     {
+        ZoneScoped
+
         if (needsResize_)
             recreateSwapchain();
 
@@ -405,10 +364,7 @@ namespace chai::gfx
         // DRAW
         shadowMapping(cmd, order, renderData);
 
-        for (auto& slot : viewportSlots_) {
-            if (!slot.alive)
-                continue;
-            auto& viewport = slot.viewport;
+        viewportReg_.forEachViewport([&](Viewport& viewport) {
             ViewportTarget& target = viewport.targets[currentFrame_];
             auto viewIt = std::find_if(renderData.views.begin(),
                                                renderData.views.end(),
@@ -416,8 +372,8 @@ namespace chai::gfx
                                            return data.cameraId == camId;
                                                });
             if (viewIt == renderData.views.end()) {
-                CHAI_LOG_WARN("Invalid Camera Id for Viewport {}", slot.viewport.id);
-                continue;
+                CHAI_LOG_WARN("Invalid Camera Id for Viewport {}", viewport.id);
+                return;
             }
 
             const auto& camView = *viewIt;
@@ -468,13 +424,13 @@ namespace chai::gfx
 
             profiler_.beginRegion(cmd, "Main Pass: " + viewport.id);
             vkCmdBeginRendering(cmd, &vpRendering);
-            renderScene(cmd, target.view, renderData, order, viewport.cameraSet[currentFrame_]);
+            renderScene(cmd, target.view, renderData, order, viewport.cameraSet[currentFrame_], viewport.shadingMode, viewport.wireframe);
             vkCmdEndRendering(cmd);
             profiler_.endRegion(cmd, "Main Pass: " + viewport.id);
 
             transitionImage(
                 cmd, target.view.image, ImageState::ColorAttachment, ImageState::ShaderRead);
-        }
+        });
 
         //Render UI
         endUIFrame();
@@ -567,7 +523,9 @@ namespace chai::gfx
                                      const RenderTargetView& view,
                                      const FrameRenderData& renderData,
                                      const std::vector<uint32_t>& order,
-                                     VkDescriptorSet cameraSet)
+                                     VkDescriptorSet cameraSet,
+                                     ViewportShadingMode shadingMode,
+                                     bool wireframe)
     {
         VkViewport viewport{0, 0, float(view.extent.width), float(view.extent.height), 0.f, 1.f};
         vkCmdSetViewport(cmd, 0, 1, &viewport);
@@ -615,10 +573,12 @@ namespace chai::gfx
                 continue;
 
             // this is not scalable, will require refactor when there are too many pipelines
-            if (mat->alphaMode == AlphaMode::Blend)
-                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrBlendPipeline_);
-            else
-                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline_);
+            VkPipeline pipeline = pipelineCache_.getOrCreate(
+                {"pbr.vert.spv",
+                 "pbr.frag.spv",
+                 mat->alphaMode,
+                 wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL});
+            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
             if (item.material != lastMaterial) {
                 vkCmdBindDescriptorSets(cmd,
@@ -634,6 +594,7 @@ namespace chai::gfx
 
             PushConstants consts;
             consts.model = item.model;
+            consts.shadingMode = static_cast<int>(shadingMode);
             vkCmdPushConstants(cmd,
                                pipelineLayout_,
                                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
@@ -744,7 +705,11 @@ namespace chai::gfx
         auto attrs = vertexAttributes();
         auto bind = vertexBinding();
 
-        pbrPipeline_ = loadPipelineByName(
+        pipelineCache_.getOrCreate({"pbr.vert.spv", "pbr.frag.spv", AlphaMode::Opaque, VK_POLYGON_MODE_FILL});
+        pipelineCache_.getOrCreate({"pbr.vert.spv", "pbr.frag.spv", AlphaMode::Blend, VK_POLYGON_MODE_FILL});
+        pipelineCache_.getOrCreate({"pbr.vert.spv", "pbr.frag.spv", AlphaMode::Opaque, VK_POLYGON_MODE_LINE});  //WIREFRAME
+
+/*        pbrPipeline_ = loadPipelineByName(
             ctx_, "pbr.vert.spv", "pbr.frag.spv", pipelineLayout_, [&](PipelineBuilder& b) {
                 b.setVertexInput({attrs.begin(), attrs.end()}, bind)
                     .setColorFormat(swapchain_.format())
@@ -752,6 +717,18 @@ namespace chai::gfx
                     .enableDepthTest()
                     .enableDepthWrite()
                     .disableBlending()
+                    .setCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
+            });*/
+
+/*        pbrWireframePipeline_ = loadPipelineByName(
+            ctx_, "pbr.vert.spv", "pbr.frag.spv", pipelineLayout_, [&](PipelineBuilder& b) {
+                b.setVertexInput({attrs.begin(), attrs.end()}, bind)
+                    .setColorFormat(swapchain_.format())
+                    .setDepthFormat(swapchain_.depthFormat())
+                    .enableDepthTest()
+                    .enableDepthWrite()
+                    .disableBlending()
+                    .setPolygonMode(VK_POLYGON_MODE_LINE)
                     .setCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
             });
 
@@ -764,7 +741,7 @@ namespace chai::gfx
                     .disableDepthWrite()
                     .enableBlending()
                     .setCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
-            });
+            });*/
 
         skyboxPipeline_ = loadPipelineByName(
             ctx_, "skybox.vert.spv", "skybox.frag.spv", pipelineLayout_, [&](PipelineBuilder& b) {
@@ -1223,221 +1200,6 @@ namespace chai::gfx
                      VK_IMAGE_ASPECT_DEPTH_BIT, // No stencil
                      1,
                      1);
-    }
-
-    ViewportTarget VulkanRenderer::createViewportTarget(VkExtent2D extent)
-    {
-        ViewportTarget target;
-        target.view.extent = extent;
-        target.view.colorFormat = swapchain_.format();
-        target.view.depthFormat = swapchain_.depthFormat();
-        target.view.clearColor.color = {{0.02f, 0.02f, 0.03f, 1.0f}};
-
-        // --- color ---
-        VkImageCreateInfo colorInfo{VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
-        colorInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-        colorInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        colorInfo.imageType = VK_IMAGE_TYPE_2D;
-        colorInfo.format = target.view.colorFormat;
-        colorInfo.extent = {extent.width, extent.height, 1};
-        colorInfo.mipLevels = 1;
-        colorInfo.arrayLayers = 1;
-        colorInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-        colorInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-
-        VmaAllocationCreateInfo colorAlloc{};
-        colorAlloc.usage = VMA_MEMORY_USAGE_AUTO;
-
-        VK_CHECK(vmaCreateImage(ctx_.allocator(),
-                                &colorInfo,
-                                &colorAlloc,
-                                &target.view.image,
-                                &target.colorAlloc,
-                                nullptr));
-
-        VkImageViewCreateInfo colorViewInfo{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
-        colorViewInfo.image = target.view.image;
-        colorViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        colorViewInfo.format = target.view.colorFormat;
-        colorViewInfo.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
-        VK_CHECK(vkCreateImageView(ctx_.device(), &colorViewInfo, nullptr, &target.view.colorView));
-
-        // --- depth ---
-        VkImageCreateInfo depthInfo{VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
-        depthInfo.imageType = VK_IMAGE_TYPE_2D;
-        depthInfo.format = target.view.depthFormat;
-        depthInfo.extent = {extent.width, extent.height, 1};
-        depthInfo.mipLevels = 1;
-        depthInfo.arrayLayers = 1;
-        depthInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-        depthInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-
-        VmaAllocationCreateInfo depthAlloc{};
-        depthAlloc.usage = VMA_MEMORY_USAGE_AUTO;
-
-        VK_CHECK(vmaCreateImage(ctx_.allocator(),
-                                &depthInfo,
-                                &depthAlloc,
-                                &target.view.depthImage,
-                                &target.depthAlloc,
-                                nullptr));
-
-        VkImageViewCreateInfo depthViewInfo{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
-        depthViewInfo.image = target.view.depthImage;
-        depthViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        depthViewInfo.format = target.view.depthFormat;
-        depthViewInfo.subresourceRange = {VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1};
-        VK_CHECK(vkCreateImageView(ctx_.device(), &depthViewInfo, nullptr, &target.view.depthView));
-
-        return target;
-    }
-
-    void VulkanRenderer::recreateViewportTarget(Viewport& viewport, uint32_t frameIndex)
-    {
-        ViewportTarget& target = viewport.targets[frameIndex];
-
-        ImGui_ImplVulkan_RemoveTexture((VkDescriptorSet)target.imguiTextureId);
-        target.destroy(ctx_);
-
-        target = createViewportTarget(viewport.pendingExtent);
-        target.imguiTextureId = (ImTextureID)ImGui_ImplVulkan_AddTexture(
-            linearSampler_, target.view.colorView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-        viewport.everRendered[frameIndex] = false; // fresh image, back to Undefined
-    }
-
-    void VulkanRenderer::createCameraUBO(VkBuffer& buffer,
-                                         VmaAllocation& alloc,
-                                         void*& mapped,
-                                         VkDescriptorSet& set)
-    {
-        VkBufferCreateInfo bufInfo{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
-        bufInfo.size = sizeof(CameraData);
-        bufInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-
-        VmaAllocationCreateInfo aci{};
-        aci.usage = VMA_MEMORY_USAGE_AUTO;
-        aci.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-                    VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
-        VmaAllocationInfo allocInfo{};
-        VK_CHECK(vmaCreateBuffer(ctx_.allocator(), &bufInfo, &aci, &buffer, &alloc, &allocInfo));
-        mapped = allocInfo.pMappedData;
-
-        VkDescriptorSetLayout camLayout = ctx_.cameraSetLayout();
-        VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
-        dsai.descriptorPool = ctx_.descriptorPool();
-        dsai.descriptorSetCount = 1;
-        dsai.pSetLayouts = &camLayout;
-        VK_CHECK(vkAllocateDescriptorSets(ctx_.device(), &dsai, &set));
-
-        VkDescriptorBufferInfo dbi{buffer, 0, sizeof(CameraData)};
-        VkWriteDescriptorSet write{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
-        write.dstSet = set;
-        write.dstBinding = 0;
-        write.descriptorCount = 1;
-        write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        write.pBufferInfo = &dbi;
-        vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);
-    }
-
-    VulkanRenderer::Viewport VulkanRenderer::createViewport(const std::string& id,
-                                                            uint32_t cameraViewId)
-    {
-        Viewport vp;
-        vp.id = id;
-        vp.cameraViewId = cameraViewId;
-
-        for (int i = 0; i < kFramesInFlight; i++) {
-            vp.targets[i] = createViewportTarget(
-                swapchain_.extent());
-            vp.targets[i].imguiTextureId =
-                (ImTextureID)ImGui_ImplVulkan_AddTexture(linearSampler_,
-                                                         vp.targets[i].view.colorView,
-                                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-            createCameraUBO(
-                vp.cameraBuffer[i], vp.cameraAlloc[i], vp.cameraMapped[i], vp.cameraSet[i]);
-        }
-        return vp;
-    }
-
-    void VulkanRenderer::destroyViewport(Viewport& vp)
-    {
-        waitIdle(); // ehh idk
-
-        for (int i = 0; i < kFramesInFlight; i++) {
-            ImGui_ImplVulkan_RemoveTexture((VkDescriptorSet)vp.targets[i].imguiTextureId);
-            vp.targets[i].destroy(ctx_);
-
-            vkDestroyBuffer(ctx_.device(),
-                            vp.cameraBuffer[i],
-                            nullptr);
-            vmaFreeMemory(ctx_.allocator(), vp.cameraAlloc[i]);
-        }
-    }
-
-    ViewportHandle VulkanRenderer::addViewport(const std::string& id, uint32_t cameraViewId)
-    {
-        uint32_t index;
-        if (!freeViewportSlots_.empty()) {
-            index = freeViewportSlots_.back();
-            freeViewportSlots_.pop_back();
-        } else {
-            index = static_cast<uint32_t>(viewportSlots_.size());
-            viewportSlots_.emplace_back();
-        }
-
-        ViewportSlot& slot = viewportSlots_[index];
-        slot.viewport = createViewport(
-            id, cameraViewId);
-        slot.alive = true;
-
-        return ViewportHandle{index, slot.generation};
-    }
-
-    void VulkanRenderer::removeViewport(ViewportHandle handle)
-    {
-        if (!isValidHandle(handle))
-            return;
-
-        ViewportSlot& slot = viewportSlots_[handle.index];
-        destroyViewport(slot.viewport);
-
-        slot.alive = false;
-        slot.generation++;
-        freeViewportSlots_.push_back(handle.index);
-    }
-
-    bool VulkanRenderer::isValidHandle(ViewportHandle handle) const
-    {
-        return handle.valid() && handle.index < viewportSlots_.size() &&
-               viewportSlots_[handle.index].alive &&
-               viewportSlots_[handle.index].generation == handle.generation;
-    }
-
-    VulkanRenderer::Viewport* VulkanRenderer::getViewport(ViewportHandle handle)
-    {
-        return isValidHandle(handle) ? &viewportSlots_[handle.index].viewport : nullptr;
-    }
-
-    uint64_t VulkanRenderer::getViewportTextureId(ViewportHandle handle) const
-    {
-        auto* vp = const_cast<VulkanRenderer*>(this)->getViewport(handle);
-        return vp ? (uint64_t)vp->targets[currentFrame_].imguiTextureId : 0;
-    }
-    void VulkanRenderer::setViewportHovered(ViewportHandle handle, bool hovered)
-    {
-        if (auto* vp = getViewport(handle))
-            vp->hovered = hovered;
-    }
-    void VulkanRenderer::requestViewportResize(ViewportHandle handle, uint32_t w, uint32_t h)
-    {
-        if (auto* vp = getViewport(handle)) {
-            vp->pendingExtent = {w, h};
-            vp->needsResize = true;
-        }
     }
 
     void applyCustomStyle()

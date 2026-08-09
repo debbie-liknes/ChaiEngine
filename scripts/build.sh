@@ -4,6 +4,10 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 source "${SCRIPT_DIR}/env.sh"
 source "${SCRIPT_DIR}/utils.sh"
 
+# Fail on exit, even if commands piped fail
+set -e
+set -o pipefail
+
 # Set default values
 CLEAN=false
 DEBUG=false

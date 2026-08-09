@@ -13,6 +13,7 @@
 #include <LogPanel.h>
 #include <Visitors/AudioSceneVisitor.h>
 #include <Visitors/FrameRenderVisitor.h>
+#include <tracy/Tracy.hpp>
 
 namespace chai
 {
@@ -42,12 +43,12 @@ namespace chai
             active_.push_back(p);
         }
 
-        auto renderer = services_.tryResolve<gfx::IRenderer>();
-        if (!renderer) {
-            CHAI_LOG_CRITICAL("Could not locate Window Service.");
+        auto registry = services_.tryResolve<gfx::IViewportRegistry>();
+        if (!registry) {
+            CHAI_LOG_CRITICAL("Could not locate Viewport Registry.");
         }
 
-        auto vpManager = std::make_shared<ui::EditorViewportManager>(*renderer, *panelRegistry);
+        auto vpManager = std::make_shared<ui::EditorViewportManager>(*registry, *panelRegistry);
         ctx_.services.provide<ui::EditorViewportManager>(vpManager);
 
         ui::loadFonts(executableDir().string() + "/assets/editor/fonts");
@@ -113,8 +114,21 @@ namespace chai
 
         // The main guts of the application
         while (!window->shouldClose()) {
+            FrameMarkStart("Engine");
+
             input->newFrame();  //tell input to clear deltas FIRST
-            window->pollEvents();
+
+            std::span<const WindowEvent> events{ window->pollEvents() };
+
+            for (const WindowEvent& event : events) {
+
+                // tell the renderer about resized events
+                if (event.type == WindowEventType::Resized)
+                    renderer->onResize(event.width, event.height);
+
+            }
+
+
             renderer->startFrame();
             float dt = clock_.tick();
 
@@ -135,6 +149,8 @@ namespace chai
 
             audioVisitor.reset();
             frameVisitor.reset();
+
+            FrameMarkEnd("Engine");
         }
     }
 }

@@ -1,32 +1,32 @@
 #include <Log.h>
 #include <Plugin/PluginMacros.h>
 #include <Plugin/PluginLoader.h>
+#include <json.hpp>
+
+namespace fs = std::filesystem;
 
 namespace chai
 {
     namespace
     {
-#if defined(_WIN32)
-        constexpr auto kPluginExt = ".dll";
-#else
-        constexpr auto kPluginExt = ".so";
-#endif
+        constexpr auto kManifestExt = ".json";
     } // namespace
 
-    IPlugin* PluginLoader::load(const std::filesystem::path& libPath)
+    IPlugin* PluginLoader::load(const fs::path& manifestPath)
     {
-        DynamicLibrary lib(libPath);
+        DynamicLibrary lib(manifestPath);
         if (!lib.valid())
             return nullptr;
 
         auto abiFn = reinterpret_cast<int (*)()>(lib.symbol("chaiPluginAbiVersion"));
         if (!abiFn) {
-            CHAI_LOG_ERROR("'{}': not a chai plugin (no chaiPluginAbiVersion)", libPath.string());
+            CHAI_LOG_ERROR("'{}': not a chai plugin (no chaiPluginAbiVersion)",
+                           lib.getBinaryPath());
             return nullptr;
         }
         if (const int v = abiFn(); v != CHAI_PLUGIN_ABI_VERSION) {
             CHAI_LOG_ERROR("'{}': plugin ABI {} != engine ABI {}",
-                           libPath.string(),
+                           lib.getBinaryPath(),
                            v,
                            CHAI_PLUGIN_ABI_VERSION);
             return nullptr;
@@ -34,17 +34,17 @@ namespace chai
 
         auto createFn = reinterpret_cast<CreatePluginFn>(lib.symbol("chaiCreatePlugin"));
         if (!createFn) {
-            CHAI_LOG_ERROR("'{}': missing chaiCreatePlugin entry point", libPath.string());
+            CHAI_LOG_ERROR("'{}': missing chaiCreatePlugin entry point", lib.getBinaryPath());
             return nullptr;
         }
 
         IPlugin* plugin = createFn();
         if (!plugin) {
-            CHAI_LOG_ERROR("'{}': chaiCreatePlugin returned null", libPath.string());
+            CHAI_LOG_ERROR("'{}': chaiCreatePlugin returned null", lib.getBinaryPath());
             return nullptr;
         }
 
-        CHAI_LOG_INFO("Loaded plugin '{}' from '{}'", plugin->name(), libPath.string());
+        CHAI_LOG_INFO("Loaded plugin '{}' from '{}'", plugin->name(), lib.getBinaryPath());
 
         loaded_.push_back({std::move(lib), std::unique_ptr<IPlugin>(plugin)});
         pluginPtrs_.push_back(plugin);
@@ -64,7 +64,7 @@ namespace chai
         for (const auto& entry : fs::directory_iterator(dir)) {
             if (!entry.is_regular_file())
                 continue;
-            if (entry.path().extension() != kPluginExt)
+            if (entry.path().extension() != kManifestExt)
                 continue;
             if (load(entry.path()))
                 ++count;

@@ -3,12 +3,14 @@ project(VulkanRenderer)
 set(${PROJECT_NAME}_headers
         commands/ImageTransition.h
         pipeline/PipelineBuilder.h
+        pipeline/PipelineCache.h
         pipeline/PipelineHelpers.h
+        pipeline/PipelineKey.h
         pipeline/ShaderModule.h
+        registries/ViewportRegistry.h
         renderer/VulkanRenderer.h
         renderer/VulkanContext.h
         resources/RenderTargetView.h
-        swapchain/Swapchain.h
         resources/Buffer.h
         resources/GpuResources.h
         resources/Material.h
@@ -24,6 +26,8 @@ set(${PROJECT_NAME}_headers
         resources/VulkanTexture.h
         resources/VulkanVertex.h
         resources/VulkanRenderTarget.h
+        resources/VulkanViewport.h
+        swapchain/Swapchain.h
         utils/VkCheck.h
         utils/VkUtils.h
         utils/GpuProfiler.h
@@ -34,8 +38,10 @@ set(${PROJECT_NAME}_headers
 set(${PROJECT_NAME}_source
         commands/ImageTransition.cpp
         pipeline/PipelineBuilder.cpp
+        pipeline/PipelineCache.cpp
         pipeline/PipelineHelpers.cpp
         pipeline/ShaderModule.cpp
+        registries/ViewportRegistry.cpp
         renderer/VulkanContext.cpp
         renderer/VulkanRenderer.cpp
         resources/Buffer.cpp
@@ -52,6 +58,7 @@ set(${PROJECT_NAME}_source
         utils/VkCheck.cpp
         utils/GpuProfiler.cpp
 
+        VulkanCommon.h
         VulkanMemoryAllocator.cpp
         VulkanPlugin.cpp
 )
@@ -129,6 +136,6 @@ add_custom_target(Shaders ALL
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC Core Graphics UI Vulkan::Vulkan glfw PRIVATE ImGui vk-bootstrap::vk-bootstrap GPUOpen::VulkanMemoryAllocator)
-#set_target_properties(vkbootstrap PROPERTIES FOLDER "external")
+set_target_properties(vk-bootstrap PROPERTIES FOLDER "external")
 
 ChaiPluginDefaults(${PROJECT_NAME} "Plugins")

@@ -15,6 +15,7 @@ layout(set = 0, binding = 0) uniform Camera {
 
 layout(push_constant) uniform Push {
     mat4 model;
+    int shadingMode;
 } pc;
 
 layout(location = 0) out vec3 vWorldPos;
