@@ -25,7 +25,7 @@ jobs:
       
       - name: Run tests
         working-directory: docs
-        run: uv run make html
+        run: uv run sphinx-build -M html . _build
       
       - name: Setup Pages
         uses: actions/configure-pages@v5
