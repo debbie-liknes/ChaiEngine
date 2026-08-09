@@ -117,7 +117,18 @@ namespace chai
             FrameMarkStart("Engine");
 
             input->newFrame();  //tell input to clear deltas FIRST
-            window->pollEvents();
+
+            std::span<const WindowEvent> events{ window->pollEvents() };
+
+            for (const WindowEvent& event : events) {
+
+                // tell the renderer about resized events
+                if (event.type == WindowEventType::Resized)
+                    renderer->onResize(event.width, event.height);
+
+            }
+
+
             renderer->startFrame();
             float dt = clock_.tick();
 
