@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap');
+
+:root {
+    --primary-color: #95a790; /* Only used by headings at the moment */
+    --background-color: #3b4a37;
+    --sidebar-color: #3b3735;
+    --docs-title-color: #587250;
+
+    --link-color: #424c3f;
+    --link-hover-color: #8d9e89;
+
+    --heading-rule-color: #9db695;
+    --table-border-color: #e1e4e5;
+
+    --api-signature-bg-color: #e8f3e9;
+    --api-signature-border-color: #558f5e;
+    --api-signature-text-color: #558f5e;
+
+    --api-admonition-title: #558f5e;
+    --api-admonition-body: #e8f3e9;
+}
+
+body {
+    font-family: 'Noto Serif';
+}
+
+.logo {
+    width: 100px !important;
+}
+
+.admonition.note {
+    background-color: var(--api-admonition-body) !important;
+}
+
+.admonition.note .admonition-title {
+    background-color: var(--api-admonition-title) !important;
+}
+
+h2, h3, h4, h5, h6, legend {
+    font-family: 'Noto Serif';
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    letter-spacing: 2px;
+}
+
+dt.sig {
+    background: var(--api-signature-bg-color) !important;
+	color: var(--api-signature-text-color) !important;
+	border-top-color: var(--api-signature-border-color) !important;
+}
+
+/* I get it -- this is insanely long for a selector, but it's what the actual theme we're overriding uses */
+html.writer-html4 .rst-content dl:not(.docutils) dl:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple) > dt,
+html.writer-html5 .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple) dl:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple) > dt {
+    border-left-color: var(--api-signature-border-color);
+}
+
+.rst-content h1 {
+    font-family: 'Noto Serif';
+    font-size: 200%;
+    text-align: center;
+    padding-top: 20px;
+    letter-spacing: 2px;
+    margin-bottom: 42px;
+    border-bottom: 5px solid var(--primary-color);
+    padding-bottom: 21px;
+}
+
+.rst-content table.docutils {
+    width: 100%;
+    border: 4px solid var(--table-border-color);
+}
+
+.rst-content code.literal {
+    border-radius: 5px;
+    padding: 3px;
+    font-size: 14px;
+}
+
+h2::after, h3::after {
+    content: "";
+    flex: 1;
+    height: 2px;
+    background-color: var(--heading-rule-color);
+}
+
+p {
+    font-family: 'Noto Sans';
+    font-size: 18px;
+    line-height: 32px;
+    font-weight: 400;
+}
+
+#property-descriptions > p:not(.classref-property),
+#property-descriptions > ul {
+    padding-left: 25px;
+}
+
+#property-descriptions > ul {
+    opacity: 0.8;
+    transform: translate(-50%) scale(0.8) translate(50%);
+}
+
+#method-descriptions > p:not(.classref-method) {
+    padding-left: 25px;
+}
+
+a {
+    color: var(--link-color);
+}
+
+a:hover {
+    color: var(--link-hover-color);
+}
+
+.wy-body-for-nav {
+    background: var(--background-color);
+}
+
+.wy-grid-for-nav {
+    display: flex;
+    width: 75%;
+    left: calc(50% - 1300px / 2 + 300px);
+    min-height: 100%;
+    height: initial;
+    max-width: 1000px;
+    box-shadow: 2px 0 10px -4px black;
+}
+
+.wy-nav-side {
+    min-width: 300px;
+    background-color: var(--sidebar-color);
+    left: calc(50% - 1300px / 2);
+}
+
+.wy-nav-content-wrap {
+    background: none;
+    display: inline-block;
+    margin-left: 0;
+    width: 100%;
+}
+
+.wy-nav-content {
+    max-width: initial;
+}
+
+.wy-side-nav-search {
+    background-color: var(--docs-title-color);
+}
