@@ -46,7 +46,7 @@ namespace chai::gfx
                      }()),
           locator_(locator), meshCache_(meshCache), texCache_(texCache), materialCache_(matCache),
           modelReg_(texReg), viewportReg_(*viewportReg),
-          pipelineCache_(context, swapchain_.format(), swapchain_.depthFormat())
+          pipelineCache_(context, swapchain_.format(), swapchain_.depthFormat()), renderGraph_(ctx_)
     {
         init();
         CHAI_LOG_INFO("VulkanRenderer initialized");
@@ -63,7 +63,7 @@ namespace chai::gfx
             vkDestroyFence(ctx_.device(), frames_[i].inFlight, nullptr);
             vkDestroySemaphore(ctx_.device(), frames_[i].imageAvailable, nullptr);
             frames_[i].shadowTarget.destroy(ctx_);
-            frames_[i].combineTarget.destroy(ctx_);
+            //frames_[i].combineTarget.destroy(ctx_);
             // frames_[i].bloomChainTarget.destroy(ctx_);
         }
 
@@ -129,25 +129,19 @@ namespace chai::gfx
             frames_[i].shadowTarget =
                 createDepth2D(ctx_, kShadowMapSize, kShadowMapSize, VK_FORMAT_D32_SFLOAT, true);
 
-            frames_[i].combineTarget = createColor2D(
-                ctx_, swapchain_.extent().width, swapchain_.extent().height, swapchain_.format());
+            //frames_[i].combineTarget = createColor2D(
+            //    ctx_, swapchain_.extent().width, swapchain_.extent().height, swapchain_.format());
 
-            // const uint32_t kBloomMips = 6;
-            // frames_[i].bloomChainTarget = createBloomChain(ctx_,
-            //                                                swapchain_.extent().width,
-            //                                                swapchain_.extent().height,
-            //                                                swapchain_.format(),
-            //                                                kBloomMips);
-
-            // uint32_t bloomSetCount = 2 * (kBloomMips - 1);
-            // frames_[i].bloomSampleSets.resize(bloomSetCount);
-            // std::vector<VkDescriptorSetLayout> layouts(bloomSetCount,
-            // ctx_.bloomSampleSetLayout()); VkDescriptorSetAllocateInfo
-            // dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO}; dsai.descriptorPool =
-            // ctx_.descriptorPool(); dsai.descriptorSetCount = bloomSetCount; dsai.pSetLayouts =
-            // layouts.data(); VK_CHECK(
-            //     vkAllocateDescriptorSets(ctx_.device(), &dsai,
-            //     frames_[i].bloomSampleSets.data()));
+            const uint32_t kBloomMips = 6;
+            uint32_t bloomSetCount = 2 * (kBloomMips - 1);
+            frames_[i].bloomSampleSets.resize(bloomSetCount);
+            std::vector<VkDescriptorSetLayout> layouts(bloomSetCount, ctx_.bloomSampleSetLayout());
+            VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
+            dsai.descriptorPool = ctx_.descriptorPool();
+            dsai.descriptorSetCount = bloomSetCount;
+            dsai.pSetLayouts = layouts.data();
+            VK_CHECK(
+                vkAllocateDescriptorSets(ctx_.device(), &dsai, frames_[i].bloomSampleSets.data()));
 
             // lights
             {
@@ -351,7 +345,7 @@ namespace chai::gfx
         lightUBO.view = renderData.sun.view;
         std::memcpy(frame.lightMapped, &lightUBO, sizeof(lightUBO));
 
-        ChaiRenderGraph renderGraph(ctx_);
+        renderGraph_.clear();
         RenderTargetView view{};
         uint32_t imageIndex = 0;
         if (!swapchain_.acquireNext(frame.imageAvailable, view, imageIndex)) {
@@ -462,67 +456,24 @@ namespace chai::gfx
             transitionImage(
                 cmd, target.view.image, ImageState::ColorAttachment, ImageState::ShaderRead);
 
-            bloomPass(renderGraph, target.view);
+            CRGTextureHandle scene =
+                renderGraph_.importTexture("Scene Color", target.view, ImageState::ShaderRead);
+            CRGTextureHandle bloomChain = renderGraph_.createTexture(
+                "BloomChain",
+                {target.view.extent.width, target.view.extent.height, target.view.colorFormat, 6});
 
-            // post process pass
-            // VkRenderingAttachmentInfo postProcessAttachment0{};
-            // postProcessAttachment0.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-            // postProcessAttachment0.imageView =
-            //    frames_[currentFrame_].bloomChainTarget.renderViews[0];
-            // postProcessAttachment0.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-            // postProcessAttachment0.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-            // postProcessAttachment0.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-            // postProcessAttachment0.clearValue.color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+            CRGTextureHandle combineTarget = renderGraph_.createTexture(
+                "CombineTarget",
+                {target.view.extent.width, target.view.extent.height, target.view.colorFormat, 1});
 
-            // VkRenderingInfo postProcessRenderingInfo{};
-            // postProcessRenderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-            // postProcessRenderingInfo.renderArea = {{0, 0},
-            //                                        frames_[currentFrame_].bloomChainTarget.extent};
-            // postProcessRenderingInfo.layerCount = 1;
-            // postProcessRenderingInfo.colorAttachmentCount = 1;
-            // postProcessRenderingInfo.pColorAttachments = &postProcessAttachment0;
+            bloomPass(renderGraph_, target.view, scene, bloomChain);
+            combinePass(renderGraph_, target.view, scene, bloomChain, combineTarget);
 
-            // transitionImage(cmd,
-            //                 frames_[currentFrame_].bloomChainTarget.image,
-            //                 ImageState::Undefined,
-            //                 ImageState::ColorAttachment);
-            // vkCmdBeginRendering(cmd, &postProcessRenderingInfo);
-            // postProcess(cmd, target.view, renderData);
-            // vkCmdEndRendering(cmd);
+            renderGraph_.compile();
+            renderGraph_.execute(cmd);
 
-            // bloomPass(cmd);
-
-            renderGraph.compile();
-            renderGraph.execute(cmd);
-
-            //{
-            //    VkRenderingAttachmentInfo combineAttachment{};
-            //    combineAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-            //    combineAttachment.imageView = frames_[currentFrame_].combineTarget.view;
-            //    combineAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-            //    combineAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-            //    combineAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-            //    combineAttachment.clearValue.color = {{0.0f, 0.0f, 0.0f, 1.0f}};
-
-            //    VkRenderingInfo combineRenderingInfo{};
-            //    combineRenderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-            //    combineRenderingInfo.renderArea = {{0, 0},
-            //                                       frames_[currentFrame_].combineTarget.extent};
-            //    combineRenderingInfo.layerCount = 1;
-            //    combineRenderingInfo.colorAttachmentCount = 1;
-            //    combineRenderingInfo.pColorAttachments = &combineAttachment;
-
-            //    transitionImage(cmd,
-            //                    frames_[currentFrame_].combineTarget.image,
-            //                    ImageState::Undefined,
-            //                    ImageState::ColorAttachment);
-
-            //    vkCmdBeginRendering(cmd, &combineRenderingInfo);
-            //    combinePass(cmd, target.view, renderData);
-            //    vkCmdEndRendering(cmd);
-
-            //    blitCombineToViewport(cmd, target.view);
-            //}
+            blitCombineToViewport(cmd, target.view, renderGraph_.resolvedImage(combineTarget), renderGraph_.resolvedExtent(combineTarget));
+            renderGraph_.markExternalState(combineTarget, ImageState::TransferSrc);
         });
 
         // Render UI
@@ -736,21 +687,16 @@ namespace chai::gfx
         // vkCmdDraw(cmd, 3, 1, 0, 0);
     }
 
-    void VulkanRenderer::bloomPass(ChaiRenderGraph& renderGraph, RenderTargetView& target)
+    void VulkanRenderer::bloomPass(ChaiRenderGraph& renderGraph, RenderTargetView& target, CRGTextureHandle sceneHandle, CRGTextureHandle bloomChain)
     {
-        CRGTextureHandle scene =
-            renderGraph.importTexture("Scene Color", target, ImageState::ShaderRead);
-        CRGTextureHandle bloomChain = renderGraph.createTexture(
-            "BloomChain", {target.extent.width, target.extent.height, target.colorFormat, 6});
-
-        //Soft threshold
+        // Soft threshold
         struct ThresholdData {
             CRGTextureHandle scene, output;
         };
         renderGraph.addPass<ThresholdData>(
             "BloomThreshold",
             [&](CRGBuilder& builder, ThresholdData& data) {
-                data.scene = builder.read(scene);
+                data.scene = builder.read(sceneHandle);
                 data.output = builder.write(bloomChain, /*mip=*/0);
             },
             [&](VkCommandBuffer cmd, const ThresholdData& data, const CRGResources& resources) {
@@ -795,6 +741,8 @@ namespace chai::gfx
         for (uint32_t mip = 1; mip < 6; ++mip) {
             uint32_t srcMip = mip - 1;
 
+            const uint32_t bloomSetIndex = bloomSetIndex_++;
+
             struct DownsampleData {
                 CRGTextureHandle src, dst;
             };
@@ -804,9 +752,9 @@ namespace chai::gfx
                     data.src = builder.read(bloomChain, srcMip);
                     data.dst = builder.write(bloomChain, mip);
                 },
-                [&, srcMip, mip](VkCommandBuffer cmd,
-                                 const DownsampleData& data,
-                                 const CRGResources& resources) {
+                [&, srcMip, mip, bloomSetIndex](VkCommandBuffer cmd,
+                                                const DownsampleData& data,
+                                                const CRGResources& resources) {
                     VkExtent2D srcExtent = resources.extent(data.src, srcMip);
                     VkExtent2D dstExtent = resources.extent(data.dst, mip);
 
@@ -828,7 +776,7 @@ namespace chai::gfx
                     VkRect2D sc{{0, 0}, dstExtent};
                     vkCmdSetScissor(cmd, 0, 1, &sc);
 
-                    VkDescriptorSet set = frames_[currentFrame_].bloomSampleSets[bloomSetIndex_++];
+                    VkDescriptorSet set = frames_[currentFrame_].bloomSampleSets[bloomSetIndex];
                     VkDescriptorImageInfo img{ctx_.linearSampler(),
                                               resources.view(data.src, srcMip),
                                               VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
@@ -858,6 +806,8 @@ namespace chai::gfx
         for (int mip = 4; mip >= 0; --mip) {
             uint32_t srcMip = uint32_t(mip) + 1;
 
+            const uint32_t bloomSetIndex = bloomSetIndex_++;
+
             struct UpsampleData {
                 CRGTextureHandle src, dst;
             };
@@ -867,7 +817,7 @@ namespace chai::gfx
                     data.src = builder.read(bloomChain, srcMip);
                     data.dst = builder.write(bloomChain, uint32_t(mip));
                 },
-                [&, srcMip, mip](
+                [&, srcMip, mip, bloomSetIndex](
                     VkCommandBuffer cmd, const UpsampleData& data, const CRGResources& resources) {
                     VkExtent2D srcExtent = resources.extent(data.src, srcMip);
                     VkExtent2D dstExtent = resources.extent(data.dst, uint32_t(mip));
@@ -891,7 +841,7 @@ namespace chai::gfx
                     VkRect2D sc{{0, 0}, dstExtent};
                     vkCmdSetScissor(cmd, 0, 1, &sc);
 
-                    VkDescriptorSet set = frames_[currentFrame_].bloomSampleSets[bloomSetIndex_++];
+                    VkDescriptorSet set = frames_[currentFrame_].bloomSampleSets[bloomSetIndex];
                     VkDescriptorImageInfo img{ctx_.linearSampler(),
                                               resources.view(data.src, srcMip),
                                               VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
@@ -954,36 +904,99 @@ namespace chai::gfx
         vkUpdateDescriptorSets(ctx_.device(), 2, writes, 0, nullptr);
     }
 
-    void VulkanRenderer::combinePass(VkCommandBuffer cmd,
-                                     const RenderTargetView& view,
-                                     const FrameRenderData& renderData)
+    void VulkanRenderer::setupCombine(VkImageView sceneView, VkImageView bloomView)
     {
-        VkViewport viewport{0,
-                            0,
-                            float(frames_[currentFrame_].combineTarget.extent.width),
-                            float(frames_[currentFrame_].combineTarget.extent.height),
-                            0.f,
-                            1.f};
-        vkCmdSetViewport(cmd, 0, 1, &viewport);
-        VkRect2D scissor{{0, 0}, frames_[currentFrame_].combineTarget.extent};
-        vkCmdSetScissor(cmd, 0, 1, &scissor);
+        // if (postProcessSet_ != VK_NULL_HANDLE)
+        //     return;
 
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, combinePipeline_);
-        vkCmdBindDescriptorSets(cmd,
-                                VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                postProcessLayout_,
-                                0,
-                                1,
-                                &frames_[currentFrame_].postProcessSet,
-                                0,
-                                nullptr);
-        vkCmdDraw(cmd, 3, 1, 0, 0);
+        if (frames_[currentFrame_].combineSet == VK_NULL_HANDLE) {
+            VkDescriptorSetLayout layout = ctx_.postProcessSetLayout();
+            VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
+            dsai.descriptorPool = ctx_.descriptorPool();
+            dsai.descriptorSetCount = 1;
+            dsai.pSetLayouts = &layout;
+            VK_CHECK(vkAllocateDescriptorSets(ctx_.device(), &dsai, &frames_[currentFrame_].combineSet));
+        }
+
+        VkDescriptorImageInfo imgs[2]{};
+        imgs[0].imageView = sceneView; // binding 0: scene
+        imgs[0].sampler = ctx_.linearSampler();
+        imgs[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imgs[1].imageView = bloomView; // binding 1: bloom
+        imgs[1].sampler = ctx_.linearSampler();
+        imgs[1].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        VkWriteDescriptorSet writes[2]{};
+        for (int i = 0; i < 2; ++i) {
+            writes[i] = VkWriteDescriptorSet{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+            writes[i].dstSet = frames_[currentFrame_].combineSet;
+            writes[i].dstBinding = uint32_t(i);
+            writes[i].descriptorCount = 1;
+            writes[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            writes[i].pImageInfo = &imgs[i];
+        }
+
+        vkUpdateDescriptorSets(ctx_.device(), 2, writes, 0, nullptr);
     }
 
-    void VulkanRenderer::blitCombineToViewport(VkCommandBuffer cmd, const RenderTargetView& view)
+    void VulkanRenderer::combinePass(ChaiRenderGraph& renderGraph,
+                                     RenderTargetView& target,
+                                     CRGTextureHandle sceneHandle,
+                                     CRGTextureHandle bloomChain,
+                                     CRGTextureHandle combineTarget)
+    {
+        struct CombineData {
+            CRGTextureHandle scene, bloom, output;
+        };
+        renderGraph.addPass<CombineData>(
+            "BloomCombine",
+            [&](CRGBuilder& builder, CombineData& data) {
+                data.scene = builder.read(sceneHandle);
+                data.bloom = builder.read(bloomChain, 0);
+                data.output = builder.write(combineTarget);
+            },
+            [&](VkCommandBuffer cmd, const CombineData& data, const CRGResources& resources) {
+                VkRenderingAttachmentInfo att{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
+                att.imageView = resources.attachmentView(data.output, 0);
+                att.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                att.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                att.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+                VkExtent2D extent = resources.extent(data.output, 0);
+                VkRenderingInfo ri{VK_STRUCTURE_TYPE_RENDERING_INFO};
+                ri.renderArea = {{0, 0}, extent};
+                ri.layerCount = 1;
+                ri.colorAttachmentCount = 1;
+                ri.pColorAttachments = &att;
+
+                vkCmdBeginRendering(cmd, &ri);
+                VkViewport vp{0, 0, float(extent.width), float(extent.height), 0.f, 1.f};
+                vkCmdSetViewport(cmd, 0, 1, &vp);
+                VkRect2D sc{{0, 0}, extent};
+                vkCmdSetScissor(cmd, 0, 1, &sc);
+
+                setupCombine(resources.view(data.scene), resources.view(data.bloom));
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, combinePipeline_);
+                vkCmdBindDescriptorSets(cmd,
+                                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                        postProcessLayout_,
+                                        0,
+                                        1,
+                                        &frames_[currentFrame_].postProcessSet,
+                                        0,
+                                        nullptr);
+                vkCmdDraw(cmd, 3, 1, 0, 0);
+                vkCmdEndRendering(cmd);
+            });
+    }
+
+    void VulkanRenderer::blitCombineToViewport(VkCommandBuffer cmd,
+                                               const RenderTargetView& view,
+                                               VkImage combineImage,
+                                               VkExtent2D combineExtent)
     {
         transitionImage(cmd,
-                        frames_[currentFrame_].combineTarget.image,
+                        combineImage,
                         ImageState::ColorAttachment,
                         ImageState::TransferSrc);
         transitionImage(cmd, view.image, ImageState::ShaderRead, ImageState::TransferDst);
@@ -991,8 +1004,7 @@ namespace chai::gfx
         VkImageBlit blit{};
         blit.srcSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
         blit.srcOffsets[0] = {0, 0, 0};
-        blit.srcOffsets[1] = {int32_t(frames_[currentFrame_].combineTarget.extent.width),
-                              int32_t(frames_[currentFrame_].combineTarget.extent.height),
+        blit.srcOffsets[1] = {int32_t(combineExtent.width), int32_t(combineExtent.height),
                               1};
 
         blit.dstSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
@@ -1000,16 +1012,7 @@ namespace chai::gfx
         blit.dstOffsets[1] = {int32_t(view.extent.width), int32_t(view.extent.height), 1};
 
         vkCmdBlitImage(cmd,
-                       frames_[currentFrame_].combineTarget.image,
-                       VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                       view.image,
-                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                       1,
-                       &blit,
-                       VK_FILTER_LINEAR);
-
-        vkCmdBlitImage(cmd,
-                       frames_[currentFrame_].combineTarget.image,
+                       combineImage,
                        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                        view.image,
                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -1201,44 +1204,44 @@ namespace chai::gfx
                     .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
             });
 
-        // downsamplePipeline_ = loadPipelineByName(
-        //     ctx_,
-        //     "postProcess.vert.spv",
-        //     "downsample.frag.spv",
-        //     bloomLayout_,
-        //     [&](PipelineBuilder& b) {
-        //         b.disableBlending()
-        //             .setColorFormat(frames_[0].bloomChainTarget.format)
-        //             .disableDepthTest()
-        //             .disableDepthWrite()
-        //             .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
-        //     });
+        downsamplePipeline_ = loadPipelineByName(
+            ctx_,
+            "postProcess.vert.spv",
+            "downsample.frag.spv",
+            bloomLayout_,
+            [&](PipelineBuilder& b) {
+                b.disableBlending()
+                    .setColorFormat(VK_FORMAT_B8G8R8A8_UNORM)
+                    .disableDepthTest()
+                    .disableDepthWrite()
+                    .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
+            });
 
-        // upsamplePipeline_ = loadPipelineByName(
-        //     ctx_,
-        //     "postProcess.vert.spv",
-        //     "upsample.frag.spv",
-        //     bloomLayout_,
-        //     [&](PipelineBuilder& b) {
-        //         b.enableBlending()
-        //             .setColorFormat(frames_[0].bloomChainTarget.format)
-        //             .disableDepthTest()
-        //             .disableDepthWrite()
-        //             .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
-        //     });
+        upsamplePipeline_ = loadPipelineByName(
+            ctx_,
+            "postProcess.vert.spv",
+            "upsample.frag.spv",
+            bloomLayout_,
+            [&](PipelineBuilder& b) {
+                b.enableBlending()
+                    .setColorFormat(VK_FORMAT_B8G8R8A8_UNORM)
+                    .disableDepthTest()
+                    .disableDepthWrite()
+                    .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
+            });
 
-        // combinePipeline_ = loadPipelineByName(
-        //     ctx_,
-        //     "combinePostProcess.vert.spv",
-        //     "combinePostProcess.frag.spv",
-        //     postProcessLayout_,
-        //     [&](PipelineBuilder& b) {
-        //         b.disableBlending()
-        //             .setColorFormat(frames_[0].bloomChainTarget.format)
-        //             .disableDepthTest()
-        //             .disableDepthWrite()
-        //             .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
-        //     });
+         combinePipeline_ = loadPipelineByName(
+             ctx_,
+             "combinePostProcess.vert.spv",
+             "combinePostProcess.frag.spv",
+             postProcessLayout_,
+             [&](PipelineBuilder& b) {
+                 b.disableBlending()
+                     .setColorFormat(VK_FORMAT_B8G8R8A8_UNORM)
+                     .disableDepthTest()
+                     .disableDepthWrite()
+                     .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
+             });
     }
 
     void VulkanRenderer::ensureSkyboxSet(FrameData& frame,

@@ -12,10 +12,22 @@ namespace chai::gfx
     {
     public:
         explicit ChaiRenderGraph(VulkanContext& ctx);
+        ~ChaiRenderGraph();
 
         CRGTextureHandle
         importTexture(const std::string& name, RenderTargetView& view, ImageState state);
         CRGTextureHandle createTexture(const std::string& name, const CRGTextureDesc& desc);
+
+        VkImage resolvedImage(CRGTextureHandle handle) const;
+        VkExtent2D resolvedExtent(CRGTextureHandle handle, uint32_t mip = 0) const;
+
+        //helps with tracking my blitting woes
+        void
+        markExternalState(CRGTextureHandle handle, ImageState state, uint32_t mip = 0)
+        {
+            CRGTexture& tex = textures_[handle.index];
+            tex.mipStates[mip] = state;
+        }
 
         template <typename PassData, typename SetupFn, typename ExecuteFn>
         PassData& addPass(const std::string& name, SetupFn&& setup, ExecuteFn&& execute)
@@ -37,6 +49,7 @@ namespace chai::gfx
             return ref;
         }
 
+        void clear();
         void compile();
         void execute(VkCommandBuffer cmd);
 
@@ -52,9 +65,8 @@ namespace chai::gfx
         std::vector<uint32_t> topologicalSort(std::vector<std::unique_ptr<CRGPassBase>>& passes);
         void computeBarriers(const std::vector<uint32_t>& order, std::vector<CRGTexture>& textures);
         void buildAdjacencyList(std::vector<std::unique_ptr<CRGPassBase>>& passes,
-                                                  std::unordered_map<uint32_t,
-                                                                     std::vector<uint32_t>>&
-                                                      adjList,
-                                                  std::vector<uint32_t>& inDegree);
+                                std::unordered_map<uint32_t, std::vector<uint32_t>>& adjList,
+                                std::vector<uint32_t>& inDegree);
+        CRGTexture buildTexture(const std::string& name, const CRGTextureDesc& desc);
     };
 } // namespace chai::gfx

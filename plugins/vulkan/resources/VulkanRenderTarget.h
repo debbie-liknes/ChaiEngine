@@ -47,9 +47,8 @@ namespace chai::gfx
         }
     };
 
-    RenderTarget createColor2D(VulkanContext& ctx, uint32_t w, uint32_t h, VkFormat fmt);
+    RenderTarget
+    createColor2D(VulkanContext& ctx, uint32_t w, uint32_t h, VkFormat fmt, uint32_t mips = 1);
     RenderTarget createDepth2D(VulkanContext& ctx, uint32_t w, uint32_t h, VkFormat fmt, bool compare);
     RenderTarget createCube(VulkanContext& ctx, uint32_t size, VkFormat fmt, uint32_t mips);
-    RenderTarget
-    createBloomChain(VulkanContext& ctx, uint32_t w, uint32_t h, VkFormat fmt, uint32_t mipCount);
 } // namespace chai::gfx

@@ -86,14 +86,14 @@ namespace chai::gfx
         return t;
     }
 
-    RenderTarget createColor2D(VulkanContext& ctx, uint32_t w, uint32_t h, VkFormat fmt)
+    RenderTarget createColor2D(VulkanContext& ctx, uint32_t w, uint32_t h, VkFormat fmt, uint32_t mips)
     {
         return makeRenderTarget(ctx,
                                 w,
                                 h,
                                 fmt,
                                 1,
-                                1,
+                                mips,
                                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
                                     VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
                                 VK_IMAGE_ASPECT_COLOR_BIT,
@@ -130,22 +130,6 @@ namespace chai::gfx
                                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                                 VK_IMAGE_ASPECT_COLOR_BIT,
                                 true,
-                                VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-                                false);
-    }
-
-    RenderTarget
-    createBloomChain(VulkanContext& ctx, uint32_t w, uint32_t h, VkFormat fmt, uint32_t mipCount)
-    {
-        return makeRenderTarget(ctx,
-                                w,
-                                h,
-                                fmt,
-                                1,
-                                mipCount,
-                                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                                VK_IMAGE_ASPECT_COLOR_BIT,
-                                false,
                                 VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
                                 false);
     }

@@ -1,4 +1,5 @@
 #include "ChaiRenderGraph.h"
+
 #include "CRGResources.h"
 
 #include <Log.h>
@@ -8,35 +9,106 @@ namespace chai::gfx
 {
     ChaiRenderGraph::ChaiRenderGraph(VulkanContext& ctx) : ctx_(ctx) {}
 
+    ChaiRenderGraph::~ChaiRenderGraph()
+    {
+        for (auto& tex : textures_) {
+            if (!tex.isImported)
+                tex.target.destroy(ctx_);
+        }
+    }
+
     // TODO: actually handle the generational part
 
     CRGTextureHandle ChaiRenderGraph::importTexture(const std::string& name,
                                                     RenderTargetView& view,
                                                     ImageState state)
     {
+        for (uint32_t i = 0; i < textures_.size(); ++i) {
+            if (textures_[i].name == name && textures_[i].isImported) {
+                // re-point at the real resource
+                textures_[i].importedTarget = &view;
+
+                //refill the state, dont trust last mip state, never trust a last image state (dont trust me)
+                std::fill(textures_[i].mipStates.begin(), textures_[i].mipStates.end(), state);
+
+                return CRGTextureHandle{i, textures_[i].generation};
+            }
+        }
+
+        // not found
+        CRGTexture tex;
+        tex.name = name;
+        tex.isImported = true;
+        tex.importedTarget = &view;
+        tex.mipStates.assign(1, state); // single mip?
+        textures_.push_back(std::move(tex));
+        return CRGTextureHandle{uint32_t(textures_.size() - 1), textures_.back().generation};
+    }
+
+    VkImage ChaiRenderGraph::resolvedImage(CRGTextureHandle handle) const
+    {
+        const CRGTexture& tex = textures_[handle.index];
+        return tex.isImported ? tex.importedTarget->image : tex.target.image;
+    }
+
+    VkExtent2D ChaiRenderGraph::resolvedExtent(CRGTextureHandle handle, uint32_t mip) const
+    {
+        const CRGTexture& tex = textures_[handle.index];
+        VkExtent2D base = tex.isImported ? tex.importedTarget->extent : tex.target.extent;
+        return {std::max(1u, base.width >> mip), std::max(1u, base.height >> mip)};
+    }
+
+    CRGTexture ChaiRenderGraph::buildTexture(const std::string& name, const CRGTextureDesc& desc)
+    {
         CRGTexture texture{};
-        texture.isImported = true;
-        texture.importedTarget = &view;
-        texture.mipStates.resize(1, state);
-        textures_.push_back(std::move(texture));
-        return CRGTextureHandle{static_cast<uint32_t>(textures_.size() - 1), 0};
+        texture.isImported = false;
+        texture.target = createColor2D(ctx_, desc.width, desc.height, desc.format, desc.mipLevels);
+        texture.mipStates.resize(desc.mipLevels, ImageState::Undefined);
+        texture.desc = desc;
+        texture.name = name;
+        return texture;
     }
 
     CRGTextureHandle ChaiRenderGraph::createTexture(const std::string& name,
                                                     const CRGTextureDesc& desc)
     {
-        CRGTexture texture{};
-        texture.isImported = false;
-        texture.target = createColor2D(ctx_, desc.width, desc.height, desc.format);
-        texture.mipStates.resize(desc.mipLevels, ImageState::Undefined);
-        textures_.push_back(std::move(texture));
-        return CRGTextureHandle{static_cast<uint32_t>(textures_.size() - 1), 0};
+        // check the pool for an existing match
+        for (uint32_t i = 0; i < textures_.size(); ++i) {
+            if (textures_[i].name == name && !textures_[i].isImported) {
+                if (textures_[i].desc.width == desc.width &&
+                    textures_[i].desc.height == desc.height &&
+                    textures_[i].desc.format == desc.format &&
+                    textures_[i].desc.mipLevels == desc.mipLevels) {
+                    return CRGTextureHandle{i, textures_[i].generation};
+                } else {
+                    // desc changed
+                    vkDeviceWaitIdle(ctx_.device()); //TODO: replace this with deferred deletion
+                    textures_[i].target.destroy(ctx_);
+                    textures_[i].generation++;
+                    textures_[i] = buildTexture(name, desc); // recreate at the SAME index
+                    textures_[i].generation += 1;
+                    return CRGTextureHandle{i, textures_[i].generation};
+                }
+            }
+        }
+
+        // no match
+        CRGTexture tex = buildTexture(name, desc);
+        textures_.push_back(std::move(tex));
+        return CRGTextureHandle{uint32_t(textures_.size() - 1), textures_.back().generation};
     }
 
     void ChaiRenderGraph::compile()
     {
         executionOrder_ = topologicalSort(passes_);
         computeBarriers(executionOrder_, textures_);
+    }
+
+    void ChaiRenderGraph::clear()
+    {
+        passes_.clear();
+        executionOrder_.clear();
+        barrierPlan_.clear();
     }
 
     void ChaiRenderGraph::execute(VkCommandBuffer cmd)
@@ -102,7 +174,7 @@ namespace chai::gfx
         }
     }
 
-void ChaiRenderGraph::buildAdjacencyList(
+    void ChaiRenderGraph::buildAdjacencyList(
         std::vector<std::unique_ptr<CRGPassBase>>& passes,
         std::unordered_map<uint32_t, std::vector<uint32_t>>& adjList,
         std::vector<uint32_t>& inDegree)
