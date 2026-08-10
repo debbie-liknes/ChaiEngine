@@ -19,6 +19,7 @@ set(ChaiScene_headers
         include/Visitors/Visitor.h
         include/Visitors/AudioSceneVisitor.h
         include/Visitors/FrameRenderVisitor.h
+        include/Visitors/SceneSaveVisitor.h
 )
 
 set(ChaiScene_source
@@ -38,6 +39,7 @@ set(ChaiScene_source
         source/Scene/SpawnPrefab.cpp
         source/Visitors/AudioSceneVisitor.cpp
         source/Visitors/FrameRenderVisitor.cpp
+        source/Visitors/SceneSaveVisitor.cpp
 )
 
 add_library(Scene SHARED ${ChaiScene_headers} ${ChaiScene_source})
