@@ -5,6 +5,7 @@
 #include "../VulkanCommon.h"
 #include "../pipeline/PipelineCache.h"
 #include "../registries/ViewportRegistry.h"
+#include "../renderGraph/ChaiRenderGraph.h"
 #include "../resources/GpuResources.h"
 #include "../resources/MaterialFactory.h"
 #include "../resources/ModelRegistry.h"
@@ -92,7 +93,7 @@ namespace chai::gfx
 
             RenderTarget shadowTarget{};
             RenderTarget combineTarget{};
-            RenderTarget bloomChainTarget{};
+            //RenderTarget bloomChainTarget{};
         };
 
         void recreateSwapchain();
@@ -115,8 +116,8 @@ namespace chai::gfx
         VkFenceCreateInfo fenceCreate(VkFenceCreateFlags flags = 0);
         VkSemaphoreCreateInfo semaphoreCreate(VkSemaphoreCreateFlags flags = 0);
         void setupPipelines();
-        void setupPostProcess(VkImageView view);
-        void bloomPass(VkCommandBuffer cmd);
+        void setupPostProcess(VkImageView view, VkImageView bloomView);
+        void bloomPass(ChaiRenderGraph& renderGraph, RenderTargetView& scene);
         void combinePass(VkCommandBuffer cmd,
                          const RenderTargetView& view,
                          const FrameRenderData& renderData);

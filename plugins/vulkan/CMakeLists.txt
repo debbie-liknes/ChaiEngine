@@ -10,6 +10,13 @@ set(${PROJECT_NAME}_headers
         registries/ViewportRegistry.h
         renderer/VulkanRenderer.h
         renderer/VulkanContext.h
+
+        renderGraph/ChaiRenderGraph.h
+        renderGraph/CRGBuilder.h
+        renderGraph/CRGDescriptors.h
+        renderGraph/CRGPass.h
+        renderGraph/CRGResources.h
+
         resources/RenderTargetView.h
         resources/Buffer.h
         resources/GpuResources.h
@@ -42,6 +49,11 @@ set(${PROJECT_NAME}_source
         pipeline/PipelineHelpers.cpp
         pipeline/ShaderModule.cpp
         registries/ViewportRegistry.cpp
+
+        renderGraph/ChaiRenderGraph.cpp
+        renderGraph/CRGBuilder.cpp
+        renderGraph/CRGResources.cpp
+
         renderer/VulkanContext.cpp
         renderer/VulkanRenderer.cpp
         resources/Buffer.cpp
