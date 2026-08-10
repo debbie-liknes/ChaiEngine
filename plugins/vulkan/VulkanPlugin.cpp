@@ -75,7 +75,7 @@ namespace chai::gfx
             auto& panelReg = ctx.services.resolve<ui::PanelRegistry>();
             panelReg.registerPanel(panelInfo);
             auto& menuService = ctx.services.resolve<ui::MenuService>();
-            menuService.registerItem("Windows/Plugins/Vulkan", ui::TogglePanel{panelInfo.displayName});
+            //menuService.registerAction("Windows/Plugins/Vulkan", ui::TogglePanel{panelInfo.displayName});
 
             CHAI_LOG_INFO("Renderer service provided");
         }

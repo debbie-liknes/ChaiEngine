@@ -23,7 +23,7 @@ if (NOT "${FMOD_LIBRARY}" STREQUAL "")
         PUBLIC
         ChaiMath
         Audio
-        Core
+        Runtime
 
         PRIVATE
         "${FMOD_LIBRARY}"

@@ -1,0 +1,48 @@
+{
+  "editor": [
+    {
+      "type": "menu",
+      "id": "file",
+      "label": "File",
+      "items": [
+        {
+          "type": "menu",
+          "id": "preferences",
+          "label": "Preferences",
+          "items": [
+            {
+              "id": "settings",
+              "type": "action",
+              "label": "Settings"
+            }
+          ]
+        },
+        {
+          "type": "separator"
+        },
+        {
+          "id": "exit",
+          "type": "action",
+          "label": "Exit"
+        }
+      ]
+    },
+    {
+      "type": "menu",
+      "id": "window",
+      "label": "Window",
+      "items": [
+        {
+          "type": "action",
+          "id": "plugin_manager",
+          "label": "Plugin Manager"
+        },
+        {
+          "type": "action",
+          "id": "logger",
+          "label": "Logger"
+        }
+      ]
+    }
+  ]
+}

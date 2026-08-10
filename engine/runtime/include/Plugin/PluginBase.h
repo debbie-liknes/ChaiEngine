@@ -3,7 +3,7 @@
  * @brief Defines the IPlugin interface that all plugins must implement
  */
 #pragma once
-#include <CoreExport.h>
+#include <RuntimeExport.h>
 #include <string>
 #include <Plugin/PluginContext.h>
 

@@ -8,6 +8,7 @@ set(${PROJECT_NAME}_headers
     include/UI/Editor/FontManager.h
     include/UI/Editor/EditorViewportManager.h
     include/UI/Editor/MenuService.h
+    include/UI/Editor/MenuConfigLoader.h
     include/UI/Editor/TreeNode.h
 )
 
@@ -19,6 +20,7 @@ set(${PROJECT_NAME}_source
 	source/UI/Editor/FontManager.cpp
 	source/UI/Editor/EditorViewportManager.cpp
 	source/UI/Editor/MenuService.cpp
+	source/UI/Editor/MenuConfigLoader.cpp
 	source/UI/Editor/TreeNode.cpp
 )
 
@@ -28,6 +30,6 @@ add_library(${PROJECT_NAME} SHARED
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
-target_link_libraries(${PROJECT_NAME} PUBLIC ChaiMath Logger Graphics PRIVATE ImGui)
+target_link_libraries(${PROJECT_NAME} PUBLIC ChaiMath Containers Core Logger Graphics PRIVATE ImGui)
 
 ChaiLibDefaults(${PROJECT_NAME} "Engine")

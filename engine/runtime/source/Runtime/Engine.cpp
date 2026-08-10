@@ -1,4 +1,4 @@
-#include <Core/Engine.h>
+#include <Runtime/Engine.h>
 #include <Log.h>
 #include <Window/Window.h>
 #include <Scene/Scene.h>
@@ -8,7 +8,7 @@
 #include <UI/Editor/PanelHost.h>
 #include <UI/Editor/DockspaceService.h>
 #include <UI/Editor/MenuService.h>
-#include <Core/SystemPaths.h>
+#include <Runtime/SystemPaths.h>
 #include <Audio/IAudioEngine.h>
 #include <LogPanel.h>
 #include <Visitors/AudioSceneVisitor.h>
@@ -33,8 +33,12 @@ namespace chai
         auto dockspace = std::make_shared<ui::DockspaceService>();
         ctx_.services.provide<ui::DockspaceService>(dockspace);
 
-        auto menuService = std::make_shared<ui::MenuService>();
+        auto configFile = executableDir() / "assets/editor/config/menu_config.json";
+        auto menuService = std::make_shared<ui::MenuService>(configFile);
         ctx_.services.provide<ui::MenuService>(menuService);
+
+        auto action = []() { exit(0); };
+        menuService->registerAction("file.exit", action);
 
         //Load plugins
         CHAI_LOG_INFO("Engine starting");

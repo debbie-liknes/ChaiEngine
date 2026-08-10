@@ -15,6 +15,6 @@ add_library(TextureLoader SHARED
 )
 
 target_include_directories(TextureLoader PUBLIC include)
-target_link_libraries(TextureLoader PUBLIC Graphics Core)
+target_link_libraries(TextureLoader PUBLIC Graphics Runtime)
 
 ChaiPluginDefaults(TextureLoader "Plugins")

@@ -5,12 +5,14 @@ set(${PROJECT_NAME}_headers
     include/Loaders/ISettingsLoader.h
     include/Loaders/TomlSettingsLoader.h
     include/Registry/SettingsRegistry.h
+    include/UI/SettingsPanel.h
 )
 
 set(${PROJECT_NAME}_source
     source/Assets/SettingsAsset.cpp
     source/Loaders/TomlSettingsLoader.cpp
     source/Registry/SettingsRegistry.cpp
+    source/UI/SettingsPanel.cpp
 )
 
 add_library(${PROJECT_NAME}
@@ -19,6 +21,6 @@ add_library(${PROJECT_NAME}
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(${PROJECT_NAME} PUBLIC Asset PRIVATE Core Logger)
+target_link_libraries(${PROJECT_NAME} PUBLIC Asset PRIVATE Runtime ImGui Logger UI)
 
 ChaiLibDefaults(${PROJECT_NAME} "Engine")

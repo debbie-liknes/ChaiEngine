@@ -1,64 +1,82 @@
 #include <UI/Editor/MenuService.h>
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <sstream>
 #include <algorithm>
+#include <stack>
 
 namespace chai::ui
 {
-    static std::vector<std::string> splitPath(const std::string& path)
+    MenuService::MenuService(const std::filesystem::path& configFile)
+        : loader_(std::make_unique<MenuConfigLoader>(configFile))
     {
-        std::vector<std::string> parts;
-        std::stringstream ss(path);
-        std::string seg;
-        while (std::getline(ss, seg, '/'))
-            parts.push_back(seg);
-        return parts;
+        buildMenu();
     }
 
-    MenuService::Node&
-    MenuService::findOrCreate(Node& parent, const std::vector<std::string>& segments, size_t idx)
+    MenuService::Node MenuService::convertToNodeDFS(const BlueprintItemSchema& schema, const std::string& slug)
     {
-        auto it = std::find_if(parent.children.begin(), parent.children.end(), [&](Node& n) {
-            return n.label == segments[idx];
-        });
-        Node& child = (it != parent.children.end())
-                          ? *it
-                          : parent.children.emplace_back(Node{segments[idx], std::nullopt, {}});
-        if (idx + 1 == segments.size())
-            return child;
-        return findOrCreate(child, segments, idx + 1);
+        Node node;
+        node.action = std::make_unique<Action>();
+        if (schema.id.has_value())
+            node.action->setID((slug.size() > 0 ? slug + "." : "") + schema.id.value());
+        if (schema.label.has_value())
+            node.action->setLabel(schema.label.value());
+
+        node.children.reserve(schema.items.size());
+        for (const auto& childSchema : schema.items) {
+            if (schema.id.has_value()) {
+                node.children.push_back(convertToNodeDFS(childSchema, node.action->getID()));
+            } else {
+                node.children.push_back(convertToNodeDFS(childSchema, ""));
+            }
+        }
+
+        if (schema.id.has_value()) {
+            actionMap_[node.action->getID()] = node.action.get();
+        }
+
+        return node;
     }
 
-    void MenuService::registerItem(const std::string& path, MenuLeaf leaf)
+    void MenuService::buildMenu()
     {
-        auto segments = splitPath(path);
-        Node& node = findOrCreate(root_, segments, 0);
-        node.leaf = std::move(leaf);
+        auto config = loader_->getConfig();
+        for (const auto& item : config.editor) {
+            root_.children.push_back(convertToNodeDFS(item, ""));
+        }
     }
 
-    void MenuService::unregisterItem(const std::string& path)
+    void MenuService::registerAction(const std::string& name, const std::function<void()>& action)
     {
-        //TODO: probably need this when we teardown plugins
+        if (auto actionItr = actionMap_.find(name); actionItr != actionMap_.end()) {
+            actionItr->second->registerAction(action);
+        }
+    }
+
+    void MenuService::unregisterAction(const std::string& name)
+    {
+        if (auto actionItr = actionMap_.find(name); actionItr != actionMap_.end()) {
+            actionItr->second->registerAction(nullptr);
+        }
     }
 
     void MenuService::drawNode(const MenuService::Node& node, PanelRegistry& registry)
     {
         for (auto& child : node.children) {
-            if (child.leaf) {
-                if (auto* toggle = std::get_if<TogglePanel>(&*child.leaf)) {
-                    bool visible = registry.isVisible(toggle->panelId);
-                    if (ImGui::MenuItem(child.label.c_str(), nullptr, &visible))
-                        registry.setPanelVisible(toggle->panelId, visible);
-                } else if (auto* action = std::get_if<MenuAction>(&*child.leaf)) {
-                    if (ImGui::MenuItem(child.label.c_str()))
-                        action->onClick();
-                } else if (std::get_if<MenuSeparator>(&*child.leaf)) {
-                    ImGui::Separator();
-                }
-            } else if (!child.children.empty()) {
-                if (ImGui::BeginMenu(child.label.c_str())) {
-                    drawNode(child, registry);
-                    ImGui::EndMenu();
+            if (child.action) {
+                if (!child.children.empty()) {
+                    if (ImGui::BeginMenu(child.action->getLabel().c_str())) {
+                        drawNode(child, registry);
+                        ImGui::EndMenu();
+                    }
+                } else if (child.action->getLabel().size()) {
+                    if (ImGui::MenuItem(child.action->getLabel().c_str(),
+                                        nullptr,
+                                        registry.isVisible(child.action->getID()),
+                                        child.action->isEnabled())) {
+                        child.action->trigger();
+                        child.action->toggle();
+                    }
                 }
             }
         }

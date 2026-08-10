@@ -24,4 +24,4 @@ target_include_directories(${PROJECT_NAME}
 
 add_subdirectory(tests)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Engine")
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Base")

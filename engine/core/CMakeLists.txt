@@ -1,27 +1,13 @@
 project(Core)
 
 set(${PROJECT_NAME}_headers
-        include/Core/Clock.h
-        include/Core/Engine.h
-        include/Core/FileIO.h
-        include/Core/SystemPaths.h
-        include/Plugin/DynamicLibrary.h
-        include/Plugin/PluginBase.h
-        include/Plugin/PluginContext.h
-        include/Plugin/PluginLoader.h
-        include/Plugin/PluginMacros.h
-        include/Plugin/PluginManager.h
-        include/Plugin/ServiceLocator.h
+    include/Action/Action.h
+    include/Action/ActionManager.h
 )
 
 set(${PROJECT_NAME}_source
-        source/Core/Engine.cpp
-        source/Core/SystemPaths.cpp
-        source/Core/FileIO.cpp
-        source/Plugin/DynamicLibrary.cpp
-        source/Plugin/PluginLoader.cpp
-        source/Plugin/PluginManager.cpp
-        source/Plugin/ServiceLocator.cpp
+    source/Action/Action.cpp
+    source/Action/ActionManager.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED
@@ -29,10 +15,14 @@ add_library(${PROJECT_NAME} SHARED
     ${${PROJECT_NAME}_source}
 )
 
-target_include_directories(Core PUBLIC ${CMAKE_BINARY_DIR}/exports/Core ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(Core PUBLIC TypeReflection Logger Asset Audio Graphics ImGui Scene UI DiagnosticsUI)
-
-#TODO: Re-enable when CI is fixed for this
-#add_subdirectory(tests)
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+    ${CMAKE_BINARY_DIR}/exports/${PROJECT_NAME}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+    Containers
+)
 
 ChaiLibDefaults(${PROJECT_NAME} "Engine")

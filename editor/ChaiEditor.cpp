@@ -14,17 +14,14 @@
 #include <Components/TransformComponent.h>
 #include <Controllers/FlyCamController.h>
 #include <Controllers/SpinController.h>
-#include <Core/Engine.h>
-#include <Core/SystemPaths.h>
+#include <Runtime/Engine.h>
+#include <Runtime/SystemPaths.h>
 #include <Loaders/ITextureLoader.h>
 #include <Loaders/TomlSettingsLoader.h>
 #include <Log.h>
 #include <Plugin/PluginLoader.h>
-<<<<<<< HEAD
 #include <Registry/SettingsRegistry.h>
-=======
 #include <Plugin/PluginManager.h>
->>>>>>> origin/plugin-manager
 #include <Rendering/IRenderer.h>
 #include <Scene/GameObject.h>
 #include <Scene/Scene.h>
@@ -36,6 +33,7 @@
 #include <UI/Editor/PanelRegistry.h>
 #include <UI/Editor/EditorViewportManager.h>
 #include <UI/Editor/DockspaceService.h>
+#include <UI/SettingsPanel.h>
 #include <tracy/Tracy.hpp>
 
 std::filesystem::path assetDir()
@@ -103,19 +101,33 @@ int main()
 
     ui::PanelDesc pluginPanel;
     pluginPanel.displayName = "Plugin Manager";
-    pluginPanel.id = "PluginManager";
+    pluginPanel.id = "window.plugin_manager";
     pluginPanel.draw = [&]() { drawPluginManager(loader); };
     pluginPanel.visible = false;
     panelReg.registerPanel(pluginPanel);
-    menuService.registerItem("Windows/Plugin Manager", ui::TogglePanel{pluginPanel.id});
+    menuService.registerAction("window.plugin_manager", [&]() {
+        panelReg.setPanelVisible(pluginPanel.id, !panelReg.isVisible(pluginPanel.id));
+    });
 
     ui::PanelDesc loggerPanel;
     loggerPanel.displayName = "Logger";
-    loggerPanel.id = "Logger";
+    loggerPanel.id = "window.logger";
     loggerPanel.draw = [&]() { diagnostics::drawLogPanel(guiSink); };
     loggerPanel.visible = true;
     panelReg.registerPanel(loggerPanel);
-    menuService.registerItem("Windows/Logger", ui::TogglePanel{loggerPanel.id});
+    menuService.registerAction("window.logger", [&]() {
+        panelReg.setPanelVisible(loggerPanel.id, !panelReg.isVisible(loggerPanel.id));
+    });
+
+    ui::PanelDesc settingsPanel;
+    settingsPanel.displayName = "Settings";
+    settingsPanel.id = "file.preferences.settings";
+    settingsPanel.draw = [&]() { settings::drawSettingsPanel(); };
+    settingsPanel.visible = true;
+    panelReg.registerPanel(settingsPanel);
+    menuService.registerAction("file.preferences.settings", [&]() {
+        panelReg.setPanelVisible(settingsPanel.id, !panelReg.isVisible(settingsPanel.id));
+    });
 
     auto meshes = engine.services().tryResolve<gfx::IMeshRegistry>();
     auto textures = engine.services().tryResolve<gfx::ITextureRegistry>();
@@ -127,6 +139,7 @@ int main()
         CHAI_LOG_CRITICAL("Required registries missing.");
         return 1;
     }
+    textures->load(makeAssetId("texture:9slice"), assetDir() / "9slice.png");
 
     auto input = engine.services().tryResolve<IInput>();
     if (!input) {
@@ -138,11 +151,11 @@ int main()
     auto& scene = engine.scene();
 
 
-    auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "SponzaHiRes/NewSponza_Main_glTF_003.glTF");
-    //auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.gltf");
+    //auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "SponzaHiRes/NewSponza_Main_glTF_003.glTF");
+    auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.gltf");
     //auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "ABeautifulGame/glTF/ABeautifulGame.gltf");
 
-    audio->playSound((assetDir() / "orchestral_techno.wav").string(), {0, 0, 0}, -10);
+    //audio->playSound((assetDir() / "orchestral_techno.wav").string(), {0, 0, 0}, -10);
 
     if (prefab) {
         auto prefabInstance = scene::spawn(scene, *prefab);
