@@ -102,7 +102,7 @@ namespace chai
 
         auto audio = services_.tryResolve<audio::IAudioEngine>();
         if (!audio) {
-            CHAI_LOG_CRITICAL("Could not locate Audio Service.");
+            CHAI_LOG_WARN("Could not locate Audio Service. Audio capability will be disabled.");
         }
 
         auto input = services_.tryResolve<IInput>();
@@ -143,9 +143,11 @@ namespace chai
 
             scene_->accept(&audioVisitor);
             scene_->accept(&frameVisitor);
-
-            audio->set3dListenersAndOrientations(audioVisitor.getData());
-            audio->update();
+            
+            if (audio) {
+                audio->set3dListenersAndOrientations(audioVisitor.getData());
+                audio->update();
+            }
 
             renderer->renderFrame(frameVisitor.getData());
             renderer->endFrame();
