@@ -5,11 +5,12 @@ add_executable(${PROJECT_NAME} "ChaiEditor.cpp")
 #just use the OpenGL Renderer for now
 target_link_libraries(${PROJECT_NAME} 
     PUBLIC 
-    Core 
+    Runtime 
     SpdLogger 
     DiagnosticsUI
     Graphics
     Scene
+    Settings
     Audio
     PRIVATE
     $<LINK_LIBRARY:WHOLE_ARCHIVE>)

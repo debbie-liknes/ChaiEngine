@@ -40,7 +40,8 @@ add_subdirectory(external)
 include_directories(external/include)
 
 # Include sub-projects.
+add_subdirectory(base)
 add_subdirectory(editor)
+add_subdirectory(engine)
 add_subdirectory(scene)
 add_subdirectory(plugins)
-add_subdirectory(engine)

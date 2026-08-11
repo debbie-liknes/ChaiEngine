@@ -14,11 +14,13 @@
 #include <Components/TransformComponent.h>
 #include <Controllers/FlyCamController.h>
 #include <Controllers/SpinController.h>
-#include <Core/Engine.h>
-#include <Core/SystemPaths.h>
+#include <Runtime/Engine.h>
+#include <Runtime/SystemPaths.h>
 #include <Loaders/ITextureLoader.h>
+#include <Loaders/TomlSettingsLoader.h>
 #include <Log.h>
 #include <Plugin/PluginLoader.h>
+#include <Registry/SettingsRegistry.h>
 #include <Plugin/PluginManager.h>
 #include <Rendering/IRenderer.h>
 #include <Scene/GameObject.h>
@@ -27,10 +29,12 @@
 #include <SpdLogSink.h>
 #include <Window/Window.h>
 #include <LogPanel.h>
-#include <UI/Editor/MenuService.h>
+#include <UI/Editor/ActionManager.h>
+#include <UI/Editor/CommandPalette.h>
 #include <UI/Editor/PanelRegistry.h>
 #include <UI/Editor/EditorViewportManager.h>
 #include <UI/Editor/DockspaceService.h>
+#include <UI/SettingsPanel.h>
 #include <tracy/Tracy.hpp>
 
 std::filesystem::path assetDir()
@@ -91,8 +95,12 @@ int main()
     engine.setPlugins(loader.plugins());
     engine.startup();
 
+    engine.services().provide<settings::SettingsRegistry>(std::make_shared<settings::SettingsRegistry>());
+
     auto& panelReg = engine.services().resolve<ui::PanelRegistry>();
-    auto& menuService = engine.services().resolve<ui::MenuService>();
+    auto& actionManager = engine.services().resolve<ui::ActionManager>();
+
+    actionManager.registerAction("file.exit", []() { exit(0); });
 
     ui::PanelDesc pluginPanel;
     pluginPanel.displayName = "Plugin Manager";
@@ -100,25 +108,43 @@ int main()
     pluginPanel.draw = [&]() { drawPluginManager(loader); };
     pluginPanel.visible = false;
     panelReg.registerPanel(pluginPanel);
-    menuService.registerItem("Windows/Plugin Manager", ui::TogglePanel{pluginPanel.id});
+    actionManager.registerPanel("window.plugin_manager", pluginPanel.id);
 
     ui::PanelDesc loggerPanel;
     loggerPanel.displayName = "Logger";
-    loggerPanel.id = "Logger";
+    loggerPanel.id = "logger";
     loggerPanel.draw = [&]() { diagnostics::drawLogPanel(guiSink); };
     loggerPanel.visible = true;
     panelReg.registerPanel(loggerPanel);
-    menuService.registerItem("Windows/Logger", ui::TogglePanel{loggerPanel.id});
+    actionManager.registerPanel("window.logger", loggerPanel.id);
+
+    ui::PanelDesc commandPalette;
+    commandPalette.displayName = "Command Palette";
+    commandPalette.id = "CommandPalette";
+    commandPalette.draw = [&]() { ui::drawCommandPalette(actionManager); };
+    commandPalette.visible = false;
+    panelReg.registerPanel(commandPalette);
+    actionManager.registerPanel("window.command_palette", commandPalette.id);
+
+    ui::PanelDesc settingsPanel;
+    settingsPanel.displayName = "Settings";
+    settingsPanel.id = "settings";
+    settingsPanel.draw = [&]() { settings::drawSettingsPanel(); };
+    settingsPanel.visible = false;
+    panelReg.registerPanel(settingsPanel);
+    actionManager.registerPanel("file.preferences.settings", settingsPanel.id);
 
     auto meshes = engine.services().tryResolve<gfx::IMeshRegistry>();
     auto textures = engine.services().tryResolve<gfx::ITextureRegistry>();
     auto models = engine.services().tryResolve<gfx::IModelRegistry>();
     auto materials = engine.services().tryResolve<gfx::IMaterialRegistry>();
     auto audio = engine.services().tryResolve<audio::IAudioEngine>();
-    if (!meshes || !textures || !models) {
+    auto settings = engine.services().tryResolve<settings::SettingsRegistry>();
+    if (!meshes || !textures || !models || !settings) {
         CHAI_LOG_CRITICAL("Required registries missing.");
         return 1;
     }
+    textures->load(makeAssetId("texture:9slice"), assetDir() / "9slice.png");
 
     auto input = engine.services().tryResolve<IInput>();
     if (!input) {
@@ -130,12 +156,11 @@ int main()
     auto& scene = engine.scene();
 
 
-    //auto prefab = models->load(makeAssetId("model:sponza"), assetDir() /
-    //"Sponza/intel/main_sponza/NewSponza_Main_glTF_003.glTF");
+    //auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "SponzaHiRes/NewSponza_Main_glTF_003.glTF");
     auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.gltf");
     //auto prefab = models->load(makeAssetId("model:sponza"), assetDir() / "ABeautifulGame/glTF/ABeautifulGame.gltf");
 
-    audio->playSound((assetDir() / "orchestral_techno.wav").string(), {0, 0, 0}, -10);
+    //audio->playSound((assetDir() / "orchestral_techno.wav").string(), {0, 0, 0}, -10);
 
     if (prefab) {
         auto prefabInstance = scene::spawn(scene, *prefab);

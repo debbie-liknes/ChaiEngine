@@ -1,14 +1,14 @@
-#include <Core/Engine.h>
+#include <Runtime/Engine.h>
 #include <Log.h>
 #include <Window/Window.h>
 #include <Scene/Scene.h>
 #include <Input/IInput.h>
+#include <UI/Editor/ActionManager.h>
 #include <UI/Editor/InternalChaiUI.h>
 #include <UI/Editor/PanelRegistry.h>
 #include <UI/Editor/PanelHost.h>
 #include <UI/Editor/DockspaceService.h>
-#include <UI/Editor/MenuService.h>
-#include <Core/SystemPaths.h>
+#include <Runtime/SystemPaths.h>
 #include <Audio/IAudioEngine.h>
 #include <LogPanel.h>
 #include <Visitors/AudioSceneVisitor.h>
@@ -27,14 +27,15 @@ namespace chai
         auto panelRegistry = std::make_shared<ui::PanelRegistry>();
         ctx_.services.provide<ui::PanelRegistry>(panelRegistry);
 
+        auto configFile = executableDir() / "assets/editor/config/action_config.json";
+        auto actionManager = std::make_shared<ui::ActionManager>(configFile, panelRegistry.get());
+        ctx_.services.provide<ui::ActionManager>(actionManager);
+
         auto panelHost = std::make_shared<ui::PanelHost>();
         ctx_.services.provide<ui::PanelHost>(panelHost);
 
         auto dockspace = std::make_shared<ui::DockspaceService>();
         ctx_.services.provide<ui::DockspaceService>(dockspace);
-
-        auto menuService = std::make_shared<ui::MenuService>();
-        ctx_.services.provide<ui::MenuService>(menuService);
 
         //Load plugins
         CHAI_LOG_INFO("Engine starting");
@@ -64,10 +65,10 @@ namespace chai
             (*it)->onUnload(ctx_);
 
         ctx_.services.remove<ui::PanelRegistry>();
+        ctx_.services.remove<ui::ActionManager>();
         ctx_.services.remove<ui::EditorViewportManager>();
         ctx_.services.remove<ui::PanelHost>();
         ctx_.services.remove<ui::DockspaceService>();
-        ctx_.services.remove<ui::MenuService>();
     }
 
     void Engine::requestStop()
@@ -86,7 +87,7 @@ namespace chai
         auto& panelRegistry = services_.resolve<ui::PanelRegistry>();
         auto& panelHost = services_.resolve<ui::PanelHost>();
         auto& dockingService = services_.resolve<ui::DockspaceService>();
-        auto& menuService = services_.resolve<ui::MenuService>();
+        auto& actionManager = services_.resolve<ui::ActionManager>();
 
         //These come from plugins, check that they exist
         auto window = services_.tryResolve<IWindow>();
@@ -101,7 +102,7 @@ namespace chai
 
         auto audio = services_.tryResolve<audio::IAudioEngine>();
         if (!audio) {
-            CHAI_LOG_CRITICAL("Could not locate Audio Service.");
+            CHAI_LOG_WARN("Could not locate Audio Service. Audio capability will be disabled.");
         }
 
         auto input = services_.tryResolve<IInput>();
@@ -136,13 +137,17 @@ namespace chai
             scene_->update(ctx);
 
             //draw internal uis
-            panelHost.draw(panelRegistry, dockingService, menuService);
+            panelHost.draw(panelRegistry, dockingService, actionManager);
+
+            actionManager.update(*input);
 
             scene_->accept(&audioVisitor);
             scene_->accept(&frameVisitor);
-
-            audio->set3dListenersAndOrientations(audioVisitor.getData());
-            audio->update();
+            
+            if (audio) {
+                audio->set3dListenersAndOrientations(audioVisitor.getData());
+                audio->update();
+            }
 
             renderer->renderFrame(frameVisitor.getData());
             renderer->endFrame();

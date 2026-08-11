@@ -22,4 +22,4 @@ set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
 add_subdirectory(tests)
 
-ChaiLibDefaults(${PROJECT_NAME} "Engine")
+ChaiLibDefaults(${PROJECT_NAME} "Base")

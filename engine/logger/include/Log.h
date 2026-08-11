@@ -36,12 +36,17 @@ namespace chai
  * @brief Logging macros. These will check the compile-time log level first, then the runtime log
  * level
  */
+// MSVC-specific: disable C26449 - gsl::span or std::string_view created from a temporary will be
+//                                 invalid when the temporary is invalidated (gsl.view)
 #define CHAI_LOG_AT(level, ...)                                                                    \
     do {                                                                                           \
         if constexpr ((level) >= CHAI_COMPILE_LOG_LEVEL) {                                         \
+            _Pragma("warning(push)")                                                               \
+            _Pragma("warning(disable : 26449)")                                                    \
             if (::chai::logEnabled(level)) {                                                       \
                 ::chai::logRecord({(level), std::format(__VA_ARGS__), __FILE__, __LINE__});        \
             }                                                                                      \
+            _Pragma("warning(pop)")                                                                \
         }                                                                                          \
     } while (false)
 

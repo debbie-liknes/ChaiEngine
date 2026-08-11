@@ -9,7 +9,7 @@
 #include <TypeRegistry.h>
 #include <string>
 #include <vector>
-#include <Core/Clock.h>
+#include <Runtime/Clock.h>
 #include <span>
 #include <Scene/Scene.h>
 #include <Rendering/IRenderer.h>

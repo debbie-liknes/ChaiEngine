@@ -18,6 +18,6 @@ add_library(${PROJECT_NAME} SHARED
 
 find_package(Vulkan REQUIRED)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC Core Window PRIVATE glfw Vulkan::Vulkan)
+target_link_libraries(${PROJECT_NAME} PUBLIC Runtime Window PRIVATE glfw Vulkan::Vulkan)
 
 ChaiPluginDefaults(${PROJECT_NAME} "Plugins")

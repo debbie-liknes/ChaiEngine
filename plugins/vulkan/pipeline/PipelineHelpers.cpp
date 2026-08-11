@@ -2,7 +2,7 @@
 
 #include "PipelineBuilder.h"
 
-#include <Core/SystemPaths.h>
+#include <Runtime/SystemPaths.h>
 #include <Log.h>
 
 namespace chai::gfx

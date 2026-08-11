@@ -15,7 +15,7 @@ Many of these are taken from _API Design for C++_ by Martin Reddy.
 
 ## C++ Guidelines
 
-- Member variables should begin with the `m_` prefix.
+- Member variables should end with the `_` suffix.
 - Leverage the PIMPL (pointer-to-implementation) idiom where possible.
     - Avoids unintentional API breakages.
     - Use `unique_ptr` types when using PIMPL interfaces to avoid forgetting to clean up memory.

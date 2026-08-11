@@ -1,16 +1,16 @@
-project(Core)
+project(Runtime)
 
 add_executable(${PROJECT_NAME}_tests
         main.cpp
         PluginTests.cpp
 )
 
-target_link_libraries(Core_tests
+target_link_libraries(${PROJECT_NAME}_tests
         PUBLIC
         gtest
         gmock
         PRIVATE
-        Core
+        Runtime
 )
 
 set_target_properties(${PROJECT_NAME}_tests PROPERTIES FOLDER "Engine")
