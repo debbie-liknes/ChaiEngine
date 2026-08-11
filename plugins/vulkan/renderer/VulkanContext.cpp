@@ -47,17 +47,22 @@ namespace chai::gfx
         setupQueues();
         setupAllocator();
         setupImmediate();
+        setupSampler();
         uploadCtx_.init(device_, graphicsQueue_, graphicsFamily_);
     }
 
     VulkanContext::~VulkanContext()
     {
+        vkDestroySampler(device_, linearSampler_, nullptr);
         vkDestroyCommandPool(device_, immediatePool_, nullptr); // cmd buffer dies with it
         vkDestroyDescriptorSetLayout(device_, lightSetLayout_, nullptr);
         vkDestroyDescriptorSetLayout(device_, materialSetLayout_, nullptr);
         vkDestroyDescriptorSetLayout(device_, cameraSetLayout_, nullptr);
         vkDestroyDescriptorSetLayout(device_, environmentSetLayout_, nullptr);
         vkDestroyDescriptorSetLayout(device_, prefilterSetLayout_, nullptr);
+        vkDestroyDescriptorSetLayout(device_, bloomThresholdLayout_, nullptr);
+        vkDestroyDescriptorSetLayout(device_, bloomSetLayout_, nullptr);
+        vkDestroyDescriptorSetLayout(device_, combineSetLayout_, nullptr);
         vkDestroyDescriptorPool(device_, descriptorPool_, nullptr);
         vkDestroyFence(device_, immediateFence_, nullptr);
         vmaDestroyAllocator(allocator_);
@@ -66,6 +71,43 @@ namespace chai::gfx
         vkDestroySurfaceKHR(instance_, surface_, nullptr);
         vkb::destroy_debug_utils_messenger(instance_, debugMessenger_);
         vkDestroyInstance(instance_, nullptr);
+    }
+
+    void VulkanContext::setupSampler()
+    {
+        VkSamplerCreateInfo samplerInfo{VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.maxLod = VK_LOD_CLAMP_NONE;
+        VK_CHECK(vkCreateSampler(device_, &samplerInfo, nullptr, &linearSampler_));
+    }
+
+    VkSampleCountFlagBits chooseSampleCount(VkSampleCountFlags supported,
+                                                           VkSampleCountFlagBits desired)
+    {
+        if (supported & desired)
+            return desired;
+
+        if (supported & VK_SAMPLE_COUNT_8_BIT)
+            return VK_SAMPLE_COUNT_8_BIT;
+        if (supported & VK_SAMPLE_COUNT_4_BIT)
+            return VK_SAMPLE_COUNT_4_BIT;
+        if (supported & VK_SAMPLE_COUNT_2_BIT)
+            return VK_SAMPLE_COUNT_2_BIT;
+        return VK_SAMPLE_COUNT_1_BIT; // no MSAA support
+    }
+
+    VkSampleCountFlagBits VulkanContext::getSampleCount(VkSampleCountFlagBits desired)
+    {
+        VkPhysicalDeviceProperties props{};
+        vkGetPhysicalDeviceProperties(physicalDevice_, &props);
+        VkSampleCountFlags supported =
+            props.limits.framebufferColorSampleCounts & props.limits.framebufferDepthSampleCounts;
+
+        return chooseSampleCount(supported, desired);
     }
 
     void VulkanContext::setupInstance(IWindow& window)
@@ -121,10 +163,10 @@ namespace chai::gfx
         features12.bufferDeviceAddress = true;
         features12.descriptorIndexing = true;
         features12.timelineSemaphore = true;
-
         VkPhysicalDeviceFeatures required{};
         required.samplerAnisotropy = VK_TRUE;
         required.fillModeNonSolid = VK_TRUE;
+        required.sampleRateShading = VK_TRUE;
 
         // use vkbootstrap to select a gpu.
         vkb::PhysicalDeviceSelector selector{vkbInstance_};
@@ -294,5 +336,50 @@ namespace chai::gfx
         filterLayout.pBindings = &filterBindings;
         VK_CHECK(
             vkCreateDescriptorSetLayout(device_, &filterLayout, nullptr, &prefilterSetLayout_));
+
+        // post process
+        VkDescriptorSetLayoutBinding postBindings{};
+        postBindings.binding = 0;
+        postBindings.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        postBindings.descriptorCount = 1;
+        postBindings.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo postLayout{
+            VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+        postLayout.bindingCount = 1;
+        postLayout.pBindings = &postBindings;
+        VK_CHECK(vkCreateDescriptorSetLayout(device_, &postLayout, nullptr, &bloomThresholdLayout_));
+
+        //bloom
+        VkDescriptorSetLayoutBinding bloomBinding{};
+        bloomBinding.binding = 0;
+        bloomBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        bloomBinding.descriptorCount = 1;
+        bloomBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo bloomLayout{
+            VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+        bloomLayout.bindingCount = 1;
+        bloomLayout.pBindings = &bloomBinding;
+        VK_CHECK(
+            vkCreateDescriptorSetLayout(device_, &bloomLayout, nullptr, &bloomSetLayout_));
+
+        // combine
+        VkDescriptorSetLayoutBinding combineBindings[2]{};
+        combineBindings[0].binding = 0;
+        combineBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        combineBindings[0].descriptorCount = 1;
+        combineBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        combineBindings[1].binding = 1;
+        combineBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        combineBindings[1].descriptorCount = 1;
+        combineBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo combineLayout{
+            VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+        combineLayout.bindingCount = 2;
+        combineLayout.pBindings = combineBindings;
+        VK_CHECK(vkCreateDescriptorSetLayout(device_, &combineLayout, nullptr, &combineSetLayout_));
     }
 } // namespace chai

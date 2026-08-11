@@ -11,6 +11,7 @@ namespace chai::gfx
         std::string fragShader;
         AlphaMode alpha = AlphaMode::Opaque;
         VkPolygonMode polygon = VK_POLYGON_MODE_FILL;
+        VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;
 
         bool operator==(const PipelineKey&) const = default;
     };
