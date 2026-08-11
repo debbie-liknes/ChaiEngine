@@ -10,7 +10,7 @@
 
 #include <AssetCache.h>
 #include <Assets/TextureAsset.h>
-#include <Core/FileIO.h>
+#include <Runtime/FileIO.h>
 #include <Plugin/ServiceLocator.h>
 
 namespace chai

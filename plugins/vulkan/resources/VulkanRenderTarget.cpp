@@ -13,12 +13,12 @@ namespace chai::gfx
                                          VkImageAspectFlags aspect,
                                          bool cube,
                                          VkSamplerAddressMode addressMode,
-                                         bool compareSampler)
+                                         bool compareSampler,
+                                    VkSampleCountFlagBits samples)
     {
         VkDevice device = ctx.device();
         RenderTarget t;
-        t.width = w;
-        t.height = h;
+        t.extent = {w, h};
         t.format = format;
         t.mipCount = mips;
         t.layerCount = layers;
@@ -30,7 +30,7 @@ namespace chai::gfx
         ii.extent = {w, h, 1};
         ii.mipLevels = mips;
         ii.arrayLayers = layers;
-        ii.samples = VK_SAMPLE_COUNT_1_BIT;
+        ii.samples = samples;
         ii.tiling = VK_IMAGE_TILING_OPTIMAL;
         ii.usage = usage;
         ii.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -87,23 +87,33 @@ namespace chai::gfx
         return t;
     }
 
-    RenderTarget createColor2D(VulkanContext& ctx, uint32_t w, uint32_t h, VkFormat fmt)
+    RenderTarget createColor2D(VulkanContext& ctx,
+                               uint32_t w,
+                               uint32_t h,
+                               VkFormat fmt,
+                               uint32_t mips,
+                               VkSampleCountFlagBits samples)
     {
         return makeRenderTarget(ctx,
                                 w,
                                 h,
                                 fmt,
                                 1,
-                                1,
-                                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                                mips,
+                                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
+                                    VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
                                 VK_IMAGE_ASPECT_COLOR_BIT,
                                 false,
                                 VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-                                false);
+                                false, samples);
     }
 
-    RenderTarget
-    createDepth2D(VulkanContext& ctx, uint32_t w, uint32_t h, VkFormat fmt, bool compare)
+    RenderTarget createDepth2D(VulkanContext& ctx,
+                               uint32_t w,
+                               uint32_t h,
+                               VkFormat fmt,
+                               bool compare,
+                               VkSampleCountFlagBits samples)
     {
         return makeRenderTarget(ctx,
                                 w,
@@ -116,7 +126,7 @@ namespace chai::gfx
                                 VK_IMAGE_ASPECT_DEPTH_BIT,
                                 false,
                                 VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
-                                compare);
+                                compare, samples);
     }
 
     RenderTarget createCube(VulkanContext& ctx, uint32_t size, VkFormat fmt, uint32_t mips)
@@ -131,6 +141,6 @@ namespace chai::gfx
                                 VK_IMAGE_ASPECT_COLOR_BIT,
                                 true,
                                 VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-                                false);
+                                false, VK_SAMPLE_COUNT_1_BIT);
     }
 }

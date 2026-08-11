@@ -10,6 +10,13 @@ set(${PROJECT_NAME}_headers
         registries/ViewportRegistry.h
         renderer/VulkanRenderer.h
         renderer/VulkanContext.h
+
+        renderGraph/ChaiRenderGraph.h
+        renderGraph/CRGBuilder.h
+        renderGraph/CRGDescriptors.h
+        renderGraph/CRGPass.h
+        renderGraph/CRGResources.h
+
         resources/RenderTargetView.h
         resources/Buffer.h
         resources/GpuResources.h
@@ -42,6 +49,11 @@ set(${PROJECT_NAME}_source
         pipeline/PipelineHelpers.cpp
         pipeline/ShaderModule.cpp
         registries/ViewportRegistry.cpp
+
+        renderGraph/ChaiRenderGraph.cpp
+        renderGraph/CRGBuilder.cpp
+        renderGraph/CRGResources.cpp
+
         renderer/VulkanContext.cpp
         renderer/VulkanRenderer.cpp
         resources/Buffer.cpp
@@ -135,7 +147,7 @@ add_custom_target(Shaders ALL
     DEPENDS ${SPIRV_FILES}
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC Core Graphics UI Vulkan::Vulkan glfw PRIVATE ImGui vk-bootstrap::vk-bootstrap GPUOpen::VulkanMemoryAllocator)
+target_link_libraries(${PROJECT_NAME} PUBLIC Runtime Graphics UI Vulkan::Vulkan glfw PRIVATE ImGui vk-bootstrap::vk-bootstrap GPUOpen::VulkanMemoryAllocator)
 set_target_properties(vk-bootstrap PROPERTIES FOLDER "external")
 
 ChaiPluginDefaults(${PROJECT_NAME} "Plugins")

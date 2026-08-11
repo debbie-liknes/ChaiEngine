@@ -64,6 +64,7 @@ namespace chai::gfx
                     .setDepthFormat(depthFormat_)
                     .enableDepthTest()
                     .setPolygonMode(key.polygon)
+                    .setSampleCount(key.sampleCount)
                     .setCullMode(key.polygon != VK_POLYGON_MODE_FILL ? VK_CULL_MODE_NONE : VK_CULL_MODE_BACK_BIT,
                                  VK_FRONT_FACE_COUNTER_CLOCKWISE);
 

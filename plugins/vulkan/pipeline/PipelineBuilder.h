@@ -36,6 +36,8 @@ namespace chai::gfx
         PipelineBuilder& disableBlending();
         PipelineBuilder& enableBlending();
 
+        PipelineBuilder& setSampleCount(VkSampleCountFlagBits);
+
         /**
          * @brief Assembles the create struct and returns the pipeline.
          */
@@ -61,5 +63,6 @@ namespace chai::gfx
         VkCompareOp depthCompareOp_ = VK_COMPARE_OP_LESS;
 
         bool hasVertexInput_ = false;
+        VkSampleCountFlagBits sampleCount_ = VK_SAMPLE_COUNT_1_BIT;
     };
 } // namespace chai::gfx

@@ -50,7 +50,13 @@ namespace chai::gfx
         VkDescriptorSetLayout lightSetLayout() const { return lightSetLayout_; }
         VkDescriptorSetLayout environmentSetLayout() const { return environmentSetLayout_; }
         VkDescriptorSetLayout prefilterSetLayout() const { return prefilterSetLayout_; }
+        VkDescriptorSetLayout bloomThresholdLayout() const { return bloomThresholdLayout_; }
+        VkDescriptorSetLayout combineSetLayout() const { return combineSetLayout_; }
+        VkDescriptorSetLayout bloomSampleSetLayout() const { return bloomSetLayout_; }
         VkDescriptorPool descriptorPool() const { return descriptorPool_; }
+
+        VkSampler linearSampler() const { return linearSampler_; }
+        VkSampleCountFlagBits getSampleCount(VkSampleCountFlagBits desired);
 
     private:
         vkb::Instance vkbInstance_;
@@ -82,6 +88,11 @@ namespace chai::gfx
         VkDescriptorSetLayout lightSetLayout_ = VK_NULL_HANDLE;
         VkDescriptorSetLayout environmentSetLayout_ = VK_NULL_HANDLE;
         VkDescriptorSetLayout prefilterSetLayout_ = VK_NULL_HANDLE;
+        VkDescriptorSetLayout bloomThresholdLayout_ = VK_NULL_HANDLE;
+        VkDescriptorSetLayout bloomSetLayout_ = VK_NULL_HANDLE;
+        VkDescriptorSetLayout combineSetLayout_ = VK_NULL_HANDLE;
+
+        VkSampler linearSampler_ = VK_NULL_HANDLE;
 
         void setupInstance(IWindow& window);
         void setupSurface(IWindow& window);
@@ -90,5 +101,6 @@ namespace chai::gfx
         void setupAllocator();
         void setupImmediate();
         void setupDescriptors();
+        void setupSampler();
     };
 } // namespace chai
