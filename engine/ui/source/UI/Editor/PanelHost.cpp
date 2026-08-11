@@ -9,7 +9,7 @@ namespace chai::ui
     {
         ZoneScoped
 
-        menus.draw(registry);
+        menus.draw();
         ImGuiID dockId = dockspace.begin();
 
         for (PanelDesc& panel : registry.panels()) {

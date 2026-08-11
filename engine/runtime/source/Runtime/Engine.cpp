@@ -3,6 +3,7 @@
 #include <Window/Window.h>
 #include <Scene/Scene.h>
 #include <Input/IInput.h>
+#include <UI/Editor/ActionManager.h>
 #include <UI/Editor/InternalChaiUI.h>
 #include <UI/Editor/PanelRegistry.h>
 #include <UI/Editor/PanelHost.h>
@@ -27,6 +28,9 @@ namespace chai
         auto panelRegistry = std::make_shared<ui::PanelRegistry>();
         ctx_.services.provide<ui::PanelRegistry>(panelRegistry);
 
+        auto actionManager = std::make_shared<ui::ActionManager>(panelRegistry.get());
+        ctx_.services.provide<ui::ActionManager>(actionManager);
+
         auto panelHost = std::make_shared<ui::PanelHost>();
         ctx_.services.provide<ui::PanelHost>(panelHost);
 
@@ -34,11 +38,8 @@ namespace chai
         ctx_.services.provide<ui::DockspaceService>(dockspace);
 
         auto configFile = executableDir() / "assets/editor/config/menu_config.json";
-        auto menuService = std::make_shared<ui::MenuService>(configFile);
+        auto menuService = std::make_shared<ui::MenuService>(configFile, actionManager.get(), panelRegistry.get());
         ctx_.services.provide<ui::MenuService>(menuService);
-
-        auto action = []() { exit(0); };
-        menuService->registerAction("file.exit", action);
 
         //Load plugins
         CHAI_LOG_INFO("Engine starting");

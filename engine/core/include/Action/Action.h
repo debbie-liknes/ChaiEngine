@@ -21,16 +21,17 @@ namespace chai
 	{
     public:
         Action() = default;
-        explicit Action(const std::function<void()>& action)
-            : registeredAction_(action) {}
+        explicit Action(const std::string& id) : id_(id) {}
+        explicit Action(const std::string& id, const std::function<void()>& callback)
+            : callback_(callback), id_(id) {}
 
         /*
         * Triggers the event held by the action.
         */
         void trigger() const;
         
-        void registerAction(const std::function<void()>& action) { registeredAction_ = action; }
-        std::function<void()> getRegisteredAction() const { return registeredAction_; }
+        void setCallback(const std::function<void()>& callback) { callback_ = callback; }
+        std::function<void()> getCallback() const { return callback_; }
 
         void setCheckable(bool checkable) { checkable_ = checkable; }
         bool isCheckable() const { return checkable_; }
@@ -49,6 +50,13 @@ namespace chai
         */
         void setEnabled(bool enabled) { enabled_ = enabled; }
         bool isEnabled() const { return enabled_; }
+
+        /*
+         * If separator is marked true, then this action is considered a
+         * menu separator.
+         */
+        void setSeparator(bool separator) { separator_ = separator; }
+        bool isSeparator() const { return separator_; }
         
         /*
         * IDs must be globally unique, as they are managed by the
@@ -62,11 +70,12 @@ namespace chai
         std::string getLabel() const { return label_; }
 
     private:
-        std::function<void()> registeredAction_ = nullptr;
+        std::function<void()> callback_ = nullptr;
 
         bool checkable_ = false;
         bool checked_ = false;
         bool enabled_ = true;
+        bool separator_ = false;
         std::string id_;
         std::string label_;
 

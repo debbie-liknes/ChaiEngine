@@ -12,29 +12,33 @@
 
 namespace chai::ui
 {
+    class ActionManager;
+    class PanelRegistry;
+
     class MenuService
     {
     public:
-        explicit MenuService(const std::filesystem::path& configFile);
+        explicit MenuService(const std::filesystem::path& configFile,
+                             ActionManager* manager,
+                             PanelRegistry* registry);
 
-        void registerAction(const std::string& name, const std::function<void()>& action);
-        void unregisterAction(const std::string& name);
-
-        void draw(PanelRegistry& registry);
+        void draw();
 
 
     private:
         struct Node {
-            std::unique_ptr<Action> action;
+            std::shared_ptr<Action> action;
             std::vector<Node> children;
         };
         Node root_;
 
         std::unique_ptr<MenuConfigLoader> loader_;
-        std::unordered_map<std::string, Action*> actionMap_;
+        ActionManager* actionManager_ = nullptr;
+        PanelRegistry* panelRegistry_ = nullptr;
+        Dictionary<Action*> actionMap_;
 
         void buildMenu();
         Node convertToNodeDFS(const BlueprintItemSchema& schema, const std::string& label);
-        void drawNode(const MenuService::Node& node, PanelRegistry& registry);
+        void drawNode(const MenuService::Node& node);
     };
 } // namespace chai::ui

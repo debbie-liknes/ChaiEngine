@@ -15,7 +15,7 @@ namespace chai
     };
 
     /*
-    * Temporarily fixes cpp:S6045 static analysis warnings arround the default
+    * Temporarily fixes cpp:S6045 static analysis warnings around the default
     * string hashing function with transparent equality.
     *
     * \note This implementation is not permanent and should be replaced with something more robust.

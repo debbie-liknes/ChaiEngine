@@ -1,6 +1,7 @@
 project(UI)
 
 set(${PROJECT_NAME}_headers
+    include/UI/Editor/ActionManager.h
     include/UI/Editor/DockspaceService.h
     include/UI/Editor/PanelHost.h
     include/UI/Editor/PanelRegistry.h
@@ -13,6 +14,7 @@ set(${PROJECT_NAME}_headers
 )
 
 set(${PROJECT_NAME}_source
+	source/UI/Editor/ActionManager.cpp
 	source/UI/Editor/DockspaceService.cpp
 	source/UI/Editor/PanelHost.cpp
 	source/UI/Editor/PanelRegistry.cpp

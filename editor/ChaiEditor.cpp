@@ -29,7 +29,7 @@
 #include <SpdLogSink.h>
 #include <Window/Window.h>
 #include <LogPanel.h>
-#include <UI/Editor/MenuService.h>
+#include <UI/Editor/ActionManager.h>
 #include <UI/Editor/PanelRegistry.h>
 #include <UI/Editor/EditorViewportManager.h>
 #include <UI/Editor/DockspaceService.h>
@@ -97,17 +97,17 @@ int main()
     engine.services().provide<settings::SettingsRegistry>(std::make_shared<settings::SettingsRegistry>());
 
     auto& panelReg = engine.services().resolve<ui::PanelRegistry>();
-    auto& menuService = engine.services().resolve<ui::MenuService>();
+    auto& actionManager = engine.services().resolve<ui::ActionManager>();
+
+    actionManager.registerAction("file.exit", []() { exit(0); });
 
     ui::PanelDesc pluginPanel;
     pluginPanel.displayName = "Plugin Manager";
-    pluginPanel.id = "window.plugin_manager";
+    pluginPanel.id = "PluginManager";
     pluginPanel.draw = [&]() { drawPluginManager(loader); };
     pluginPanel.visible = false;
     panelReg.registerPanel(pluginPanel);
-    menuService.registerAction("window.plugin_manager", [&]() {
-        panelReg.setPanelVisible(pluginPanel.id, !panelReg.isVisible(pluginPanel.id));
-    });
+    actionManager.registerPanel("window.plugin_manager", pluginPanel.id);
 
     ui::PanelDesc loggerPanel;
     loggerPanel.displayName = "Logger";
@@ -115,19 +115,15 @@ int main()
     loggerPanel.draw = [&]() { diagnostics::drawLogPanel(guiSink); };
     loggerPanel.visible = true;
     panelReg.registerPanel(loggerPanel);
-    menuService.registerAction("window.logger", [&]() {
-        panelReg.setPanelVisible(loggerPanel.id, !panelReg.isVisible(loggerPanel.id));
-    });
+    actionManager.registerPanel("window.logger", loggerPanel.id);
 
     ui::PanelDesc settingsPanel;
     settingsPanel.displayName = "Settings";
-    settingsPanel.id = "file.preferences.settings";
+    settingsPanel.id = "settings";
     settingsPanel.draw = [&]() { settings::drawSettingsPanel(); };
     settingsPanel.visible = true;
     panelReg.registerPanel(settingsPanel);
-    menuService.registerAction("file.preferences.settings", [&]() {
-        panelReg.setPanelVisible(settingsPanel.id, !panelReg.isVisible(settingsPanel.id));
-    });
+    actionManager.registerPanel("file.preferences.settings", settingsPanel.id);
 
     auto meshes = engine.services().tryResolve<gfx::IMeshRegistry>();
     auto textures = engine.services().tryResolve<gfx::ITextureRegistry>();

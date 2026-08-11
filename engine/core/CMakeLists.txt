@@ -2,12 +2,10 @@ project(Core)
 
 set(${PROJECT_NAME}_headers
     include/Action/Action.h
-    include/Action/ActionManager.h
 )
 
 set(${PROJECT_NAME}_source
     source/Action/Action.cpp
-    source/Action/ActionManager.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED
@@ -22,7 +20,6 @@ target_include_directories(${PROJECT_NAME}
 )
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    Containers
 )
 
 ChaiLibDefaults(${PROJECT_NAME} "Engine")

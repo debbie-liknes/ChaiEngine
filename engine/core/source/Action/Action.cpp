@@ -4,7 +4,7 @@ namespace chai
 {
     void Action::trigger() const
     {
-        if (registeredAction_)
-            registeredAction_.operator()();
+        if (callback_)
+            callback_.operator()();
     }
 }

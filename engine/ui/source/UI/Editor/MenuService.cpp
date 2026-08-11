@@ -4,11 +4,14 @@
 #include <sstream>
 #include <algorithm>
 #include <stack>
+#include <UI/Editor/ActionManager.h>
+#include <UI/Editor/PanelRegistry.h>
 
 namespace chai::ui
 {
-    MenuService::MenuService(const std::filesystem::path& configFile)
-        : loader_(std::make_unique<MenuConfigLoader>(configFile))
+    MenuService::MenuService(const std::filesystem::path& configFile, ActionManager* manager, PanelRegistry* registry)
+        : loader_(std::make_unique<MenuConfigLoader>(configFile)), actionManager_(manager),
+          panelRegistry_(registry)
     {
         buildMenu();
     }
@@ -16,11 +19,17 @@ namespace chai::ui
     MenuService::Node MenuService::convertToNodeDFS(const BlueprintItemSchema& schema, const std::string& slug)
     {
         Node node;
-        node.action = std::make_unique<Action>();
-        if (schema.id.has_value())
-            node.action->setID((slug.size() > 0 ? slug + "." : "") + schema.id.value());
-        if (schema.label.has_value())
-            node.action->setLabel(schema.label.value());
+        if (schema.id.has_value()) {
+            const auto id = (slug.size() > 0 ? slug + "." : "") + schema.id.value();
+            node.action = actionManager_->getOrCreateAction(id);
+            if (schema.label.has_value())
+                node.action->setLabel(schema.label.value());
+        } else if (schema.type == "separator") {
+            // Separator item is a special case -- we'll return early here if encountered.
+            node.action = std::make_shared<Action>();
+            node.action->setSeparator(true);
+            return node;
+        }
 
         node.children.reserve(schema.items.size());
         for (const auto& childSchema : schema.items) {
@@ -46,33 +55,21 @@ namespace chai::ui
         }
     }
 
-    void MenuService::registerAction(const std::string& name, const std::function<void()>& action)
-    {
-        if (auto actionItr = actionMap_.find(name); actionItr != actionMap_.end()) {
-            actionItr->second->registerAction(action);
-        }
-    }
-
-    void MenuService::unregisterAction(const std::string& name)
-    {
-        if (auto actionItr = actionMap_.find(name); actionItr != actionMap_.end()) {
-            actionItr->second->registerAction(nullptr);
-        }
-    }
-
-    void MenuService::drawNode(const MenuService::Node& node, PanelRegistry& registry)
+    void MenuService::drawNode(const MenuService::Node& node)
     {
         for (auto& child : node.children) {
             if (child.action) {
-                if (!child.children.empty()) {
+                if (child.action->isSeparator()) {
+                    ImGui::Separator();
+                } else if (!child.children.empty()) {
                     if (ImGui::BeginMenu(child.action->getLabel().c_str())) {
-                        drawNode(child, registry);
+                        drawNode(child);
                         ImGui::EndMenu();
                     }
                 } else if (child.action->getLabel().size()) {
                     if (ImGui::MenuItem(child.action->getLabel().c_str(),
                                         nullptr,
-                                        registry.isVisible(child.action->getID()),
+                                        panelRegistry_->isVisible(actionManager_->getPanelId(child.action->getID())),
                                         child.action->isEnabled())) {
                         child.action->trigger();
                         child.action->toggle();
@@ -82,11 +79,11 @@ namespace chai::ui
         }
     }
 
-    void MenuService::draw(PanelRegistry& registry)
+    void MenuService::draw()
     {
         if (!ImGui::BeginMainMenuBar())
             return;
-        drawNode(root_, registry);
+        drawNode(root_);
         ImGui::EndMainMenuBar();
     }
 } // namespace chai::ui
