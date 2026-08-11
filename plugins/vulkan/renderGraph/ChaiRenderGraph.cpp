@@ -29,7 +29,8 @@ namespace chai::gfx
                 // re-point at the real resource
                 textures_[i].importedTarget = &view;
 
-                //refill the state, dont trust last mip state, never trust a last image state (dont trust me)
+                // refill the state, dont trust last mip state, never trust a last image state (dont
+                // trust me)
                 std::fill(textures_[i].mipStates.begin(), textures_[i].mipStates.end(), state);
 
                 return CRGTextureHandle{i, textures_[i].generation};
@@ -41,8 +42,8 @@ namespace chai::gfx
         tex.name = name;
         tex.isImported = true;
         tex.importedTarget = &view;
-        tex.mipStates.assign(1, state); // single mip?
-        tex.desc.type = type; 
+        tex.mipStates.assign(1, state); // single mip? who can say
+        tex.desc.type = type;
         textures_.push_back(std::move(tex));
         return CRGTextureHandle{uint32_t(textures_.size() - 1), textures_.back().generation};
     }
@@ -65,8 +66,8 @@ namespace chai::gfx
         CRGTexture texture{};
         texture.isImported = false;
         if (desc.type == TextureType::Color2D) {
-            texture.target =
-                createColor2D(ctx_, desc.width, desc.height, desc.format, desc.mipLevels, desc.sampleCount);
+            texture.target = createColor2D(
+                ctx_, desc.width, desc.height, desc.format, desc.mipLevels, desc.sampleCount);
 
         } else if (desc.type == TextureType::Depth) {
             texture.target =
@@ -91,7 +92,7 @@ namespace chai::gfx
                     return CRGTextureHandle{i, textures_[i].generation};
                 } else {
                     // desc changed
-                    vkDeviceWaitIdle(ctx_.device()); //TODO: replace this with deferred deletion
+                    vkDeviceWaitIdle(ctx_.device()); // TODO: replace this with deferred deletion
                     textures_[i].target.destroy(ctx_);
                     textures_[i].generation++;
                     textures_[i] = buildTexture(name, desc); // recreate at the SAME index
@@ -109,6 +110,7 @@ namespace chai::gfx
 
     void ChaiRenderGraph::compile()
     {
+        // sort and compute
         executionOrder_ = topologicalSort(passes_);
         computeBarriers(executionOrder_, textures_);
     }
@@ -122,10 +124,13 @@ namespace chai::gfx
 
     void ChaiRenderGraph::execute(VkCommandBuffer cmd)
     {
+        // walk through the passes in order
         for (uint32_t passIdx : executionOrder_) {
+            // transition all images
             for (auto& barrier : barrierPlan_[passIdx])
                 transitionImage(cmd, barrier.image, barrier.from, barrier.to, barrier.mip);
 
+            // execute the callers logic
             CRGResources res(*this);
             passes_[passIdx]->execute(res, cmd);
         }
@@ -134,6 +139,8 @@ namespace chai::gfx
     std::vector<uint32_t>
     ChaiRenderGraph::topologicalSort(std::vector<std::unique_ptr<CRGPassBase>>& passes)
     {
+        // we create an adjacency list of all the resources, so we know what order to execute the
+        // passes
         std::unordered_map<uint32_t, std::vector<uint32_t>> adjList;
         std::vector<uint32_t> inDegree;
         buildAdjacencyList(passes, adjList, inDegree);
@@ -155,6 +162,7 @@ namespace chai::gfx
             }
         }
 
+        // no cycles allowed
         if (order.size() != passes.size())
             CHAI_LOG_ERROR("RenderGraph: cycle detected. Some pass depends on itself indirectly.");
 
@@ -197,18 +205,18 @@ namespace chai::gfx
         adjList.clear();
         inDegree.assign(passes.size(), 0);
 
-        // key: combines handle index + mip into one lookup key
+        // combines handle index & mip into one lookup key
         auto makeKey = [](uint32_t handleIndex, uint32_t mip) {
             return (uint64_t(handleIndex) << 32) | uint64_t(mip);
         };
 
         std::unordered_map<uint64_t, uint32_t>
-            lastWriter; // slot -> pass index that most recently wrote it
+            lastWriter; // maps slot to pass index that most recently wrote it
 
         for (uint32_t i = 0; i < passes.size(); i++) {
             auto& pass = passes[i];
 
-            // resolve reads FIRST using writers seen so far (i.e. strictly earlier passes)
+            // resolve reads first
             for (auto& access : pass->accesses) {
                 if (access.access != CRGAccess::Read)
                     continue;
@@ -219,11 +227,9 @@ namespace chai::gfx
                     adjList[it->second].push_back(i);
                     inDegree[i]++;
                 }
-                // if no writer seen yet, this read has no in-graph dependency
-                // (e.g. reading an imported resource nothing in this graph writes)
             }
 
-            // THEN register this pass's own writes, so later passes see them
+            // register this pass's writes, so later passes see them
             for (auto& access : pass->accesses) {
                 if (access.access == CRGAccess::Write) {
                     uint64_t k = makeKey(access.handle.index, access.mip);

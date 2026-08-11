@@ -418,11 +418,10 @@ namespace chai::gfx
             camUBO.position = camView.position;
             std::memcpy(viewport.cameraMapped[currentFrame_], &camUBO, sizeof(camUBO));
 
-            ////////////////////////////// Main Pass /////////////////////////////////////////
-
             constexpr VkFormat kBloomFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
             constexpr VkFormat kSceneDepthFormat = VK_FORMAT_D32_SFLOAT;
 
+            // Need 2 textures: one for scene color and one for MSAA. Both for color and depth
             CRGTextureHandle sceneHDR = renderGraph_.createTexture(
                 "SceneColorHDR",
                 {target.view.extent.width, target.view.extent.height, kBloomFormat, 1});

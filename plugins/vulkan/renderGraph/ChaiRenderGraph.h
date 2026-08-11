@@ -1,3 +1,6 @@
+/**
+ * @file ChaiRenderGraph.h
+ */
 #pragma once
 #include "../commands/ImageTransition.h"
 #include "../renderer/VulkanContext.h"
@@ -8,29 +11,56 @@
 
 namespace chai::gfx
 {
+    /**
+     * @brief A class that adds passes and manages Render Targets
+     * Works in 3 phases: setup, compile and execute
+     * Setup allows callers to add passes and specify functions to be called during the remaining 2
+     * phases. Compile looks at all the passes and decides how to transition image layouts for the
+     * gpu to use. Execute walks through the plan created during compile
+     */
     class ChaiRenderGraph
     {
     public:
         explicit ChaiRenderGraph(VulkanContext& ctx);
         ~ChaiRenderGraph();
 
+        /**
+         * @brief Add a Render Target to the graph that isnt owned by the graph
+         */
         CRGTextureHandle importTexture(const std::string& name,
                                        RenderTarget& view,
                                        ImageState state,
                                        TextureType type = TextureType::Color2D);
+
+        /**
+         * @brief Create a Render Target that is owned and managed by the graph
+         */
         CRGTextureHandle createTexture(const std::string& name, const CRGTextureDesc& desc);
 
+        /**
+         * @brief Temporary function to allow blitting from outside the graph
+         * @todo Have blitting be handled by the graph somehow, and remove this
+         */
         VkImage resolvedImage(CRGTextureHandle handle) const;
+
+        /**
+         * @brief Temporary function to allow blitting from outside the graph
+         * @todo Have blitting be handled by the graph somehow, and remove this
+         */
         VkExtent2D resolvedExtent(CRGTextureHandle handle, uint32_t mip = 0) const;
 
-        //helps with tracking my blitting woes
-        void
-        markExternalState(CRGTextureHandle handle, ImageState state, uint32_t mip = 0)
+        /**
+         * @brief Tell the render graph about a transition image call from the outside
+         */
+        void markExternalState(CRGTextureHandle handle, ImageState state, uint32_t mip = 0)
         {
             CRGTexture& tex = textures_[handle.index];
             tex.mipStates[mip] = state;
         }
 
+        /**
+         * @brief Add a pass that will be execute by the graph
+         */
         template <typename PassData, typename SetupFn, typename ExecuteFn>
         PassData& addPass(const std::string& name, SetupFn&& setup, ExecuteFn&& execute)
         {
@@ -51,8 +81,19 @@ namespace chai::gfx
             return ref;
         }
 
+        /**
+         * @brief Clears the previous passea and compile output
+         */
         void clear();
+
+        /**
+         * @brief Creates an execution order for the passes and barrier plan for transition images
+         */
         void compile();
+
+        /**
+         * @brief Executes the plan created during compile.
+         */
         void execute(VkCommandBuffer cmd);
 
     private:
