@@ -11,7 +11,7 @@
 #include <AssetCache.h>
 #include <Assets/DefaultTextures.h>
 #include <Assets/MeshAsset.h>
-#include <Core/SystemPaths.h>
+#include <Runtime/SystemPaths.h>
 #include <Input/IInput.h>
 #include <Log.h>
 #include <Rendering/CameraData.h>

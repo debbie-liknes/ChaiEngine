@@ -28,4 +28,11 @@ namespace chai::ui
 
         return false;
     }
+
+    PanelDesc* PanelRegistry::getPanel(const std::string& id)
+    {
+        if (auto it = panels_.find(id); it != panels_.end())
+            return &it->second;
+        return nullptr;
+    }
 }

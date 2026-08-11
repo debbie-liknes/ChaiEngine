@@ -4,7 +4,7 @@ add_executable(${PROJECT_NAME} main.cpp)
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    Core
+    Runtime
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
