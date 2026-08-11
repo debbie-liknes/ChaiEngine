@@ -35,6 +35,7 @@ namespace chai
 
         void setHoveredCamera(int32_t cameraId) override;
         int32_t getHoveredCamera() const override;
+        int getActiveCamera() const override;
 
         const std::vector<unsigned int>& getTypedCharactersThisFrame() const override;
 
@@ -46,7 +47,9 @@ namespace chai
         float scrollX, scrollY;
 
         std::vector<unsigned int> typedChars_;
-        int32_t activeCamera_ = 0;
+        int32_t hoveredCamera_ = 0;
+        int32_t capturedCamera_ = 0;
+        bool wasDragButtonDown_ = false;
 	};
 
     Key toChaiKey(int glfwKey);

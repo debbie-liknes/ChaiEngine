@@ -104,6 +104,7 @@ namespace chai
 
         virtual void setHoveredCamera(int32_t cameraId) = 0;
         virtual int32_t getHoveredCamera() const = 0;
+        virtual int getActiveCamera() const = 0;
 
         virtual void setCursorMode(CursorMode mode) = 0;
 

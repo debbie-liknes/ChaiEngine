@@ -13,7 +13,7 @@ namespace chai::scene
     {
         IInput& in = ctx.input;
 
-        if (in.getHoveredCamera() != gameObject_->getObjectId()) {
+        if (in.getActiveCamera() != gameObject_->getObjectId()) {
             return;
         }
 

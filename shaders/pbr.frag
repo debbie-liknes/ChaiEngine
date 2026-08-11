@@ -5,6 +5,11 @@ layout(location = 1) in vec3 vNormal;
 layout(location = 2) in vec4 vTangent;
 layout(location = 3) in vec2 vUV;
 
+layout(push_constant) uniform Push {
+    mat4 model;
+    int shadingMode;
+} pc;
+
 // set 0 = camera
 layout(set = 0, binding = 0) uniform Camera {
     mat4 view;
@@ -171,5 +176,15 @@ void main()
     vec3 color = ambient + lo + emissive;
     color *= exposure;
     color = acesFilm(color);
-    outColor = vec4(color, base.a);
+
+    vec3 finalColor;
+    switch (pc.shadingMode) {
+        case 1: finalColor = normalize(N) * 0.5 + 0.5; break;
+        case 2: finalColor = vec3(vUV, 0.0);           break;
+        case 3: finalColor = vec3(roughness);          break;
+        case 4: finalColor = vec3(metallic);           break;
+        case 5: finalColor = vec3(ao);                 break;
+        default: finalColor = color;                   break;
+    }
+    outColor = vec4(finalColor, base.a);
 }

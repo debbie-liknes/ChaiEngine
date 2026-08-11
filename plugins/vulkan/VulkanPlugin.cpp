@@ -12,6 +12,7 @@
 #include "resources/ModelRegistry.h"
 #include "resources/TextureFactory.h"
 #include "resources/TextureRegistry.h"
+#include "registries/ViewportRegistry.h"
 
 #include <Assets/IMeshRegistry.h>
 #include <Log.h>
@@ -49,13 +50,16 @@ namespace chai::gfx
                 *vulkCtx_, texRegistry_->cache(), resources_->graveyard());
             modelRegistry_ = std::make_shared<ModelRegistry>(
                 *meshRegistry_, *texRegistry_, *matRegistry_, &ctx.services);
+            viewportRegistry_ = std::make_shared<ViewportRegistry>(*vulkCtx_);
             renderer_ = std::make_shared<VulkanRenderer>(*window,
                                                          meshRegistry_->cache(),
                                                          texRegistry_->cache(),
                                                          matRegistry_->cache(),
                                                          modelRegistry_,
+                                                         viewportRegistry_,
                                                          *vulkCtx_,
                                                          ctx.services);
+
             renderer_->initializeUI();
 
             // register services, but make sure to UN-register them on unload
@@ -66,6 +70,7 @@ namespace chai::gfx
             ctx.services.provide<TextureFactory>(texFactory_);
             ctx.services.provide<IMaterialRegistry>(matRegistry_);
             ctx.services.provide<IModelRegistry>(modelRegistry_);
+            ctx.services.provide<IViewportRegistry>(viewportRegistry_);
 
             ui::PanelDesc panelInfo;
             panelInfo.displayName = "Vulkan Stats";
@@ -86,11 +91,14 @@ namespace chai::gfx
             if (renderer_)
                 renderer_->waitIdle(); // probably unnecessary here
 
-            auto panelReg = ctx.services.resolve<ui::PanelRegistry>();
+            auto& panelReg = ctx.services.resolve<ui::PanelRegistry>();
             panelReg.unregisterPanel("Vulkan Stats");
+
+            viewportRegistry_->shutdown();
             renderer_->shutdownUI();
 
             // remove services
+            ctx.services.remove<IViewportRegistry>();
             ctx.services.remove<TextureFactory>();
             ctx.services.remove<ITextureRegistry>();
             ctx.services.remove<IMeshRegistry>();
@@ -107,6 +115,7 @@ namespace chai::gfx
 
             resources_->graveyard().flushAll();
 
+            viewportRegistry_.reset();
             renderer_.reset();
 
             meshRegistry_.reset();
@@ -136,6 +145,8 @@ namespace chai::gfx
 
         // Materials
         std::shared_ptr<MaterialRegistry> matRegistry_;
+
+        std::shared_ptr<ViewportRegistry> viewportRegistry_;
     };
 
     CHAI_PLUGIN(VulkanPlugin);

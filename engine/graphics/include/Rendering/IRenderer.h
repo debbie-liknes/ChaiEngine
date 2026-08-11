@@ -50,16 +50,6 @@ namespace chai
              * @brief Block until the gpu is idle. Used for teardown
              */
             virtual void waitIdle() = 0;
-
-
-            //Viewport management
-            virtual ViewportHandle addViewport(const std::string& id, uint32_t cameraViewIndex) = 0;
-            virtual void removeViewport(ViewportHandle handle) = 0;
-            virtual void
-            requestViewportResize(ViewportHandle handle, uint32_t width, uint32_t height) = 0;
-            virtual uint64_t getViewportTextureId(ViewportHandle handle) const = 0;
-            virtual void setViewportHovered(ViewportHandle handle, bool hovered) = 0;
-            virtual math::Vec2 getViewportExtent(ViewportHandle handle) const = 0;
         };
     }
 } // namespace chai
