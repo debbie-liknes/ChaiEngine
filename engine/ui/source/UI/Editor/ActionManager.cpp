@@ -2,38 +2,67 @@
 
 #include <UI/Editor/PanelRegistry.h>
 
+#include <algorithm>
 #include <numeric>
 
 namespace chai::ui
 {
     // WARNING: Entirely AI generated -- probably should be replaced with something more robust / unit tested.
-    // Use with caution...
-    size_t levenshteinDistance(std::string_view s1, std::string_view s2)
+    // Use with caution... Returns a match score (higher is better). Returns -1 if no
+    // match.
+    int commandPaletteScore(std::string_view pattern, std::string_view str)
     {
-        const size_t m = s1.size();
-        const size_t n = s2.size();
-        if (m == 0)
-            return n;
-        if (n == 0)
-            return m;
+        if (pattern.empty())
+            return 0;
 
-        std::vector<size_t> dp(n + 1);
-        std::iota(dp.begin(), dp.end(), 0);
+        size_t patternIdx = 0;
+        int score = 0;
+        int consecutiveMatches = 0;
+        bool prevWasSeparator = true;
 
-        for (size_t i = 0; i < m; ++i) {
-            size_t prev_diag = dp[0];
-            dp[0] = i + 1;
-            for (size_t j = 0; j < n; ++j) {
-                size_t temp = dp[j + 1];
-                if (s1[i] == s2[j]) {
-                    dp[j + 1] = prev_diag;
-                } else {
-                    dp[j + 1] = 1 + std::min({dp[j], dp[j + 1], prev_diag});
+        for (size_t i = 0; i < str.size(); ++i) {
+            char strChar = str[i];
+            char patternChar = pattern[patternIdx];
+
+            if (std::tolower(strChar) == std::tolower(patternChar)) {
+                // Base match score
+                score += 10;
+
+                // Bonus for consecutive character matches
+                score += (consecutiveMatches * 5);
+                consecutiveMatches++;
+
+                // Bonus for matching start of word or camelCase
+                if (prevWasSeparator || std::isupper(strChar)) {
+                    score += 15;
                 }
-                prev_diag = temp;
+
+                patternIdx++;
+                if (patternIdx == pattern.size()) {
+                    // Return total score when full pattern is matched
+                    return score;
+                }
+            } else {
+                consecutiveMatches = 0;
+            }
+
+            prevWasSeparator = std::ispunct(strChar) || std::isspace(strChar);
+        }
+
+        // Pattern was not fully matched as a subsequence
+        return -1;
+    }
+
+    void ActionManager::update(const IInput& input)
+    {
+        for (auto& [key, value] : actionDict_) {
+            if (value->getShortcut().key.has_value()) {
+                // Just opens the command palette until we get further with the shortcut system
+                if (input.keyDown(Key::P) && input.keyDown(Key::LeftCtrl) && input.keyDown(Key::LeftShift)) {
+                    value->trigger();
+                }
             }
         }
-        return dp[n];
     }
 
     std::shared_ptr<Action> ActionManager::getOrCreateAction(const std::string& id)
@@ -56,11 +85,9 @@ namespace chai::ui
         return nullptr;
     }
 
-    void ActionManager::registerAction(const std::string& id, const std::function<void()>& callback) const
+    void ActionManager::registerAction(const std::string& id, const std::function<void()>& callback)
     {
-        if (auto action = getAction(id)) {
-            action->setCallback(callback);
-        }
+        getOrCreateAction(id)->setCallback(callback);
     }
 
     void ActionManager::unregisterAction(const std::string& id) const
@@ -88,14 +115,39 @@ namespace chai::ui
     
     ActionManager::SearchReturnType ActionManager::fuzzySearch(std::string_view input) const
     {
-        constexpr size_t maxDistance = 3;
+        // Temporary struct to pair matched entries with their score
+        struct ScoredMatch {
+            std::string key;
+            Action* value;
+            int score;
+        };
 
-        SearchReturnType results;
+        std::vector<ScoredMatch> matches;
+        matches.reserve(actionDict_.size());
 
+        // 1. Filter and score entries
         for (const auto& [key, value] : actionDict_) {
-            if (levenshteinDistance(input, key) <= maxDistance) {
-                results.emplace_back(key, value.get());
+            if (!value->getCallback())
+                continue; // Skip all unregistered actions
+            int score = commandPaletteScore(input, key);
+            if (score > 0 || input.empty()) {
+                matches.emplace_back(key, value.get(), score);
             }
+        }
+
+        // 2. Sort matches descending by score (highest relevance first)
+        std::sort(matches.begin(), matches.end(), [](const ScoredMatch& a, const ScoredMatch& b) {
+            if (a.score != b.score) {
+                return a.score > b.score; // Higher score first
+            }
+            return a.key.length() < b.key.length(); // Tie-breaker: shorter string first
+        });
+
+        // 3. Convert back to ReturnType (std::vector<std::pair<std::string, Action*>>)
+        SearchReturnType results;
+        results.reserve(matches.size());
+        for (const auto& match : matches) {
+            results.emplace_back(match.key, match.value);
         }
 
         return results;

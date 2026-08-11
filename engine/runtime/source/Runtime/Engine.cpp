@@ -69,6 +69,7 @@ namespace chai
             (*it)->onUnload(ctx_);
 
         ctx_.services.remove<ui::PanelRegistry>();
+        ctx_.services.remove<ui::ActionManager>();
         ctx_.services.remove<ui::EditorViewportManager>();
         ctx_.services.remove<ui::PanelHost>();
         ctx_.services.remove<ui::DockspaceService>();
@@ -92,6 +93,7 @@ namespace chai
         auto& panelHost = services_.resolve<ui::PanelHost>();
         auto& dockingService = services_.resolve<ui::DockspaceService>();
         auto& menuService = services_.resolve<ui::MenuService>();
+        auto& actionManager = services_.resolve<ui::ActionManager>();
 
         //These come from plugins, check that they exist
         auto window = services_.tryResolve<IWindow>();
@@ -131,6 +133,8 @@ namespace chai
 
             //draw internal uis
             panelHost.draw(panelRegistry, dockingService, menuService);
+
+            actionManager.update(*input);
 
             scene_->accept(&audioVisitor);
             scene_->accept(&frameVisitor);

@@ -30,6 +30,7 @@
 #include <Window/Window.h>
 #include <LogPanel.h>
 #include <UI/Editor/ActionManager.h>
+#include <UI/Editor/CommandPalette.h>
 #include <UI/Editor/PanelRegistry.h>
 #include <UI/Editor/EditorViewportManager.h>
 #include <UI/Editor/DockspaceService.h>
@@ -111,17 +112,25 @@ int main()
 
     ui::PanelDesc loggerPanel;
     loggerPanel.displayName = "Logger";
-    loggerPanel.id = "window.logger";
+    loggerPanel.id = "logger";
     loggerPanel.draw = [&]() { diagnostics::drawLogPanel(guiSink); };
     loggerPanel.visible = true;
     panelReg.registerPanel(loggerPanel);
     actionManager.registerPanel("window.logger", loggerPanel.id);
 
+    ui::PanelDesc commandPalette;
+    commandPalette.displayName = "Command Palette";
+    commandPalette.id = "CommandPalette";
+    commandPalette.draw = [&]() { ui::drawCommandPalette(actionManager); };
+    commandPalette.visible = false;
+    panelReg.registerPanel(commandPalette);
+    actionManager.registerPanel("window.command_palette", commandPalette.id);
+
     ui::PanelDesc settingsPanel;
     settingsPanel.displayName = "Settings";
     settingsPanel.id = "settings";
     settingsPanel.draw = [&]() { settings::drawSettingsPanel(); };
-    settingsPanel.visible = true;
+    settingsPanel.visible = false;
     panelReg.registerPanel(settingsPanel);
     actionManager.registerPanel("file.preferences.settings", settingsPanel.id);
 

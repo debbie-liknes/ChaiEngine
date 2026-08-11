@@ -22,6 +22,10 @@ namespace chai::ui
             item.label = j.at("label").get_to(item.label.emplace());
         }
 
+        if (j.contains("shortcut") && !j["shortcut"].is_null()) {
+            item.shortcut = j.at("shortcut").get_to(item.shortcut.emplace());
+        }
+
         if (j.contains("items") && j["items"].is_array()) {
             j.at("items").get_to(item.items);
         }
@@ -31,24 +35,6 @@ namespace chai::ui
     void from_json(const json& j, MenuConfigData& config)
     {
         j.at("editor").get_to(config.editor);
-    }
-
-    // Utility function to recursively print and verify the parsed structure
-    void printBlueprintTree(const BlueprintItemSchema& item, int indentLevel = 0)
-    {
-        std::string indent(indentLevel * 2, ' ');
-
-        if (item.type == "separator") {
-            std::cout << indent << "--- [Separator] ---" << std::endl;
-            return;
-        }
-
-        std::cout << indent << "[" << item.type << "] " << (item.label ? *item.label : "Unlabeled")
-                  << " (ID: " << (item.id ? *item.id : "None") << ")" << std::endl;
-
-        for (const auto& child : item.items) {
-            printBlueprintTree(child, indentLevel + 1);
-        }
     }
 
     MenuConfigLoader::MenuConfigLoader(const std::filesystem::path& configFile)
@@ -64,10 +50,6 @@ namespace chai::ui
             json j = json::parse(configFileStream);
 
             config_ = j.get<MenuConfigData>();
-                
-            for (const auto& topLevelItem : config_.editor) {
-                printBlueprintTree(topLevelItem);
-            }
         }
         catch (json::exception& ex)
         {

@@ -2,6 +2,7 @@ project(UI)
 
 set(${PROJECT_NAME}_headers
     include/UI/Editor/ActionManager.h
+    include/UI/Editor/CommandPalette.h
     include/UI/Editor/DockspaceService.h
     include/UI/Editor/PanelHost.h
     include/UI/Editor/PanelRegistry.h
@@ -15,6 +16,7 @@ set(${PROJECT_NAME}_headers
 
 set(${PROJECT_NAME}_source
 	source/UI/Editor/ActionManager.cpp
+	source/UI/Editor/CommandPalette.cpp
 	source/UI/Editor/DockspaceService.cpp
 	source/UI/Editor/PanelHost.cpp
 	source/UI/Editor/PanelRegistry.cpp
@@ -32,6 +34,6 @@ add_library(${PROJECT_NAME} SHARED
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
-target_link_libraries(${PROJECT_NAME} PUBLIC ChaiMath Containers Core Logger Graphics PRIVATE ImGui)
+target_link_libraries(${PROJECT_NAME} PUBLIC ChaiMath Containers Core Logger Graphics Window PRIVATE ImGui)
 
 ChaiLibDefaults(${PROJECT_NAME} "Engine")

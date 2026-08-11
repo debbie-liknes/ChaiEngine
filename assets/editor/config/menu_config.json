@@ -39,6 +39,24 @@
         },
         {
           "type": "action",
+          "id": "plugins",
+          "label": "Plugins",
+          "items": [
+            {
+              "type": "action",
+              "id": "vulkan_stats",
+              "label": "Vulkan Stats"
+            }
+          ]
+        },
+        {
+          "type": "action",
+          "id": "command_palette",
+          "label": "Command Palette",
+          "shortcut": "Ctrl+Shift+P"
+        },
+        {
+          "type": "action",
           "id": "logger",
           "label": "Logger"
         }

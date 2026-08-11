@@ -4,9 +4,145 @@
 #include <string_view>
 #include <functional>
 #include <optional>
+#include <algorithm>
 
 namespace chai
 {
+    enum class Modifier : uint8_t
+    {
+        NONE    = 0,
+        CTRL    = 1 << 0,
+        SHIFT   = 1 << 1,
+        ALT     = 1 << 2,
+        SUPER   = 1 << 3 // OS-specific (Win / MacOS key)
+    };
+
+    constexpr Modifier operator|(Modifier lhs, Modifier rhs)
+    {
+        return static_cast<Modifier>(static_cast<std::byte>(lhs) | static_cast<std::byte>(rhs));
+    }
+
+    constexpr Modifier operator&(Modifier lhs, Modifier rhs)
+    {
+        return static_cast<Modifier>(static_cast<std::byte>(lhs) & static_cast<std::byte>(rhs));
+    }
+
+    constexpr Modifier operator~(Modifier val)
+    {
+        return static_cast<Modifier>(~static_cast<std::byte>(val));
+    }
+
+    inline Modifier& operator|=(Modifier& lhs, Modifier rhs)
+    {
+        lhs = lhs | rhs;
+        return lhs;
+    }
+
+    inline Modifier& operator&=(Modifier& lhs, Modifier rhs)
+    {
+        lhs = lhs & rhs;
+        return lhs;
+    }
+
+    inline bool hasFlag(Modifier flags, Modifier flag)
+    {
+        return (flags & flag) == flag;
+    }
+
+    struct Shortcut
+    {
+        Modifier modifier = Modifier::NONE;
+        std::optional<char> key;
+
+        std::string modifierStr() const
+        {
+            using enum Modifier;
+
+            std::string result;
+
+            if (hasFlag(modifier, CTRL))
+                result += "Ctrl+";
+            if (hasFlag(modifier, SHIFT))
+                result += "Shift+";
+            if (hasFlag(modifier, ALT))
+                result += "Alt+";
+            if (hasFlag(modifier, SUPER))
+                result += "Super+";
+
+            return result;
+        }
+
+        explicit operator std::string() const
+        {
+            std::string result = modifierStr();
+            if (key.has_value()) {
+                result += *key;
+            }
+            return result;
+        }
+
+        static std::optional<Shortcut> fromString(std::string_view str)
+        {
+            Shortcut shortcut;
+
+            // Helper lambda to trim leading/trailing spaces
+            auto trim = [](std::string_view s) {
+                while (!s.empty() && std::isspace(static_cast<unsigned char>(s.front())))
+                    s.remove_prefix(1);
+                while (!s.empty() && std::isspace(static_cast<unsigned char>(s.back())))
+                    s.remove_suffix(1);
+                return s;
+            };
+
+            // Split string by '+'
+            size_t start = 0;
+            size_t end = str.find('+');
+            std::vector<std::string_view> tokens;
+
+            while (end != std::string_view::npos) {
+                tokens.push_back(trim(str.substr(start, end - start)));
+                start = end + 1;
+                end = str.find('+', start);
+            }
+            tokens.push_back(trim(str.substr(start)));
+
+            if (tokens.empty())
+                return std::nullopt;
+
+            // Process all tokens except the last one as potential modifiers
+            for (size_t i = 0; i < tokens.size(); ++i) {
+                auto token = tokens[i];
+
+                // Check if token matches a modifier (case-insensitive conversion)
+                std::string tokenLower(token);
+                std::transform(tokenLower.begin(),
+                               tokenLower.end(),
+                               tokenLower.begin(),
+                               [](unsigned char c) { return std::tolower(c); });
+
+                if (tokenLower == "ctrl" || tokenLower == "control") {
+                    shortcut.modifier |= Modifier::CTRL;
+                } else if (tokenLower == "shift") {
+                    shortcut.modifier |= Modifier::SHIFT;
+                } else if (tokenLower == "alt") {
+                    shortcut.modifier |= Modifier::ALT;
+                } else if (tokenLower == "super" || tokenLower == "cmd" || tokenLower == "win") {
+                    shortcut.modifier |= Modifier::SUPER;
+                } else {
+                    // If it's not a recognized modifier and it's the last token, treat as key
+                    if (i == tokens.size() - 1 && token.length() == 1) {
+                        shortcut.key = token[0];
+                    } else {
+                        // Invalid token or single character key was not at the end
+                        return std::nullopt;
+                    }
+                }
+            }
+
+            return shortcut;
+        }
+    };
+
     /*
     * \description The Action interface is loosely inspired by Qt's QAction
     * for the purpose of providing a decoupled interface for delegating
@@ -32,6 +168,9 @@ namespace chai
         
         void setCallback(const std::function<void()>& callback) { callback_ = callback; }
         std::function<void()> getCallback() const { return callback_; }
+
+        void setShortcut(const Shortcut& shortcut) { shortcut_ = shortcut; }
+        Shortcut getShortcut() const { return shortcut_; }
 
         void setCheckable(bool checkable) { checkable_ = checkable; }
         bool isCheckable() const { return checkable_; }
@@ -71,6 +210,8 @@ namespace chai
 
     private:
         std::function<void()> callback_ = nullptr;
+
+        Shortcut shortcut_;
 
         bool checkable_ = false;
         bool checked_ = false;

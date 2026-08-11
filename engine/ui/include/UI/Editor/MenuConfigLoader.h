@@ -34,6 +34,7 @@ namespace chai::ui
         std::string type;                       // "menu", "action", or "separator"
         std::optional<std::string> id;          // Optional for separators
         std::optional<std::string> label;       // Optional for separators
+        std::optional<std::string> shortcut;    // Optional
         std::vector<BlueprintItemSchema> items; // Recursive children for "menu" types
     };
 

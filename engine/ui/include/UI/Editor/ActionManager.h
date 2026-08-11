@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Action/Action.h>
+#include <Input/IInput.h>
 
 #include <Containers/Dictionary.h>
 #include <memory>
@@ -15,10 +16,12 @@ namespace chai::ui
     public:
         explicit ActionManager(PanelRegistry* registry) : panelRegistry_(registry) {}
 
+        void update(const IInput& input);
+
         [[nodiscard]] std::shared_ptr<Action> getOrCreateAction(const std::string& id);
         [[nodiscard]] std::shared_ptr<Action> getAction(const std::string& id) const;
 
-        void registerAction(const std::string& id, const std::function<void()>& action) const;
+        void registerAction(const std::string& id, const std::function<void()>& action);
         void unregisterAction(const std::string& id) const;
 
         void registerPanel(const std::string& actionId, const std::string& panelId);

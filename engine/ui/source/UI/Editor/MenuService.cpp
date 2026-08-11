@@ -24,6 +24,12 @@ namespace chai::ui
             node.action = actionManager_->getOrCreateAction(id);
             if (schema.label.has_value())
                 node.action->setLabel(schema.label.value());
+            if (schema.shortcut.has_value()) {
+                if (auto shortcutMaybe = Shortcut::fromString(schema.shortcut.value());
+                    shortcutMaybe.has_value()) {
+                    node.action->setShortcut(shortcutMaybe.value());
+                }
+            }
         } else if (schema.type == "separator") {
             // Separator item is a special case -- we'll return early here if encountered.
             node.action = std::make_shared<Action>();
@@ -62,13 +68,13 @@ namespace chai::ui
                 if (child.action->isSeparator()) {
                     ImGui::Separator();
                 } else if (!child.children.empty()) {
-                    if (ImGui::BeginMenu(child.action->getLabel().c_str())) {
+                    if (ImGui::BeginMenu(child.action->getLabel().c_str(), child.action->isEnabled())) {
                         drawNode(child);
                         ImGui::EndMenu();
                     }
                 } else if (child.action->getLabel().size()) {
                     if (ImGui::MenuItem(child.action->getLabel().c_str(),
-                                        nullptr,
+                                        std::string(child.action->getShortcut()).c_str(),
                                         panelRegistry_->isVisible(actionManager_->getPanelId(child.action->getID())),
                                         child.action->isEnabled())) {
                         child.action->trigger();

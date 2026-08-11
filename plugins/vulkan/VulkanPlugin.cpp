@@ -19,7 +19,7 @@
 #include <Plugin/PluginMacros.h>
 #include <Plugin/ServiceLocator.h>
 #include <UI/Editor/PanelRegistry.h>
-#include <UI/Editor/MenuService.h>
+#include <UI/Editor/ActionManager.h>
 #include <Window/Window.h>
 #include <memory>
 
@@ -69,13 +69,14 @@ namespace chai::gfx
 
             ui::PanelDesc panelInfo;
             panelInfo.displayName = "Vulkan Stats";
+            panelInfo.id = "VulkanStats";
             panelInfo.draw = [&]() { ui::drawVulkanStatsPanel(renderer_->getStats()); };
             panelInfo.visible = false;
 
             auto& panelReg = ctx.services.resolve<ui::PanelRegistry>();
             panelReg.registerPanel(panelInfo);
-            auto& menuService = ctx.services.resolve<ui::MenuService>();
-            //menuService.registerAction("Windows/Plugins/Vulkan", ui::TogglePanel{panelInfo.displayName});
+            auto& actionManager = ctx.services.resolve<ui::ActionManager>();
+            actionManager.registerPanel("window.plugins.vulkan_stats", panelInfo.id);
 
             CHAI_LOG_INFO("Renderer service provided");
         }
