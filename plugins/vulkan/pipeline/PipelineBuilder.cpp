@@ -150,8 +150,9 @@ namespace chai::gfx
 
         VkPipelineMultisampleStateCreateInfo multisample{
             VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO};
-        multisample.rasterizationSamples = sampleCount_; // no MSAA
+        multisample.rasterizationSamples = sampleCount_;
         multisample.minSampleShading = 1.0f;
+        multisample.sampleShadingEnable = VK_TRUE;
 
         VkPipelineDepthStencilStateCreateInfo depthStencil{
             VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO};

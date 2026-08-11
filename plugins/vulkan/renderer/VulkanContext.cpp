@@ -165,6 +165,7 @@ namespace chai::gfx
         VkPhysicalDeviceFeatures required{};
         required.samplerAnisotropy = VK_TRUE;
         required.fillModeNonSolid = VK_TRUE;
+        required.sampleRateShading = VK_TRUE;
 
         // use vkbootstrap to select a gpu.
         vkb::PhysicalDeviceSelector selector{vkbInstance_};

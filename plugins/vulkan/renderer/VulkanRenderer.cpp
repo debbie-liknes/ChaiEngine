@@ -378,8 +378,11 @@ namespace chai::gfx
         // DRAW
 
         renderGraph_.clear();
-        CRGTextureHandle shadowHandle = renderGraph_.importTexture(
-            "ShadowMap", frames_[currentFrame_].shadowTarget, ImageState::Undefined, TextureType::Depth);
+        CRGTextureHandle shadowHandle =
+            renderGraph_.importTexture("ShadowMap",
+                                       frames_[currentFrame_].shadowTarget,
+                                       ImageState::Undefined,
+                                       TextureType::Depth);
         shadowMapping(cmd, order, renderData, shadowHandle);
 
         renderGraph_.compile();
@@ -422,15 +425,31 @@ namespace chai::gfx
             CRGTextureHandle sceneHDR = renderGraph_.createTexture(
                 "SceneColorHDR",
                 {target.view.extent.width, target.view.extent.height, kBloomFormat, 1});
+            CRGTextureHandle sceneHDRMSAA =
+                renderGraph_.createTexture("SceneColorHDRMulti",
+                                           {target.view.extent.width,
+                                            target.view.extent.height,
+                                            kBloomFormat,
+                                            1,
+                                            TextureType::Color2D,
+                                            ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT)});
             CRGTextureHandle sceneDepth = renderGraph_.createTexture("SceneDepth",
                                                                      {target.view.extent.width,
                                                                       target.view.extent.height,
                                                                       kSceneDepthFormat,
                                                                       1,
                                                                       TextureType::Depth});
+            CRGTextureHandle sceneDepthMulti =
+                renderGraph_.createTexture("SceneDepthMulti",
+                                           {target.view.extent.width,
+                                            target.view.extent.height,
+                                            kSceneDepthFormat,
+                                            1,
+                                            TextureType::Depth,
+                                            ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT)});
 
             struct MainPassData {
-                CRGTextureHandle color, depth, shadow;
+                CRGTextureHandle color, colorMulti, depth, depthMulti, shadow;
             };
             renderGraph_.addPass<MainPassData>(
                 "MainPass_" + viewport.id,
@@ -438,21 +457,29 @@ namespace chai::gfx
                     data.color = builder.write(sceneHDR);
                     data.depth = builder.write(sceneDepth);
                     data.shadow = builder.read(shadowHandle);
+                    data.colorMulti = builder.write(sceneHDRMSAA);
+                    data.depthMulti = builder.write(sceneDepthMulti);
                 },
                 [&, order](
                     VkCommandBuffer cmd, const MainPassData& data, const CRGResources& resources) {
                     VkExtent2D extent = resources.extent(data.color, 0);
 
                     VkRenderingAttachmentInfo vpColor{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
-                    vpColor.imageView = resources.attachmentView(data.color, 0);
+                    vpColor.imageView = resources.attachmentView(data.colorMulti, 0);
                     vpColor.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                    vpColor.resolveMode = VK_RESOLVE_MODE_AVERAGE_BIT;
+                    vpColor.resolveImageView = resources.attachmentView(data.color, 0);
+                    vpColor.resolveImageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
                     vpColor.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
                     vpColor.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
                     vpColor.clearValue = target.view.clearColor;
 
                     VkRenderingAttachmentInfo vpDepth{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
-                    vpDepth.imageView = resources.attachmentView(data.depth, 0);
+                    vpDepth.imageView = resources.attachmentView(data.depthMulti, 0);
                     vpDepth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+                    vpDepth.resolveMode = VK_RESOLVE_MODE_SAMPLE_ZERO_BIT;
+                    vpDepth.resolveImageView = resources.attachmentView(data.depth, 0);
+                    vpDepth.resolveImageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
                     vpDepth.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
                     vpDepth.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
                     vpDepth.clearValue.depthStencil = {1.0f, 0};
@@ -645,11 +672,12 @@ namespace chai::gfx
             if (!mesh)
                 continue;
 
-            VkPipeline pipeline = pipelineCache_.getOrCreate(
-                {"pbr.vert.spv",
-                 "pbr.frag.spv",
-                 mat->alphaMode,
-                 wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL});
+            VkPipeline pipeline =
+                pipelineCache_.getOrCreate({"pbr.vert.spv",
+                                            "pbr.frag.spv",
+                                            mat->alphaMode,
+                                            wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL,
+                                            ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT)});
             vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
             if (item.material != lastMaterial) {
@@ -1000,7 +1028,8 @@ namespace chai::gfx
     void VulkanRenderer::blitCombineToViewport(VkCommandBuffer cmd,
                                                const RenderTargetView& view,
                                                VkImage combineImage,
-                                               VkExtent2D combineExtent, bool everRendered)
+                                               VkExtent2D combineExtent,
+                                               bool everRendered)
     {
         transitionImage(cmd, combineImage, ImageState::ColorAttachment, ImageState::TransferSrc);
         transitionImage(cmd,
@@ -1133,17 +1162,17 @@ namespace chai::gfx
                                     "pbr.frag.spv",
                                     AlphaMode::Opaque,
                                     VK_POLYGON_MODE_FILL,
-                                    ctx_.getSampleCount(VK_SAMPLE_COUNT_1_BIT)});
+                                    ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT)});
         pipelineCache_.getOrCreate({"pbr.vert.spv",
                                     "pbr.frag.spv",
                                     AlphaMode::Blend,
                                     VK_POLYGON_MODE_FILL,
-                                    ctx_.getSampleCount(VK_SAMPLE_COUNT_1_BIT)});
+                                    ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT)});
         pipelineCache_.getOrCreate({"pbr.vert.spv",
                                     "pbr.frag.spv",
                                     AlphaMode::Opaque,
                                     VK_POLYGON_MODE_LINE,
-                                    ctx_.getSampleCount(VK_SAMPLE_COUNT_1_BIT)}); // WIREFRAME
+                                    ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT)}); // WIREFRAME
 
         skyboxPipeline_ = loadPipelineByName(
             ctx_, "skybox.vert.spv", "skybox.frag.spv", pipelineLayout_, [&](PipelineBuilder& b) {
@@ -1153,7 +1182,7 @@ namespace chai::gfx
                     .disableDepthWrite()
                     .setDepthOp(VK_COMPARE_OP_LESS_OR_EQUAL)
                     .disableBlending()
-                    .setSampleCount(ctx_.getSampleCount(VK_SAMPLE_COUNT_1_BIT))
+                    .setSampleCount(ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT))
                     .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
             });
 
@@ -1587,7 +1616,6 @@ namespace chai::gfx
                 depth.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
                 depth.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
                 depth.clearValue.depthStencil.depth = 1.0f;
-                
 
                 VkRenderingInfo ri{VK_STRUCTURE_TYPE_RENDERING_INFO};
                 ri.renderArea = {{0, 0}, {kShadowMapSize, kShadowMapSize}};

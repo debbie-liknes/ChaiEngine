@@ -23,6 +23,7 @@ namespace chai::gfx
         VkFormat format = VK_FORMAT_UNDEFINED;
         uint32_t mipLevels = 1;
         TextureType type = TextureType::Color2D;
+        VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;
     };
 
     enum class CRGAccess { Read, Write };

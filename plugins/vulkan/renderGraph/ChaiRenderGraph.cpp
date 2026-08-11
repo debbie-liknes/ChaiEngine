@@ -66,11 +66,11 @@ namespace chai::gfx
         texture.isImported = false;
         if (desc.type == TextureType::Color2D) {
             texture.target =
-                createColor2D(ctx_, desc.width, desc.height, desc.format, desc.mipLevels);
+                createColor2D(ctx_, desc.width, desc.height, desc.format, desc.mipLevels, desc.sampleCount);
 
         } else if (desc.type == TextureType::Depth) {
             texture.target =
-                createDepth2D(ctx_, desc.width, desc.height, desc.format, false);
+                createDepth2D(ctx_, desc.width, desc.height, desc.format, false, desc.sampleCount);
         }
         texture.mipStates.resize(desc.mipLevels, ImageState::Undefined);
         texture.desc = desc;

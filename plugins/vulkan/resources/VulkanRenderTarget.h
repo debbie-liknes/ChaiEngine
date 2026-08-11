@@ -48,7 +48,12 @@ namespace chai::gfx
     };
 
     RenderTarget
-    createColor2D(VulkanContext& ctx, uint32_t w, uint32_t h, VkFormat fmt, uint32_t mips = 1);
-    RenderTarget createDepth2D(VulkanContext& ctx, uint32_t w, uint32_t h, VkFormat fmt, bool compare);
+    createColor2D(VulkanContext& ctx, uint32_t w, uint32_t h, VkFormat fmt, uint32_t mips = 1, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
+    RenderTarget createDepth2D(VulkanContext& ctx,
+                               uint32_t w,
+                               uint32_t h,
+                               VkFormat fmt,
+                               bool compare,
+                               VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
     RenderTarget createCube(VulkanContext& ctx, uint32_t size, VkFormat fmt, uint32_t mips);
 } // namespace chai::gfx
