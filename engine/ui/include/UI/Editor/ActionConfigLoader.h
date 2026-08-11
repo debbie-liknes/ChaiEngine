@@ -4,8 +4,6 @@
 #include <filesystem>
 #include <optional>
 
-#include <Action/Action.h>
-
 namespace chai::ui
 {    
     // Represents an individual item (menu, action, or separator)
@@ -15,8 +13,6 @@ namespace chai::ui
         std::optional<std::string> label;       // Optional for separators
         std::optional<std::string> shortcut;    // Optional
         std::vector<BlueprintItemSchema> items; // Recursive children for "menu" types
-
-        
     };
 
     struct ActionConfigData {

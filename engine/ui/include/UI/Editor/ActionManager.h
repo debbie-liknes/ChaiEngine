@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Action/Action.h>
+#include <Core/Action.h>
 #include <Input/IInput.h>
 #include <UI/Editor/ActionConfigLoader.h>
 

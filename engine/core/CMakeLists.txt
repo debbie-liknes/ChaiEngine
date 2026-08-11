@@ -1,11 +1,13 @@
 project(Core)
 
 set(${PROJECT_NAME}_headers
-    include/Action/Action.h
+    include/Core/Action.h
+    include/Core/Shortcut.h
 )
 
 set(${PROJECT_NAME}_source
-    source/Action/Action.cpp
+    source/Core/Action.cpp
+    source/Core/Shortcut.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED
