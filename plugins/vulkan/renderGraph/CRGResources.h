@@ -6,6 +6,8 @@
 
 namespace chai::gfx
 {
+    class ChaiRenderGraph;
+
     /**
      * @brief Only used by the execute function on the render graph to allow access to texture
      * handles owned by the graph. Graph owned handles cannot be used to retrieve these outside of

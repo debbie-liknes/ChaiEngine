@@ -6,6 +6,8 @@
 
 namespace chai::gfx
 {
+    class ChaiRenderGraph;
+
     /**
      * @brief Used by the render graph to indicate which textures are required during execution.
      * When adding a pass, there are 2 phases: init and execute. The builder is used in the init to
