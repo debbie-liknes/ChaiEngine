@@ -23,6 +23,7 @@ namespace chai::ui
         void unregisterPanel(const std::string& id);
         void setPanelVisible(const std::string& id, bool visible);
         bool isVisible(const std::string& id);
+        PanelDesc* getPanel(const std::string& id);
         auto panels() { return std::views::values(panels_); }
 
     private:

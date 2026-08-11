@@ -8,9 +8,9 @@ set(${PROJECT_NAME}_headers
     include/UI/Editor/PanelRegistry.h
     include/UI/Editor/InternalChaiUI.h
     include/UI/Editor/FontManager.h
+    include/UI/Editor/EditorMenu.h
     include/UI/Editor/EditorViewportManager.h
-    include/UI/Editor/MenuService.h
-    include/UI/Editor/MenuConfigLoader.h
+    include/UI/Editor/ActionConfigLoader.h
     include/UI/Editor/TreeNode.h
 )
 
@@ -22,9 +22,9 @@ set(${PROJECT_NAME}_source
 	source/UI/Editor/PanelRegistry.cpp
 	source/UI/Editor/InternalChaiUI.cpp
 	source/UI/Editor/FontManager.cpp
+	source/UI/Editor/EditorMenu.cpp
 	source/UI/Editor/EditorViewportManager.cpp
-	source/UI/Editor/MenuService.cpp
-	source/UI/Editor/MenuConfigLoader.cpp
+	source/UI/Editor/ActionConfigLoader.cpp
 	source/UI/Editor/TreeNode.cpp
 )
 

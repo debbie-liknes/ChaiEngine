@@ -2,33 +2,12 @@
 
 #include <string>
 #include <filesystem>
+#include <optional>
+
+#include <Action/Action.h>
 
 namespace chai::ui
-{
-    //enum class MenuItemType
-    //{
-    //    MENU,
-    //    ACTION,
-    //    SEPARATOR
-    //};
-
-    //struct BaseMenuDefinition
-    //{
-    //    MenuItemType type;
-    //};
-
-    //struct ActionDefinition : public BaseMenuDefinition
-    //{
-    //    std::string id;
-    //    std::string label;
-    //};
-
-    //struct MenuDefinition : public ActionDefinition
-    //{
-    //    std::vector<BaseMenuDefinition*> children;
-    //};
-
-    
+{    
     // Represents an individual item (menu, action, or separator)
     struct BlueprintItemSchema {
         std::string type;                       // "menu", "action", or "separator"
@@ -36,21 +15,23 @@ namespace chai::ui
         std::optional<std::string> label;       // Optional for separators
         std::optional<std::string> shortcut;    // Optional
         std::vector<BlueprintItemSchema> items; // Recursive children for "menu" types
+
+        
     };
 
-    struct MenuConfigData {
+    struct ActionConfigData {
         std::vector<BlueprintItemSchema> editor;
     };
 
-    class MenuConfigLoader
+    class ActionConfigLoader
     {
     public:
-        explicit MenuConfigLoader(const std::filesystem::path& configFile);
+        explicit ActionConfigLoader(const std::filesystem::path& configFile);
 
-        MenuConfigData getConfig() const { return config_; }
+        ActionConfigData getConfig() const { return config_; }
     private:
         void parseConfigFile(const std::filesystem::path& configFile);
 
-        MenuConfigData config_;
+        ActionConfigData config_;
     };
 } // namespace chai::ui

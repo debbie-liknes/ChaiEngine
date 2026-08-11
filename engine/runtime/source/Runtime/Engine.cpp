@@ -8,7 +8,6 @@
 #include <UI/Editor/PanelRegistry.h>
 #include <UI/Editor/PanelHost.h>
 #include <UI/Editor/DockspaceService.h>
-#include <UI/Editor/MenuService.h>
 #include <Runtime/SystemPaths.h>
 #include <Audio/IAudioEngine.h>
 #include <LogPanel.h>
@@ -28,7 +27,8 @@ namespace chai
         auto panelRegistry = std::make_shared<ui::PanelRegistry>();
         ctx_.services.provide<ui::PanelRegistry>(panelRegistry);
 
-        auto actionManager = std::make_shared<ui::ActionManager>(panelRegistry.get());
+        auto configFile = executableDir() / "assets/editor/config/action_config.json";
+        auto actionManager = std::make_shared<ui::ActionManager>(configFile, panelRegistry.get());
         ctx_.services.provide<ui::ActionManager>(actionManager);
 
         auto panelHost = std::make_shared<ui::PanelHost>();
@@ -36,10 +36,6 @@ namespace chai
 
         auto dockspace = std::make_shared<ui::DockspaceService>();
         ctx_.services.provide<ui::DockspaceService>(dockspace);
-
-        auto configFile = executableDir() / "assets/editor/config/menu_config.json";
-        auto menuService = std::make_shared<ui::MenuService>(configFile, actionManager.get(), panelRegistry.get());
-        ctx_.services.provide<ui::MenuService>(menuService);
 
         //Load plugins
         CHAI_LOG_INFO("Engine starting");
@@ -73,7 +69,6 @@ namespace chai
         ctx_.services.remove<ui::EditorViewportManager>();
         ctx_.services.remove<ui::PanelHost>();
         ctx_.services.remove<ui::DockspaceService>();
-        ctx_.services.remove<ui::MenuService>();
     }
 
     void Engine::requestStop()
@@ -92,7 +87,6 @@ namespace chai
         auto& panelRegistry = services_.resolve<ui::PanelRegistry>();
         auto& panelHost = services_.resolve<ui::PanelHost>();
         auto& dockingService = services_.resolve<ui::DockspaceService>();
-        auto& menuService = services_.resolve<ui::MenuService>();
         auto& actionManager = services_.resolve<ui::ActionManager>();
 
         //These come from plugins, check that they exist
@@ -132,7 +126,7 @@ namespace chai
             scene_->update(ctx);
 
             //draw internal uis
-            panelHost.draw(panelRegistry, dockingService, menuService);
+            panelHost.draw(panelRegistry, dockingService, actionManager);
 
             actionManager.update(*input);
 

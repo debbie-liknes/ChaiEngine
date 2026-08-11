@@ -1,4 +1,4 @@
-#include <UI/Editor/MenuConfigLoader.h>
+#include <UI/Editor/ActionConfigLoader.h>
 
 #include <Log.h>
 #include <json.hpp>
@@ -32,24 +32,24 @@ namespace chai::ui
     }
 
     // Custom deserialization for MenuConfigData
-    void from_json(const json& j, MenuConfigData& config)
+    void from_json(const json& j, ActionConfigData& config)
     {
         j.at("editor").get_to(config.editor);
     }
 
-    MenuConfigLoader::MenuConfigLoader(const std::filesystem::path& configFile)
+    ActionConfigLoader::ActionConfigLoader(const std::filesystem::path& configFile)
     {
         parseConfigFile(configFile);
     }
 
-    void MenuConfigLoader::parseConfigFile(const std::filesystem::path& configFile)
+    void ActionConfigLoader::parseConfigFile(const std::filesystem::path& configFile)
     {
         try
         {
             std::ifstream configFileStream(configFile);
             json j = json::parse(configFileStream);
 
-            config_ = j.get<MenuConfigData>();
+            config_ = j.get<ActionConfigData>();
         }
         catch (json::exception& ex)
         {

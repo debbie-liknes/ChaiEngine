@@ -76,7 +76,7 @@ namespace chai::gfx
             auto& panelReg = ctx.services.resolve<ui::PanelRegistry>();
             panelReg.registerPanel(panelInfo);
             auto& actionManager = ctx.services.resolve<ui::ActionManager>();
-            actionManager.registerPanel("window.plugins.vulkan_stats", panelInfo.id);
+            actionManager.registerPanel("window.plugins.vulkan_stats", panelInfo.id, true);
 
             CHAI_LOG_INFO("Renderer service provided");
         }

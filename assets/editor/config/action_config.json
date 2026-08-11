@@ -41,13 +41,7 @@
           "type": "action",
           "id": "plugins",
           "label": "Plugins",
-          "items": [
-            {
-              "type": "action",
-              "id": "vulkan_stats",
-              "label": "Vulkan Stats"
-            }
-          ]
+          "items": []
         },
         {
           "type": "action",

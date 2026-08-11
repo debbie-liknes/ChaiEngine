@@ -2,15 +2,35 @@
 
 #include <UI/Editor/PanelRegistry.h>
 
+#include <filesystem>
 #include <algorithm>
 #include <numeric>
+#include <ranges>
 
-namespace chai::ui
+namespace
 {
-    // WARNING: Entirely AI generated -- probably should be replaced with something more robust / unit tested.
-    // Use with caution... Returns a match score (higher is better). Returns -1 if no
-    // match.
-    int commandPaletteScore(std::string_view pattern, std::string_view str)
+    std::vector<std::string> cumulativeSplit(std::string_view str, char delim)
+    {
+        std::vector<std::string> result;
+        size_t pos = 0;
+
+        // Find each delimiter position and store the prefix
+        while ((pos = str.find(delim, pos)) != std::string_view::npos) {
+            if (pos > 0) { // Prevents adding an empty prefix if str starts with delim
+                result.emplace_back(str.substr(0, pos));
+            }
+            pos++; // Move past the current delimiter
+        }
+
+        // Append the full string as the final prefix
+        if (!str.empty()) {
+            result.emplace_back(str);
+        }
+
+        return result;
+    }
+
+    int computeScore(std::string_view pattern, std::string_view str)
     {
         if (pattern.empty())
             return 0;
@@ -20,11 +40,9 @@ namespace chai::ui
         int consecutiveMatches = 0;
         bool prevWasSeparator = true;
 
-        for (size_t i = 0; i < str.size(); ++i) {
-            char strChar = str[i];
-            char patternChar = pattern[patternIdx];
-
-            if (std::tolower(strChar) == std::tolower(patternChar)) {
+        for (auto& strChar : str) {
+            if (char patternChar = pattern[patternIdx];
+                std::tolower(strChar) == std::tolower(patternChar)) {
                 // Base match score
                 score += 10;
 
@@ -52,10 +70,19 @@ namespace chai::ui
         // Pattern was not fully matched as a subsequence
         return -1;
     }
+}
+
+namespace chai::ui
+{
+    ActionManager::ActionManager(const std::filesystem::path& configFile, PanelRegistry* registry)
+        : loader_(std::make_unique<ActionConfigLoader>(configFile)), panelRegistry_(registry)
+    {
+        fromConfig(loader_->getConfig());
+    }
 
     void ActionManager::update(const IInput& input)
     {
-        for (auto& [key, value] : actionDict_) {
+        for (const auto& [key, value] : actionDict_) {
             if (value->getShortcut().key.has_value()) {
                 // Just opens the command palette until we get further with the shortcut system
                 if (input.keyDown(Key::P) && input.keyDown(Key::LeftCtrl) && input.keyDown(Key::LeftShift)) {
@@ -77,12 +104,34 @@ namespace chai::ui
         }
     }
 
+    std::shared_ptr<Action> ActionManager::getOrCreateSeparatorAction()
+    {
+        const auto action = getOrCreateAction("separator");
+        action->setSeparator(true);
+        return action;
+    }
+
     std::shared_ptr<Action> ActionManager::getAction(const std::string& id) const
     {
         if (auto itr = actionDict_.find(id); itr != actionDict_.end()) {
             return itr->second;
         }
         return nullptr;
+    }
+
+    void ActionManager::generateAncestors(std::shared_ptr<Action> action)
+    {
+        auto currentChild = action;
+
+        auto prefixes = cumulativeSplit(action->getID(), '.');
+        prefixes.pop_back(); // Remove current action
+
+        for (const auto& prefix : prefixes | std::views::reverse) {
+            auto parent = getOrCreateAction(prefix);
+            parent->attachChild(currentChild);
+
+            currentChild = parent;
+        }
     }
 
     void ActionManager::registerAction(const std::string& id, const std::function<void()>& callback)
@@ -97,11 +146,19 @@ namespace chai::ui
         }
     }
 
-    void ActionManager::registerPanel(const std::string& actionId, const std::string& panelId)
+    void ActionManager::registerPanel(const std::string& actionId, const std::string& panelId, bool setActionLabel)
     {
         registerAction(actionId, [this, panelId]() {
             panelRegistry_->setPanelVisible(panelId, !panelRegistry_->isVisible(panelId));
         });
+
+        auto registeredAction = getAction(actionId);
+
+        generateAncestors(registeredAction);
+
+        if (setActionLabel)
+            registeredAction->setLabel(panelRegistry_->getPanel(panelId)->displayName);
+
         actionId2PanelId_.insert_or_assign(actionId, panelId);
     }
 
@@ -113,6 +170,9 @@ namespace chai::ui
         return std::string();
     }
     
+    /*
+    * TODO: Write a detailed comment on how this fuzzy search works
+    */
     ActionManager::SearchReturnType ActionManager::fuzzySearch(std::string_view input) const
     {
         // Temporary struct to pair matched entries with their score
@@ -125,17 +185,17 @@ namespace chai::ui
         std::vector<ScoredMatch> matches;
         matches.reserve(actionDict_.size());
 
-        // 1. Filter and score entries
+        // Filter and score entries
         for (const auto& [key, value] : actionDict_) {
             if (!value->getCallback())
                 continue; // Skip all unregistered actions
-            int score = commandPaletteScore(input, key);
+            int score = computeScore(input, key);
             if (score > 0 || input.empty()) {
                 matches.emplace_back(key, value.get(), score);
             }
         }
 
-        // 2. Sort matches descending by score (highest relevance first)
+        // Sort matches descending by score (highest relevance first)
         std::sort(matches.begin(), matches.end(), [](const ScoredMatch& a, const ScoredMatch& b) {
             if (a.score != b.score) {
                 return a.score > b.score; // Higher score first
@@ -143,7 +203,7 @@ namespace chai::ui
             return a.key.length() < b.key.length(); // Tie-breaker: shorter string first
         });
 
-        // 3. Convert back to ReturnType (std::vector<std::pair<std::string, Action*>>)
+        // Convert back to ReturnType (std::vector<std::pair<std::string, Action*>>)
         SearchReturnType results;
         results.reserve(matches.size());
         for (const auto& match : matches) {
@@ -151,5 +211,41 @@ namespace chai::ui
         }
 
         return results;
+    }
+
+    void ActionManager::fromConfig(const ActionConfigData& config)
+    {
+        auto root = getOrCreateAction("editor");
+
+        for (auto& schema : config.editor) {
+            root->addChild(fromSchema(schema));
+        }
+    }
+
+    std::shared_ptr<Action> ActionManager::fromSchema(const BlueprintItemSchema& schema, const std::string& slug)
+    {
+        std::shared_ptr<Action> action;
+        if (schema.id.has_value()) {
+            const auto id = (slug.size() > 0 ? slug + "." : "") + schema.id.value();
+            action = getOrCreateAction(id);
+            if (schema.label.has_value())
+                action->setLabel(schema.label.value());
+            if (schema.shortcut.has_value()) {
+                if (auto shortcutMaybe = Shortcut::fromString(schema.shortcut.value());
+                    shortcutMaybe.has_value()) {
+                    action->setShortcut(shortcutMaybe.value());
+                }
+            }
+        } else if (schema.type == "separator") {
+            action = getOrCreateSeparatorAction();
+        }
+
+        std::vector<std::shared_ptr<Action>> items;
+        for (const auto& item : schema.items) {
+            items.push_back(fromSchema(item, action->getID()));
+        }
+        action->setChildren(std::move(items));
+
+        return action;
     }
 }

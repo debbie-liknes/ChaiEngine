@@ -5,6 +5,7 @@
 #include <functional>
 #include <optional>
 #include <algorithm>
+#include <memory>
 
 namespace chai
 {
@@ -165,6 +166,16 @@ namespace chai
         * Triggers the event held by the action.
         */
         void trigger() const;
+
+        const std::vector<std::shared_ptr<Action>>* getChildren() const { return &children_; }
+        void setChildren(std::vector<std::shared_ptr<Action>>&& actions) { children_ = actions; }
+        void addChild(std::shared_ptr<Action> action) { children_.push_back(action); }
+        void attachChild(std::shared_ptr<Action> action)
+        {
+            if (auto itr = std::find(children_.begin(), children_.end(), action);
+                itr == children_.end())
+                children_.push_back(action);
+        }
         
         void setCallback(const std::function<void()>& callback) { callback_ = callback; }
         std::function<void()> getCallback() const { return callback_; }
@@ -210,6 +221,8 @@ namespace chai
 
     private:
         std::function<void()> callback_ = nullptr;
+
+        std::vector<std::shared_ptr<Action>> children_;
 
         Shortcut shortcut_;
 
