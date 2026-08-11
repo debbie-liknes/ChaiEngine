@@ -119,13 +119,13 @@ namespace chai::gfx
         void setupCombine(VkImageView view, VkImageView bloomView);
         void bloomPass(ChaiRenderGraph& renderGraph,
                        RenderTargetView& scene,
-                       CRGTextureHandle sceneHandle,
-                       CRGTextureHandle bloomChain);
+                       CRGTextureHandle& sceneHandle,
+                       CRGTextureHandle& bloomChain);
         void combinePass(ChaiRenderGraph& renderGraph,
                          RenderTargetView& target,
-                         CRGTextureHandle sceneHandle,
-                         CRGTextureHandle bloomChain,
-                         CRGTextureHandle combineTarget);
+                         CRGTextureHandle& sceneHandle,
+                         CRGTextureHandle& bloomChain,
+                         CRGTextureHandle& combineTarget);
         void blitCombineToViewport(VkCommandBuffer cmd,
                                    const RenderTargetView& view,
                                    VkImage combineImage,
@@ -136,11 +136,10 @@ namespace chai::gfx
         void bakeBrdfLut();
         void bakePrefilter(const GpuTexture& envCube);
         void writeEnvironmentSet(const GpuTexture& skybox);
-        void
-        shadowMapping(VkCommandBuffer cmd, const std::vector<uint32_t>&, const FrameRenderData&);
-        void postProcess(VkCommandBuffer cmd,
-                         const RenderTargetView& view,
-                         const FrameRenderData& renderData);
+        void shadowMapping(VkCommandBuffer cmd,
+                           const std::vector<uint32_t>&,
+                           const FrameRenderData&,
+                           CRGTextureHandle&);
 
         void beginUIFrame();
         void endUIFrame();

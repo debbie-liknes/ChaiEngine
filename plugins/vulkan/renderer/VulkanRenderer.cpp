@@ -341,7 +341,6 @@ namespace chai::gfx
         lightUBO.view = renderData.sun.view;
         std::memcpy(frame.lightMapped, &lightUBO, sizeof(lightUBO));
 
-        renderGraph_.clear();
         RenderTargetView view{};
         uint32_t imageIndex = 0;
         if (!swapchain_.acquireNext(frame.imageAvailable, view, imageIndex)) {
@@ -377,9 +376,18 @@ namespace chai::gfx
         });
 
         // DRAW
-        shadowMapping(cmd, order, renderData);
+
+        renderGraph_.clear();
+        CRGTextureHandle shadowHandle = renderGraph_.importTexture(
+            "ShadowMap", frames_[currentFrame_].shadowTarget, ImageState::Undefined, TextureType::Depth);
+        shadowMapping(cmd, order, renderData, shadowHandle);
+
+        renderGraph_.compile();
+        renderGraph_.execute(cmd);
 
         viewportReg_.forEachViewport([&](Viewport& viewport) {
+            renderGraph_.clear();
+
             ViewportTarget& target = viewport.targets[currentFrame_];
             auto viewIt = std::find_if(renderData.views.begin(),
                                        renderData.views.end(),
@@ -406,79 +414,75 @@ namespace chai::gfx
             camUBO.position = camView.position;
             std::memcpy(viewport.cameraMapped[currentFrame_], &camUBO, sizeof(camUBO));
 
-            constexpr VkFormat kBloomFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+            ////////////////////////////// Main Pass /////////////////////////////////////////
 
-            // sized against THIS viewport's real extent, pooled/reused across frames by name
-            CRGTextureHandle sceneHDRHandle = renderGraph_.createTexture(
+            constexpr VkFormat kBloomFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+            constexpr VkFormat kSceneDepthFormat = VK_FORMAT_D32_SFLOAT;
+
+            CRGTextureHandle sceneHDR = renderGraph_.createTexture(
                 "SceneColorHDR",
                 {target.view.extent.width, target.view.extent.height, kBloomFormat, 1});
+            CRGTextureHandle sceneDepth = renderGraph_.createTexture("SceneDepth",
+                                                                     {target.view.extent.width,
+                                                                      target.view.extent.height,
+                                                                      kSceneDepthFormat,
+                                                                      1,
+                                                                      TextureType::Depth});
 
-            VkImage sceneImage = renderGraph_.resolvedImage(sceneHDRHandle);
-            VkImageView sceneAttachmentView =
-                renderGraph_.resolvedAttachmentView(sceneHDRHandle, 0);
-            VkImageView sceneSampledView = renderGraph_.resolvedView(sceneHDRHandle, 0);
-            VkExtent2D sceneExtent = renderGraph_.resolvedExtent(sceneHDRHandle, 0);
+            struct MainPassData {
+                CRGTextureHandle color, depth, shadow;
+            };
+            renderGraph_.addPass<MainPassData>(
+                "MainPass_" + viewport.id,
+                [&](CRGBuilder& builder, MainPassData& data) {
+                    data.color = builder.write(sceneHDR);
+                    data.depth = builder.write(sceneDepth);
+                    data.shadow = builder.read(shadowHandle);
+                },
+                [&, order](
+                    VkCommandBuffer cmd, const MainPassData& data, const CRGResources& resources) {
+                    VkExtent2D extent = resources.extent(data.color, 0);
 
-            VkRenderingAttachmentInfo vpColor{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
-            vpColor.imageView = sceneAttachmentView;
-            vpColor.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-            vpColor.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-            vpColor.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-            vpColor.clearValue = target.view.clearColor;
+                    VkRenderingAttachmentInfo vpColor{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
+                    vpColor.imageView = resources.attachmentView(data.color, 0);
+                    vpColor.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                    vpColor.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                    vpColor.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+                    vpColor.clearValue = target.view.clearColor;
 
-            VkRenderingAttachmentInfo vpDepth{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
-            vpDepth.imageView = target.view.depthView;
-            vpDepth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-            vpDepth.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-            vpDepth.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            vpDepth.clearValue.depthStencil = {1.0f, 0};
+                    VkRenderingAttachmentInfo vpDepth{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
+                    vpDepth.imageView = resources.attachmentView(data.depth, 0);
+                    vpDepth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+                    vpDepth.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                    vpDepth.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                    vpDepth.clearValue.depthStencil = {1.0f, 0};
 
-            VkRenderingInfo vpRendering{VK_STRUCTURE_TYPE_RENDERING_INFO};
-            vpRendering.renderArea =
-                VkRect2D{{0, 0}, sceneExtent}; // now genuinely matches this viewport
-            vpRendering.layerCount = 1;
-            vpRendering.colorAttachmentCount = 1;
-            vpRendering.pColorAttachments = &vpColor;
-            vpRendering.pDepthAttachment = &vpDepth;
+                    VkRenderingInfo ri{VK_STRUCTURE_TYPE_RENDERING_INFO};
+                    ri.renderArea = {{0, 0}, extent};
+                    ri.layerCount = 1;
+                    ri.colorAttachmentCount = 1;
+                    ri.pColorAttachments = &vpColor;
+                    ri.pDepthAttachment = &vpDepth;
 
-            profiler_.beginRegion(cmd, "Main Pass: " + viewport.id);
+                    RenderTargetView sceneView{};
+                    sceneView.extent = extent;
+                    sceneView.colorFormat = kBloomFormat;
 
-            transitionImage(cmd,
-                            sceneImage,
-                            viewport.everRendered[currentFrame_] ? ImageState::ShaderRead
-                                                                 : ImageState::Undefined,
-                            ImageState::ColorAttachment);
-            transitionImage(
-                cmd, target.view.depthImage, ImageState::Undefined, ImageState::DepthAttachment);
+                    profiler_.beginRegion(cmd, "Main Pass: " + viewport.id);
+                    vkCmdBeginRendering(cmd, &ri);
+                    renderScene(cmd,
+                                sceneView,
+                                renderData,
+                                order,
+                                viewport.cameraSet[currentFrame_],
+                                viewport.shadingMode,
+                                viewport.wireframe);
+                    vkCmdEndRendering(cmd);
+                    profiler_.endRegion(cmd, "Main Pass: " + viewport.id);
+                });
 
             bool everBlitted = viewport.everRendered[currentFrame_];
             viewport.everRendered[currentFrame_] = true;
-
-            RenderTargetView sceneView{};
-            sceneView.extent = sceneExtent;
-            sceneView.image = sceneImage;
-            sceneView.colorView = sceneSampledView; // used for the graph import below
-            sceneView.colorFormat = kBloomFormat;
-            sceneView.depthImage = target.view.depthImage;
-            sceneView.depthView = target.view.depthView;
-            sceneView.depthFormat = target.view.depthFormat;
-            sceneView.clearColor = target.view.clearColor;
-
-            vkCmdBeginRendering(cmd, &vpRendering);
-            renderScene(cmd,
-                        sceneView,
-                        renderData,
-                        order,
-                        viewport.cameraSet[currentFrame_],
-                        viewport.shadingMode,
-                        viewport.wireframe);
-            vkCmdEndRendering(cmd);
-
-            transitionImage(cmd, sceneImage, ImageState::ColorAttachment, ImageState::ShaderRead);
-            profiler_.endRegion(cmd, "Main Pass: " + viewport.id);
-
-            CRGTextureHandle scene =
-                renderGraph_.importTexture("Scene Color", sceneView, ImageState::ShaderRead);
 
             CRGTextureHandle bloomChain = renderGraph_.createTexture(
                 "BloomChain",
@@ -488,8 +492,13 @@ namespace chai::gfx
                 "CombineTarget",
                 {target.view.extent.width, target.view.extent.height, kBloomFormat, 1});
 
-            bloomPass(renderGraph_, target.view, scene, bloomChain);
-            combinePass(renderGraph_, target.view, scene, bloomChain, combineTarget);
+            profiler_.beginRegion(cmd, "Post Process Pass: " + viewport.id);
+            bloomPass(renderGraph_,
+                      target.view,
+                      sceneHDR,
+                      bloomChain); // sceneHDR directly, no import needed
+            combinePass(renderGraph_, target.view, sceneHDR, bloomChain, combineTarget);
+            profiler_.endRegion(cmd, "Post Process Pass: " + viewport.id);
 
             renderGraph_.compile();
             renderGraph_.execute(cmd);
@@ -687,36 +696,10 @@ namespace chai::gfx
         vkCmdDraw(cmd, 3, 1, 0, 0);
     }
 
-    void VulkanRenderer::postProcess(VkCommandBuffer cmd,
-                                     const RenderTargetView& view,
-                                     const FrameRenderData& renderData)
-    {
-        // This is just bloom right now
-        // VkViewport viewport{0, 0, float(frames_[currentFrame_].bloomChainTarget.extent.width),
-        // float(frames_[currentFrame_].bloomChainTarget.extent.height), 0.f, 1.f};
-        // vkCmdSetViewport(cmd, 0, 1, &viewport);
-        // VkRect2D scissor{{0, 0}, frames_[currentFrame_].bloomChainTarget.extent};
-        // vkCmdSetScissor(cmd, 0, 1, &scissor);
-
-        //// threshold pass
-        // setupPostProcess(view.colorView);
-        // vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, thresholdPipeline_);
-        // vkCmdBindDescriptorSets(cmd,
-        //                         VK_PIPELINE_BIND_POINT_GRAPHICS,
-        //                         postProcessLayout_,
-        //                         0,
-        //                         1,
-        //                         &frames_[currentFrame_].postProcessSet,
-        //                         0,
-        //                         nullptr);
-
-        // vkCmdDraw(cmd, 3, 1, 0, 0);
-    }
-
     void VulkanRenderer::bloomPass(ChaiRenderGraph& renderGraph,
                                    RenderTargetView& target,
-                                   CRGTextureHandle sceneHandle,
-                                   CRGTextureHandle bloomChain)
+                                   CRGTextureHandle& sceneHandle,
+                                   CRGTextureHandle& bloomChain)
     {
         // Soft threshold
         struct ThresholdData {
@@ -899,9 +882,6 @@ namespace chai::gfx
 
     void VulkanRenderer::setupPostProcess(VkImageView sceneView, VkImageView bloomView)
     {
-        // if (postProcessSet_ != VK_NULL_HANDLE)
-        //     return;
-
         if (frames_[currentFrame_].postProcessSet == VK_NULL_HANDLE) {
             VkDescriptorSetLayout layout = ctx_.postProcessSetLayout();
             VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
@@ -935,9 +915,6 @@ namespace chai::gfx
 
     void VulkanRenderer::setupCombine(VkImageView sceneView, VkImageView bloomView)
     {
-        // if (postProcessSet_ != VK_NULL_HANDLE)
-        //     return;
-
         if (frames_[currentFrame_].combineSet == VK_NULL_HANDLE) {
             VkDescriptorSetLayout layout = ctx_.postProcessSetLayout();
             VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
@@ -971,9 +948,9 @@ namespace chai::gfx
 
     void VulkanRenderer::combinePass(ChaiRenderGraph& renderGraph,
                                      RenderTargetView& target,
-                                     CRGTextureHandle sceneHandle,
-                                     CRGTextureHandle bloomChain,
-                                     CRGTextureHandle combineTarget)
+                                     CRGTextureHandle& sceneHandle,
+                                     CRGTextureHandle& bloomChain,
+                                     CRGTextureHandle& combineTarget)
     {
         struct CombineData {
             CRGTextureHandle scene, bloom, output;
@@ -1152,12 +1129,21 @@ namespace chai::gfx
         auto attrs = vertexAttributes();
         auto bind = vertexBinding();
 
-        pipelineCache_.getOrCreate(
-            {"pbr.vert.spv", "pbr.frag.spv", AlphaMode::Opaque, VK_POLYGON_MODE_FILL});
-        pipelineCache_.getOrCreate(
-            {"pbr.vert.spv", "pbr.frag.spv", AlphaMode::Blend, VK_POLYGON_MODE_FILL});
-        pipelineCache_.getOrCreate(
-            {"pbr.vert.spv", "pbr.frag.spv", AlphaMode::Opaque, VK_POLYGON_MODE_LINE}); // WIREFRAME
+        pipelineCache_.getOrCreate({"pbr.vert.spv",
+                                    "pbr.frag.spv",
+                                    AlphaMode::Opaque,
+                                    VK_POLYGON_MODE_FILL,
+                                    ctx_.getSampleCount(VK_SAMPLE_COUNT_1_BIT)});
+        pipelineCache_.getOrCreate({"pbr.vert.spv",
+                                    "pbr.frag.spv",
+                                    AlphaMode::Blend,
+                                    VK_POLYGON_MODE_FILL,
+                                    ctx_.getSampleCount(VK_SAMPLE_COUNT_1_BIT)});
+        pipelineCache_.getOrCreate({"pbr.vert.spv",
+                                    "pbr.frag.spv",
+                                    AlphaMode::Opaque,
+                                    VK_POLYGON_MODE_LINE,
+                                    ctx_.getSampleCount(VK_SAMPLE_COUNT_1_BIT)}); // WIREFRAME
 
         skyboxPipeline_ = loadPipelineByName(
             ctx_, "skybox.vert.spv", "skybox.frag.spv", pipelineLayout_, [&](PipelineBuilder& b) {
@@ -1167,6 +1153,7 @@ namespace chai::gfx
                     .disableDepthWrite()
                     .setDepthOp(VK_COMPARE_OP_LESS_OR_EQUAL)
                     .disableBlending()
+                    .setSampleCount(ctx_.getSampleCount(VK_SAMPLE_COUNT_1_BIT))
                     .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
             });
 
@@ -1577,97 +1564,72 @@ namespace chai::gfx
 
     void VulkanRenderer::shadowMapping(VkCommandBuffer cmd,
                                        const std::vector<uint32_t>& order,
-                                       const FrameRenderData& renderData)
+                                       const FrameRenderData& renderData,
+                                       CRGTextureHandle& shadowHandle)
     {
         auto& target = frames_[currentFrame_].shadowTarget;
         const auto& items = renderData.items;
 
-        {
-            VkDescriptorImageInfo img{};
-            img.imageView = target.view; // the skybox
-            img.sampler = target.sampler;
-            img.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            VkWriteDescriptorSet w{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
-            w.dstSet = frames_[currentFrame_].lightSet;
-            w.dstBinding = 1;
-            w.descriptorCount = 1;
-            w.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            w.pImageInfo = &img;
-            vkUpdateDescriptorSets(ctx_.device(), 1, &w, 0, nullptr);
-        }
+        struct ShadowData {
+            CRGTextureHandle output;
+        };
+        renderGraph_.addPass<ShadowData>(
+            "ShadowMap",
+            [&](CRGBuilder& builder, ShadowData& data) {
+                data.output = builder.write(shadowHandle);
+            },
+            [&, order](VkCommandBuffer cmd, const ShadowData& data, const CRGResources& resources) {
+                // body is your existing shadowMapping() code, minus its own imageBarrier call —
+                // the graph now issues that barrier automatically before this lambda runs
+                VkRenderingAttachmentInfo depth{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
+                depth.imageView = resources.attachmentView(data.output, 0);
+                depth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+                depth.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                depth.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+                depth.clearValue.depthStencil.depth = 1.0f;
+                
 
-        imageBarrier(cmd,
-                     target.image,
-                     VK_IMAGE_LAYOUT_UNDEFINED,
-                     VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-                     VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
-                     0,
-                     VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT |
-                         VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
-                     VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-                     VK_IMAGE_ASPECT_DEPTH_BIT, // no stencil
-                     1,
-                     1);
+                VkRenderingInfo ri{VK_STRUCTURE_TYPE_RENDERING_INFO};
+                ri.renderArea = {{0, 0}, {kShadowMapSize, kShadowMapSize}};
+                ri.layerCount = 1;
+                ri.pDepthAttachment = &depth;
 
-        VkRenderingAttachmentInfo depth{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
-        depth.imageView = target.view;
-        depth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-        depth.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        depth.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        depth.clearValue.depthStencil.depth = 1.0f;
+                profiler_.beginRegion(cmd, "Shadow Pass");
+                vkCmdBeginRendering(cmd, &ri);
+                VkViewport vp{0, 0, float(kShadowMapSize), float(kShadowMapSize), 0.f, 1.f};
+                vkCmdSetViewport(cmd, 0, 1, &vp);
+                VkRect2D sc{{0, 0}, {kShadowMapSize, kShadowMapSize}};
+                vkCmdSetScissor(cmd, 0, 1, &sc);
 
-        VkRenderingInfo ri{VK_STRUCTURE_TYPE_RENDERING_INFO};
-        ri.renderArea = {{0, 0}, {kShadowMapSize, kShadowMapSize}};
-        ri.layerCount = 1;
-        ri.pDepthAttachment = &depth;
+                vkCmdSetDepthBias(cmd, 1.25f, 0.f, 2.f);
 
-        profiler_.beginRegion(cmd, "Shadow Pass");
-        vkCmdBeginRendering(cmd, &ri);
-        VkViewport vp{0, 0, float(kShadowMapSize), float(kShadowMapSize), 0.f, 1.f};
-        vkCmdSetViewport(cmd, 0, 1, &vp);
-        VkRect2D sc{{0, 0}, {kShadowMapSize, kShadowMapSize}};
-        vkCmdSetScissor(cmd, 0, 1, &sc);
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipeline_);
 
-        vkCmdSetDepthBias(cmd, 1.25f, 0.f, 2.f);
+                for (auto& idx : order) {
+                    const RenderItem& item = items[idx];
 
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipeline_);
+                    const GpuMesh* mesh = meshCache_->resource(item.mesh);
+                    if (!mesh)
+                        continue;
 
-        for (auto& idx : order) {
-            const RenderItem& item = items[idx];
+                    struct {
+                        math::Mat4 proj;
+                        math::Mat4 view;
+                        math::Mat4 model;
+                    } push{renderData.sun.proj, renderData.sun.view, item.model};
+                    vkCmdPushConstants(
+                        cmd, shadowLayout_, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(push), &push);
+                    VkBuffer vb = mesh->vertexBuffer.handle;
+                    VkDeviceSize offset = 0;
+                    vkCmdBindVertexBuffers(cmd, 0, 1, &vb, &offset);
+                    vkCmdBindIndexBuffer(cmd, mesh->indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
+                    vkCmdDrawIndexed(cmd, mesh->indexCount, 1, 0, 0, 0);
+                    stats_.shadowPass.drawCalls++;
+                }
 
-            const GpuMesh* mesh = meshCache_->resource(item.mesh);
-            if (!mesh)
-                continue;
-
-            struct {
-                math::Mat4 proj;
-                math::Mat4 view;
-                math::Mat4 model;
-            } push{renderData.sun.proj, renderData.sun.view, item.model};
-            vkCmdPushConstants(
-                cmd, shadowLayout_, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(push), &push);
-            VkBuffer vb = mesh->vertexBuffer.handle;
-            VkDeviceSize offset = 0;
-            vkCmdBindVertexBuffers(cmd, 0, 1, &vb, &offset);
-            vkCmdBindIndexBuffer(cmd, mesh->indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
-            vkCmdDrawIndexed(cmd, mesh->indexCount, 1, 0, 0, 0);
-            stats_.shadowPass.drawCalls++;
-        }
-
-        vkCmdEndRendering(cmd);
-        profiler_.endRegion(cmd, "Shadow Pass");
-
-        imageBarrier(cmd,
-                     target.image,
-                     VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-                     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                     VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
-                     VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-                     VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
-                     VK_ACCESS_2_SHADER_READ_BIT,
-                     VK_IMAGE_ASPECT_DEPTH_BIT, // No stencil
-                     1,
-                     1);
+                vkCmdEndRendering(cmd);
+                profiler_.endRegion(cmd, "Shadow Pass");
+            });
     }
 
     void applyCustomStyle()

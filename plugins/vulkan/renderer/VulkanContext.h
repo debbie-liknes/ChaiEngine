@@ -55,6 +55,7 @@ namespace chai::gfx
         VkDescriptorPool descriptorPool() const { return descriptorPool_; }
 
         VkSampler linearSampler() const { return linearSampler_; }
+        VkSampleCountFlagBits getSampleCount(VkSampleCountFlagBits desired);
 
     private:
         vkb::Instance vkbInstance_;

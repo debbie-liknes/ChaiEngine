@@ -20,8 +20,9 @@ namespace chai::gfx
     // TODO: actually handle the generational part
 
     CRGTextureHandle ChaiRenderGraph::importTexture(const std::string& name,
-                                                    RenderTargetView& view,
-                                                    ImageState state)
+                                                    RenderTarget& view,
+                                                    ImageState state,
+                                                    TextureType type)
     {
         for (uint32_t i = 0; i < textures_.size(); ++i) {
             if (textures_[i].name == name && textures_[i].isImported) {
@@ -41,6 +42,7 @@ namespace chai::gfx
         tex.isImported = true;
         tex.importedTarget = &view;
         tex.mipStates.assign(1, state); // single mip?
+        tex.desc.type = type; 
         textures_.push_back(std::move(tex));
         return CRGTextureHandle{uint32_t(textures_.size() - 1), textures_.back().generation};
     }
@@ -62,7 +64,14 @@ namespace chai::gfx
     {
         CRGTexture texture{};
         texture.isImported = false;
-        texture.target = createColor2D(ctx_, desc.width, desc.height, desc.format, desc.mipLevels);
+        if (desc.type == TextureType::Color2D) {
+            texture.target =
+                createColor2D(ctx_, desc.width, desc.height, desc.format, desc.mipLevels);
+
+        } else if (desc.type == TextureType::Depth) {
+            texture.target =
+                createDepth2D(ctx_, desc.width, desc.height, desc.format, false);
+        }
         texture.mipStates.resize(desc.mipLevels, ImageState::Undefined);
         texture.desc = desc;
         texture.name = name;
@@ -160,9 +169,15 @@ namespace chai::gfx
         for (uint32_t passIdx : order) {
             for (auto& access : passes_[passIdx]->accesses) {
                 CRGTexture& tex = textures[access.handle.index];
-                ImageState needed = (access.access == CRGAccess::Read)
-                                        ? ImageState::ShaderRead
-                                        : ImageState::ColorAttachment;
+                ImageState needed = ImageState::Undefined;
+                if (tex.desc.type == TextureType::Color2D) {
+                    needed = (access.access == CRGAccess::Read) ? ImageState::ShaderRead
+                                                                : ImageState::ColorAttachment;
+                } else if (tex.desc.type == TextureType::Depth) {
+                    needed = (access.access == CRGAccess::Read) ? ImageState::DepthShaderRead
+                                                                : ImageState::DepthAttachment;
+                }
+
                 ImageState current = tex.mipStates[access.mip];
 
                 if (current != needed) {

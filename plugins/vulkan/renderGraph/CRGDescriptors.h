@@ -15,11 +15,14 @@ namespace chai::gfx
         bool isValid() const { return index != UINT32_MAX; }
     };
 
+    enum class TextureType { Depth, Color2D, Cube };
+
     struct CRGTextureDesc 
     {
         uint32_t width = 0, height = 0;
         VkFormat format = VK_FORMAT_UNDEFINED;
         uint32_t mipLevels = 1;
+        TextureType type = TextureType::Color2D;
     };
 
     enum class CRGAccess { Read, Write };
@@ -38,7 +41,7 @@ namespace chai::gfx
 
         bool isImported = false;
         RenderTarget target;             // valid if isImported is false
-        RenderTargetView* importedTarget = nullptr; // valid if isImported is true
+        RenderTarget* importedTarget = nullptr; // valid if isImported is true
 
         std::vector<ImageState> mipStates; // tracks the state of each mip level
 

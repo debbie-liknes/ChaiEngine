@@ -103,6 +103,12 @@ namespace chai::gfx
         return *this;
     }
 
+    PipelineBuilder& PipelineBuilder::setSampleCount(VkSampleCountFlagBits count)
+    {
+        sampleCount_ = count;
+        return *this;
+    }
+
     VkPipeline PipelineBuilder::build(VkDevice device, VkPipelineLayout layout)
     {
         // TODO: support adding multiple shader stages
@@ -144,7 +150,7 @@ namespace chai::gfx
 
         VkPipelineMultisampleStateCreateInfo multisample{
             VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO};
-        multisample.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT; // no MSAA
+        multisample.rasterizationSamples = sampleCount_; // no MSAA
         multisample.minSampleShading = 1.0f;
 
         VkPipelineDepthStencilStateCreateInfo depthStencil{

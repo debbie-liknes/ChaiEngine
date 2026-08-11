@@ -84,6 +84,31 @@ namespace chai::gfx
         VK_CHECK(vkCreateSampler(device_, &samplerInfo, nullptr, &linearSampler_));
     }
 
+    VkSampleCountFlagBits chooseSampleCount(VkSampleCountFlags supported,
+                                                           VkSampleCountFlagBits desired)
+    {
+        if (supported & desired)
+            return desired;
+
+        if (supported & VK_SAMPLE_COUNT_8_BIT)
+            return VK_SAMPLE_COUNT_8_BIT;
+        if (supported & VK_SAMPLE_COUNT_4_BIT)
+            return VK_SAMPLE_COUNT_4_BIT;
+        if (supported & VK_SAMPLE_COUNT_2_BIT)
+            return VK_SAMPLE_COUNT_2_BIT;
+        return VK_SAMPLE_COUNT_1_BIT; // no MSAA support
+    }
+
+    VkSampleCountFlagBits VulkanContext::getSampleCount(VkSampleCountFlagBits desired)
+    {
+        VkPhysicalDeviceProperties props{};
+        vkGetPhysicalDeviceProperties(physicalDevice_, &props);
+        VkSampleCountFlags supported =
+            props.limits.framebufferColorSampleCounts & props.limits.framebufferDepthSampleCounts;
+
+        return chooseSampleCount(supported, desired);
+    }
+
     void VulkanContext::setupInstance(IWindow& window)
     {
         vkb::InstanceBuilder builder;
@@ -137,7 +162,6 @@ namespace chai::gfx
         features12.bufferDeviceAddress = true;
         features12.descriptorIndexing = true;
         features12.timelineSemaphore = true;
-
         VkPhysicalDeviceFeatures required{};
         required.samplerAnisotropy = VK_TRUE;
         required.fillModeNonSolid = VK_TRUE;

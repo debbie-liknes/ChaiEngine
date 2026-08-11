@@ -13,6 +13,7 @@ namespace chai::gfx
         DepthAttachment,
 
         ShaderRead,
+        DepthShaderRead,
 
         TransferSrc,
         TransferDst,

@@ -6,14 +6,14 @@ namespace chai::gfx
     VkImageView CRGResources::view(CRGTextureHandle h, uint32_t mip) const
     {
         return graph_.textures_[h.index].isImported
-                   ? graph_.textures_[h.index].importedTarget->colorView
+                   ? graph_.textures_[h.index].importedTarget->renderView(mip)
                    : graph_.textures_[h.index].target.renderView(mip);
     }
 
     VkImageView CRGResources::attachmentView(CRGTextureHandle h, uint32_t mip) const
     {
         return graph_.textures_[h.index].isImported
-                   ? graph_.textures_[h.index].importedTarget->colorView
+                   ? graph_.textures_[h.index].importedTarget->renderView(mip)
                    : graph_.textures_[h.index].target.renderView(mip);
     }
 
