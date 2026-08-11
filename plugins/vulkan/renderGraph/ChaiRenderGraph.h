@@ -29,6 +29,20 @@ namespace chai::gfx
             tex.mipStates[mip] = state;
         }
 
+        VkImageView resolvedAttachmentView(CRGTextureHandle handle,
+                                                            uint32_t mip) const
+        {
+            const CRGTexture& tex = textures_[handle.index];
+            return tex.isImported ? tex.importedTarget->colorView : tex.target.renderViews[mip];
+        }
+
+        VkImageView resolvedView(CRGTextureHandle handle, uint32_t mip) const
+        {
+            const CRGTexture& tex = textures_[handle.index];
+            return tex.isImported ? tex.importedTarget->colorView
+                                  : tex.target.view; // full-range sampling view
+        }
+
         template <typename PassData, typename SetupFn, typename ExecuteFn>
         PassData& addPass(const std::string& name, SetupFn&& setup, ExecuteFn&& execute)
         {

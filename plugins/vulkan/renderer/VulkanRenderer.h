@@ -129,7 +129,8 @@ namespace chai::gfx
         void blitCombineToViewport(VkCommandBuffer cmd,
                                    const RenderTargetView& view,
                                    VkImage combineImage,
-                                   VkExtent2D combineExtent);
+                                   VkExtent2D combineExtent,
+            bool everRendered);
         void ensureSkyboxSet(FrameData& frame, const GpuTexture& cube, Handle<Texture> handle);
         void bakeIrradiance(const GpuTexture& envCube);
         void bakeBrdfLut();

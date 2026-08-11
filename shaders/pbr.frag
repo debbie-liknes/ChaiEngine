@@ -125,7 +125,7 @@ void main()
 
     vec3 mr = texture(metalRoughTex, vUV).rgb;
     float metallic  = mr.b * mat.metallic;
-    float roughness = clamp(mr.g * mat.roughness, 0.04, 1.0);
+    float roughness = clamp(mr.g * mat.roughness, 0.08, 1.0);
     float ao        = texture(occlusionTex, vUV).r;
     vec3 emissive   = texture(emissiveTex, vUV).rgb * mat.emissive.rgb;
 
@@ -136,7 +136,7 @@ void main()
     vec3 L = normalize(-light.direction.xyz);
     vec3 H = normalize(V + L);
 
-    float NoV = max(dot(N, V), 1e-4);
+    float NoV = max(dot(N, V), 0.02); 
     float NoL = max(dot(N, L), 0.0);
     float NoH = max(dot(N, H), 0.0);
     float VoH = max(dot(V, H), 0.0);
@@ -172,10 +172,10 @@ void main()
 
     // ---- combine ----
     //TODO: make this a uniform
-    float exposure = 2.9;
+    float exposure = 1.0;
     vec3 color = ambient + lo + emissive;
     color *= exposure;
-    color = acesFilm(color);
+    //color = acesFilm(color);
 
     vec3 finalColor;
     switch (pc.shadingMode) {

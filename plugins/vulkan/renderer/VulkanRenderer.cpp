@@ -46,7 +46,8 @@ namespace chai::gfx
                      }()),
           locator_(locator), meshCache_(meshCache), texCache_(texCache), materialCache_(matCache),
           modelReg_(texReg), viewportReg_(*viewportReg),
-          pipelineCache_(context, swapchain_.format(), swapchain_.depthFormat()), renderGraph_(ctx_)
+          pipelineCache_(context, VK_FORMAT_R16G16B16A16_SFLOAT, swapchain_.depthFormat()),
+          renderGraph_(ctx_)
     {
         init();
         CHAI_LOG_INFO("VulkanRenderer initialized");
@@ -63,8 +64,6 @@ namespace chai::gfx
             vkDestroyFence(ctx_.device(), frames_[i].inFlight, nullptr);
             vkDestroySemaphore(ctx_.device(), frames_[i].imageAvailable, nullptr);
             frames_[i].shadowTarget.destroy(ctx_);
-            //frames_[i].combineTarget.destroy(ctx_);
-            // frames_[i].bloomChainTarget.destroy(ctx_);
         }
 
         pipelineCache_.destroyAll();
@@ -128,9 +127,6 @@ namespace chai::gfx
 
             frames_[i].shadowTarget =
                 createDepth2D(ctx_, kShadowMapSize, kShadowMapSize, VK_FORMAT_D32_SFLOAT, true);
-
-            //frames_[i].combineTarget = createColor2D(
-            //    ctx_, swapchain_.extent().width, swapchain_.extent().height, swapchain_.format());
 
             const uint32_t kBloomMips = 6;
             uint32_t bloomSetCount = 2 * (kBloomMips - 1);
@@ -410,8 +406,21 @@ namespace chai::gfx
             camUBO.position = camView.position;
             std::memcpy(viewport.cameraMapped[currentFrame_], &camUBO, sizeof(camUBO));
 
+            constexpr VkFormat kBloomFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+
+            // sized against THIS viewport's real extent, pooled/reused across frames by name
+            CRGTextureHandle sceneHDRHandle = renderGraph_.createTexture(
+                "SceneColorHDR",
+                {target.view.extent.width, target.view.extent.height, kBloomFormat, 1});
+
+            VkImage sceneImage = renderGraph_.resolvedImage(sceneHDRHandle);
+            VkImageView sceneAttachmentView =
+                renderGraph_.resolvedAttachmentView(sceneHDRHandle, 0);
+            VkImageView sceneSampledView = renderGraph_.resolvedView(sceneHDRHandle, 0);
+            VkExtent2D sceneExtent = renderGraph_.resolvedExtent(sceneHDRHandle, 0);
+
             VkRenderingAttachmentInfo vpColor{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
-            vpColor.imageView = target.view.colorView;
+            vpColor.imageView = sceneAttachmentView;
             vpColor.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
             vpColor.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
             vpColor.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -425,46 +434,59 @@ namespace chai::gfx
             vpDepth.clearValue.depthStencil = {1.0f, 0};
 
             VkRenderingInfo vpRendering{VK_STRUCTURE_TYPE_RENDERING_INFO};
-            vpRendering.renderArea = VkRect2D{{0, 0}, target.view.extent};
+            vpRendering.renderArea =
+                VkRect2D{{0, 0}, sceneExtent}; // now genuinely matches this viewport
             vpRendering.layerCount = 1;
             vpRendering.colorAttachmentCount = 1;
             vpRendering.pColorAttachments = &vpColor;
             vpRendering.pDepthAttachment = &vpDepth;
 
+            profiler_.beginRegion(cmd, "Main Pass: " + viewport.id);
+
             transitionImage(cmd,
-                            target.view.image,
+                            sceneImage,
                             viewport.everRendered[currentFrame_] ? ImageState::ShaderRead
                                                                  : ImageState::Undefined,
                             ImageState::ColorAttachment);
             transitionImage(
                 cmd, target.view.depthImage, ImageState::Undefined, ImageState::DepthAttachment);
 
+            bool everBlitted = viewport.everRendered[currentFrame_];
             viewport.everRendered[currentFrame_] = true;
 
-            profiler_.beginRegion(cmd, "Main Pass: " + viewport.id);
+            RenderTargetView sceneView{};
+            sceneView.extent = sceneExtent;
+            sceneView.image = sceneImage;
+            sceneView.colorView = sceneSampledView; // used for the graph import below
+            sceneView.colorFormat = kBloomFormat;
+            sceneView.depthImage = target.view.depthImage;
+            sceneView.depthView = target.view.depthView;
+            sceneView.depthFormat = target.view.depthFormat;
+            sceneView.clearColor = target.view.clearColor;
+
             vkCmdBeginRendering(cmd, &vpRendering);
             renderScene(cmd,
-                        target.view,
+                        sceneView,
                         renderData,
                         order,
                         viewport.cameraSet[currentFrame_],
                         viewport.shadingMode,
                         viewport.wireframe);
             vkCmdEndRendering(cmd);
+
+            transitionImage(cmd, sceneImage, ImageState::ColorAttachment, ImageState::ShaderRead);
             profiler_.endRegion(cmd, "Main Pass: " + viewport.id);
 
-            transitionImage(
-                cmd, target.view.image, ImageState::ColorAttachment, ImageState::ShaderRead);
-
             CRGTextureHandle scene =
-                renderGraph_.importTexture("Scene Color", target.view, ImageState::ShaderRead);
+                renderGraph_.importTexture("Scene Color", sceneView, ImageState::ShaderRead);
+
             CRGTextureHandle bloomChain = renderGraph_.createTexture(
                 "BloomChain",
-                {target.view.extent.width, target.view.extent.height, target.view.colorFormat, 6});
+                {target.view.extent.width, target.view.extent.height, kBloomFormat, 6});
 
             CRGTextureHandle combineTarget = renderGraph_.createTexture(
                 "CombineTarget",
-                {target.view.extent.width, target.view.extent.height, target.view.colorFormat, 1});
+                {target.view.extent.width, target.view.extent.height, kBloomFormat, 1});
 
             bloomPass(renderGraph_, target.view, scene, bloomChain);
             combinePass(renderGraph_, target.view, scene, bloomChain, combineTarget);
@@ -472,7 +494,11 @@ namespace chai::gfx
             renderGraph_.compile();
             renderGraph_.execute(cmd);
 
-            blitCombineToViewport(cmd, target.view, renderGraph_.resolvedImage(combineTarget), renderGraph_.resolvedExtent(combineTarget));
+            blitCombineToViewport(cmd,
+                                  target.view,
+                                  renderGraph_.resolvedImage(combineTarget),
+                                  renderGraph_.resolvedExtent(combineTarget),
+                                  everBlitted);
             renderGraph_.markExternalState(combineTarget, ImageState::TransferSrc);
         });
 
@@ -687,7 +713,10 @@ namespace chai::gfx
         // vkCmdDraw(cmd, 3, 1, 0, 0);
     }
 
-    void VulkanRenderer::bloomPass(ChaiRenderGraph& renderGraph, RenderTargetView& target, CRGTextureHandle sceneHandle, CRGTextureHandle bloomChain)
+    void VulkanRenderer::bloomPass(ChaiRenderGraph& renderGraph,
+                                   RenderTargetView& target,
+                                   CRGTextureHandle sceneHandle,
+                                   CRGTextureHandle bloomChain)
     {
         // Soft threshold
         struct ThresholdData {
@@ -915,7 +944,8 @@ namespace chai::gfx
             dsai.descriptorPool = ctx_.descriptorPool();
             dsai.descriptorSetCount = 1;
             dsai.pSetLayouts = &layout;
-            VK_CHECK(vkAllocateDescriptorSets(ctx_.device(), &dsai, &frames_[currentFrame_].combineSet));
+            VK_CHECK(
+                vkAllocateDescriptorSets(ctx_.device(), &dsai, &frames_[currentFrame_].combineSet));
         }
 
         VkDescriptorImageInfo imgs[2]{};
@@ -993,19 +1023,18 @@ namespace chai::gfx
     void VulkanRenderer::blitCombineToViewport(VkCommandBuffer cmd,
                                                const RenderTargetView& view,
                                                VkImage combineImage,
-                                               VkExtent2D combineExtent)
+                                               VkExtent2D combineExtent, bool everRendered)
     {
+        transitionImage(cmd, combineImage, ImageState::ColorAttachment, ImageState::TransferSrc);
         transitionImage(cmd,
-                        combineImage,
-                        ImageState::ColorAttachment,
-                        ImageState::TransferSrc);
-        transitionImage(cmd, view.image, ImageState::ShaderRead, ImageState::TransferDst);
+                        view.image,
+                        everRendered ? ImageState::ShaderRead : ImageState::Undefined,
+                        ImageState::TransferDst);
 
         VkImageBlit blit{};
         blit.srcSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
         blit.srcOffsets[0] = {0, 0, 0};
-        blit.srcOffsets[1] = {int32_t(combineExtent.width), int32_t(combineExtent.height),
-                              1};
+        blit.srcOffsets[1] = {int32_t(combineExtent.width), int32_t(combineExtent.height), 1};
 
         blit.dstSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
         blit.dstOffsets[0] = {0, 0, 0};
@@ -1132,7 +1161,7 @@ namespace chai::gfx
 
         skyboxPipeline_ = loadPipelineByName(
             ctx_, "skybox.vert.spv", "skybox.frag.spv", pipelineLayout_, [&](PipelineBuilder& b) {
-                b.setColorFormat(swapchain_.format())
+                b.setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
                     .setDepthFormat(swapchain_.depthFormat())
                     .enableDepthTest()
                     .disableDepthWrite()
@@ -1198,7 +1227,7 @@ namespace chai::gfx
             postProcessLayout_,
             [&](PipelineBuilder& b) {
                 b.disableBlending()
-                    .setColorFormat(VK_FORMAT_B8G8R8A8_UNORM)
+                    .setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
                     .disableDepthTest()
                     .disableDepthWrite()
                     .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
@@ -1211,7 +1240,7 @@ namespace chai::gfx
             bloomLayout_,
             [&](PipelineBuilder& b) {
                 b.disableBlending()
-                    .setColorFormat(VK_FORMAT_B8G8R8A8_UNORM)
+                    .setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
                     .disableDepthTest()
                     .disableDepthWrite()
                     .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
@@ -1224,24 +1253,24 @@ namespace chai::gfx
             bloomLayout_,
             [&](PipelineBuilder& b) {
                 b.enableBlending()
-                    .setColorFormat(VK_FORMAT_B8G8R8A8_UNORM)
+                    .setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
                     .disableDepthTest()
                     .disableDepthWrite()
                     .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
             });
 
-         combinePipeline_ = loadPipelineByName(
-             ctx_,
-             "combinePostProcess.vert.spv",
-             "combinePostProcess.frag.spv",
-             postProcessLayout_,
-             [&](PipelineBuilder& b) {
-                 b.disableBlending()
-                     .setColorFormat(VK_FORMAT_B8G8R8A8_UNORM)
-                     .disableDepthTest()
-                     .disableDepthWrite()
-                     .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
-             });
+        combinePipeline_ = loadPipelineByName(ctx_,
+                                              "combinePostProcess.vert.spv",
+                                              "combinePostProcess.frag.spv",
+                                              postProcessLayout_,
+                                              [&](PipelineBuilder& b) {
+                                                  b.disableBlending()
+                                                      .setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
+                                                      .disableDepthTest()
+                                                      .disableDepthWrite()
+                                                      .setCullMode(VK_CULL_MODE_NONE,
+                                                                   VK_FRONT_FACE_COUNTER_CLOCKWISE);
+                                              });
     }
 
     void VulkanRenderer::ensureSkyboxSet(FrameData& frame,

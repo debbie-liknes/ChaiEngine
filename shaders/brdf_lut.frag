@@ -57,7 +57,7 @@ vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness)
 
 float G_SchlickGGX_IBL(float NdotV, float k)
 {
-    return NdotV / (NdotV * (1.0 - k) + k);
+    return NdotV / max(NdotV * (1.0 - k) + k, 1e-4);
 }
 
 float G_Smith_IBL(float NoV, float NoL, float roughness)
@@ -93,7 +93,7 @@ void main() {
         if(NoL > 0.0)
         {
             float g = G_Smith_IBL(NoV, NoL, roughness);
-            float G_Vis = (g * VoH) / (NoH * NoV);
+            float G_Vis = (g * VoH) / max(NoH * NoV, 1e-4);
             float Fc = pow(1.0 - VoH, 5.0);
 
             A += (1.0 - Fc) * G_Vis;
