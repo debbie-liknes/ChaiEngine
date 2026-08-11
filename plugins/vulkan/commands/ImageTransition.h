@@ -6,6 +6,9 @@
 
 namespace chai::gfx
 {
+    /**
+     * @brief Tracks the state of an image on the GPU
+     */
     enum class ImageState {
         Undefined,
 
@@ -21,13 +24,9 @@ namespace chai::gfx
         Present
     };
 
-    struct ImageStateInfo {
-        VkImageLayout layout;
-        VkPipelineStageFlags2 stage;
-        VkAccessFlags2 access;
-        VkImageAspectFlags aspect;
-    };
-
+    /**
+     * @brief Helper wrapper around imageBarrier
+     */
     void transitionImage(VkCommandBuffer cmd,
                          VkImage image,
                          ImageState oldState,
@@ -35,6 +34,10 @@ namespace chai::gfx
                          uint32_t baseMip = 0,
                          uint32_t mipLevel = 1);
 
+    /**
+     * @brief Transitions an image layout. Tell vulkan how the image will be used next.
+     * Also synchronizes operations on the image
+     */
     void imageBarrier(VkCommandBuffer cmd,
                       VkImage image,
                       VkImageLayout oldLayout,

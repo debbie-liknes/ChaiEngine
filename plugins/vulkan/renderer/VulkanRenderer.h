@@ -85,7 +85,7 @@ namespace chai::gfx
             VkFence inFlight = VK_NULL_HANDLE;
 
             VkDescriptorSet lightSet = VK_NULL_HANDLE;
-            VkDescriptorSet postProcessSet = VK_NULL_HANDLE;
+            VkDescriptorSet bloomThresholdSet = VK_NULL_HANDLE;
             VkDescriptorSet combineSet = VK_NULL_HANDLE;
             std::vector<VkDescriptorSet> bloomSampleSets;
             void* lightMapped = nullptr;
@@ -115,7 +115,7 @@ namespace chai::gfx
         VkFenceCreateInfo fenceCreate(VkFenceCreateFlags flags = 0);
         VkSemaphoreCreateInfo semaphoreCreate(VkSemaphoreCreateFlags flags = 0);
         void setupPipelines();
-        void setupPostProcess(VkImageView view, VkImageView bloomView);
+        void setupThreshold(VkImageView view);
         void setupCombine(VkImageView view, VkImageView bloomView);
         void bloomPass(ChaiRenderGraph& renderGraph,
                        RenderTargetView& scene,
@@ -201,7 +201,8 @@ namespace chai::gfx
         VkPipeline downsamplePipeline_ = VK_NULL_HANDLE;
         VkPipeline upsamplePipeline_ = VK_NULL_HANDLE;
         VkPipeline combinePipeline_ = VK_NULL_HANDLE;
-        VkPipelineLayout postProcessLayout_ = VK_NULL_HANDLE;
+        VkPipelineLayout thresholdLayout_ = VK_NULL_HANDLE;
+        VkPipelineLayout combineLayout_ = VK_NULL_HANDLE;
         VkPipelineLayout bloomLayout_ = VK_NULL_HANDLE;
     };
 } // namespace chai::gfx

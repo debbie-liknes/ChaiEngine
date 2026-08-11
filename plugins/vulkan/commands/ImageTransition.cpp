@@ -4,6 +4,13 @@
 
 namespace chai::gfx
 {
+    struct ImageStateInfo {
+        VkImageLayout layout;
+        VkPipelineStageFlags2 stage;
+        VkAccessFlags2 access;
+        VkImageAspectFlags aspect;
+    };
+
     static ImageStateInfo getStateInfo(ImageState state)
     {
         switch (state) {

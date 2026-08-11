@@ -83,7 +83,8 @@ namespace chai::gfx
         vkDestroyPipelineLayout(ctx_.device(), brdfLutLayout_, nullptr);
         vkDestroyPipelineLayout(ctx_.device(), prefilterLayout_, nullptr);
         vkDestroyPipelineLayout(ctx_.device(), shadowLayout_, nullptr);
-        vkDestroyPipelineLayout(ctx_.device(), postProcessLayout_, nullptr);
+        vkDestroyPipelineLayout(ctx_.device(), thresholdLayout_, nullptr);
+        vkDestroyPipelineLayout(ctx_.device(), combineLayout_, nullptr);
         vkDestroyPipelineLayout(ctx_.device(), bloomLayout_, nullptr);
 
         irradianceTarget_.destroy(ctx_);
@@ -759,14 +760,14 @@ namespace chai::gfx
                 VkRect2D sc{{0, 0}, extent};
                 vkCmdSetScissor(cmd, 0, 1, &sc);
 
-                setupPostProcess(resources.view(data.scene), resources.view(data.output));
+                setupThreshold(resources.view(data.scene));
                 vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, thresholdPipeline_);
                 vkCmdBindDescriptorSets(cmd,
                                         VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                        postProcessLayout_,
+                                        thresholdLayout_,
                                         0,
                                         1,
-                                        &frames_[currentFrame_].postProcessSet,
+                                        &frames_[currentFrame_].bloomThresholdSet,
                                         0,
                                         nullptr);
                 vkCmdDraw(cmd, 3, 1, 0, 0);
@@ -908,43 +909,38 @@ namespace chai::gfx
         }
     }
 
-    void VulkanRenderer::setupPostProcess(VkImageView sceneView, VkImageView bloomView)
+    void VulkanRenderer::setupThreshold(VkImageView sceneView)
     {
-        if (frames_[currentFrame_].postProcessSet == VK_NULL_HANDLE) {
-            VkDescriptorSetLayout layout = ctx_.postProcessSetLayout();
+        if (frames_[currentFrame_].bloomThresholdSet == VK_NULL_HANDLE) {
+            VkDescriptorSetLayout layout = ctx_.bloomThresholdLayout();
             VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
             dsai.descriptorPool = ctx_.descriptorPool();
             dsai.descriptorSetCount = 1;
             dsai.pSetLayouts = &layout;
             VK_CHECK(vkAllocateDescriptorSets(
-                ctx_.device(), &dsai, &frames_[currentFrame_].postProcessSet));
+                ctx_.device(), &dsai, &frames_[currentFrame_].bloomThresholdSet));
         }
 
-        VkDescriptorImageInfo imgs[2]{};
-        imgs[0].imageView = sceneView; // binding 0: scene
-        imgs[0].sampler = ctx_.linearSampler();
-        imgs[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imgs[1].imageView = bloomView; // binding 1: bloom
-        imgs[1].sampler = ctx_.linearSampler();
-        imgs[1].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        VkDescriptorImageInfo imgs{};
+        imgs.imageView = sceneView; // binding 0: scene
+        imgs.sampler = ctx_.linearSampler();
+        imgs.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-        VkWriteDescriptorSet writes[2]{};
-        for (int i = 0; i < 2; ++i) {
-            writes[i] = VkWriteDescriptorSet{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
-            writes[i].dstSet = frames_[currentFrame_].postProcessSet;
-            writes[i].dstBinding = uint32_t(i);
-            writes[i].descriptorCount = 1;
-            writes[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            writes[i].pImageInfo = &imgs[i];
-        }
+        VkWriteDescriptorSet writes{};
+        writes = VkWriteDescriptorSet{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+        writes.dstSet = frames_[currentFrame_].bloomThresholdSet;
+        writes.dstBinding = 0;
+        writes.descriptorCount = 1;
+        writes.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        writes.pImageInfo = &imgs;
 
-        vkUpdateDescriptorSets(ctx_.device(), 2, writes, 0, nullptr);
+        vkUpdateDescriptorSets(ctx_.device(), 1, &writes, 0, nullptr);
     }
 
     void VulkanRenderer::setupCombine(VkImageView sceneView, VkImageView bloomView)
     {
         if (frames_[currentFrame_].combineSet == VK_NULL_HANDLE) {
-            VkDescriptorSetLayout layout = ctx_.postProcessSetLayout();
+            VkDescriptorSetLayout layout = ctx_.combineSetLayout();
             VkDescriptorSetAllocateInfo dsai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
             dsai.descriptorPool = ctx_.descriptorPool();
             dsai.descriptorSetCount = 1;
@@ -1014,10 +1010,10 @@ namespace chai::gfx
                 vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, combinePipeline_);
                 vkCmdBindDescriptorSets(cmd,
                                         VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                        postProcessLayout_,
+                                        combineLayout_,
                                         0,
                                         1,
-                                        &frames_[currentFrame_].postProcessSet,
+                                        &frames_[currentFrame_].combineSet,
                                         0,
                                         nullptr);
                 vkCmdDraw(cmd, 3, 1, 0, 0);
@@ -1131,13 +1127,12 @@ namespace chai::gfx
         }
 
         {
-            VkDescriptorSetLayout postSets[] = {ctx_.postProcessSetLayout()}; // 2 samplers
+            VkDescriptorSetLayout postSets[] = {ctx_.bloomThresholdLayout()}; // 1 sampler
             VkPipelineLayoutCreateInfo li{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
             li.setLayoutCount = 1;
             li.pSetLayouts = postSets;
             li.pushConstantRangeCount = 0;
-            // li.pPushConstantRanges = &irrPc;
-            VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &li, nullptr, &postProcessLayout_));
+            VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &li, nullptr, &thresholdLayout_));
         }
 
         {
@@ -1153,6 +1148,15 @@ namespace chai::gfx
             li.pushConstantRangeCount = 1;
             li.pPushConstantRanges = &bloomPc;
             VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &li, nullptr, &bloomLayout_));
+        }
+
+        {
+            VkDescriptorSetLayout combineSet[] = {ctx_.combineSetLayout()}; // 2 samplers
+            VkPipelineLayoutCreateInfo li{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+            li.setLayoutCount = 1;
+            li.pSetLayouts = combineSet;
+            li.pushConstantRangeCount = 0;
+            VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &li, nullptr, &combineLayout_));
         }
 
         auto attrs = vertexAttributes();
@@ -1240,7 +1244,7 @@ namespace chai::gfx
             ctx_,
             "softThreshold.vert.spv",
             "softThreshold.frag.spv",
-            postProcessLayout_,
+            thresholdLayout_,
             [&](PipelineBuilder& b) {
                 b.disableBlending()
                     .setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
@@ -1278,7 +1282,7 @@ namespace chai::gfx
         combinePipeline_ = loadPipelineByName(ctx_,
                                               "combinePostProcess.vert.spv",
                                               "combinePostProcess.frag.spv",
-                                              postProcessLayout_,
+                                              combineLayout_,
                                               [&](PipelineBuilder& b) {
                                                   b.disableBlending()
                                                       .setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)

@@ -3,6 +3,7 @@
 
 namespace chai::gfx
 {
+    //TODO: These functions are the same and idk what to do about it
     VkImageView CRGResources::view(CRGTextureHandle h, uint32_t mip) const
     {
         return graph_.textures_[h.index].isImported

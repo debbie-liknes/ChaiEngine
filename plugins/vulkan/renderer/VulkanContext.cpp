@@ -60,8 +60,9 @@ namespace chai::gfx
         vkDestroyDescriptorSetLayout(device_, cameraSetLayout_, nullptr);
         vkDestroyDescriptorSetLayout(device_, environmentSetLayout_, nullptr);
         vkDestroyDescriptorSetLayout(device_, prefilterSetLayout_, nullptr);
-        vkDestroyDescriptorSetLayout(device_, postProcessSetLayout_, nullptr);
+        vkDestroyDescriptorSetLayout(device_, bloomThresholdLayout_, nullptr);
         vkDestroyDescriptorSetLayout(device_, bloomSetLayout_, nullptr);
+        vkDestroyDescriptorSetLayout(device_, combineSetLayout_, nullptr);
         vkDestroyDescriptorPool(device_, descriptorPool_, nullptr);
         vkDestroyFence(device_, immediateFence_, nullptr);
         vmaDestroyAllocator(allocator_);
@@ -337,23 +338,17 @@ namespace chai::gfx
             vkCreateDescriptorSetLayout(device_, &filterLayout, nullptr, &prefilterSetLayout_));
 
         // post process
-        VkDescriptorSetLayoutBinding postBindings[2]{};
-        postBindings[0].binding = 0;
-        postBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        postBindings[0].descriptorCount = 1;
-        postBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        postBindings[1].binding = 1;
-        postBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        postBindings[1].descriptorCount = 1;
-        postBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        VkDescriptorSetLayoutBinding postBindings{};
+        postBindings.binding = 0;
+        postBindings.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        postBindings.descriptorCount = 1;
+        postBindings.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         VkDescriptorSetLayoutCreateInfo postLayout{
             VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
-        postLayout.bindingCount = 2;
-        postLayout.pBindings = postBindings;
-        VK_CHECK(
-            vkCreateDescriptorSetLayout(device_, &postLayout, nullptr, &postProcessSetLayout_));
+        postLayout.bindingCount = 1;
+        postLayout.pBindings = &postBindings;
+        VK_CHECK(vkCreateDescriptorSetLayout(device_, &postLayout, nullptr, &bloomThresholdLayout_));
 
         //bloom
         VkDescriptorSetLayoutBinding bloomBinding{};
@@ -368,5 +363,23 @@ namespace chai::gfx
         bloomLayout.pBindings = &bloomBinding;
         VK_CHECK(
             vkCreateDescriptorSetLayout(device_, &bloomLayout, nullptr, &bloomSetLayout_));
+
+        // combine
+        VkDescriptorSetLayoutBinding combineBindings[2]{};
+        combineBindings[0].binding = 0;
+        combineBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        combineBindings[0].descriptorCount = 1;
+        combineBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        combineBindings[1].binding = 1;
+        combineBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        combineBindings[1].descriptorCount = 1;
+        combineBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo combineLayout{
+            VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+        combineLayout.bindingCount = 2;
+        combineLayout.pBindings = combineBindings;
+        VK_CHECK(vkCreateDescriptorSetLayout(device_, &combineLayout, nullptr, &combineSetLayout_));
     }
 } // namespace chai
