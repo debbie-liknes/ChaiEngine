@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <cstddef>
+#include <cstdint>
 #include <string>
 
 namespace chai

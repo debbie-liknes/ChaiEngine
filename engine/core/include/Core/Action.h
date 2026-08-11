@@ -101,6 +101,5 @@ namespace chai
         std::string label_;
 
         // TODO: Associate menu item with icon
-        // TODO: Associate menu item with keybinding
 	};
 }
