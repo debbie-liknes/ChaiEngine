@@ -26,8 +26,6 @@ namespace chai::scene
         void write(const std::filesystem::path& path) const;
 
     private:
-        void visit_camera(CameraComponent& camera);
-
         struct p;
         std::unique_ptr<p> impl_;
     };

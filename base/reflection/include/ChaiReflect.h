@@ -6,27 +6,30 @@
 #pragma once
 #include <TypeRegistry.h>
 
+template<typename>
+struct ChaiReflect;
+
 /**
  * @brief Defines a struct that registers the specified type with the
  * TypeRegistry and provides a describe function to add properties and methods to the
  * TypeInfo.
  */
-#define CHAI_REFLECT(Type, TypeName)                                                               \
-    namespace                                                                                      \
-    {                                                                                              \
-        struct ChaiReflect_##Type {                                                                \
-            using Self = Type;                                                                     \
-            static void describe(::chai::TypeInfo& type);                                          \
-            ChaiReflect_##Type()                                                                   \
-            {                                                                                      \
-                auto& reg = ::chai::TypeRegistry::instance();                                      \
-                reg.registerType<Type>(TypeName);                                                  \
-                describe(*reg.getType<Type>());                                                    \
-            }                                                                                      \
-        };                                                                                         \
-        [[maybe_unused]] const ChaiReflect_##Type chaiReflectInstance_##Type{};                    \
-    }                                                                                              \
-    void ChaiReflect_##Type::describe([[maybe_unused]] ::chai::TypeInfo& type)
+#define CHAI_REFLECT(Type, TypeName)                                                           \
+    template<>                                                                                 \
+    struct ChaiReflect<Type> {                                                                 \
+        using Self = Type;                                                                     \
+        static void describe(::chai::TypeInfo& type);                                          \
+        ChaiReflect()                                                                          \
+        {                                                                                      \
+            auto& reg = ::chai::TypeRegistry::instance();                                      \
+            reg.registerType<Type>(TypeName);                                                  \
+            describe(*reg.getType<Type>());                                                    \
+        }                                                                                      \
+        static const ChaiReflect reflect;                                                      \
+    };                                                                                         \
+    const ChaiReflect<Type> ChaiReflect<Type>::reflect;                                        \
+                                                                                               \
+    void ChaiReflect<Type>::describe([[maybe_unused]] ::chai::TypeInfo& type)
 
 #define CHAI_FIELD(member) type.addProperty(#member, &Self::member)
 #define CHAI_METHOD(method) type.addMethod(#method, &Self::method)

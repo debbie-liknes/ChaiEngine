@@ -39,6 +39,5 @@ namespace chai::scene
         bool enabled_ = true;
         bool shadowsEnabled_ = true;
     };
-    CHAI_REFLECT(LightComponent, "LightComponent") {}
-
 }
+

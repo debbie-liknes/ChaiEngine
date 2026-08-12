@@ -15,3 +15,6 @@ namespace chai::scene
 
     }
 }
+
+CHAI_REFLECT(chai::scene::SkyboxComponent, "SkyboxComponent") {}
+

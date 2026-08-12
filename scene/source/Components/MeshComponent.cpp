@@ -14,3 +14,6 @@ namespace chai::scene
 
     }
 }
+
+CHAI_REFLECT(chai::scene::MeshComponent, "MeshComponent") {}
+

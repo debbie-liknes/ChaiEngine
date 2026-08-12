@@ -64,7 +64,7 @@ namespace chai
             info.paramTypes = {std::type_index(typeid(Args))...};
 
             // Create an invoker that can call the method
-            info.invoker = [method](void* obj, const std::vector<std::any>& args) -> std::any
+            info.invoker = [method, this](void* obj, const std::vector<std::any>& args) -> std::any
             {
                 auto* typedObj = static_cast<T*>(obj);
                 if constexpr (sizeof...(Args) == 0)
@@ -82,7 +82,7 @@ namespace chai
                 else
                 {
                     // Handle parameters
-                    return invokeWithArgs(typedObj, method, args, std::index_sequence_for < Args...>{});
+                    return invokeWithArgs(typedObj, method, args, std::index_sequence_for<Args...>{});
                 }
             };
 

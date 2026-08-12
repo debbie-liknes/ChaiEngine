@@ -25,7 +25,7 @@ namespace chai::scene
         {
             static_assert(std::is_base_of_v<IController, T>, "T must inherit from IController");
 
-            auto controller = std::make_unique<T>(m_owner, std::forward<Args>(args)...);
+            auto controller = std::make_unique<T>(owner_, std::forward<Args>(args)...);
             T* ptr = controller.get();
 
             // Store by type
@@ -121,11 +121,13 @@ namespace chai::scene
         bool hasControllers() const { return !controllers_.empty(); }
 
     private:
+        friend struct ChaiReflect<ControllerComponent>;
+
         std::vector<std::unique_ptr<IController>> controllers_;
         std::unordered_map<std::type_index, IController*> controllersByType_;
         std::unordered_map<std::string, IController*> controllersByName_;
-        chai::scene::GameObject* m_owner;
+        chai::scene::GameObject* owner_;
     };
 
-    CHAI_REFLECT(ControllerComponent, "ControllerComponent") {}
 }
+

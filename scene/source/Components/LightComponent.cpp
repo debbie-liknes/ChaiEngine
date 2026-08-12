@@ -7,3 +7,6 @@ namespace chai::scene
 {
     LightComponent::LightComponent(GameObject* owner) : Component(owner) {}
 } // namespace chai::scene
+
+CHAI_REFLECT(chai::scene::LightComponent, "LightComponent") {}
+

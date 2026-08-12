@@ -26,11 +26,10 @@ namespace chai::scene
         void setFOV(float fov);
 
     private:
+        friend struct ChaiReflect<CameraComponent>;
+
         Camera cam_;
     };
 
-    CHAI_REFLECT(CameraComponent, "CameraComponent")
-    {
-
-    }
 }
+

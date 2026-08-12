@@ -107,3 +107,6 @@ namespace chai::scene
     }
 
 } // namespace chai::cup
+
+CHAI_REFLECT(chai::scene::TransformComponent, "TransformComponent") {}
+

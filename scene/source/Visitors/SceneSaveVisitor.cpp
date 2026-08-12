@@ -5,6 +5,7 @@
 
 #include <Components/CameraComponent.h>
 #include <Scene/GameObject.h>
+#include <TypeInfo.h>
 #include <Visitors/SceneSaveVisitor.h>
 
 #include <rapidxml/rapidxml.hpp>
@@ -31,6 +32,22 @@ namespace chai::scene
 
         // current "node" node (used when visiting Components)
         rapidxml::xml_node<>* node_{ nullptr };
+
+        void create_prop_element(rapidxml::xml_node<>& node, const TypeInfo& ti) {
+
+            char* allocated_string{ doc_.allocate_string(ti.name.data()) };
+            rapidxml::xml_node<>* prop{ doc_.allocate_node(rapidxml::node_element, allocated_string) };
+
+            for (const auto& [name, property] : ti.properties) {
+
+                // ZHR :: TODO
+
+
+            }
+
+            node.append_node(prop);
+
+        }
 
     };
 
@@ -85,6 +102,7 @@ namespace chai::scene
 
     }
 
+
     void SceneSaveVisitor::visit(Component* comp) {
 
         if (!comp || !impl_->node_)
@@ -92,109 +110,30 @@ namespace chai::scene
 
         rapidxml::xml_document<>& doc{ impl_->doc_ };
         rapidxml::xml_node<>& root{ *impl_->root_ };
-
-
-        if (CameraComponent* camera{ dynamic_cast<CameraComponent*>(comp) })
-            visit_camera(*camera);
-
-    }
-
-    void SceneSaveVisitor::visit_camera(CameraComponent& camera) {
-
         rapidxml::xml_node<>& node{ *impl_->node_ };
 
-        rapidxml::xml_document<>& doc{ impl_->doc_ };
-
-        rapidxml::xml_node<>* obj{ doc.allocate_node(rapidxml::node_element, "component") };
-        // type
-        {
-            rapidxml::xml_attribute<>* type_attribute{ doc.allocate_attribute("type", "Camera") };
-            obj->append_attribute(type_attribute);
+        if (auto ti{ TypeRegistry::instance().getType(std::type_index{typeid(*comp) })}) {
+            impl_->create_prop_element(node, *ti);
+        } else {
+            CHAI_LOG_ERROR("Component is not registered with the meta system and cannot be saved.");
         }
-
-        const Camera& cam{ camera.getCamera() };
-
-        // aspect ratio
-        {
-            std::string aspect_ratio = std::to_string(cam.getAspectRatio());
-            char* allocated_string{ doc.allocate_string(aspect_ratio.data()) };
-
-            rapidxml::xml_attribute<>* aspect_ratio_attribute{ doc.allocate_attribute("aspect_ratio", allocated_string) };
-            obj->append_attribute(aspect_ratio_attribute);
-
-        }
-
-        // fovy
-        {
-            std::string fov_y = std::to_string(cam.getFovY());
-            char* allocated_string{ doc.allocate_string(fov_y.data()) };
-
-            rapidxml::xml_attribute<>* fov_y_attribute{ doc.allocate_attribute("fovy", allocated_string) };
-            obj->append_attribute(fov_y_attribute);
-        }
-
-        // near plane
-        {
-            std::string near_plane = std::to_string(cam.getNearPlane());
-            char* allocated_string{ doc.allocate_string(near_plane.data()) };
-
-            rapidxml::xml_attribute<>* near_plane_attribute{ doc.allocate_attribute("near_plane", allocated_string) };
-            obj->append_attribute(near_plane_attribute);
-        }
-
-        // far plane
-        {
-            std::string far_plane = std::to_string(cam.getFarPlane());
-            char* allocated_string{ doc.allocate_string(far_plane.data()) };
-
-            rapidxml::xml_attribute<>* far_plane_attribute{ doc.allocate_attribute("far_plane", allocated_string) };
-            obj->append_attribute(far_plane_attribute);
-        }
-
-        // view matrix
-        {
-            // this is a bit silly... need a better solution for serializing the matrix
-
-            const math::Mat4& mat{ cam.getViewMatrix() };
-
-            std::string str;
-            bool not_first{ false };
-            for (auto m : mat) {
-
-                if (not_first)
-                    str += ",";
-
-                not_first = true;
-                str += std::to_string(m);
-
-            }
-
-            char* allocated_string{ doc.allocate_string(str.data()) };
-
-            rapidxml::xml_attribute<>* view_matrix_attribute{ doc.allocate_attribute("view_matrix", allocated_string) };
-            obj->append_attribute(view_matrix_attribute);
-        }
-
-        node.append_node(obj);
 
     }
-
 
     void SceneSaveVisitor::write(const std::filesystem::path& path) const {
 
-        if (!impl_->root_)
+        if (!impl_)
             return;
 
         std::ofstream ofile{ path, std::ios::binary };
         if (!ofile.is_open()) {
-            CHAI_LOG_ERROR("Could not save scene to file: {}", path.string());
+            CHAI_LOG_ERROR("could not save to file: {}", path.string());
             return;
         }
 
         ofile << impl_->doc_;
 
     }
-
 
 }
 

@@ -35,6 +35,7 @@
 #include <UI/Editor/EditorViewportManager.h>
 #include <UI/Editor/DockspaceService.h>
 #include <UI/SettingsPanel.h>
+#include <Visitors/SceneSaveVisitor.h>
 #include <tracy/Tracy.hpp>
 
 std::filesystem::path assetDir()
@@ -195,6 +196,10 @@ int main()
 
     setupDockspace(engine.services(), scene);
     engine.run();
+
+    SceneSaveVisitor ssv{};
+    scene.accept(&ssv);
+    ssv.write("honk.scen");
 
     engine.shutdown();
 }

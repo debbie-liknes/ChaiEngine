@@ -1,9 +1,11 @@
 #pragma once
 #include <SceneExport.h>
 #include <ChaiMath.h>
+#include <ChaiReflect.h>
 
 namespace chai::scene
 {
+
     class SCENE_EXPORT Camera
     {
     public:
@@ -25,6 +27,8 @@ namespace chai::scene
         float getFarPlane() const { return farPlane_; }
 
     private:
+        friend struct ChaiReflect<Camera>;
+
         float aspect_ = 0.0;
         float fov_ = 45.0f; // degrees
         float nearPlane_ = 0.1f;

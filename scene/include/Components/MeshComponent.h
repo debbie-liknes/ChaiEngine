@@ -24,9 +24,5 @@ namespace chai::scene
         Handle<gfx::Mesh> mesh_;
         Handle<gfx::Material> material_;
     };
-
-    CHAI_REFLECT(MeshComponent, "MeshComponent")
-    {
-
-    }
 }
+

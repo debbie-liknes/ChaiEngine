@@ -20,5 +20,5 @@ namespace chai::scene
     private:
         Handle<gfx::Texture> skyMap_;
     };
-    CHAI_REFLECT(SkyboxComponent, "SkyboxComponent") {}
 }
+

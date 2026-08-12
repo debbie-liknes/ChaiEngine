@@ -40,3 +40,4 @@ namespace chai::scene
         viewMatrix_ = viewMatrix;
     }
 }
+
