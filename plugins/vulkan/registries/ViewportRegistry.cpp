@@ -10,15 +10,6 @@ namespace chai::gfx
 {
     ViewportRegistry::ViewportRegistry(VulkanContext& ctx)
     {
-        VkSamplerCreateInfo samplerInfo{VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
-        samplerInfo.magFilter = VK_FILTER_LINEAR;
-        samplerInfo.minFilter = VK_FILTER_LINEAR;
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        samplerInfo.maxLod = VK_LOD_CLAMP_NONE;
-        VK_CHECK(vkCreateSampler(ctx.device(), &samplerInfo, nullptr, &linearSampler_));
-
         ctx_ = &ctx;
     }
 
@@ -33,8 +24,6 @@ namespace chai::gfx
             if (slot.alive)
                 destroyViewport(slot.viewport);
         }
-
-        vkDestroySampler(ctx_->device(), linearSampler_, nullptr);
 
         ctx_ = nullptr;
         swapchain_ = nullptr;
@@ -101,7 +90,8 @@ namespace chai::gfx
         colorInfo.mipLevels = 1;
         colorInfo.arrayLayers = 1;
         colorInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-        colorInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        colorInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+                          VK_IMAGE_USAGE_SAMPLED_BIT;
 
         VmaAllocationCreateInfo colorAlloc{};
         colorAlloc.usage = VMA_MEMORY_USAGE_AUTO;
@@ -160,7 +150,7 @@ namespace chai::gfx
 
         target = createViewportTarget(viewport.pendingExtent);
         target.imguiTextureId = (ImTextureID)ImGui_ImplVulkan_AddTexture(
-            linearSampler_, target.view.colorView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            ctx_->linearSampler(), target.view.colorView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         viewport.everRendered[frameIndex] = false; // fresh image, back to Undefined
     }
@@ -210,7 +200,7 @@ namespace chai::gfx
         for (int i = 0; i < kFramesInFlight; i++) {
             vp.targets[i] = createViewportTarget(swapchain_->extent());
             vp.targets[i].imguiTextureId =
-                (ImTextureID)ImGui_ImplVulkan_AddTexture(linearSampler_,
+                (ImTextureID)ImGui_ImplVulkan_AddTexture(ctx_->linearSampler(),
                                                          vp.targets[i].view.colorView,
                                                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 

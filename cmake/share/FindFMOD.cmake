@@ -22,6 +22,7 @@ set(FMOD_NAMES fmod fmod_vc)
 find_library(FMOD_LIBRARY NAMES ${FMOD_NAMES}
         PATHS
         "$ENV{FMOD_HOME}/api/core/lib/x64"
+        "$ENV{FMOD_HOME}/api/core/lib/x86_64"
         DOC "fmod - Library"
 )
 

@@ -1,8 +1,16 @@
 #include "ImageTransition.h"
+
 #include <cstdlib>
 
 namespace chai::gfx
 {
+    struct ImageStateInfo {
+        VkImageLayout layout;
+        VkPipelineStageFlags2 stage;
+        VkAccessFlags2 access;
+        VkImageAspectFlags aspect;
+    };
+
     static ImageStateInfo getStateInfo(ImageState state)
     {
         switch (state) {
@@ -48,6 +56,12 @@ namespace chai::gfx
                         VK_PIPELINE_STAGE_2_NONE,
                         0,
                         VK_IMAGE_ASPECT_COLOR_BIT};
+
+            case ImageState::DepthShaderRead:
+                return {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                        VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+                        VK_ACCESS_2_SHADER_SAMPLED_READ_BIT,
+                        VK_IMAGE_ASPECT_DEPTH_BIT};
         }
 
         return {VK_IMAGE_LAYOUT_UNDEFINED, VK_PIPELINE_STAGE_2_NONE, 0, VK_IMAGE_ASPECT_COLOR_BIT};
@@ -63,7 +77,8 @@ namespace chai::gfx
                       VkAccessFlags2 dstAccess,
                       VkImageAspectFlags aspect,
                       uint32_t layerCount,
-                      uint32_t mipCount)
+                      uint32_t mipCount,
+                      uint32_t baseMip)
     {
         VkImageMemoryBarrier2 barrier{VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2};
 
@@ -78,7 +93,7 @@ namespace chai::gfx
 
         barrier.image = image;
 
-        barrier.subresourceRange = {aspect, 0, mipCount, 0, layerCount};
+        barrier.subresourceRange = {aspect, baseMip, mipCount, 0, layerCount};
 
         VkDependencyInfo dep{VK_STRUCTURE_TYPE_DEPENDENCY_INFO};
 
@@ -88,7 +103,12 @@ namespace chai::gfx
         vkCmdPipelineBarrier2(cmd, &dep);
     }
 
-    void transitionImage(VkCommandBuffer cmd, VkImage image, ImageState oldState, ImageState newState)
+    void transitionImage(VkCommandBuffer cmd,
+                         VkImage image,
+                         ImageState oldState,
+                         ImageState newState,
+                         uint32_t baseMip,
+                         uint32_t mipCount)
     {
         const auto src = getStateInfo(oldState);
         const auto dst = getStateInfo(newState);
@@ -101,6 +121,9 @@ namespace chai::gfx
                      src.access,
                      dst.stage,
                      dst.access,
-                     dst.aspect);
+                     dst.aspect,
+                     (~0U),
+                     mipCount,
+                     baseMip);
     }
-}
+} // namespace chai::gfx

@@ -5,6 +5,7 @@
 #include "../VulkanCommon.h"
 #include "../pipeline/PipelineCache.h"
 #include "../registries/ViewportRegistry.h"
+#include "../renderGraph/ChaiRenderGraph.h"
 #include "../resources/GpuResources.h"
 #include "../resources/MaterialFactory.h"
 #include "../resources/ModelRegistry.h"
@@ -84,6 +85,9 @@ namespace chai::gfx
             VkFence inFlight = VK_NULL_HANDLE;
 
             VkDescriptorSet lightSet = VK_NULL_HANDLE;
+            VkDescriptorSet bloomThresholdSet = VK_NULL_HANDLE;
+            VkDescriptorSet combineSet = VK_NULL_HANDLE;
+            std::vector<VkDescriptorSet> bloomSampleSets;
             void* lightMapped = nullptr;
             VkBuffer lightBuffer = VK_NULL_HANDLE;
             VmaAllocation lightAlloc = VK_NULL_HANDLE;
@@ -111,13 +115,31 @@ namespace chai::gfx
         VkFenceCreateInfo fenceCreate(VkFenceCreateFlags flags = 0);
         VkSemaphoreCreateInfo semaphoreCreate(VkSemaphoreCreateFlags flags = 0);
         void setupPipelines();
+        void setupThreshold(VkImageView view);
+        void setupCombine(VkImageView view, VkImageView bloomView);
+        void bloomPass(ChaiRenderGraph& renderGraph,
+                       RenderTargetView& scene,
+                       CRGTextureHandle& sceneHandle,
+                       CRGTextureHandle& bloomChain);
+        void combinePass(ChaiRenderGraph& renderGraph,
+                         RenderTargetView& target,
+                         CRGTextureHandle& sceneHandle,
+                         CRGTextureHandle& bloomChain,
+                         CRGTextureHandle& combineTarget);
+        void blitCombineToViewport(VkCommandBuffer cmd,
+                                   const RenderTargetView& view,
+                                   VkImage combineImage,
+                                   VkExtent2D combineExtent,
+            bool everRendered);
         void ensureSkyboxSet(FrameData& frame, const GpuTexture& cube, Handle<Texture> handle);
         void bakeIrradiance(const GpuTexture& envCube);
         void bakeBrdfLut();
         void bakePrefilter(const GpuTexture& envCube);
         void writeEnvironmentSet(const GpuTexture& skybox);
-        void
-        shadowMapping(VkCommandBuffer cmd, const std::vector<uint32_t>&, const FrameRenderData&);
+        void shadowMapping(VkCommandBuffer cmd,
+                           const std::vector<uint32_t>&,
+                           const FrameRenderData&,
+                           CRGTextureHandle&);
 
         void beginUIFrame();
         void endUIFrame();
@@ -144,12 +166,10 @@ namespace chai::gfx
         std::shared_ptr<ModelRegistry> modelReg_;
 
         PipelineCache pipelineCache_;
+        ChaiRenderGraph renderGraph_;
 
         // pipelines and layouts
         VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
-        //VkPipeline pbrPipeline_ = VK_NULL_HANDLE;
-        //VkPipeline pbrBlendPipeline_ = VK_NULL_HANDLE;
-        //VkPipeline pbrWireframePipeline_ = VK_NULL_HANDLE;
         VkPipeline skyboxPipeline_ = VK_NULL_HANDLE;
 
         // IBL
@@ -175,5 +195,14 @@ namespace chai::gfx
 
         VkDescriptorSet skyboxSet_ = VK_NULL_HANDLE;
         Handle<Texture> skyboxCube_;
+
+        // post processing
+        VkPipeline thresholdPipeline_ = VK_NULL_HANDLE;
+        VkPipeline downsamplePipeline_ = VK_NULL_HANDLE;
+        VkPipeline upsamplePipeline_ = VK_NULL_HANDLE;
+        VkPipeline combinePipeline_ = VK_NULL_HANDLE;
+        VkPipelineLayout thresholdLayout_ = VK_NULL_HANDLE;
+        VkPipelineLayout combineLayout_ = VK_NULL_HANDLE;
+        VkPipelineLayout bloomLayout_ = VK_NULL_HANDLE;
     };
 } // namespace chai::gfx
