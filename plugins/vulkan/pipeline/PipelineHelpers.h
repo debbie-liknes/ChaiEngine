@@ -9,8 +9,25 @@
 #include <filesystem>
 #include <string_view>
 
+#include "ShaderCompiler.h"
+
 namespace chai::gfx
 {
+    inline VkShaderModule createShaderMod(VkDevice device, const std::vector<uint32_t>& spirv)
+    {
+        VkShaderModuleCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        createInfo.codeSize = spirv.size() * sizeof(uint32_t); // byte size, not element count
+        createInfo.pCode = spirv.data();
+
+        VkShaderModule module;
+        if (vkCreateShaderModule(device, &createInfo, nullptr, &module) != VK_SUCCESS) {
+            CHAI_LOG_ERROR("Failed to create shader module");
+            return VK_NULL_HANDLE;
+        }
+        return module;
+    }
+
     template <typename ConfigureFn>
     VkPipeline loadPipeline(VulkanContext& ctx,
                             const std::filesystem::path& vertPath,
@@ -18,17 +35,24 @@ namespace chai::gfx
                             VkPipelineLayout layout,
                             ConfigureFn&& configure)
     {
-        VkShaderModule vert = loadShaderModule(ctx.device(), vertPath);
-        VkShaderModule frag = loadShaderModule(ctx.device(), fragPath);
-        if (vert == VK_NULL_HANDLE || frag == VK_NULL_HANDLE) {
-            CHAI_LOG_CRITICAL(
-                "loadPipeline: shader load failed ({}, {})", vertPath.string(), fragPath.string());
-            if (vert)
-                vkDestroyShaderModule(ctx.device(), vert, nullptr);
-            if (frag)
-                vkDestroyShaderModule(ctx.device(), frag, nullptr);
+        ShaderCompiler compiler;
+        ShaderCompiler::CompileResult vertResult = compiler.compile(vertPath, ShaderStage::Vertex);
+        ShaderCompiler::CompileResult fragResult = compiler.compile(fragPath, ShaderStage::Fragment);
+
+        if (!vertResult.success) {
+            CHAI_LOG_ERROR("Failed to compile shader {} with error {}",
+                           vertPath.string(),
+                           vertResult.errorLog);
+            return VK_NULL_HANDLE;
+        } else if (!fragResult.success) {
+            CHAI_LOG_ERROR("Failed to compile shader {} with error {}",
+                           fragPath.string(),
+                           fragResult.errorLog);
             return VK_NULL_HANDLE;
         }
+
+        VkShaderModule vert = createShaderMod(ctx.device(), vertResult.spirv);
+        VkShaderModule frag = createShaderMod(ctx.device(), fragResult.spirv);
 
         PipelineBuilder builder;
         builder.setShaders(vert, frag);

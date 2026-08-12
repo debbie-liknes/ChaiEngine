@@ -673,8 +673,8 @@ namespace chai::gfx
                 continue;
 
             VkPipeline pipeline =
-                pipelineCache_.getOrCreate({"pbr.vert.spv",
-                                            "pbr.frag.spv",
+                pipelineCache_.getOrCreate({"pbr.vert",
+                                            "pbr.frag",
                                             mat->alphaMode,
                                             wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL,
                                             ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT)});
@@ -1159,26 +1159,27 @@ namespace chai::gfx
         }
 
         auto attrs = vertexAttributes();
+        auto shadowAttrs = shadowVertexAttributes();
         auto bind = vertexBinding();
 
-        pipelineCache_.getOrCreate({"pbr.vert.spv",
-                                    "pbr.frag.spv",
+        pipelineCache_.getOrCreate({"pbr.vert",
+                                    "pbr.frag",
                                     AlphaMode::Opaque,
                                     VK_POLYGON_MODE_FILL,
                                     ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT)});
-        pipelineCache_.getOrCreate({"pbr.vert.spv",
-                                    "pbr.frag.spv",
+        pipelineCache_.getOrCreate({"pbr.vert",
+                                    "pbr.frag",
                                     AlphaMode::Blend,
                                     VK_POLYGON_MODE_FILL,
                                     ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT)});
-        pipelineCache_.getOrCreate({"pbr.vert.spv",
-                                    "pbr.frag.spv",
+        pipelineCache_.getOrCreate({"pbr.vert",
+                                    "pbr.frag",
                                     AlphaMode::Opaque,
                                     VK_POLYGON_MODE_LINE,
                                     ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT)}); // WIREFRAME
 
         skyboxPipeline_ = loadPipelineByName(
-            ctx_, "skybox.vert.spv", "skybox.frag.spv", pipelineLayout_, [&](PipelineBuilder& b) {
+            ctx_, "skybox.vert", "skybox.frag", pipelineLayout_, [&](PipelineBuilder& b) {
                 b.setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
                     .setDepthFormat(swapchain_.depthFormat())
                     .enableDepthTest()
@@ -1191,8 +1192,8 @@ namespace chai::gfx
 
         irradiancePipeline_ = loadPipelineByName(
             ctx_,
-            "irradiance.vert.spv",
-            "irradiance.frag.spv",
+            "irradiance.vert",
+            "irradiance.frag",
             irradianceLayout_,
             [&](PipelineBuilder& b) {
                 b.setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
@@ -1203,8 +1204,8 @@ namespace chai::gfx
             });
 
         brdfLutPipeline_ = loadPipelineByName(ctx_,
-                                              "brdf_lut.vert.spv",
-                                              "brdf_lut.frag.spv",
+                                              "brdf_lut.vert",
+                                              "brdf_lut.frag",
                                               brdfLutLayout_,
                                               [&](PipelineBuilder& b) {
                                                   b.setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
@@ -1217,8 +1218,8 @@ namespace chai::gfx
 
         prefilterPipeline_ = loadPipelineByName(
             ctx_,
-            "prefilter.vert.spv",
-            "prefilter.frag.spv",
+            "prefilter.vert",
+            "prefilter.frag",
             prefilterLayout_,
             [&](PipelineBuilder& b) {
                 b.setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
@@ -1229,8 +1230,8 @@ namespace chai::gfx
             });
 
         shadowPipeline_ = loadPipelineByName(
-            ctx_, "shadow.vert.spv", "shadow.frag.spv", shadowLayout_, [&](PipelineBuilder& b) {
-                b.setVertexInput({attrs.begin(), attrs.end()}, bind)
+            ctx_, "shadow.vert", "shadow.frag", shadowLayout_, [&](PipelineBuilder& b) {
+                b.setVertexInput({shadowAttrs.begin(), shadowAttrs.end()}, bind)
                     .setDepthFormat(swapchain_.depthFormat())
                     .disableBlending()
                     .enableDepthTest()
@@ -1241,8 +1242,8 @@ namespace chai::gfx
 
         thresholdPipeline_ = loadPipelineByName(
             ctx_,
-            "softThreshold.vert.spv",
-            "softThreshold.frag.spv",
+            "softThreshold.vert",
+            "softThreshold.frag",
             thresholdLayout_,
             [&](PipelineBuilder& b) {
                 b.disableBlending()
@@ -1254,8 +1255,8 @@ namespace chai::gfx
 
         downsamplePipeline_ = loadPipelineByName(
             ctx_,
-            "postProcess.vert.spv",
-            "downsample.frag.spv",
+            "postProcess.vert",
+            "downsample.frag",
             bloomLayout_,
             [&](PipelineBuilder& b) {
                 b.disableBlending()
@@ -1267,8 +1268,8 @@ namespace chai::gfx
 
         upsamplePipeline_ = loadPipelineByName(
             ctx_,
-            "postProcess.vert.spv",
-            "upsample.frag.spv",
+            "postProcess.vert",
+            "upsample.frag",
             bloomLayout_,
             [&](PipelineBuilder& b) {
                 b.enableBlending()
@@ -1279,8 +1280,8 @@ namespace chai::gfx
             });
 
         combinePipeline_ = loadPipelineByName(ctx_,
-                                              "combinePostProcess.vert.spv",
-                                              "combinePostProcess.frag.spv",
+                                              "combinePostProcess.vert",
+                                              "combinePostProcess.frag",
                                               combineLayout_,
                                               [&](PipelineBuilder& b) {
                                                   b.disableBlending()

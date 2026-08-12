@@ -6,6 +6,7 @@ set(${PROJECT_NAME}_headers
         pipeline/PipelineCache.h
         pipeline/PipelineHelpers.h
         pipeline/PipelineKey.h
+        pipeline/ShaderCompiler.h
         pipeline/ShaderModule.h
         registries/ViewportRegistry.h
         renderer/VulkanRenderer.h
@@ -47,6 +48,7 @@ set(${PROJECT_NAME}_source
         pipeline/PipelineBuilder.cpp
         pipeline/PipelineCache.cpp
         pipeline/PipelineHelpers.cpp
+        pipeline/ShaderCompiler.cpp
         pipeline/ShaderModule.cpp
         registries/ViewportRegistry.cpp
 
@@ -105,49 +107,14 @@ add_library(${PROJECT_NAME} SHARED
 
 find_package(Vulkan REQUIRED)
 
-set(SHADER_SOURCE_DIR "${CMAKE_SOURCE_DIR}/shaders")
 set(SHADER_OUTPUT_DIR "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/shaders")
-
-file(GLOB_RECURSE SHADER_FILES CONFIGURE_DEPENDS
-    "${SHADER_SOURCE_DIR}/*.vert"
-    "${SHADER_SOURCE_DIR}/*.frag"
-    "${SHADER_SOURCE_DIR}/*.comp"
-    "${SHADER_SOURCE_DIR}/*.geom"
-    "${SHADER_SOURCE_DIR}/*.tesc"
-    "${SHADER_SOURCE_DIR}/*.tese"
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/shaders
+        ${SHADER_OUTPUT_DIR}
 )
 
-set(SPIRV_FILES)
-
-foreach(SHADER ${SHADER_FILES})
-
-    file(RELATIVE_PATH REL_PATH
-        "${SHADER_SOURCE_DIR}"
-        "${SHADER}")
-
-    set(SPIRV "${SHADER_OUTPUT_DIR}/${REL_PATH}.spv")
-
-    get_filename_component(SPIRV_DIR "${SPIRV}" DIRECTORY)
-
-    add_custom_command(
-        OUTPUT "${SPIRV}"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${SPIRV_DIR}"
-        COMMAND ${Vulkan_GLSLC_EXECUTABLE}
-                "${SHADER}"
-                -o "${SPIRV}"
-        DEPENDS "${SHADER}"
-        VERBATIM
-    )
-
-    list(APPEND SPIRV_FILES "${SPIRV}")
-
-endforeach()
-
-add_custom_target(Shaders ALL
-    DEPENDS ${SPIRV_FILES}
-)
-
-target_link_libraries(${PROJECT_NAME} PUBLIC Runtime Graphics UI Vulkan::Vulkan glfw PRIVATE ImGui vk-bootstrap::vk-bootstrap GPUOpen::VulkanMemoryAllocator)
+target_link_libraries(${PROJECT_NAME} PUBLIC Runtime Graphics UI Vulkan::Vulkan glfw PRIVATE ImGui vk-bootstrap::vk-bootstrap GPUOpen::VulkanMemoryAllocator shaderc)
 set_target_properties(vk-bootstrap PROPERTIES FOLDER "external")
 
 ChaiPluginDefaults(${PROJECT_NAME} "Plugins")
