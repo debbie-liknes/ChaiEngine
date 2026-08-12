@@ -40,6 +40,7 @@ target_link_libraries(${PROJECT_NAME}
     Logger
     Asset
     Audio
+    Graph
     Graphics
     ImGui
     Scene

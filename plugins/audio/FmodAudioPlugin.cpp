@@ -16,6 +16,9 @@ namespace chai::audio::fmod
     public:
         const char* name() const override { return "AudioEngine(fmod)"; }
 
+        ServiceList requiredServices() const override { return {}; }
+        ServiceList providedServices() const override { return {typeid(audio::IAudioEngine)}; }
+
         void onLoad(PluginContext& ctx) override
         {
             m_audioEngine = std::make_shared<FmodAudioEngine>();

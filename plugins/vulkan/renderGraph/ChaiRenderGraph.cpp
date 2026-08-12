@@ -2,11 +2,17 @@
 
 #include "CRGResources.h"
 
+#include <Graph/Algorithms.h>
+
 #include <Log.h>
 #include <queue>
 
 namespace chai::gfx
 {
+    void buildAdjacencyList(std::vector<std::unique_ptr<CRGPassBase>>& passes,
+                            std::unordered_map<uint32_t, std::vector<uint32_t>>& adjList,
+                            std::vector<uint32_t>& inDegree);
+
     ChaiRenderGraph::ChaiRenderGraph(VulkanContext& ctx) : ctx_(ctx) {}
 
     ChaiRenderGraph::~ChaiRenderGraph()
@@ -110,8 +116,13 @@ namespace chai::gfx
 
     void ChaiRenderGraph::compile()
     {
+        std::unordered_map<uint32_t, std::vector<uint32_t>> adjList;
+        std::vector<uint32_t> inDegree;
+        buildAdjacencyList(passes_, adjList, inDegree);
+
         // sort and compute
-        executionOrder_ = topologicalSort(passes_);
+        if (!graph::topologicalSort(passes_, executionOrder_, adjList, inDegree))
+            CHAI_LOG_ERROR("RenderGraph: cycle detected. Some pass depends on itself indirectly.");
         computeBarriers(executionOrder_, textures_);
     }
 
@@ -134,39 +145,6 @@ namespace chai::gfx
             CRGResources res(*this);
             passes_[passIdx]->execute(res, cmd);
         }
-    }
-
-    std::vector<uint32_t>
-    ChaiRenderGraph::topologicalSort(std::vector<std::unique_ptr<CRGPassBase>>& passes)
-    {
-        // we create an adjacency list of all the resources, so we know what order to execute the
-        // passes
-        std::unordered_map<uint32_t, std::vector<uint32_t>> adjList;
-        std::vector<uint32_t> inDegree;
-        buildAdjacencyList(passes, adjList, inDegree);
-
-        std::queue<uint32_t> ready;
-        for (uint32_t i = 0; i < passes.size(); ++i)
-            if (inDegree[i] == 0)
-                ready.push(i);
-
-        // kahns algo
-        std::vector<uint32_t> order;
-        while (!ready.empty()) {
-            uint32_t p = ready.front();
-            ready.pop();
-            order.push_back(p);
-            for (uint32_t dependent : adjList[p]) {
-                if (--inDegree[dependent] == 0)
-                    ready.push(dependent); // this pass last dependency just got resolved
-            }
-        }
-
-        // no cycles allowed
-        if (order.size() != passes.size())
-            CHAI_LOG_ERROR("RenderGraph: cycle detected. Some pass depends on itself indirectly.");
-
-        return order;
     }
 
     void ChaiRenderGraph::computeBarriers(const std::vector<uint32_t>& order,
@@ -197,45 +175,45 @@ namespace chai::gfx
         }
     }
 
-    void ChaiRenderGraph::buildAdjacencyList(
-        std::vector<std::unique_ptr<CRGPassBase>>& passes,
-        std::unordered_map<uint32_t, std::vector<uint32_t>>& adjList,
-        std::vector<uint32_t>& inDegree)
-    {
-        adjList.clear();
-        inDegree.assign(passes.size(), 0);
+     void buildAdjacencyList(
+         std::vector<std::unique_ptr<CRGPassBase>>& passes,
+         std::unordered_map<uint32_t, std::vector<uint32_t>>& adjList,
+         std::vector<uint32_t>& inDegree)
+     {
+         adjList.clear();
+         inDegree.assign(passes.size(), 0);
 
-        // combines handle index & mip into one lookup key
-        auto makeKey = [](uint32_t handleIndex, uint32_t mip) {
-            return (uint64_t(handleIndex) << 32) | uint64_t(mip);
-        };
+         // combines handle index & mip into one lookup key
+         auto makeKey = [](uint32_t handleIndex, uint32_t mip) {
+             return (uint64_t(handleIndex) << 32) | uint64_t(mip);
+         };
 
-        std::unordered_map<uint64_t, uint32_t>
-            lastWriter; // maps slot to pass index that most recently wrote it
+         std::unordered_map<uint64_t, uint32_t>
+             lastWriter; // maps slot to pass index that most recently wrote it
 
-        for (uint32_t i = 0; i < passes.size(); i++) {
-            auto& pass = passes[i];
+         for (uint32_t i = 0; i < passes.size(); i++) {
+             auto& pass = passes[i];
 
-            // resolve reads first
-            for (auto& access : pass->accesses) {
-                if (access.access != CRGAccess::Read)
-                    continue;
+             // resolve reads first
+             for (auto& access : pass->accesses) {
+                 if (access.access != CRGAccess::Read)
+                     continue;
 
-                uint64_t k = makeKey(access.handle.index, access.mip);
-                auto it = lastWriter.find(k);
-                if (it != lastWriter.end()) {
-                    adjList[it->second].push_back(i);
-                    inDegree[i]++;
-                }
-            }
+                 uint64_t k = makeKey(access.handle.index, access.mip);
+                 auto it = lastWriter.find(k);
+                 if (it != lastWriter.end()) {
+                     adjList[it->second].push_back(i);
+                     inDegree[i]++;
+                 }
+             }
 
-            // register this pass's writes, so later passes see them
-            for (auto& access : pass->accesses) {
-                if (access.access == CRGAccess::Write) {
-                    uint64_t k = makeKey(access.handle.index, access.mip);
-                    lastWriter[k] = i;
-                }
-            }
-        }
-    }
+             // register this pass's writes, so later passes see them
+             for (auto& access : pass->accesses) {
+                 if (access.access == CRGAccess::Write) {
+                     uint64_t k = makeKey(access.handle.index, access.mip);
+                     lastWriter[k] = i;
+                 }
+             }
+         }
+     }
 } // namespace chai::gfx

@@ -15,6 +15,9 @@ namespace chai::gfx
     {
     public:
         const char* name() const override { return "Loader(gltf)"; }
+        
+        ServiceList requiredServices() const override { return {}; }
+        ServiceList providedServices() const override { return { typeid(gfx::IModelLoader) }; }
 
         void onLoad(PluginContext& ctx) override
         {

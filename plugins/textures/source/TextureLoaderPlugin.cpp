@@ -15,6 +15,9 @@ namespace chai
     {
     public:
         const char* name() const override { return "Loader(pngs)"; }
+        
+        ServiceList requiredServices() const override { return {}; }
+        ServiceList providedServices() const override { return { typeid(gfx::ITextureLoader) }; }
 
         void onLoad(PluginContext& ctx) override
         {

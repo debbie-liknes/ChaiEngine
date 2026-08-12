@@ -27,6 +27,9 @@ namespace chai
     {
     public:
         const char* name() const override { return "Window(GLFW)"; }
+        
+        ServiceList requiredServices() const override { return {}; }
+        ServiceList providedServices() const override { return { typeid(IWindow), typeid(IInput) }; }
 
         void onLoad(PluginContext& ctx) override
         {

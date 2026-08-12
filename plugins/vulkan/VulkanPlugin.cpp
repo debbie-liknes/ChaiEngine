@@ -30,12 +30,34 @@ namespace chai::gfx
     {
     public:
         const char* name() const override { return "Renderer(Vulkan)"; }
+        
+        ServiceList requiredServices() const override
+        {
+            return { typeid(IWindow), typeid(ITextureLoader), typeid(ui::PanelRegistry), typeid(ui::ActionManager) };
+        }
+        ServiceList providedServices() const override
+        {
+            return {typeid(AssetCache<Mesh>),
+                    typeid(IRenderer),
+                    typeid(IMeshRegistry),
+                    typeid(ITextureRegistry),
+                    typeid(TextureFactory),
+                    typeid(IModelRegistry),
+                    typeid(IMeshRegistry),
+                    typeid(IViewportRegistry)};
+        }
 
         void onLoad(PluginContext& ctx) override
         {
-            auto window = ctx.services.tryResolve<chai::IWindow>();
+            auto window = ctx.services.tryResolve<IWindow>();
             if (!window) {
                 CHAI_LOG_CRITICAL("Renderer requires IWindow; load the window plugin first");
+                return;
+            }
+
+            auto textureLoader = ctx.services.tryResolve<ITextureLoader>();
+            if (!textureLoader) {
+                CHAI_LOG_CRITICAL("Renderer requires ITextureLoader; load the texture loaderr plugin first");
                 return;
             }
 

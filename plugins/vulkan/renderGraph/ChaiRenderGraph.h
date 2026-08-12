@@ -105,11 +105,7 @@ namespace chai::gfx
         std::vector<uint32_t> executionOrder_;
         std::unordered_map<uint32_t, std::vector<CRGBarrier>> barrierPlan_;
 
-        std::vector<uint32_t> topologicalSort(std::vector<std::unique_ptr<CRGPassBase>>& passes);
         void computeBarriers(const std::vector<uint32_t>& order, std::vector<CRGTexture>& textures);
-        void buildAdjacencyList(std::vector<std::unique_ptr<CRGPassBase>>& passes,
-                                std::unordered_map<uint32_t, std::vector<uint32_t>>& adjList,
-                                std::vector<uint32_t>& inDegree);
         CRGTexture buildTexture(const std::string& name, const CRGTextureDesc& desc);
     };
 } // namespace chai::gfx
