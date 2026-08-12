@@ -24,6 +24,8 @@ namespace chai::scene
         float getIntensity() const { return intensity_; }
 
     private:
+        friend struct ChaiReflect<LightComponent>;
+
         LightType type_ = LightType::DIRECTIONAL;
         math::Vec3 color_ = math::Vec3(3.f, 3.f, 3.f);
         float intensity_ = 1.4f;

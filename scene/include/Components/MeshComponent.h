@@ -21,6 +21,8 @@ namespace chai::scene
         void setMaterial(Handle<gfx::Material> mat) { material_ = mat; }
 
     private:
+        friend struct ChaiReflect<MeshComponent>;
+
         Handle<gfx::Mesh> mesh_;
         Handle<gfx::Material> material_;
     };

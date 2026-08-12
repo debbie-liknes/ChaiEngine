@@ -108,5 +108,9 @@ namespace chai::scene
 
 } // namespace chai::cup
 
-CHAI_REFLECT(chai::scene::TransformComponent, "TransformComponent") {}
+CHAI_REFLECT(chai::scene::TransformComponent, "TransformComponent") {
+    CHAI_FIELD(position_);
+    CHAI_FIELD(rotation_);
+    CHAI_FIELD(scale_);
+}
 

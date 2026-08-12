@@ -16,5 +16,7 @@ namespace chai::scene
     }
 }
 
-CHAI_REFLECT(chai::scene::SkyboxComponent, "SkyboxComponent") {}
+CHAI_REFLECT(chai::scene::SkyboxComponent, "SkyboxComponent") {
+    CHAI_FIELD(skyMap_);
+}
 

@@ -34,6 +34,8 @@ namespace chai::scene
         void lookAt(const math::Vec3& target, const math::Vec3& worldUp);
 
     private:
+        friend struct ChaiReflect<TransformComponent>;
+
         math::Vec3 position_{0.0f, 0.0f, 0.0f};
         math::Quat rotation_;
         math::Vec3 scale_{1.0f, 1.0f, 1.0f};

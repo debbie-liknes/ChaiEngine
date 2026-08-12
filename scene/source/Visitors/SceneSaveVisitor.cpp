@@ -1,5 +1,6 @@
 
 #include <fstream>
+#include <unordered_set> // maybe should use vector and ranges::find instead?
 
 #include <Log.h>
 
@@ -25,6 +26,8 @@ namespace chai::scene
 
         ~p() = default;
 
+        std::unordered_set<std::string> properties_not_found_;
+
         rapidxml::xml_document<> doc_;
 
         // root "scene" node
@@ -33,16 +36,38 @@ namespace chai::scene
         // current "node" node (used when visiting Components)
         rapidxml::xml_node<>* node_{ nullptr };
 
-        void create_prop_element(rapidxml::xml_node<>& node, const TypeInfo& ti) {
+        void create_prop_element(rapidxml::xml_node<>& node, const std::string& name, const TypeInfo& ti) {
 
             char* allocated_string{ doc_.allocate_string(ti.name.data()) };
-            rapidxml::xml_node<>* prop{ doc_.allocate_node(rapidxml::node_element, allocated_string) };
+            rapidxml::xml_node<>* prop{ doc_.allocate_node(rapidxml::node_element, "property") };
+
+            // name
+            {
+                char* allocated_string{ doc_.allocate_string(name.data()) };
+
+                rapidxml::xml_attribute<>* name_attribute{ doc_.allocate_attribute("name", allocated_string) };
+                prop->append_attribute(name_attribute);
+            }
+
+            // type
+            {
+                char* allocated_string{ doc_.allocate_string(ti.name.data()) };
+
+                rapidxml::xml_attribute<>* type_attribute{ doc_.allocate_attribute("type", allocated_string) };
+                prop->append_attribute(type_attribute);
+            }
 
             for (const auto& [name, property] : ti.properties) {
 
-                if (auto ti{ TypeRegistry::instance().getType(property.type)})
-                    create_prop_element(*prop, *ti);
+                if (auto ti{ TypeRegistry::instance().getType(property.type)}) {
+                    create_prop_element(*prop, ti->name, *ti);
+                }
+                else {
 
+                    if (properties_not_found_.insert(name).second)
+                        CHAI_LOG_WARN("Could not find TypeInfo for {}", name);
+
+                }
 
             }
 
@@ -114,7 +139,7 @@ namespace chai::scene
         rapidxml::xml_node<>& node{ *impl_->node_ };
 
         if (auto ti{ TypeRegistry::instance().getType(std::type_index{typeid(*comp) })}) {
-            impl_->create_prop_element(node, *ti);
+            impl_->create_prop_element(node, "component", *ti);
         } else {
             CHAI_LOG_ERROR("Component is not registered with the meta system and cannot be saved.");
         }

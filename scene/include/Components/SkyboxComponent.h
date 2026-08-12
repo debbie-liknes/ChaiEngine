@@ -18,6 +18,8 @@ namespace chai::scene
         void setTexture(Handle<gfx::Texture> h) { skyMap_ = h; }
 
     private:
+        friend struct ChaiReflect<SkyboxComponent>;
+
         Handle<gfx::Texture> skyMap_;
     };
 }

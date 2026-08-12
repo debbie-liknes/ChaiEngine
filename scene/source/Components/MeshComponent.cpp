@@ -15,5 +15,8 @@ namespace chai::scene
     }
 }
 
-CHAI_REFLECT(chai::scene::MeshComponent, "MeshComponent") {}
+CHAI_REFLECT(chai::scene::MeshComponent, "MeshComponent") {
+    CHAI_FIELD(mesh_);
+    CHAI_FIELD(material_);
+}
 
