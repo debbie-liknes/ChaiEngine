@@ -40,7 +40,8 @@ namespace chai::scene
 
             for (const auto& [name, property] : ti.properties) {
 
-                // ZHR :: TODO
+                if (auto ti{ TypeRegistry::instance().getType(property.type)})
+                    create_prop_element(*prop, *ti);
 
 
             }
