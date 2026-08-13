@@ -2,6 +2,7 @@ project(Graph)
 
 set(${PROJECT_NAME}_headers
     include/Graph/Algorithms.h
+    include/Graph/Graph.h
 )
 
 add_library(${PROJECT_NAME} INTERFACE

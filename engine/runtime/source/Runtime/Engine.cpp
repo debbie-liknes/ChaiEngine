@@ -13,47 +13,17 @@
 #include <LogPanel.h>
 #include <Visitors/AudioSceneVisitor.h>
 #include <Visitors/FrameRenderVisitor.h>
-#include <Graph/Algorithms.h>
 #include <tracy/Tracy.hpp>
-
-#include <unordered_set>
 
 namespace chai
 {
-    void buildAdjacencyList(std::vector<IPlugin*>& plugins,
-        std::unordered_map<uint32_t, std::vector<uint32_t>>& adjList,
-        std::vector<uint32_t>& inDegree,
-        const std::unordered_set<std::type_index>& providedServicesByEngine)
+    IPlugin::ServiceList Engine::providedServices() const
     {
-        adjList.clear();
-        inDegree.assign(plugins.size(), 0);
-
-        std::unordered_map<std::type_index, uint32_t> service2Plugin;
-
-        for (uint32_t i = 0; i < plugins.size(); i++)
-            for (const auto& service : plugins[i]->providedServices())
-                service2Plugin.insert_or_assign(service, i);
-
-        for (uint32_t i = 0; i < plugins.size(); i++) {
-            std::unordered_set<uint32_t> pluginsRequired;
-            for (const auto& service : plugins[i]->requiredServices()) {
-                if (auto itr = service2Plugin.find(service); itr != service2Plugin.end()) {
-                    pluginsRequired.insert(service2Plugin[service]);
-                    inDegree[service2Plugin[service]]++;
-                }
-                else if (!providedServicesByEngine.contains(service)) {
-                    CHAI_LOG_CRITICAL("Unresolved service dependency for plugin {}",
-                                      plugins[i]->name());
-                }
-            }
-            adjList.insert_or_assign(
-                i, std::vector<uint32_t>{pluginsRequired.begin(), pluginsRequired.end()});
-        }
-
-    }
-
-    Engine::~Engine()
-    {
+        return {typeid(ui::PanelRegistry),
+                typeid(ui::ActionManager),
+                typeid(ui::PanelHost),
+                typeid(ui::DockspaceService),
+                typeid(ui::EditorViewportManager)};
     }
 
     void Engine::startup()
@@ -74,22 +44,9 @@ namespace chai
 
         //Load plugins
         CHAI_LOG_INFO("Engine starting");
-
-        std::unordered_set<std::type_index> providedServicesByEngine{typeid(ui::PanelRegistry),
-            typeid(ui::ActionManager), typeid(ui::PanelHost), typeid(ui::DockspaceService)};
-
-        std::unordered_map<uint32_t, std::vector<uint32_t>> adjList;
-        std::vector<uint32_t> inDegree;
-        buildAdjacencyList(plugins_, adjList, inDegree, providedServicesByEngine);
-
-        std::vector<uint32_t> sortedPlugins;
-        if (!graph::topologicalSort(plugins_, sortedPlugins, adjList, inDegree)) {
-            CHAI_LOG_ERROR("Engine: Plugin dependency cycle detected. Some plugin depends on itself indirectly.");
-        }
-
-        for (const auto& i : sortedPlugins | std::views::reverse) {
-            plugins_[i]->onLoad(ctx_);
-            active_.push_back(plugins_[i]);
+        for (const auto& plugin : plugins_) {
+            plugin->onLoad(ctx_);
+            active_.push_back(plugin);
         }
 
         auto registry = services_.tryResolve<gfx::IViewportRegistry>();

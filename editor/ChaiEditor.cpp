@@ -87,11 +87,14 @@ int main()
     addLogSink(&guiSink);
 
     Engine engine;
-    PluginLoader loader;
+    PluginLoader loader(engine.providedServices());
     auto exeDir = executableDir();
     if (exeDir.empty())
         exeDir = std::filesystem::current_path();
-    loader.loadDirectory(exeDir / "plugins");
+    if (!loader.loadDirectory(exeDir / "plugins")) {
+        CHAI_LOG_CRITICAL("Editor: Failed to load plugins. Exiting prematurely.");
+        return 1;
+    }
     engine.setPlugins(loader.plugins());
     engine.startup();
 

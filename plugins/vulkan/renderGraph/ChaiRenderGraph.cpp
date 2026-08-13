@@ -9,9 +9,7 @@
 
 namespace chai::gfx
 {
-    void buildAdjacencyList(std::vector<std::unique_ptr<CRGPassBase>>& passes,
-                            std::unordered_map<uint32_t, std::vector<uint32_t>>& adjList,
-                            std::vector<uint32_t>& inDegree);
+    graph::Graph<CRGPassBase*> buildPassGraph(std::vector<std::unique_ptr<CRGPassBase>>& passes);
 
     ChaiRenderGraph::ChaiRenderGraph(VulkanContext& ctx) : ctx_(ctx) {}
 
@@ -114,16 +112,17 @@ namespace chai::gfx
         return CRGTextureHandle{uint32_t(textures_.size() - 1), textures_.back().generation};
     }
 
-    void ChaiRenderGraph::compile()
+    bool ChaiRenderGraph::compile()
     {
-        std::unordered_map<uint32_t, std::vector<uint32_t>> adjList;
-        std::vector<uint32_t> inDegree;
-        buildAdjacencyList(passes_, adjList, inDegree);
-
         // sort and compute
-        if (!graph::topologicalSort(passes_, executionOrder_, adjList, inDegree))
-            CHAI_LOG_ERROR("RenderGraph: cycle detected. Some pass depends on itself indirectly.");
+        if (auto passGraph = buildPassGraph(passes_);
+            !graph::topologicalSort(passGraph, executionOrder_)) {
+            CHAI_LOG_CRITICAL("RenderGraph: cycle detected. Some pass depends on itself indirectly.");
+            return false;
+        }
         computeBarriers(executionOrder_, textures_);
+
+        return true;
     }
 
     void ChaiRenderGraph::clear()
@@ -175,45 +174,42 @@ namespace chai::gfx
         }
     }
 
-     void buildAdjacencyList(
-         std::vector<std::unique_ptr<CRGPassBase>>& passes,
-         std::unordered_map<uint32_t, std::vector<uint32_t>>& adjList,
-         std::vector<uint32_t>& inDegree)
-     {
-         adjList.clear();
-         inDegree.assign(passes.size(), 0);
+    graph::Graph<CRGPassBase*> buildPassGraph(std::vector<std::unique_ptr<CRGPassBase>>& passes)
+    {
+        graph::Graph<CRGPassBase*> passGraph;
 
-         // combines handle index & mip into one lookup key
-         auto makeKey = [](uint32_t handleIndex, uint32_t mip) {
-             return (uint64_t(handleIndex) << 32) | uint64_t(mip);
-         };
+        // combines handle index & mip into one lookup key
+        auto makeKey = [](uint32_t handleIndex, uint32_t mip) {
+            return (uint64_t(handleIndex) << 32) | uint64_t(mip);
+        };
 
-         std::unordered_map<uint64_t, uint32_t>
-             lastWriter; // maps slot to pass index that most recently wrote it
+        std::unordered_map<uint64_t, uint32_t>
+            lastWriter; // maps slot to pass index that most recently wrote it
 
-         for (uint32_t i = 0; i < passes.size(); i++) {
-             auto& pass = passes[i];
+        for (uint32_t i = 0; i < passes.size(); i++) {
+            const auto& pass = passes[i];
 
-             // resolve reads first
-             for (auto& access : pass->accesses) {
-                 if (access.access != CRGAccess::Read)
-                     continue;
+            passGraph.nodes.push_back(pass.get());
 
-                 uint64_t k = makeKey(access.handle.index, access.mip);
-                 auto it = lastWriter.find(k);
-                 if (it != lastWriter.end()) {
-                     adjList[it->second].push_back(i);
-                     inDegree[i]++;
-                 }
-             }
+            // resolve reads first
+            for (const auto& access : pass->accesses) {
+                if (access.access == CRGAccess::Read) {
+                    uint64_t k = makeKey(access.handle.index, access.mip);
+                    if (auto it = lastWriter.find(k); it != lastWriter.end()) {
+                        passGraph.edges.add(it->second, i);
+                    }
+                }
+            }
 
-             // register this pass's writes, so later passes see them
-             for (auto& access : pass->accesses) {
-                 if (access.access == CRGAccess::Write) {
-                     uint64_t k = makeKey(access.handle.index, access.mip);
-                     lastWriter[k] = i;
-                 }
-             }
-         }
-     }
+            // register this pass's writes, so later passes see them
+            for (const auto& access : pass->accesses) {
+                if (access.access == CRGAccess::Write) {
+                    uint64_t k = makeKey(access.handle.index, access.mip);
+                    lastWriter[k] = i;
+                }
+            }
+        }
+
+        return passGraph;
+    }
 } // namespace chai::gfx

@@ -8,6 +8,7 @@
 #include "CRGBuilder.h"
 #include "CRGDescriptors.h"
 #include "CRGPass.h"
+#include <Graph/Graph.h>
 
 namespace chai::gfx
 {
@@ -89,7 +90,7 @@ namespace chai::gfx
         /**
          * @brief Creates an execution order for the passes and barrier plan for transition images
          */
-        void compile();
+        [[nodiscard]] bool compile();
 
         /**
          * @brief Executes the plan created during compile.
@@ -102,7 +103,7 @@ namespace chai::gfx
         VulkanContext& ctx_;
         std::vector<std::unique_ptr<CRGPassBase>> passes_;
         std::vector<CRGTexture> textures_;
-        std::vector<uint32_t> executionOrder_;
+        graph::NodeList<uint32_t> executionOrder_;
         std::unordered_map<uint32_t, std::vector<CRGBarrier>> barrierPlan_;
 
         void computeBarriers(const std::vector<uint32_t>& order, std::vector<CRGTexture>& textures);

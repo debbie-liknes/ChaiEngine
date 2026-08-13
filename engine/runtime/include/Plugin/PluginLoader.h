@@ -20,6 +20,9 @@ namespace chai
     class PluginLoader
     {
     public:
+        PluginLoader() = default;
+        explicit PluginLoader(const IPlugin::ServiceList& providedServices) : providedServices_(providedServices) {}
+
         /**
          * @brief Load one plugin library
          * @return Pointer to the plugin or nullptr on failure
@@ -27,13 +30,11 @@ namespace chai
         IPlugin* load(const std::filesystem::path& libPath);
 
         /**
-         * @brief Scane a directory and load every plugin in it.
+         * @brief Scan a directory and load every plugin in it.
          * 
-         * @todo Order of loading is unspecified. This may bite me later
-         * 
-         * @return Count of plugins loaded
+         * @return Success
          */
-        std::size_t loadDirectory(const std::filesystem::path& dir);
+        [[nodiscard]] bool loadDirectory(const std::filesystem::path& dir);
 
         struct Loaded {
             DynamicLibrary library;
@@ -44,7 +45,7 @@ namespace chai
         std::span<IPlugin* const> plugins() const { return pluginPtrs_; }
 
     private:
-
+        IPlugin::ServiceList providedServices_;
         std::vector<Loaded> loaded_;
         std::vector<IPlugin*> pluginPtrs_;
     };

@@ -2,6 +2,7 @@
 #include <Plugin/PluginLoader.h>
 #include <Runtime/SystemPaths.h>
 #include <Audio/IAudioEngine.h>
+#include <Log.h>
 
 std::filesystem::path assetDir()
 {
@@ -17,7 +18,10 @@ int main()
     auto exeDir = executableDir();
     if (exeDir.empty())
         exeDir = std::filesystem::current_path();
-    loader.loadDirectory(exeDir / "plugins");
+    if (!loader.loadDirectory(exeDir / "plugins")) {
+        CHAI_LOG_CRITICAL("Editor: Failed to load plugins. Exiting prematurely.");
+        return 1;
+    }
     engine.setPlugins(loader.plugins());
     engine.startup();
 

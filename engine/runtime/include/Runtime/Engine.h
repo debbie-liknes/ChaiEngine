@@ -24,13 +24,13 @@ namespace chai
     class Engine
     {
     public:
-        ~Engine();
-
         //lifecycle methods
         void startup();
         void shutdown();
         void requestStop();
         void run();
+
+        IPlugin::ServiceList providedServices() const;
 
         ServiceLocator& services() { return services_; }
         scene::Scene& scene() { return *scene_; }
