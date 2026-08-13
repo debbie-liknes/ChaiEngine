@@ -34,6 +34,7 @@
 #include <UI/Editor/PanelRegistry.h>
 #include <UI/Editor/EditorViewportManager.h>
 #include <UI/Editor/DockspaceService.h>
+#include <EditorUI/SceneHierarchy.h>
 #include <UI/SettingsPanel.h>
 #include <tracy/Tracy.hpp>
 
@@ -42,7 +43,7 @@ std::filesystem::path assetDir()
     return CHAI_ASSET_DIR;
 }
 
-void setupDockspace(chai::ServiceLocator& locator, chai::scene::Scene& scene)
+void setupDockspace(const chai::ServiceLocator& locator, chai::scene::Scene& scene)
 {
     using namespace chai;
     using namespace ui;
@@ -55,12 +56,15 @@ void setupDockspace(chai::ServiceLocator& locator, chai::scene::Scene& scene)
 
     std::string mainPanelId = vpManager.addViewport("Main Scene", scene.getCameraId());
 
-    auto sceneIds = scene.registerPanels(panelRegistry);
+    std::string hierarchy = "Hierarchy";
+    panelRegistry.registerPanel({.id = hierarchy, .displayName = hierarchy, .draw = [&scene] {
+                                     ui::drawSceneHierarchy(scene);
+                            }});
 
     ui::DockSplit horizontalSplit;
     horizontalSplit.ratio = 0.25f;
     horizontalSplit.side = ui::DockSplit::Side::Left;
-    horizontalSplit.windowId = sceneIds.hierarchy;
+    horizontalSplit.windowId = hierarchy;
 
     ui::DockSplit split;
     split.side = ui::DockSplit::Side::Bottom;

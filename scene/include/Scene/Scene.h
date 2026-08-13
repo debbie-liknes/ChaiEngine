@@ -6,11 +6,6 @@
 
 namespace chai::scene
 {
-    struct ScenePanelIds
-    {
-        std::string hierarchy;
-    };
-
     //Scene class that holds all the entities in the scene
     //Does not hold the camera, those are associated with views (probably players?)
     //The scene should hold data that is persistent across frames
@@ -31,7 +26,6 @@ namespace chai::scene
         void update(const UpdateContext&);
         void accept(Visitor* visitor);
 
-        ScenePanelIds registerPanels(ui::PanelRegistry& locator);
         std::vector<std::shared_ptr<GameObject>>& getObjects() { return m_objects; }
 
         GameObject* createObject(const std::string& name);

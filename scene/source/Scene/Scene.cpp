@@ -4,23 +4,12 @@
 #include <Components/TransformComponent.h>
 #include <Scene/Scene.h>
 #include <UI/Editor/InternalChaiUI.h>
-#include <EditorUI/SceneHierarchy.h>
 #include <Visitors/FrameRenderVisitor.h>
 #include <tracy/Tracy.hpp>
 
 namespace chai::scene
 {
     Scene::Scene() {}
-
-    ScenePanelIds Scene::registerPanels(ui::PanelRegistry& registry)
-    {
-        std::string hierarchy = "Hierarchy";
-        registry.registerPanel({.id = hierarchy, .displayName = "Hierarchy", .draw = [this] {
-                                         ui::drawSceneHierarchy(*this);
-                                     }});
-
-        return ScenePanelIds{hierarchy};
-    }
 
     void Scene::update(const UpdateContext& ctx)
     {
