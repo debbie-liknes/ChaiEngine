@@ -175,6 +175,7 @@ void main()
     float exposure = 1.0;
     vec3 color = ambient + lo + emissive;
     color *= exposure;
+    //color = vec3(0.0, 1.0, 0.0);
     //color = acesFilm(color);
 
     vec3 finalColor;

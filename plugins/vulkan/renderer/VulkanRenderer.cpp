@@ -233,6 +233,8 @@ namespace chai::gfx
 
         // Wait until this frame slots previous work is done.
         VK_CHECK(vkWaitForFences(ctx_.device(), 1, &frame.inFlight, VK_TRUE, UINT64_MAX));
+        pipelineReg_.collectGarbage(currentFrame_);
+        pipelineReg_.prcoessPendingBuilds(currentFrame_);
 
         viewportReg_.tick(currentFrame_);
         viewportReg_.applyPendingViewportResizes();
@@ -2074,6 +2076,6 @@ namespace chai::gfx
 
     void VulkanRenderer::recompileShaders() 
     {
-        pipelineReg_.reloadAll();
+        pipelineReg_.reloadAllAsync();
     }
 } // namespace chai::gfx

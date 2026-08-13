@@ -30,11 +30,57 @@ namespace chai::gfx
          }
     }
 
+    void PipelineRegistry::reloadAllAsync()
+    {
+        if (reloadInProgress_) {
+            return;
+        }
+        reloadInProgress_ = true;
+
+        reloadFuture_ = std::async(std::launch::async, [this] { 
+            std::vector<std::pair<PipelineHandle, VkPipeline>> results;
+            for (int i = 0; i < entries_.size(); i++) {
+                PipelineEntry& entry = entries_[i];
+                VkPipeline newPipe = build(entry);
+                PipelineHandle handle{.index = static_cast<uint32_t>(i)};
+                results.push_back({handle, newPipe});
+            }
+            return results;
+        });
+    }
+
     void PipelineRegistry::destroyAll()
     {
          for (auto& entry : entries_)
              vkDestroyPipeline(ctx_.device(), entry.pipeline, nullptr);
          entries_.clear();
+    }
+
+    void PipelineRegistry::prcoessPendingBuilds(uint32_t currentFrameIndex)
+    {
+        if (!reloadInProgress_)
+            return;
+
+        if (reloadFuture_.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+            return;
+
+        for (auto& [handle, pipe] : reloadFuture_.get()) {
+            PipelineEntry& entry = entries_[handle.index];
+            if (pipe == VK_NULL_HANDLE) {
+                CHAI_LOG_ERROR("Reload failed for '{}', keeping previous pipeline", entry.name);
+                continue;
+            }
+            deferredDelete_[currentFrameIndex].push_back(entry.pipeline);
+            entry.pipeline = pipe;
+        }
+        reloadInProgress_ = false;
+    }
+
+    void PipelineRegistry::collectGarbage(uint32_t frameIndex)
+    {
+        for (auto pipe : deferredDelete_[frameIndex])
+            vkDestroyPipeline(ctx_.device(), pipe, nullptr);
+        deferredDelete_[frameIndex].clear();
     }
 
     VkPipeline PipelineRegistry::get(const PipelineHandle& handle)

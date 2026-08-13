@@ -6,6 +6,8 @@
 #include <string>
 #include <functional>
 #include <unordered_map>
+#include <future>
+#include <array>
 
 namespace chai::gfx
 {
@@ -29,12 +31,19 @@ namespace chai::gfx
         VkPipeline get(const PipelineHandle& key);
 
         void reloadAll();
+        void reloadAllAsync();
         void destroyAll();
+
+        void prcoessPendingBuilds(uint32_t currentFrameIndex);
+        void collectGarbage(uint32_t frameIndex);
 
     private:
         VkPipeline build(const PipelineEntry& entry);
 
         VulkanContext& ctx_;
         std::vector<PipelineEntry> entries_;
+        bool reloadInProgress_ = false;
+        std::future<std::vector<std::pair<PipelineHandle, VkPipeline>>> reloadFuture_;
+        std::array<std::vector<VkPipeline>, kFramesInFlight> deferredDelete_;
     };
 }
