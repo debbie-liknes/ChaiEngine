@@ -1,6 +1,6 @@
 #pragma once
 
-#include <UI/Editor/ActionManager.h>
+#include <EditorUI/ActionManager.h>
 
 namespace chai::ui
 {

@@ -2,7 +2,7 @@
 
 #include <Core/Action.h>
 #include <Input/IInput.h>
-#include <UI/Editor/ActionConfigLoader.h>
+#include <EditorUI/ActionConfigLoader.h>
 
 #include <Containers/Dictionary.h>
 #include <memory>

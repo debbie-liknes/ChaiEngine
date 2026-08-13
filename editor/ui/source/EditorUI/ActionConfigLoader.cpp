@@ -1,4 +1,4 @@
-#include <UI/Editor/ActionConfigLoader.h>
+#include <EditorUI/ActionConfigLoader.h>
 
 #include <Log.h>
 #include <json.hpp>

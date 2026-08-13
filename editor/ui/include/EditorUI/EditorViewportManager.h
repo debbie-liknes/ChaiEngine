@@ -1,7 +1,7 @@
 #pragma once
 #include <Rendering/IRenderer.h>
 #include <Rendering/Viewport.h>
-#include <UI/Editor/PanelRegistry.h>
+#include <EditorUI/PanelRegistry.h>
 #include <string>
 #include <Rendering/Viewport.h>
 

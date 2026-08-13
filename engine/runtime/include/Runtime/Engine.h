@@ -13,7 +13,6 @@
 #include <span>
 #include <Scene/Scene.h>
 #include <Rendering/IRenderer.h>
-#include <UI/Editor/EditorViewportManager.h>
 
 namespace chai
 {
@@ -24,13 +23,11 @@ namespace chai
     class Engine
     {
     public:
-        ~Engine();
-
         //lifecycle methods
         void startup();
         void shutdown();
         void requestStop();
-        void run();
+        void run(const std::function<void(const UpdateContext&)>& updateCallback);
 
         ServiceLocator& services() { return services_; }
         scene::Scene& scene() { return *scene_; }

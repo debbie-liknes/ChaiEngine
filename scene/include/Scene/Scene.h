@@ -2,7 +2,6 @@
 #include <vector>
 #include <Scene/GameObject.h>
 #include <Scene/IUpdatable.h>
-#include <UI/Editor/PanelRegistry.h>
 
 namespace chai::scene
 {

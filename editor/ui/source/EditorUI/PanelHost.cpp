@@ -1,8 +1,8 @@
-#include <UI/Editor/PanelHost.h>
-#include <UI/Editor/InternalChaiUI.h>
+#include <EditorUI/PanelHost.h>
+#include <UI/InternalChaiUI.h>
 #include <imgui.h>
 #include <tracy/Tracy.hpp>
-#include <UI/Editor/EditorMenu.h>
+#include <EditorUI/EditorMenu.h>
 
 namespace chai::ui
 {

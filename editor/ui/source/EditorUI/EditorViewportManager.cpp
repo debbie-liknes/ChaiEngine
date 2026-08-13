@@ -1,5 +1,5 @@
-#include <UI/Editor/EditorViewportManager.h>
-#include <UI/Editor/PanelRegistry.h>
+#include <EditorUI/EditorViewportManager.h>
+#include <EditorUI/PanelRegistry.h>
 #include <imgui.h>
 
 namespace chai::ui

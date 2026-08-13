@@ -1,6 +1,6 @@
 #pragma once
-#include <UI/Editor/InternalChaiUI.h>
-#include <UI/Editor/TreeNode.h>
+#include <UI/InternalChaiUI.h>
+#include <UI/TreeNode.h>
 #include "renderer/VulkanRenderer.h"
 
 // I know this plugin has ImGui right now because it has the vulkan impl, but DO NOT

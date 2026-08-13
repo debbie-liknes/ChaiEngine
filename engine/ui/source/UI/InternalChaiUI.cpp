@@ -1,4 +1,4 @@
-#include <UI/Editor/InternalChaiUI.h>
+#include <UI/InternalChaiUI.h>
 #include <algorithm>
 #include <imgui.h>
 #include <cstring>

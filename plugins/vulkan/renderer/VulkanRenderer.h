@@ -18,7 +18,7 @@
 
 #include <Plugin/ServiceLocator.h>
 #include <Rendering/IRenderer.h>
-#include <UI/Editor/InternalChaiUI.h>
+#include <UI/InternalChaiUI.h>
 #include <array>
 #include <cstdint>
 #include <vulkan/vulkan.h>

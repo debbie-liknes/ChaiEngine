@@ -1,7 +1,7 @@
-#include <LogPanel.h>
+#include <DiagnosticsUI/LogPanel.h>
 #include <imgui.h>
-#include <UI/Editor/InternalChaiUI.h>
-#include <UI/Editor/FontManager.h>
+#include <UI/InternalChaiUI.h>
+#include <UI/FontManager.h>
 
 namespace chai::diagnostics
 {

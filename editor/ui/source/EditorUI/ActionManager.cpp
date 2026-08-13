@@ -1,6 +1,6 @@
-#include <UI/Editor/ActionManager.h>
+#include <EditorUI/ActionManager.h>
 
-#include <UI/Editor/PanelRegistry.h>
+#include <EditorUI/PanelRegistry.h>
 
 #include <filesystem>
 #include <algorithm>

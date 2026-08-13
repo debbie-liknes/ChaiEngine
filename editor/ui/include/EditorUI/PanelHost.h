@@ -1,7 +1,7 @@
 #pragma once
-#include <UI/Editor/DockspaceService.h>
-#include <UI/Editor/PanelRegistry.h>
-#include <UI/Editor/ActionManager.h>
+#include <EditorUI/DockspaceService.h>
+#include <EditorUI/PanelRegistry.h>
+#include <EditorUI/ActionManager.h>
 
 namespace chai::ui
 {

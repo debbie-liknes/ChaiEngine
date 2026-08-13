@@ -1,31 +1,15 @@
 project(UI)
 
 set(${PROJECT_NAME}_headers
-    include/UI/Editor/ActionManager.h
-    include/UI/Editor/CommandPalette.h
-    include/UI/Editor/DockspaceService.h
-    include/UI/Editor/PanelHost.h
-    include/UI/Editor/PanelRegistry.h
-    include/UI/Editor/InternalChaiUI.h
-    include/UI/Editor/FontManager.h
-    include/UI/Editor/EditorMenu.h
-    include/UI/Editor/EditorViewportManager.h
-    include/UI/Editor/ActionConfigLoader.h
-    include/UI/Editor/TreeNode.h
+    include/UI/InternalChaiUI.h
+    include/UI/FontManager.h
+    include/UI/TreeNode.h
 )
 
 set(${PROJECT_NAME}_source
-	source/UI/Editor/ActionManager.cpp
-	source/UI/Editor/CommandPalette.cpp
-	source/UI/Editor/DockspaceService.cpp
-	source/UI/Editor/PanelHost.cpp
-	source/UI/Editor/PanelRegistry.cpp
-	source/UI/Editor/InternalChaiUI.cpp
-	source/UI/Editor/FontManager.cpp
-	source/UI/Editor/EditorMenu.cpp
-	source/UI/Editor/EditorViewportManager.cpp
-	source/UI/Editor/ActionConfigLoader.cpp
-	source/UI/Editor/TreeNode.cpp
+	source/UI/InternalChaiUI.cpp
+	source/UI/FontManager.cpp
+	source/UI/TreeNode.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED

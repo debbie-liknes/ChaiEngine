@@ -24,7 +24,7 @@ int main()
     auto audio = engine.services().tryResolve<audio::IAudioEngine>();
     audio->playSound((assetDir() / "orchestral_techno.wav").string(), chai::math::Vec3{5, 0, 0});
 
-    engine.run();
+    engine.run([](const UpdateContext&) {});
 
     engine.shutdown();
 

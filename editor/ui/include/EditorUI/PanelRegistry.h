@@ -1,5 +1,4 @@
 #pragma once
-#include <UIExport.h>
 #include <functional>
 #include <string>
 #include <ranges>
@@ -16,7 +15,7 @@ namespace chai::ui
         // FontWeight titleFont = FontWeight::BoldTitle;
     };
 
-	class UI_EXPORT PanelRegistry
+	class PanelRegistry
 	{
     public:
         void registerPanel(PanelDesc desc);

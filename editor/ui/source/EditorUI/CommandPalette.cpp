@@ -1,4 +1,4 @@
-#include <UI/Editor/CommandPalette.h>
+#include <EditorUI/CommandPalette.h>
 
 #include <Log.h>
 
