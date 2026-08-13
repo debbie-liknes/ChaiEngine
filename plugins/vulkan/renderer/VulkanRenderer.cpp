@@ -2072,5 +2072,8 @@ namespace chai::gfx
         profiler_.endRegion(cmd, "UI Rendering");
     }
 
-    void VulkanRenderer::recompileShaders() {}
+    void VulkanRenderer::recompileShaders() 
+    {
+        pipelineReg_.reloadAll();
+    }
 } // namespace chai::gfx

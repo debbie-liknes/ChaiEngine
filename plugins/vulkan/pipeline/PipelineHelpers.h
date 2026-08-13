@@ -1,4 +1,5 @@
 #pragma once
+#include "../VulkanCommon.h"
 #include "../renderer/VulkanContext.h"
 #include "PipelineBuilder.h"
 #include "PipelineHelpers.h"
@@ -71,7 +72,7 @@ namespace chai::gfx
                                   VkPipelineLayout layout,
                                   ConfigureFn&& configure)
     {
-        const auto dir = executableDir() / "shaders";
+        const auto dir = shaderDir();
         return loadPipeline(
             ctx, dir / vertName, dir / fragName, layout, std::forward<ConfigureFn>(configure));
     }

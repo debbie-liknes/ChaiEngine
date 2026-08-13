@@ -114,6 +114,14 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         ${SHADER_OUTPUT_DIR}
 )
 
+#unsure about this
+set(CHAI_SHADER_SOURCE_DIR "${CMAKE_SOURCE_DIR}/shaders")
+configure_file(
+    ${CMAKE_SOURCE_DIR}/cmake/ShaderPaths.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/generated/ShaderPaths.h
+)
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 target_link_libraries(${PROJECT_NAME} PUBLIC Runtime Graphics UI Vulkan::Vulkan glfw PRIVATE ImGui vk-bootstrap::vk-bootstrap GPUOpen::VulkanMemoryAllocator shaderc)
 set_target_properties(vk-bootstrap PROPERTIES FOLDER "external")
 
