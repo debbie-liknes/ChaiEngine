@@ -4,6 +4,7 @@
 #include <json.hpp>
 
 #include <ranges>
+#include <bit>
 
 #include <Graph/Algorithms.h>
 
@@ -25,7 +26,7 @@ namespace chai
         if (!lib.valid())
             return nullptr;
 
-        auto abiFn = static_cast<int (*)()>(lib.symbol("chaiPluginAbiVersion"));
+        auto abiFn = std::bit_cast<int (*)()>(lib.symbol("chaiPluginAbiVersion"));
         if (!abiFn) {
             CHAI_LOG_ERROR("'{}': not a chai plugin (no chaiPluginAbiVersion)",
                            lib.getBinaryPath());
@@ -39,7 +40,7 @@ namespace chai
             return nullptr;
         }
 
-        auto createFn = static_cast<CreatePluginFn>(lib.symbol("chaiCreatePlugin"));
+        auto createFn = std::bit_cast<CreatePluginFn>(lib.symbol("chaiCreatePlugin"));
         if (!createFn) {
             CHAI_LOG_ERROR("'{}': missing chaiCreatePlugin entry point", lib.getBinaryPath());
             return nullptr;
