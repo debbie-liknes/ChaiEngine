@@ -3,9 +3,9 @@ project(VulkanRenderer)
 set(${PROJECT_NAME}_headers
         commands/ImageTransition.h
         pipeline/PipelineBuilder.h
-        pipeline/PipelineCache.h
         pipeline/PipelineHelpers.h
         pipeline/PipelineKey.h
+        pipeline/PipelineRegistry.h
         pipeline/ShaderCompiler.h
         pipeline/ShaderModule.h
         registries/ViewportRegistry.h
@@ -46,8 +46,8 @@ set(${PROJECT_NAME}_headers
 set(${PROJECT_NAME}_source
         commands/ImageTransition.cpp
         pipeline/PipelineBuilder.cpp
-        pipeline/PipelineCache.cpp
         pipeline/PipelineHelpers.cpp
+        pipeline/PipelineRegistry.cpp
         pipeline/ShaderCompiler.cpp
         pipeline/ShaderModule.cpp
         registries/ViewportRegistry.cpp
