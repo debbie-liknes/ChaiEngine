@@ -21,23 +21,13 @@
 #include <Loaders/ITextureLoader.h>
 #include <Loaders/TomlSettingsLoader.h>
 #include <Log.h>
-#include <Plugin/PluginLoader.h>
-#include <Registry/SettingsRegistry.h>
 #include <Plugin/PluginManager.h>
 #include <Rendering/IRenderer.h>
 #include <Scene/GameObject.h>
 #include <Scene/Scene.h>
 #include <Scene/SpawnPrefab.h>
-#include <SpdLogSink.h>
 #include <Window/Window.h>
-#include <DiagnosticsUI/LogPanel.h>
-#include <EditorUI/ActionManager.h>
 #include <EditorUI/CommandPalette.h>
-#include <EditorUI/PanelHost.h>
-#include <EditorUI/PanelRegistry.h>
-#include <EditorUI/EditorViewportManager.h>
-#include <EditorUI/DockspaceService.h>
-#include <EditorUI/SceneHierarchy.h>
 #include <UI/SettingsPanel.h>
 
 std::filesystem::path assetDir()
@@ -80,31 +70,6 @@ namespace chai
 
     void Editor::startup()
     {
-    }
-
-    void Editor::shutdown()
-    {
-        engine_->shutdown();
-
-        engine_->services().remove<ui::PanelRegistry>();
-        engine_->services().remove<ui::ActionManager>();
-        engine_->services().remove<ui::EditorViewportManager>();
-        engine_->services().remove<ui::PanelHost>();
-        engine_->services().remove<ui::DockspaceService>();
-    }
-
-    void Editor::requestStop()
-    {
-        engine_->requestStop();
-    }
-
-    void Editor::run()
-    {
-        // these dont come from a plugin, guaranteed
-        //auto& panelRegistry = engine_->services().resolve<ui::PanelRegistry>();
-        //auto& panelHost = engine_->services().resolve<ui::PanelHost>();
-        //auto& dockingService = engine_->services().resolve<ui::DockspaceService>();
-        //auto& actionManager = engine_->services().resolve<ui::ActionManager>();
         using namespace chai;
         using namespace scene;
 
@@ -115,18 +80,18 @@ namespace chai
         addLogSink(guiSink_.get());
 
         // Register panel management and docking services
-        auto panelRegistry = std::make_shared<ui::PanelRegistry>();
-        engine_->services().provide<ui::PanelRegistry>(panelRegistry);
+        panelRegistry_ = std::make_shared<ui::PanelRegistry>();
+        engine_->services().provide<ui::PanelRegistry>(panelRegistry_);
 
         auto configFile = executableDir() / "assets/editor/config/action_config.json";
-        auto actionManager = std::make_shared<ui::ActionManager>(configFile, panelRegistry.get());
-        engine_->services().provide<ui::ActionManager>(actionManager);
+        actionManager_ = std::make_shared<ui::ActionManager>(configFile, panelRegistry_.get());
+        engine_->services().provide<ui::ActionManager>(actionManager_);
 
-        auto panelHost = std::make_shared<ui::PanelHost>();
-        engine_->services().provide<ui::PanelHost>(panelHost);
+        panelHost_ = std::make_shared<ui::PanelHost>();
+        engine_->services().provide<ui::PanelHost>(panelHost_);
 
-        auto dockspace = std::make_shared<ui::DockspaceService>();
-        engine_->services().provide<ui::DockspaceService>(dockspace);
+        dockspace_ = std::make_shared<ui::DockspaceService>();
+        engine_->services().provide<ui::DockspaceService>(dockspace_);
 
         auto exeDir = executableDir();
         if (exeDir.empty())
@@ -136,50 +101,51 @@ namespace chai
 
         engine_->startup();
 
-        auto registry = engine_->services().tryResolve<gfx::IViewportRegistry>();
-        if (!registry) {
+        auto viewportRegistry = engine_->services().tryResolve<gfx::IViewportRegistry>();
+        if (!viewportRegistry) {
             CHAI_LOG_CRITICAL("Could not locate Viewport Registry.");
         }
 
-        auto vpManager = std::make_shared<ui::EditorViewportManager>(*registry, *panelRegistry);
-        engine_->services().provide<ui::EditorViewportManager>(vpManager);
+        vpManager_ =
+            std::make_shared<ui::EditorViewportManager>(*viewportRegistry, *panelRegistry_);
+        engine_->services().provide<ui::EditorViewportManager>(vpManager_);
 
-        engine_->services().provide<settings::SettingsRegistry>(
-            std::make_shared<settings::SettingsRegistry>());
+        settingsRegistry_ = std::make_shared<settings::SettingsRegistry>();
+        engine_->services().provide<settings::SettingsRegistry>(settingsRegistry_);
 
-        actionManager->registerAction("file.exit", []() { exit(0); });
+        actionManager_->registerAction("file.exit", []() { exit(0); });
 
         ui::PanelDesc pluginPanel;
         pluginPanel.displayName = "Plugin Manager";
         pluginPanel.id = "PluginManager";
         pluginPanel.draw = [&]() { drawPluginManager(*loader_); };
         pluginPanel.visible = false;
-        panelRegistry->registerPanel(pluginPanel);
-        actionManager->registerPanel("window.plugin_manager", pluginPanel.id);
+        panelRegistry_->registerPanel(pluginPanel);
+        actionManager_->registerPanel("window.plugin_manager", pluginPanel.id);
 
         ui::PanelDesc loggerPanel;
         loggerPanel.displayName = "Logger";
         loggerPanel.id = "logger";
         loggerPanel.draw = [&]() { diagnostics::drawLogPanel(*guiSink_); };
         loggerPanel.visible = true;
-        panelRegistry->registerPanel(loggerPanel);
-        actionManager->registerPanel("window.logger", loggerPanel.id);
+        panelRegistry_->registerPanel(loggerPanel);
+        actionManager_->registerPanel("window.logger", loggerPanel.id);
 
         ui::PanelDesc commandPalette;
         commandPalette.displayName = "Command Palette";
         commandPalette.id = "CommandPalette";
-        commandPalette.draw = [&]() { ui::drawCommandPalette(*actionManager); };
+        commandPalette.draw = [&]() { ui::drawCommandPalette(*actionManager_); };
         commandPalette.visible = false;
-        panelRegistry->registerPanel(commandPalette);
-        actionManager->registerPanel("window.command_palette", commandPalette.id);
+        panelRegistry_->registerPanel(commandPalette);
+        actionManager_->registerPanel("window.command_palette", commandPalette.id);
 
         ui::PanelDesc settingsPanel;
         settingsPanel.displayName = "Settings";
         settingsPanel.id = "settings";
         settingsPanel.draw = [&]() { settings::drawSettingsPanel(); };
         settingsPanel.visible = false;
-        panelRegistry->registerPanel(settingsPanel);
-        actionManager->registerPanel("file.preferences.settings", settingsPanel.id);
+        panelRegistry_->registerPanel(settingsPanel);
+        actionManager_->registerPanel("file.preferences.settings", settingsPanel.id);
 
         auto meshes = engine_->services().tryResolve<gfx::IMeshRegistry>();
         auto textures = engine_->services().tryResolve<gfx::ITextureRegistry>();
@@ -243,12 +209,32 @@ namespace chai
         skyboxComp->setTexture(skyBoxTex);
 
         setupDockspace(engine_->services(), scene);
+    }
 
-        engine_->run([&panelRegistry, &dockspace, &panelHost, &actionManager](
+    void Editor::shutdown()
+    {
+        engine_->shutdown();
+
+        engine_->services().remove<ui::PanelRegistry>();
+        engine_->services().remove<ui::ActionManager>();
+        engine_->services().remove<ui::EditorViewportManager>();
+        engine_->services().remove<ui::PanelHost>();
+        engine_->services().remove<ui::DockspaceService>();
+        engine_->services().remove<settings::SettingsRegistry>();
+    }
+
+    void Editor::requestStop()
+    {
+        engine_->requestStop();
+    }
+
+    void Editor::run()
+    {
+        engine_->run([this](
                          const UpdateContext& ctx) {
             //draw internal uis
-            panelHost->draw(*panelRegistry, *dockspace, *actionManager);
-            actionManager->update(ctx.input);
+            panelHost_->draw(*panelRegistry_, *dockspace_, *actionManager_);
+            actionManager_->update(ctx.input);
         });
     }
 
