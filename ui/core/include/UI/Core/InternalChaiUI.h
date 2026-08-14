@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 #include <ChaiMath.h>
-#include <UI/FontManager.h>
+#include <UI/Core/FontManager.h>
 
 namespace chai::ui
 {

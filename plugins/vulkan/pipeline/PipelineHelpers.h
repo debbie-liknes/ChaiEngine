@@ -4,7 +4,7 @@
 #include "PipelineHelpers.h"
 #include "ShaderModule.h"
 
-#include <Runtime/SystemPaths.h>
+#include <OS/SystemPaths.h>
 #include <Log.h>
 #include <filesystem>
 #include <string_view>

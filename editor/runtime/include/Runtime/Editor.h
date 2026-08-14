@@ -26,6 +26,8 @@ namespace chai
         void run();
 
     private:
+        void registerActions() const;
+
         std::unique_ptr<PluginLoader> loader_ = std::make_unique<PluginLoader>();
         std::unique_ptr<Engine> engine_ = std::make_unique<Engine>();
         

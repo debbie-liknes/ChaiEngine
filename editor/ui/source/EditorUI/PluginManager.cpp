@@ -1,6 +1,6 @@
-#include <Plugin/PluginManager.h>
-#include <UI/FontManager.h>
-#include <UI/InternalChaiUI.h>
+#include <EditorUI/PluginManager.h>
+#include <UI/Core/FontManager.h>
+#include <UI/Core/InternalChaiUI.h>
 #include <imgui.h>
 
 namespace chai

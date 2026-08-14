@@ -3,8 +3,6 @@
 #include <Window/Window.h>
 #include <Scene/Scene.h>
 #include <Input/IInput.h>
-#include <UI/InternalChaiUI.h>
-#include <Runtime/SystemPaths.h>
 #include <Audio/IAudioEngine.h>
 #include <Visitors/AudioSceneVisitor.h>
 #include <Visitors/FrameRenderVisitor.h>
@@ -20,8 +18,6 @@ namespace chai
             p->onLoad(ctx_);
             active_.push_back(p);
         }
-
-        ui::loadFonts(executableDir().string() + "/assets/editor/fonts");
 
         //Create scene
         scene_ = std::make_unique<scene::Scene>();

@@ -3,7 +3,7 @@
 #include <Components/MeshComponent.h>
 #include <Components/TransformComponent.h>
 #include <Scene/Scene.h>
-#include <UI/InternalChaiUI.h>
+#include <UI/Core/InternalChaiUI.h>
 #include <Visitors/FrameRenderVisitor.h>
 #include <tracy/Tracy.hpp>
 

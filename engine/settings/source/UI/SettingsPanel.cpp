@@ -1,6 +1,6 @@
 #include <imgui.h>
-#include <UI/InternalChaiUI.h>
-#include <UI/FontManager.h>
+#include <UI/Core/InternalChaiUI.h>
+#include <UI/Core/FontManager.h>
 #include <UI/SettingsPanel.h>
 
 namespace chai::settings

@@ -1,5 +1,5 @@
 #include <EditorUI/PanelHost.h>
-#include <UI/InternalChaiUI.h>
+#include <UI/Core/InternalChaiUI.h>
 #include <imgui.h>
 #include <tracy/Tracy.hpp>
 #include <EditorUI/EditorMenu.h>

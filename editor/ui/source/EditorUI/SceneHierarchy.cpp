@@ -1,9 +1,9 @@
 #include <EditorUI/SceneHierarchy.h>
-#include <UI/InternalChaiUI.h>
-#include <UI/TreeNode.h>
+#include <UI/Core/InternalChaiUI.h>
+#include <UI/Core/TreeNode.h>
 #include <Scene/Scene.h>
 #include <TypeRegistry.h>
-#include <UI/FontManager.h>
+#include <UI/Core/FontManager.h>
 #include <IconsFontAwesome7.h>
 #include <Scene/GameObject.h>
 

@@ -17,17 +17,18 @@
 #include <Controllers/FlyCamController.h>
 #include <Controllers/SpinController.h>
 #include <Runtime/Engine.h>
-#include <Runtime/SystemPaths.h>
+#include <OS/SystemPaths.h>
 #include <Loaders/ITextureLoader.h>
 #include <Loaders/TomlSettingsLoader.h>
 #include <Log.h>
-#include <Plugin/PluginManager.h>
+#include <EditorUI/PluginManager.h>
 #include <Rendering/IRenderer.h>
 #include <Scene/GameObject.h>
 #include <Scene/Scene.h>
 #include <Scene/SpawnPrefab.h>
 #include <Window/Window.h>
 #include <EditorUI/CommandPalette.h>
+#include <UI/Core/InternalChaiUI.h>
 #include <UI/SettingsPanel.h>
 
 std::filesystem::path assetDir()
@@ -37,12 +38,10 @@ std::filesystem::path assetDir()
 
 namespace chai
 {
-    void setupDockspace(const chai::ServiceLocator& locator, chai::scene::Scene& scene)
+    void setupDockspace(const ServiceLocator& locator, scene::Scene& scene)
     {
-        using namespace chai;
         using namespace ui;
         using namespace scene;
-
 
         auto& panelRegistry = locator.resolve<PanelRegistry>();
         auto& vpManager = locator.resolve<EditorViewportManager>();
@@ -51,9 +50,12 @@ namespace chai
         std::string mainPanelId = vpManager.addViewport("Main Scene", scene.getCameraId());
 
         std::string hierarchy = "Hierarchy";
-        panelRegistry.registerPanel({.id = hierarchy, .displayName = hierarchy, .draw = [&scene] {
-                                        ui::drawSceneHierarchy(scene);
-                                }});
+        panelRegistry.registerPanel({
+            .id = hierarchy,
+            .displayName = hierarchy,
+            .draw = [&scene] {
+                ui::drawSceneHierarchy(scene);
+            }});
 
         ui::DockSplit horizontalSplit;
         horizontalSplit.ratio = 0.25f;
@@ -68,51 +70,8 @@ namespace chai
         dockspace.setDefaultLayout({horizontalSplit, split}, mainPanelId);
     }
 
-    void Editor::startup()
+    void Editor::registerActions() const
     {
-        using namespace chai;
-        using namespace scene;
-
-        // setup logging
-        addLogSink(logSink_.get());
-        setLogLevel(chai::LogLevel::Info);
-
-        addLogSink(guiSink_.get());
-
-        // Register panel management and docking services
-        panelRegistry_ = std::make_shared<ui::PanelRegistry>();
-        engine_->services().provide<ui::PanelRegistry>(panelRegistry_);
-
-        auto configFile = executableDir() / "assets/editor/config/action_config.json";
-        actionManager_ = std::make_shared<ui::ActionManager>(configFile, panelRegistry_.get());
-        engine_->services().provide<ui::ActionManager>(actionManager_);
-
-        panelHost_ = std::make_shared<ui::PanelHost>();
-        engine_->services().provide<ui::PanelHost>(panelHost_);
-
-        dockspace_ = std::make_shared<ui::DockspaceService>();
-        engine_->services().provide<ui::DockspaceService>(dockspace_);
-
-        auto exeDir = executableDir();
-        if (exeDir.empty())
-            exeDir = std::filesystem::current_path();
-        loader_->loadDirectory(exeDir / "plugins");
-        engine_->setPlugins(loader_->plugins());
-
-        engine_->startup();
-
-        auto viewportRegistry = engine_->services().tryResolve<gfx::IViewportRegistry>();
-        if (!viewportRegistry) {
-            CHAI_LOG_CRITICAL("Could not locate Viewport Registry.");
-        }
-
-        vpManager_ =
-            std::make_shared<ui::EditorViewportManager>(*viewportRegistry, *panelRegistry_);
-        engine_->services().provide<ui::EditorViewportManager>(vpManager_);
-
-        settingsRegistry_ = std::make_shared<settings::SettingsRegistry>();
-        engine_->services().provide<settings::SettingsRegistry>(settingsRegistry_);
-
         actionManager_->registerAction("file.exit", []() { exit(0); });
 
         ui::PanelDesc pluginPanel;
@@ -146,34 +105,19 @@ namespace chai
         settingsPanel.visible = false;
         panelRegistry_->registerPanel(settingsPanel);
         actionManager_->registerPanel("file.preferences.settings", settingsPanel.id);
+    }
 
-        auto meshes = engine_->services().tryResolve<gfx::IMeshRegistry>();
-        auto textures = engine_->services().tryResolve<gfx::ITextureRegistry>();
-        auto models = engine_->services().tryResolve<gfx::IModelRegistry>();
-        auto materials = engine_->services().tryResolve<gfx::IMaterialRegistry>();
-        auto audio = engine_->services().tryResolve<audio::IAudioEngine>();
-        auto settings = engine_->services().tryResolve<settings::SettingsRegistry>();
-        if (!meshes || !textures || !models || !settings) {
-            CHAI_LOG_CRITICAL("Required registries missing.");
-            return;
-        }
-        textures->load(makeAssetId("texture:9slice"), assetDir() / "9slice.png");
+    void setupDefaultScene(chai::scene::Scene& scene,
+                           gfx::IModelRegistry& models,
+                           gfx::ITextureRegistry& textures)
+    {
+        using namespace scene;
 
-        auto input = engine_->services().tryResolve<IInput>();
-        if (!input) {
-            CHAI_LOG_CRITICAL("Could not get input services.");
-            return;
-        }
-
-        // build the scene
-        auto& scene = engine_->scene();
-
-        auto prefab = models->load(makeAssetId("model:sponza"), assetDir() /
-        "SponzaHiRes/NewSponza_Main_glTF_003.glTF");
-        //auto prefab =
-        //    models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.gltf");
         // auto prefab = models->load(makeAssetId("model:sponza"), assetDir() /
-        // "ABeautifulGame/glTF/ABeautifulGame.gltf");
+        //"SponzaHiRes/NewSponza_Main_glTF_003.glTF");
+        auto prefab = models.load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.gltf");
+        //  auto prefab = models->load(makeAssetId("model:sponza"), assetDir() /
+        //  "ABeautifulGame/glTF/ABeautifulGame.gltf");
 
         // audio->playSound((assetDir() / "orchestral_techno.wav").string(), {0, 0, 0}, -10);
 
@@ -205,8 +149,78 @@ namespace chai
                                                          assetDir() / "skybox/cubemap_3.png",
                                                          assetDir() / "skybox/cubemap_4.png",
                                                          assetDir() / "skybox/cubemap_5.png"};
-        auto skyBoxTex = textures->loadCubemap(makeAssetId("component:skybox"), skyTextures);
+        auto skyBoxTex = textures.loadCubemap(makeAssetId("component:skybox"), skyTextures);
         skyboxComp->setTexture(skyBoxTex);
+    }
+
+    void Editor::startup()
+    {
+        using namespace scene;
+
+        // setup logging
+        addLogSink(logSink_.get());
+        setLogLevel(chai::LogLevel::Info);
+
+        addLogSink(guiSink_.get());
+
+        // Register panel management and docking services
+        panelRegistry_ = std::make_shared<ui::PanelRegistry>();
+        engine_->services().provide<ui::PanelRegistry>(panelRegistry_);
+
+        auto configFile = executableDir() / "assets/editor/config/action_config.json";
+        actionManager_ = std::make_shared<ui::ActionManager>(configFile, panelRegistry_.get());
+        engine_->services().provide<ui::ActionManager>(actionManager_);
+
+        panelHost_ = std::make_shared<ui::PanelHost>();
+        engine_->services().provide<ui::PanelHost>(panelHost_);
+
+        dockspace_ = std::make_shared<ui::DockspaceService>();
+        engine_->services().provide<ui::DockspaceService>(dockspace_);
+
+        auto exeDir = executableDir();
+        if (exeDir.empty())
+            exeDir = std::filesystem::current_path();
+        loader_->loadDirectory(exeDir / "plugins");
+        engine_->setPlugins(loader_->plugins());
+
+        engine_->startup();
+
+        ui::loadFonts(executableDir().string() + "/assets/editor/fonts");
+
+        auto viewportRegistry = engine_->services().tryResolve<gfx::IViewportRegistry>();
+        if (!viewportRegistry) {
+            CHAI_LOG_CRITICAL("Could not locate Viewport Registry.");
+        }
+
+        vpManager_ =
+            std::make_shared<ui::EditorViewportManager>(*viewportRegistry, *panelRegistry_);
+        engine_->services().provide<ui::EditorViewportManager>(vpManager_);
+
+        settingsRegistry_ = std::make_shared<settings::SettingsRegistry>();
+        engine_->services().provide<settings::SettingsRegistry>(settingsRegistry_);
+
+        auto meshes = engine_->services().tryResolve<gfx::IMeshRegistry>();
+        auto textures = engine_->services().tryResolve<gfx::ITextureRegistry>();
+        auto models = engine_->services().tryResolve<gfx::IModelRegistry>();
+        auto materials = engine_->services().tryResolve<gfx::IMaterialRegistry>();
+        auto audio = engine_->services().tryResolve<audio::IAudioEngine>();
+        auto settings = engine_->services().tryResolve<settings::SettingsRegistry>();
+        if (!meshes || !textures || !models || !settings) {
+            CHAI_LOG_CRITICAL("Required registries missing.");
+            return;
+        }
+
+        auto input = engine_->services().tryResolve<IInput>();
+        if (!input) {
+            CHAI_LOG_CRITICAL("Could not get input services.");
+            return;
+        }
+
+        registerActions();
+
+        // build the scene
+        auto& scene = engine_->scene();
+        setupDefaultScene(scene, *models, *textures);
 
         setupDockspace(engine_->services(), scene);
     }

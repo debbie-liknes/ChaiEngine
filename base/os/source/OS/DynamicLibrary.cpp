@@ -1,4 +1,4 @@
-#include <Plugin/DynamicLibrary.h>
+#include <OS/DynamicLibrary.h>
 #include <Log.h>
 #include <json.hpp>
 #include <picosha2_fast.h>

@@ -41,6 +41,6 @@ set(ChaiScene_source
 add_library(Scene SHARED ${ChaiScene_headers} ${ChaiScene_source})
 
 target_include_directories(Scene PUBLIC include)
-target_link_libraries(Scene PUBLIC Audio Graphics TypeReflection UI Window)
+target_link_libraries(Scene PUBLIC Audio Graphics TypeReflection UICore Window)
 
 ChaiLibDefaults(Scene "Scene")

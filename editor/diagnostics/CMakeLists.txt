@@ -14,6 +14,6 @@ add_library(${PROJECT_NAME} SHARED
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
-target_link_libraries(${PROJECT_NAME} PUBLIC UI Logger PRIVATE ImGui spdlog::spdlog)
+target_link_libraries(${PROJECT_NAME} PUBLIC UICore Logger PRIVATE ImGui spdlog::spdlog)
 
 ChaiLibDefaults(${PROJECT_NAME} "Editor")

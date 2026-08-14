@@ -1,6 +1,6 @@
 #include <Runtime/Engine.h>
 #include <Plugin/PluginLoader.h>
-#include <Runtime/SystemPaths.h>
+#include <OS/SystemPaths.h>
 #include <Audio/IAudioEngine.h>
 
 std::filesystem::path assetDir()
