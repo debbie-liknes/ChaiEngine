@@ -168,10 +168,10 @@ namespace chai
         // build the scene
         auto& scene = engine_->scene();
 
-        // auto prefab = models->load(makeAssetId("model:sponza"), assetDir() /
-        // "SponzaHiRes/NewSponza_Main_glTF_003.glTF");
-        auto prefab =
-            models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.gltf");
+        auto prefab = models->load(makeAssetId("model:sponza"), assetDir() /
+        "SponzaHiRes/NewSponza_Main_glTF_003.glTF");
+        //auto prefab =
+        //    models->load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.gltf");
         // auto prefab = models->load(makeAssetId("model:sponza"), assetDir() /
         // "ABeautifulGame/glTF/ABeautifulGame.gltf");
 

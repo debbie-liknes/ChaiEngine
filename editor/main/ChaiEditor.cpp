@@ -1,6 +1,6 @@
 ﻿#include <Runtime/Editor.h>
 
-#include <Tracy/Tracy.hpp>
+#include <tracy/Tracy.hpp>
 
 int main()
 {

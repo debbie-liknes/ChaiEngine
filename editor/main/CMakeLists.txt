@@ -4,10 +4,9 @@ add_executable(${PROJECT_NAME} "ChaiEditor.cpp")
 
 #just use the OpenGL Renderer for now
 target_link_libraries(${PROJECT_NAME} 
-    PUBLIC 
+    PRIVATE 
     Editor
-    PRIVATE
-    $<LINK_LIBRARY:WHOLE_ARCHIVE>)
+)
 
 if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
