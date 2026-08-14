@@ -189,7 +189,6 @@ namespace chai
         auto exeDir = executableDir();
         if (exeDir.empty())
             exeDir = std::filesystem::current_path();
-        loader_->loadDirectory(exeDir / "plugins");
         if (!loader_->loadDirectory(exeDir / "plugins")) {
             CHAI_LOG_CRITICAL("Editor: Failed to load plugins. Exiting prematurely.");
             return;
