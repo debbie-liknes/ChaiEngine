@@ -194,6 +194,7 @@ namespace chai
             return;
         }
 
+        engine_->setPlugins(loader_->plugins());
         engine_->startup();
 
         ui::loadFonts(executableDir().string() + "/assets/editor/fonts");
