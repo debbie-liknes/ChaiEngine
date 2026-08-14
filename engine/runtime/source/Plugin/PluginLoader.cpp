@@ -17,7 +17,7 @@ namespace chai
         constexpr auto kManifestExt = ".json";
     } // namespace
     
-    graph::Graph<IPlugin*> buildPluginGraph(std::span<IPlugin*>,
+    graph::Graph<IPlugin*> buildPluginGraph(std::span<IPlugin* const>,
                                             const IPlugin::ServiceList& providedServices);
 
     IPlugin* PluginLoader::load(const fs::path& manifestPath)
@@ -100,7 +100,7 @@ namespace chai
         return true;
     }
 
-    graph::Graph<IPlugin*> buildPluginGraph(std::span<IPlugin*> plugins,
+    graph::Graph<IPlugin*> buildPluginGraph(std::span<IPlugin* const> plugins,
                                             const IPlugin::ServiceList& providedServices)
     {
         graph::Graph<IPlugin*> pluginGraph;
