@@ -1,3 +1,6 @@
+/**
+ * @file PipelineKey.h
+ */
 #pragma once
 #include "../VulkanCommon.h"
 
@@ -51,6 +54,9 @@ namespace chai::gfx
         bool operator==(const PipelineDesc&) const = default;
     };
 
+    /**
+     * @brief Allows the pipeline registry to uniquely identify a pipeline
+     */
     struct PipelineKey {
         VkPipelineLayout layout;
         PipelineDesc desc;
@@ -58,7 +64,9 @@ namespace chai::gfx
         bool operator==(const PipelineKey&) const = default;
     };
 
-    //TODO: generational handle
+    /**
+     * @brief Provide handles to the entries in the Pipeline Registry
+     */
     struct PipelineHandle {
         uint32_t index = UINT32_MAX;
 

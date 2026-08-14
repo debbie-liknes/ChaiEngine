@@ -30,7 +30,7 @@ namespace chai::ui
 
     void drawRenderDebugTools(gfx::VulkanRenderer& renderer) 
     {
-        if (Button("Hot Reload")) {
+        if (Button("Reload Shaders")) {
             renderer.recompileShaders();
         }
     }

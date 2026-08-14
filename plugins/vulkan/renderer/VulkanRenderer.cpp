@@ -2,8 +2,6 @@
 
 #include "../commands/ImageTransition.h"
 #include "../pipeline/PipelineBuilder.h"
-#include "../pipeline/PipelineHelpers.h"
-#include "../pipeline/ShaderModule.h"
 #include "../resources/TextureFactory.h"
 #include "../resources/VulkanVertex.h"
 #include "../utils/VkCheck.h"

@@ -1,3 +1,6 @@
+/**
+ * @file ShaderCompiler.h
+ */
 #pragma once
 #include <Common/GraphicsEnums.h>
 #include <filesystem>
@@ -6,6 +9,9 @@
 
 namespace chai::gfx
 {
+    /**
+     * @brief Runtime compiler for shaders. Produces spirv bytes
+     */
     class ShaderCompiler
     {
     public:
