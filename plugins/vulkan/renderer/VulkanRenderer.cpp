@@ -250,8 +250,6 @@ namespace chai::gfx
 
     void VulkanRenderer::startFrame()
     {
-        FrameMark;
-
         FrameData& frame = frames_[currentFrame_];
 
         // Wait until this frame slots previous work is done.
