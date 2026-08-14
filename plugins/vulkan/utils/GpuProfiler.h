@@ -56,6 +56,8 @@ namespace chai::gfx
          */
         float getTotalFrameTimeMs() const;
 
+        TracyVkCtx& getTracyCtx();
+
     private:
         struct RegionQuery {
             uint32_t startQueryIndex;
@@ -95,4 +97,30 @@ namespace chai::gfx
 
         TracyVkCtx profilerCtx_ = nullptr;
     };
+
+    /**
+     * @brief Scoped gpu region for tracy
+     */
+    class ScopedGpuRegion
+    {
+    public:
+        ScopedGpuRegion(GpuProfiler& profiler, VkCommandBuffer cmd, std::string name);
+        ~ScopedGpuRegion();
+
+        ScopedGpuRegion(const ScopedGpuRegion&) = delete;
+        ScopedGpuRegion& operator=(const ScopedGpuRegion&) = delete;
+
+    private:
+        GpuProfiler& profiler_;
+        VkCommandBuffer cmd_;
+        std::string name_;
+    };
 } // namespace chai::gfx
+
+#define CHAI_GPU_ZONE(profiler, tracyCtx, cmd, name)                                    \
+    TracyVkZone(tracyCtx, cmd, name);        \
+    ::chai::gfx::ScopedGpuRegion chaiGpuRegion_##__LINE__(profiler, cmd, name)
+
+#define CHAI_GPU_ZONE_DYNAMIC(profiler, tracyCtx, cmd, namevar)                                               \
+    TracyVkZoneTransient(tracyCtx, chaiTracyZone_##__LINE__, cmd, (namevar).c_str(), true);                   \
+    ::chai::gfx::ScopedGpuRegion chaiGpuRegion_##__LINE__(profiler, cmd, namevar)

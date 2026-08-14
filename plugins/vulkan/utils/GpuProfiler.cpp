@@ -30,6 +30,7 @@ namespace chai::gfx
         frames_.resize(framesInFlight_);
 
         profilerCtx_ = TracyVkContext(physicalDevice, device, queue, setupBuff);
+        TracyVkContextName(profilerCtx_, "GPU context", 12);
     }
 
     void GpuProfiler::shutdown(VkDevice device)
@@ -117,6 +118,8 @@ namespace chai::gfx
             cmd, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPool_, frame.endQueryIndex);
 
         frame.hasResults = true;
+
+        TracyVkCollect(profilerCtx_, cmd);
     }
 
     void GpuProfiler::collect(uint32_t frameIndex, VkDevice device)
@@ -187,5 +190,21 @@ namespace chai::gfx
     float GpuProfiler::getTotalFrameTimeMs() const
     {
         return lastFrameTimeMs_;
+    }
+
+    TracyVkCtx& GpuProfiler::getTracyCtx()
+    {
+        return profilerCtx_;
+    }
+
+    ScopedGpuRegion::ScopedGpuRegion(GpuProfiler& profiler, VkCommandBuffer cmd, std::string name)
+        : profiler_(profiler), cmd_(cmd), name_(name)
+    {
+        profiler_.beginRegion(cmd_, name_);
+    }
+
+    ScopedGpuRegion::~ScopedGpuRegion()
+    {
+        profiler_.endRegion(cmd_, name_);
     }
 } // namespace chai::gfx
