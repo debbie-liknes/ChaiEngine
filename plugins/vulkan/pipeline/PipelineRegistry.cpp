@@ -6,11 +6,29 @@ namespace chai::gfx
 {
     PipelineRegistry::PipelineRegistry(VulkanContext& ctx) : ctx_(ctx) {}
 
+    void PipelineRegistry::enqueueBuild(PipelineHandle handle, PipelineEntry snapshot)  //intentional copy
+    {
+        pending_.push_back(
+            {handle, std::async(std::launch::async, [this, snapshot = std::move(snapshot)] {
+                 return build(snapshot);
+             })});
+    }
+
     PipelineHandle PipelineRegistry::create(std::string name, PipelineKey key)
     {
         PipelineEntry entry = {name, key};
         entry.pipeline = build(entry);
         PipelineHandle handle{.index = static_cast<uint32_t>(entries_.size())};
+        auto& inserted = entries_.emplace_back(std::move(entry));
+
+        return handle;
+    }
+
+    PipelineHandle PipelineRegistry::createAsync(std::string name, PipelineKey key)
+    {
+        PipelineEntry entry = {name, key};
+        PipelineHandle handle{.index = static_cast<uint32_t>(entries_.size())};
+        enqueueBuild(handle, entry);
         auto& inserted = entries_.emplace_back(std::move(entry));
 
         return handle;
@@ -32,21 +50,9 @@ namespace chai::gfx
 
     void PipelineRegistry::reloadAllAsync()
     {
-        if (reloadInProgress_) {
-            return;
+        for (int i = 0; i < entries_.size(); i++) {
+            enqueueBuild(PipelineHandle{.index = static_cast<uint32_t>(i)}, entries_[i]);
         }
-        reloadInProgress_ = true;
-
-        reloadFuture_ = std::async(std::launch::async, [this] { 
-            std::vector<std::pair<PipelineHandle, VkPipeline>> results;
-            for (int i = 0; i < entries_.size(); i++) {
-                PipelineEntry& entry = entries_[i];
-                VkPipeline newPipe = build(entry);
-                PipelineHandle handle{.index = static_cast<uint32_t>(i)};
-                results.push_back({handle, newPipe});
-            }
-            return results;
-        });
     }
 
     void PipelineRegistry::destroyAll()
@@ -56,24 +62,25 @@ namespace chai::gfx
          entries_.clear();
     }
 
-    void PipelineRegistry::prcoessPendingBuilds(uint32_t currentFrameIndex)
+    void PipelineRegistry::processPendingBuilds(uint32_t currentFrameIndex)
     {
-        if (!reloadInProgress_)
-            return;
+        std::erase_if(pending_, [&](PendingPipelineBuild& job) {
+            if (job.future.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+                return false;
 
-        if (reloadFuture_.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
-            return;
+            VkPipeline newPipe = job.future.get();
+            PipelineEntry& entry = entries_[job.handle.index];
 
-        for (auto& [handle, pipe] : reloadFuture_.get()) {
-            PipelineEntry& entry = entries_[handle.index];
-            if (pipe == VK_NULL_HANDLE) {
-                CHAI_LOG_ERROR("Reload failed for '{}', keeping previous pipeline", entry.name);
-                continue;
+            if (newPipe == VK_NULL_HANDLE) {
+                CHAI_LOG_ERROR("Build failed for '{}', keeping previous pipeline", entry.name);
+            } else {
+                if (entry.pipeline != VK_NULL_HANDLE)
+                    deferredDelete_[currentFrameIndex].push_back(entry.pipeline);
+                entry.pipeline = newPipe;
             }
-            deferredDelete_[currentFrameIndex].push_back(entry.pipeline);
-            entry.pipeline = pipe;
-        }
-        reloadInProgress_ = false;
+
+            return true; // done, drop from pending_
+        });
     }
 
     void PipelineRegistry::collectGarbage(uint32_t frameIndex)

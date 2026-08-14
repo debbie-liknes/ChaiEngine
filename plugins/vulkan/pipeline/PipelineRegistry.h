@@ -22,28 +22,34 @@ namespace chai::gfx
         VkPipeline pipeline = VK_NULL_HANDLE;
     };
 
+    struct PendingPipelineBuild {
+        PipelineHandle handle;
+        std::future<VkPipeline> future;
+    };
+
     class PipelineRegistry
     {
     public:
         explicit PipelineRegistry(VulkanContext& ctx);
 
         PipelineHandle create(std::string name, PipelineKey key);
+        PipelineHandle createAsync(std::string name, PipelineKey key);
         VkPipeline get(const PipelineHandle& key);
 
         void reloadAll();
         void reloadAllAsync();
         void destroyAll();
 
-        void prcoessPendingBuilds(uint32_t currentFrameIndex);
+        void processPendingBuilds(uint32_t currentFrameIndex);
         void collectGarbage(uint32_t frameIndex);
 
     private:
         VkPipeline build(const PipelineEntry& entry);
+        void enqueueBuild(PipelineHandle handle, PipelineEntry snapshot);
 
         VulkanContext& ctx_;
         std::vector<PipelineEntry> entries_;
-        bool reloadInProgress_ = false;
-        std::future<std::vector<std::pair<PipelineHandle, VkPipeline>>> reloadFuture_;
+        std::vector<PendingPipelineBuild> pending_;
         std::array<std::vector<VkPipeline>, kFramesInFlight> deferredDelete_;
     };
 }

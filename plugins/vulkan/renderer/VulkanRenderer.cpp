@@ -194,11 +194,6 @@ namespace chai::gfx
 
         setupPipelines();
 
-        if (!brdfBaked_) {
-            bakeBrdfLut();
-            brdfBaked_ = true;
-        }
-
         // skybox
         if (environmentSet_ == VK_NULL_HANDLE) {
             VkDescriptorSetLayout layout = ctx_.environmentSetLayout();
@@ -209,22 +204,40 @@ namespace chai::gfx
             VK_CHECK(vkAllocateDescriptorSets(ctx_.device(), &dsai, &environmentSet_));
         }
 
-        auto cube = texCache_->ingest(makeAssetId("builtin:cube"), createDefaultCubeTexture());
+        skyboxCube_ = texCache_->ingest(makeAssetId("builtin:cube"), createDefaultCubeTexture());
         // we require the default textures to be ready
         ctx_.uploadContext().waitFor(ctx_.uploadContext().lastSubmittedValue());
 
         // TODO: I dont like that theres no way out. Need to rethink how to default bind the
         // environment Or if default binding (to a black skybox cube) makes sense.
-        while (!texCache_->isReady(cube)) {
+        while (!texCache_->isReady(skyboxCube_)) {
             texCache_->tick();
         }
-        auto skyResource = texCache_->resource(cube);
+
+        viewportReg_.init(swapchain_);
+    }
+
+    void VulkanRenderer::tryBakeIBL()
+    {
+        if (pipelineReg_.get(irradianceHandle_) == VK_NULL_HANDLE)
+            return;
+        if (pipelineReg_.get(prefilterHandle_) == VK_NULL_HANDLE)
+            return;
+        if (pipelineReg_.get(skyboxHandle_) == VK_NULL_HANDLE)
+            return;
+
+        if (!texCache_->isReady(skyboxCube_))
+            return;
+
+        auto skyResource = texCache_->resource(skyboxCube_);
+        if (!skyResource)
+            return; //shouldnt happen
+
+        bakeBrdfLut();
         bakeIrradiance(*skyResource);
         bakePrefilter(*skyResource);
         writeEnvironmentSet(*skyResource);
         iblBaked_ = true;
-
-        viewportReg_.init(swapchain_);
     }
 
     void VulkanRenderer::startFrame()
@@ -234,10 +247,13 @@ namespace chai::gfx
         // Wait until this frame slots previous work is done.
         VK_CHECK(vkWaitForFences(ctx_.device(), 1, &frame.inFlight, VK_TRUE, UINT64_MAX));
         pipelineReg_.collectGarbage(currentFrame_);
-        pipelineReg_.prcoessPendingBuilds(currentFrame_);
+        pipelineReg_.processPendingBuilds(currentFrame_);
 
         viewportReg_.tick(currentFrame_);
         viewportReg_.applyPendingViewportResizes();
+
+        if (!iblBaked_)
+            tryBakeIBL();
 
         // sync input to imgui
         ImGuiIO& io = ImGui::GetIO();
@@ -318,12 +334,8 @@ namespace chai::gfx
         stats_.clear();
 
         if (!iblBaked_ || (renderData.environment.skyboxCube != skyboxCube_)) {
-            if (const GpuTexture* sky = texCache_->resource(renderData.environment.skyboxCube)) {
-                bakeIrradiance(*sky);
-                bakePrefilter(*sky);
-                writeEnvironmentSet(*sky);
-                iblBaked_ = true;
-            }
+            skyboxCube_ = renderData.environment.skyboxCube;
+            tryBakeIBL();
         }
 
         LightData lightUBO{};
@@ -672,6 +684,9 @@ namespace chai::gfx
                 pipeline = pipelineReg_.get(pbrOpaqueHandle_);
             }
 
+            if (pipeline == VK_NULL_HANDLE)
+                continue;
+
             vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
             if (item.material != lastMaterial) {
@@ -705,17 +720,27 @@ namespace chai::gfx
         }
 
         // skybox render
-        const GpuTexture* cubeTex = texCache_->resource(renderData.environment.skyboxCube);
-        if (!cubeTex)
-            return;
-        ensureSkyboxSet(frame, *cubeTex, renderData.environment.skyboxCube);
+        if (auto skyboxPipeline = pipelineReg_.get(skyboxHandle_);
+            skyboxPipeline != VK_NULL_HANDLE) {
+            const GpuTexture* cubeTex = texCache_->resource(renderData.environment.skyboxCube);
+            if (!cubeTex)
+                return;
+            ensureSkyboxSet(frame, *cubeTex, renderData.environment.skyboxCube);
 
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineReg_.get(skyboxHandle_));
+            vkCmdBindPipeline(
+                cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineReg_.get(skyboxHandle_));
 
-        vkCmdBindDescriptorSets(
-            cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout_, 3, 1, &skyboxSet_, 0, nullptr);
+            vkCmdBindDescriptorSets(cmd,
+                                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                    pipelineLayout_,
+                                    3,
+                                    1,
+                                    &skyboxSet_,
+                                    0,
+                                    nullptr);
 
-        vkCmdDraw(cmd, 3, 1, 0, 0);
+            vkCmdDraw(cmd, 3, 1, 0, 0);
+        }
     }
 
     void VulkanRenderer::bloomPass(ChaiRenderGraph& renderGraph,
@@ -734,6 +759,10 @@ namespace chai::gfx
                 data.output = builder.write(bloomChain, /*mip=*/0);
             },
             [&](VkCommandBuffer cmd, const ThresholdData& data, const CRGResources& resources) {
+                VkPipeline pipeline = pipelineReg_.get(softThresholdHandle_);
+                if (pipeline == VK_NULL_HANDLE)
+                    return;
+
                 VkRenderingAttachmentInfo att{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
                 att.imageView = resources.attachmentView(data.output, 0);
                 att.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -754,8 +783,7 @@ namespace chai::gfx
                 vkCmdSetScissor(cmd, 0, 1, &sc);
 
                 setupThreshold(resources.view(data.scene));
-                vkCmdBindPipeline(
-                    cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineReg_.get(softThresholdHandle_));
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
                 vkCmdBindDescriptorSets(cmd,
                                         VK_PIPELINE_BIND_POINT_GRAPHICS,
                                         thresholdLayout_,
@@ -790,6 +818,10 @@ namespace chai::gfx
                 [&, srcMip, mip, bloomSetIndex](VkCommandBuffer cmd,
                                                 const DownsampleData& data,
                                                 const CRGResources& resources) {
+                    VkPipeline pipeline = pipelineReg_.get(downsampleHandle_);
+                    if (pipeline == VK_NULL_HANDLE)
+                        return;
+
                     VkExtent2D srcExtent = resources.extent(data.src, srcMip);
                     VkExtent2D dstExtent = resources.extent(data.dst, mip);
 
@@ -823,8 +855,7 @@ namespace chai::gfx
                     write.pImageInfo = &img;
                     vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);
 
-                    vkCmdBindPipeline(
-                        cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineReg_.get(downsampleHandle_));
+                    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
                     vkCmdBindDescriptorSets(
                         cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, bloomLayout_, 0, 1, &set, 0, nullptr);
 
@@ -855,6 +886,10 @@ namespace chai::gfx
                 },
                 [&, srcMip, mip, bloomSetIndex](
                     VkCommandBuffer cmd, const UpsampleData& data, const CRGResources& resources) {
+                    VkPipeline pipeline = pipelineReg_.get(upsampleHandle_);
+                    if (pipeline == VK_NULL_HANDLE)
+                        return;
+
                     VkExtent2D srcExtent = resources.extent(data.src, srcMip);
                     VkExtent2D dstExtent = resources.extent(data.dst, uint32_t(mip));
 
@@ -889,8 +924,7 @@ namespace chai::gfx
                     write.pImageInfo = &img;
                     vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);
 
-                    vkCmdBindPipeline(
-                        cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineReg_.get(upsampleHandle_));
+                    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
                     vkCmdBindDescriptorSets(
                         cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, bloomLayout_, 0, 1, &set, 0, nullptr);
 
@@ -983,6 +1017,10 @@ namespace chai::gfx
                 data.output = builder.write(combineTarget);
             },
             [&](VkCommandBuffer cmd, const CombineData& data, const CRGResources& resources) {
+                VkPipeline pipeline = pipelineReg_.get(combineHandle_);
+                if (pipeline == VK_NULL_HANDLE)
+                    return;
+
                 VkRenderingAttachmentInfo att{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
                 att.imageView = resources.attachmentView(data.output, 0);
                 att.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -1194,7 +1232,7 @@ namespace chai::gfx
         const VkFormat depthFormat = swapchain_.depthFormat();
         const VkSampleCountFlagBits samples = ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT);
 
-        pbrOpaqueHandle_ = pipelineReg_.create("pbr_opaque",
+        pbrOpaqueHandle_ = pipelineReg_.createAsync("pbr_opaque",
                             {
                                 .layout = pbrLayout_,
                                 .desc =
@@ -1223,7 +1261,7 @@ namespace chai::gfx
                                     },
                             });
 
-        pbrBlendHandle_ = pipelineReg_.create(
+        pbrBlendHandle_ = pipelineReg_.createAsync(
             "pbr_blend",
                             {
                                 .layout = pbrLayout_,
@@ -1253,7 +1291,7 @@ namespace chai::gfx
                                     },
                             });
 
-        wireframeHandle_ = pipelineReg_.create(
+        wireframeHandle_ = pipelineReg_.createAsync(
             "pbr_wireframe",
                             {
                                 .layout = pbrLayout_,
@@ -1283,7 +1321,7 @@ namespace chai::gfx
                                     },
                             });
 
-        skyboxHandle_ = pipelineReg_.create(
+        skyboxHandle_ = pipelineReg_.createAsync(
             "skybox",
                             {
                                 .layout = pipelineLayout_,
@@ -1313,7 +1351,7 @@ namespace chai::gfx
                                     },
                             });
 
-        irradianceHandle_ = pipelineReg_.create(
+        irradianceHandle_ = pipelineReg_.createAsync(
             "irradiance",
                             {
                                 .layout = irradianceLayout_,
@@ -1340,7 +1378,8 @@ namespace chai::gfx
                                     },
                             });
 
-        brdfHandle_ = pipelineReg_.create("brdf_lut",
+        brdfHandle_ = pipelineReg_.createAsync(
+            "brdf_lut",
                             {
                                 .layout = brdfLutLayout_,
                                 .desc =
@@ -1366,7 +1405,7 @@ namespace chai::gfx
                                     },
                             });
 
-        prefilterHandle_ = pipelineReg_.create(
+        prefilterHandle_ = pipelineReg_.createAsync(
             "prefilter",
                             {
                                 .layout = prefilterLayout_,
@@ -1393,7 +1432,7 @@ namespace chai::gfx
                                     },
                             });
 
-        shadowHandle_ = pipelineReg_.create(
+        shadowHandle_ = pipelineReg_.createAsync(
             "shadow",
                             {
                                 .layout = shadowLayout_,
@@ -1418,7 +1457,7 @@ namespace chai::gfx
                                     },
                             });
 
-        softThresholdHandle_ = pipelineReg_.create(
+        softThresholdHandle_ = pipelineReg_.createAsync(
             "softThreshold",
                             {
                                 .layout = thresholdLayout_,
@@ -1445,7 +1484,7 @@ namespace chai::gfx
                                     },
                             });
 
-        downsampleHandle_ = pipelineReg_.create(
+        downsampleHandle_ = pipelineReg_.createAsync(
             "downsample",
                             {
                                 .layout = bloomLayout_,
@@ -1472,7 +1511,7 @@ namespace chai::gfx
                                     },
                             });
 
-        upsampleHandle_ = pipelineReg_.create(
+        upsampleHandle_ = pipelineReg_.createAsync(
             "upsample",
                             {
                                 .layout = bloomLayout_,
@@ -1499,7 +1538,8 @@ namespace chai::gfx
                                     },
                             });
 
-        combineHandle_ = pipelineReg_.create("combinePostProcess",
+        combineHandle_ = pipelineReg_.createAsync(
+            "combinePostProcess",
                             {
                                 .layout = combineLayout_,
                                 .desc =
@@ -1847,8 +1887,10 @@ namespace chai::gfx
                 data.output = builder.write(shadowHandle);
             },
             [&, order](VkCommandBuffer cmd, const ShadowData& data, const CRGResources& resources) {
-                // body is your existing shadowMapping() code, minus its own imageBarrier call —
-                // the graph now issues that barrier automatically before this lambda runs
+                VkPipeline shadowPipeline = pipelineReg_.get(shadowHandle_);
+                if (shadowPipeline == VK_NULL_HANDLE)
+                    return;
+
                 VkRenderingAttachmentInfo depth{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
                 depth.imageView = resources.attachmentView(data.output, 0);
                 depth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
@@ -1870,7 +1912,7 @@ namespace chai::gfx
 
                 vkCmdSetDepthBias(cmd, 1.25f, 0.f, 2.f);
 
-                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineReg_.get(shadowHandle_));
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipeline);
 
                 for (auto& idx : order) {
                     const RenderItem& item = items[idx];

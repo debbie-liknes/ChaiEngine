@@ -132,6 +132,7 @@ namespace chai::gfx
                                    VkImage combineImage,
                                    VkExtent2D combineExtent,
             bool everRendered);
+        void tryBakeIBL();
         void ensureSkyboxSet(FrameData& frame, const GpuTexture& cube, Handle<Texture> handle);
         void bakeIrradiance(const GpuTexture& envCube);
         void bakeBrdfLut();
@@ -179,7 +180,6 @@ namespace chai::gfx
 
         RenderTarget brdfLut_{};
         VkPipelineLayout brdfLutLayout_ = VK_NULL_HANDLE;
-        bool brdfBaked_ = false;
 
         RenderTarget prefilterTarget_{};
         VkPipelineLayout prefilterLayout_ = VK_NULL_HANDLE;
