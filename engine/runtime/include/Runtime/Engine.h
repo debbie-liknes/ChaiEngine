@@ -9,11 +9,10 @@
 #include <TypeRegistry.h>
 #include <string>
 #include <vector>
-#include <Runtime/Clock.h>
+#include <OS/Clock.h>
 #include <span>
 #include <Scene/Scene.h>
 #include <Rendering/IRenderer.h>
-#include <UI/Editor/EditorViewportManager.h>
 
 namespace chai
 {
@@ -28,7 +27,7 @@ namespace chai
         void startup();
         void shutdown();
         void requestStop();
-        void run();
+        void run(const std::function<void(const UpdateContext&)>& updateCallback);
 
         IPlugin::ServiceList providedServices() const;
 

@@ -3,7 +3,7 @@
  * @brief Helper class to load dynamic plugins
  */
 #pragma once
-#include <Plugin/DynamicLibrary.h>
+#include <OS/DynamicLibrary.h>
 #include <Plugin/PluginBase.h>
 #include <filesystem>
 #include <memory>

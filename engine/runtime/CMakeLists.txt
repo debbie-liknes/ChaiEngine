@@ -1,26 +1,17 @@
 project(Runtime)
 
 set(${PROJECT_NAME}_headers
-    include/Runtime/Clock.h
     include/Runtime/Engine.h
-    include/Runtime/FileIO.h
-    include/Runtime/SystemPaths.h
-    include/Plugin/DynamicLibrary.h
     include/Plugin/PluginBase.h
     include/Plugin/PluginContext.h
     include/Plugin/PluginLoader.h
     include/Plugin/PluginMacros.h
-    include/Plugin/PluginManager.h
     include/Plugin/ServiceLocator.h
 )
 
 set(${PROJECT_NAME}_source
     source/Runtime/Engine.cpp
-    source/Runtime/SystemPaths.cpp
-    source/Runtime/FileIO.cpp
-    source/Plugin/DynamicLibrary.cpp
     source/Plugin/PluginLoader.cpp
-    source/Plugin/PluginManager.cpp
     source/Plugin/ServiceLocator.cpp
 )
 
@@ -44,8 +35,9 @@ target_link_libraries(${PROJECT_NAME}
     Graphics
     ImGui
     Scene
-    UI
+    UICore
     DiagnosticsUI
+    OS
 )
 
 #TODO: Re-enable when CI is fixed for this
