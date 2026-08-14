@@ -9,10 +9,10 @@
 #include <AssetCache.h>
 #include <Assets/DefaultTextures.h>
 #include <Assets/MeshAsset.h>
+#include <OS/SystemPaths.h>
 #include <Input/IInput.h>
 #include <Log.h>
 #include <Rendering/CameraData.h>
-#include <Runtime/SystemPaths.h>
 #include <Window/Window.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>

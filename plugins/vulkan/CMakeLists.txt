@@ -117,8 +117,8 @@ configure_file(
     ${CMAKE_CURRENT_BINARY_DIR}/generated/ShaderPaths.h
 )
 
+target_link_libraries(${PROJECT_NAME} PUBLIC Runtime Graphics UICore Vulkan::Vulkan glfw PRIVATE ImGui EditorUI vk-bootstrap::vk-bootstrap GPUOpen::VulkanMemoryAllocator shaderc)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
-target_link_libraries(${PROJECT_NAME} PUBLIC Runtime Graphics UI Vulkan::Vulkan glfw PRIVATE ImGui vk-bootstrap::vk-bootstrap GPUOpen::VulkanMemoryAllocator shaderc)
 set_target_properties(vk-bootstrap PROPERTIES FOLDER "external")
 
 ChaiPluginDefaults(${PROJECT_NAME} "Plugins")

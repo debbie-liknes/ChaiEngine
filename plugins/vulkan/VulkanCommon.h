@@ -3,7 +3,7 @@
 #include <vulkan/vulkan.h>
 #include <ChaiMath.h>
 #include <filesystem>
-#include <Runtime/SystemPaths.h>
+#include <OS/SystemPaths.h>
 #include "ShaderPaths.h"
 
 namespace chai::gfx

@@ -10,7 +10,6 @@ set(ChaiScene_headers
         include/Components/TransformComponent.h
         include/Controllers/Controller.h
         include/Controllers/FlyCamController.h
-        include/EditorUI/SceneHierarchy.h
         include/Scene/Camera.h
         include/Scene/GameObject.h
         include/Scene/Scene.h
@@ -31,7 +30,6 @@ set(ChaiScene_source
         source/Components/TransformComponent.cpp
         source/Controllers/SpinController.cpp
         source/Controllers/FlyCamController.cpp
-        source/EditorUI/SceneHierarchy.cpp
         source/Scene/Camera.cpp
         source/Scene/GameObject.cpp
         source/Scene/Scene.cpp
@@ -43,6 +41,6 @@ set(ChaiScene_source
 add_library(Scene SHARED ${ChaiScene_headers} ${ChaiScene_source})
 
 target_include_directories(Scene PUBLIC include)
-target_link_libraries(Scene PUBLIC Audio Graphics TypeReflection UI Window)
+target_link_libraries(Scene PUBLIC Audio Graphics TypeReflection UICore Window)
 
 ChaiLibDefaults(Scene "Scene")
