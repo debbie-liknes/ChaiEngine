@@ -75,6 +75,8 @@ namespace chai
                 continue;
             if (load(entry.path()))
                 ++count;
+            else
+                return false;
         }
 
         auto pluginGraph = buildPluginGraph(pluginPtrs_, providedServices_);

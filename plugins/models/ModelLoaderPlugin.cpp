@@ -19,12 +19,14 @@ namespace chai::gfx
         ServiceList requiredServices() const override { return {}; }
         ServiceList providedServices() const override { return { typeid(gfx::IModelLoader) }; }
 
-        void onLoad(PluginContext& ctx) override
+        bool onLoad(PluginContext& ctx) override
         {
             // register services, but make sure to UN-register them on unload
             ctx.services.provide<gfx::IModelLoader>(std::make_shared<GLTFLoader>());
 
             CHAI_LOG_INFO("Model Plugin loaded");
+
+            return true;
         }
 
         void onUnload(PluginContext& ctx) override

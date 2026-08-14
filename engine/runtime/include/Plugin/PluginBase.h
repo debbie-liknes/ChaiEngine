@@ -27,7 +27,7 @@ namespace chai
         using ServiceList = std::unordered_set<std::type_index>;
         virtual ServiceList providedServices() const = 0;
         virtual ServiceList requiredServices() const = 0;
-        virtual void onLoad(PluginContext& ctx) = 0;
+        [[nodiscard]] virtual bool onLoad(PluginContext& ctx) = 0;
         virtual void onUnload(PluginContext& ctx) = 0;
     };
 }

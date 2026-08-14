@@ -19,12 +19,14 @@ namespace chai
         ServiceList requiredServices() const override { return {}; }
         ServiceList providedServices() const override { return { typeid(gfx::ITextureLoader) }; }
 
-        void onLoad(PluginContext& ctx) override
+        [[nodiscard]] bool onLoad(PluginContext& ctx) override
         {
             // register services, but make sure to UN-register them on unload
             ctx.services.provide<gfx::ITextureLoader>(std::make_shared<PNGLoader>());
 
             CHAI_LOG_INFO("Texture Plugin loaded");
+
+            return true;
         }
 
         void onUnload(PluginContext& ctx) override

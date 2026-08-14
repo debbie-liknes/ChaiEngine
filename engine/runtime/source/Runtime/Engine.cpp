@@ -10,17 +10,22 @@
 
 namespace chai
 {
-    void Engine::startup()
+    bool Engine::startup()
     {
         //Load plugins
         CHAI_LOG_INFO("Engine starting");
         for (const auto& plugin : plugins_) {
-            plugin->onLoad(ctx_);
+            if (!plugin->onLoad(ctx_)) {
+                CHAI_LOG_CRITICAL("Plugin {} failed to load. Exiting prematurely.", plugin->name());
+                return false;
+            }
             active_.push_back(plugin);
         }
 
         //Create scene
         scene_ = std::make_unique<scene::Scene>();
+
+        return true;
     }
 
     void Engine::shutdown()

@@ -24,7 +24,7 @@ namespace chai
     {
     public:
         //lifecycle methods
-        void startup();
+        [[nodiscard]] bool startup();
         void shutdown();
         void requestStop();
         void run(const std::function<void(const UpdateContext&)>& updateCallback);

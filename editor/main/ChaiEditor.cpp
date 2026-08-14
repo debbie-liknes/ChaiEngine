@@ -11,9 +11,12 @@ int main()
 
     Editor editor;
 
-    editor.startup();
+    if (!editor.startup())
+        return 1;
 
     editor.run();
 
     editor.shutdown();
+
+    return 0;
 }

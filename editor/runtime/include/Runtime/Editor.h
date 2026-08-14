@@ -22,7 +22,7 @@ namespace chai
         IPlugin::ServiceList providedServices() const;
         
         //lifecycle methods
-        void startup();
+        bool startup();
         void shutdown();
         void requestStop();
         void run();

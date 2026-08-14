@@ -19,7 +19,7 @@ namespace chai::audio::fmod
         ServiceList requiredServices() const override { return {}; }
         ServiceList providedServices() const override { return {typeid(audio::IAudioEngine)}; }
 
-        void onLoad(PluginContext& ctx) override
+        [[nodiscard]] bool onLoad(PluginContext& ctx) override
         {
             m_audioEngine = std::make_shared<FmodAudioEngine>();
 
@@ -27,6 +27,8 @@ namespace chai::audio::fmod
             ctx.services.provide<IAudioEngine>(m_audioEngine);
 
             CHAI_LOG_INFO("FMOD Audio Plugin loaded");
+            
+            return true;
         }
 
         void onUnload(PluginContext& ctx) override
