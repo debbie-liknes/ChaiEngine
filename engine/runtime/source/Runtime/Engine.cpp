@@ -3,56 +3,21 @@
 #include <Window/Window.h>
 #include <Scene/Scene.h>
 #include <Input/IInput.h>
-#include <UI/Editor/ActionManager.h>
-#include <UI/Editor/InternalChaiUI.h>
-#include <UI/Editor/PanelRegistry.h>
-#include <UI/Editor/PanelHost.h>
-#include <UI/Editor/DockspaceService.h>
-#include <Runtime/SystemPaths.h>
 #include <Audio/IAudioEngine.h>
-#include <LogPanel.h>
 #include <Visitors/AudioSceneVisitor.h>
 #include <Visitors/FrameRenderVisitor.h>
 #include <tracy/Tracy.hpp>
 
 namespace chai
 {
-    Engine::~Engine()
-    {
-    }
-
     void Engine::startup()
     {
-        // Register panel management and docking services
-        auto panelRegistry = std::make_shared<ui::PanelRegistry>();
-        ctx_.services.provide<ui::PanelRegistry>(panelRegistry);
-
-        auto configFile = executableDir() / "assets/editor/config/action_config.json";
-        auto actionManager = std::make_shared<ui::ActionManager>(configFile, panelRegistry.get());
-        ctx_.services.provide<ui::ActionManager>(actionManager);
-
-        auto panelHost = std::make_shared<ui::PanelHost>();
-        ctx_.services.provide<ui::PanelHost>(panelHost);
-
-        auto dockspace = std::make_shared<ui::DockspaceService>();
-        ctx_.services.provide<ui::DockspaceService>(dockspace);
-
         //Load plugins
         CHAI_LOG_INFO("Engine starting");
         for (auto& p : plugins_) {
             p->onLoad(ctx_);
             active_.push_back(p);
         }
-
-        auto registry = services_.tryResolve<gfx::IViewportRegistry>();
-        if (!registry) {
-            CHAI_LOG_CRITICAL("Could not locate Viewport Registry.");
-        }
-
-        auto vpManager = std::make_shared<ui::EditorViewportManager>(*registry, *panelRegistry);
-        ctx_.services.provide<ui::EditorViewportManager>(vpManager);
-
-        ui::loadFonts(executableDir().string() + "/assets/editor/fonts");
 
         //Create scene
         scene_ = std::make_unique<scene::Scene>();
@@ -63,12 +28,6 @@ namespace chai
         CHAI_LOG_INFO("Engine shutdown");
         for (auto it = active_.rbegin(); it != active_.rend(); ++it)
             (*it)->onUnload(ctx_);
-
-        ctx_.services.remove<ui::PanelRegistry>();
-        ctx_.services.remove<ui::ActionManager>();
-        ctx_.services.remove<ui::EditorViewportManager>();
-        ctx_.services.remove<ui::PanelHost>();
-        ctx_.services.remove<ui::DockspaceService>();
     }
 
     void Engine::requestStop()
@@ -81,14 +40,8 @@ namespace chai
         plugins_.assign(p.begin(), p.end());
     }
 
-    void Engine::run()
+    void Engine::run(const std::function<void(const UpdateContext&)>& updateCallback)
     {
-        //these dont come from a plugin, guaranteed
-        auto& panelRegistry = services_.resolve<ui::PanelRegistry>();
-        auto& panelHost = services_.resolve<ui::PanelHost>();
-        auto& dockingService = services_.resolve<ui::DockspaceService>();
-        auto& actionManager = services_.resolve<ui::ActionManager>();
-
         //These come from plugins, check that they exist
         auto window = services_.tryResolve<IWindow>();
         if (!window) {
@@ -126,20 +79,13 @@ namespace chai
                 // tell the renderer about resized events
                 if (event.type == WindowEventType::Resized)
                     renderer->onResize(event.width, event.height);
-
             }
-
 
             renderer->startFrame();
             float dt = clock_.tick();
 
             UpdateContext ctx{dt, *input};
             scene_->update(ctx);
-
-            //draw internal uis
-            panelHost.draw(panelRegistry, dockingService, actionManager);
-
-            actionManager.update(*input);
 
             scene_->accept(&audioVisitor);
             scene_->accept(&frameVisitor);
@@ -148,6 +94,8 @@ namespace chai
                 audio->set3dListenersAndOrientations(audioVisitor.getData());
                 audio->update();
             }
+
+            updateCallback(ctx);
 
             renderer->renderFrame(frameVisitor.getData());
             renderer->endFrame();

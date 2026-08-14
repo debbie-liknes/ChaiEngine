@@ -1,3 +1,5 @@
 add_subdirectory(containers)
+add_subdirectory(logger)
 add_subdirectory(math)
 add_subdirectory(reflection)
+add_subdirectory(os)

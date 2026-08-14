@@ -19,8 +19,8 @@
 #include <Plugin/PluginBase.h>
 #include <Plugin/PluginMacros.h>
 #include <Plugin/ServiceLocator.h>
-#include <UI/Editor/PanelRegistry.h>
-#include <UI/Editor/ActionManager.h>
+#include <EditorUI/PanelRegistry.h>
+#include <EditorUI/ActionManager.h>
 #include <Window/Window.h>
 #include <memory>
 
