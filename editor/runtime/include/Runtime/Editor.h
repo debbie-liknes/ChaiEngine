@@ -19,6 +19,8 @@ namespace chai
     class Editor
     {
     public:
+        IPlugin::ServiceList providedServices() const;
+        
         //lifecycle methods
         void startup();
         void shutdown();
@@ -28,7 +30,7 @@ namespace chai
     private:
         void registerActions() const;
 
-        std::unique_ptr<PluginLoader> loader_ = std::make_unique<PluginLoader>();
+        std::unique_ptr<PluginLoader> loader_ = std::make_unique<PluginLoader>(providedServices());
         std::unique_ptr<Engine> engine_ = std::make_unique<Engine>();
         
         std::unique_ptr<SpdLogSink> logSink_ = std::make_unique<SpdLogSink>();

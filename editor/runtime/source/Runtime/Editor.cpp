@@ -153,6 +153,15 @@ namespace chai
         skyboxComp->setTexture(skyBoxTex);
     }
 
+    IPlugin::ServiceList Editor::providedServices() const
+    {
+        return {typeid(ui::PanelRegistry),
+                typeid(ui::ActionManager),
+                typeid(ui::PanelHost),
+                typeid(ui::DockspaceService),
+                typeid(ui::EditorViewportManager)};
+    }
+
     void Editor::startup()
     {
         using namespace scene;
@@ -181,7 +190,10 @@ namespace chai
         if (exeDir.empty())
             exeDir = std::filesystem::current_path();
         loader_->loadDirectory(exeDir / "plugins");
-        engine_->setPlugins(loader_->plugins());
+        if (!loader_->loadDirectory(exeDir / "plugins")) {
+            CHAI_LOG_CRITICAL("Editor: Failed to load plugins. Exiting prematurely.");
+            return;
+        }
 
         engine_->startup();
 

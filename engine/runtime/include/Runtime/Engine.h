@@ -29,8 +29,6 @@ namespace chai
         void requestStop();
         void run(const std::function<void(const UpdateContext&)>& updateCallback);
 
-        IPlugin::ServiceList providedServices() const;
-
         ServiceLocator& services() { return services_; }
         scene::Scene& scene() { return *scene_; }
         void setPlugins(std::span<IPlugin* const> p);
