@@ -105,6 +105,15 @@ namespace chai::gfx
             auto& actionManager = ctx.services.resolve<ui::ActionManager>();
             actionManager.registerPanel("window.plugins.vulkan_stats", panelInfo.id, true);
 
+            ui::PanelDesc debugPanelInfo;
+            debugPanelInfo.displayName = "Render Debug";
+            debugPanelInfo.id = "RenderDebug";
+            debugPanelInfo.draw = [&]() { ui::drawRenderDebugTools(*renderer_); };
+            debugPanelInfo.visible = false;
+
+            panelReg.registerPanel(debugPanelInfo);
+            actionManager.registerPanel("window.plugins.vulkan_debug", debugPanelInfo.id, true);
+
             CHAI_LOG_INFO("Renderer service provided");
 
             return true;

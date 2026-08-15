@@ -27,4 +27,11 @@ namespace chai::ui
             }
         }
 	}
+
+    void drawRenderDebugTools(gfx::VulkanRenderer& renderer) 
+    {
+        if (Button("Reload Shaders")) {
+            renderer.recompileShaders();
+        }
+    }
 } // namespace chai::ui

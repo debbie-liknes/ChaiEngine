@@ -3,10 +3,9 @@ project(VulkanRenderer)
 set(${PROJECT_NAME}_headers
         commands/ImageTransition.h
         pipeline/PipelineBuilder.h
-        pipeline/PipelineCache.h
-        pipeline/PipelineHelpers.h
         pipeline/PipelineKey.h
-        pipeline/ShaderModule.h
+        pipeline/PipelineRegistry.h
+        pipeline/ShaderCompiler.h
         registries/ViewportRegistry.h
         renderer/VulkanRenderer.h
         renderer/VulkanContext.h
@@ -45,9 +44,8 @@ set(${PROJECT_NAME}_headers
 set(${PROJECT_NAME}_source
         commands/ImageTransition.cpp
         pipeline/PipelineBuilder.cpp
-        pipeline/PipelineCache.cpp
-        pipeline/PipelineHelpers.cpp
-        pipeline/ShaderModule.cpp
+        pipeline/PipelineRegistry.cpp
+        pipeline/ShaderCompiler.cpp
         registries/ViewportRegistry.cpp
 
         renderGraph/ChaiRenderGraph.cpp
@@ -105,46 +103,18 @@ add_library(${PROJECT_NAME} SHARED
 
 find_package(Vulkan REQUIRED)
 
-set(SHADER_SOURCE_DIR "${CMAKE_SOURCE_DIR}/shaders")
 set(SHADER_OUTPUT_DIR "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/shaders")
-
-file(GLOB_RECURSE SHADER_FILES CONFIGURE_DEPENDS
-    "${SHADER_SOURCE_DIR}/*.vert"
-    "${SHADER_SOURCE_DIR}/*.frag"
-    "${SHADER_SOURCE_DIR}/*.comp"
-    "${SHADER_SOURCE_DIR}/*.geom"
-    "${SHADER_SOURCE_DIR}/*.tesc"
-    "${SHADER_SOURCE_DIR}/*.tese"
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/shaders
+        ${SHADER_OUTPUT_DIR}
 )
 
-set(SPIRV_FILES)
-
-foreach(SHADER ${SHADER_FILES})
-
-    file(RELATIVE_PATH REL_PATH
-        "${SHADER_SOURCE_DIR}"
-        "${SHADER}")
-
-    set(SPIRV "${SHADER_OUTPUT_DIR}/${REL_PATH}.spv")
-
-    get_filename_component(SPIRV_DIR "${SPIRV}" DIRECTORY)
-
-    add_custom_command(
-        OUTPUT "${SPIRV}"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${SPIRV_DIR}"
-        COMMAND ${Vulkan_GLSLC_EXECUTABLE}
-                "${SHADER}"
-                -o "${SPIRV}"
-        DEPENDS "${SHADER}"
-        VERBATIM
-    )
-
-    list(APPEND SPIRV_FILES "${SPIRV}")
-
-endforeach()
-
-add_custom_target(Shaders ALL
-    DEPENDS ${SPIRV_FILES}
+#unsure about this
+set(CHAI_SHADER_SOURCE_DIR "${CMAKE_SOURCE_DIR}/shaders")
+configure_file(
+    ${CMAKE_SOURCE_DIR}/cmake/ShaderPaths.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/generated/ShaderPaths.h
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -160,7 +130,9 @@ target_link_libraries(${PROJECT_NAME}
     EditorUI
     vk-bootstrap::vk-bootstrap
     GPUOpen::VulkanMemoryAllocator
+    unofficial::shaderc::shaderc
 )
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 set_target_properties(vk-bootstrap PROPERTIES FOLDER "external")
 
 ChaiPluginDefaults(${PROJECT_NAME} "Plugins")

@@ -2,8 +2,6 @@
 
 #include "../commands/ImageTransition.h"
 #include "../pipeline/PipelineBuilder.h"
-#include "../pipeline/PipelineHelpers.h"
-#include "../pipeline/ShaderModule.h"
 #include "../resources/TextureFactory.h"
 #include "../resources/VulkanVertex.h"
 #include "../utils/VkCheck.h"
@@ -45,9 +43,7 @@ namespace chai::gfx
                          return VkExtent2D{uint32_t(w), uint32_t(h)};
                      }()),
           locator_(locator), meshCache_(meshCache), texCache_(texCache), materialCache_(matCache),
-          modelReg_(texReg), viewportReg_(*viewportReg),
-          pipelineCache_(context, VK_FORMAT_R16G16B16A16_SFLOAT, swapchain_.depthFormat()),
-          renderGraph_(ctx_)
+          modelReg_(texReg), viewportReg_(*viewportReg), pipelineReg_(context), renderGraph_(ctx_)
     {
         init();
         CHAI_LOG_INFO("VulkanRenderer initialized");
@@ -66,17 +62,7 @@ namespace chai::gfx
             frames_[i].shadowTarget.destroy(ctx_);
         }
 
-        pipelineCache_.destroyAll();
-
-        vkDestroyPipeline(ctx_.device(), skyboxPipeline_, nullptr);
-        vkDestroyPipeline(ctx_.device(), irradiancePipeline_, nullptr);
-        vkDestroyPipeline(ctx_.device(), brdfLutPipeline_, nullptr);
-        vkDestroyPipeline(ctx_.device(), prefilterPipeline_, nullptr);
-        vkDestroyPipeline(ctx_.device(), shadowPipeline_, nullptr);
-        vkDestroyPipeline(ctx_.device(), thresholdPipeline_, nullptr);
-        vkDestroyPipeline(ctx_.device(), combinePipeline_, nullptr);
-        vkDestroyPipeline(ctx_.device(), downsamplePipeline_, nullptr);
-        vkDestroyPipeline(ctx_.device(), upsamplePipeline_, nullptr);
+        pipelineReg_.destroyAll();
 
         vkDestroyPipelineLayout(ctx_.device(), pipelineLayout_, nullptr);
         vkDestroyPipelineLayout(ctx_.device(), irradianceLayout_, nullptr);
@@ -86,6 +72,7 @@ namespace chai::gfx
         vkDestroyPipelineLayout(ctx_.device(), thresholdLayout_, nullptr);
         vkDestroyPipelineLayout(ctx_.device(), combineLayout_, nullptr);
         vkDestroyPipelineLayout(ctx_.device(), bloomLayout_, nullptr);
+        vkDestroyPipelineLayout(ctx_.device(), pbrLayout_, nullptr);
 
         irradianceTarget_.destroy(ctx_);
         brdfLut_.destroy(ctx_);
@@ -205,11 +192,6 @@ namespace chai::gfx
 
         setupPipelines();
 
-        if (!brdfBaked_) {
-            bakeBrdfLut();
-            brdfBaked_ = true;
-        }
-
         // skybox
         if (environmentSet_ == VK_NULL_HANDLE) {
             VkDescriptorSetLayout layout = ctx_.environmentSetLayout();
@@ -220,22 +202,40 @@ namespace chai::gfx
             VK_CHECK(vkAllocateDescriptorSets(ctx_.device(), &dsai, &environmentSet_));
         }
 
-        auto cube = texCache_->ingest(makeAssetId("builtin:cube"), createDefaultCubeTexture());
+        skyboxCube_ = texCache_->ingest(makeAssetId("builtin:cube"), createDefaultCubeTexture());
         // we require the default textures to be ready
         ctx_.uploadContext().waitFor(ctx_.uploadContext().lastSubmittedValue());
 
         // TODO: I dont like that theres no way out. Need to rethink how to default bind the
         // environment Or if default binding (to a black skybox cube) makes sense.
-        while (!texCache_->isReady(cube)) {
+        while (!texCache_->isReady(skyboxCube_)) {
             texCache_->tick();
         }
-        auto skyResource = texCache_->resource(cube);
+
+        viewportReg_.init(swapchain_);
+    }
+
+    void VulkanRenderer::tryBakeIBL()
+    {
+        if (pipelineReg_.get(irradianceHandle_) == VK_NULL_HANDLE)
+            return;
+        if (pipelineReg_.get(prefilterHandle_) == VK_NULL_HANDLE)
+            return;
+        if (pipelineReg_.get(skyboxHandle_) == VK_NULL_HANDLE)
+            return;
+
+        if (!texCache_->isReady(skyboxCube_))
+            return;
+
+        auto skyResource = texCache_->resource(skyboxCube_);
+        if (!skyResource)
+            return; //shouldnt happen
+
+        bakeBrdfLut();
         bakeIrradiance(*skyResource);
         bakePrefilter(*skyResource);
         writeEnvironmentSet(*skyResource);
         iblBaked_ = true;
-
-        viewportReg_.init(swapchain_);
     }
 
     void VulkanRenderer::startFrame()
@@ -244,9 +244,14 @@ namespace chai::gfx
 
         // Wait until this frame slots previous work is done.
         VK_CHECK(vkWaitForFences(ctx_.device(), 1, &frame.inFlight, VK_TRUE, UINT64_MAX));
+        pipelineReg_.collectGarbage(currentFrame_);
+        pipelineReg_.processPendingBuilds(currentFrame_);
 
         viewportReg_.tick(currentFrame_);
         viewportReg_.applyPendingViewportResizes();
+
+        if (!iblBaked_)
+            tryBakeIBL();
 
         // sync input to imgui
         ImGuiIO& io = ImGui::GetIO();
@@ -327,12 +332,8 @@ namespace chai::gfx
         stats_.clear();
 
         if (!iblBaked_ || (renderData.environment.skyboxCube != skyboxCube_)) {
-            if (const GpuTexture* sky = texCache_->resource(renderData.environment.skyboxCube)) {
-                bakeIrradiance(*sky);
-                bakePrefilter(*sky);
-                writeEnvironmentSet(*sky);
-                iblBaked_ = true;
-            }
+            skyboxCube_ = renderData.environment.skyboxCube;
+            tryBakeIBL();
         }
 
         LightData lightUBO{};
@@ -679,12 +680,18 @@ namespace chai::gfx
             if (!mesh)
                 continue;
 
-            VkPipeline pipeline =
-                pipelineCache_.getOrCreate({"pbr.vert.spv",
-                                            "pbr.frag.spv",
-                                            mat->alphaMode,
-                                            wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL,
-                                            ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT)});
+            VkPipeline pipeline; 
+            if (wireframe) {
+                pipeline = pipelineReg_.get(wireframeHandle_);
+            } else if (mat->alphaMode == AlphaMode::Blend) {
+                pipeline = pipelineReg_.get(pbrBlendHandle_);
+            } else {
+                pipeline = pipelineReg_.get(pbrOpaqueHandle_);
+            }
+
+            if (pipeline == VK_NULL_HANDLE)
+                continue;
+
             vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
             if (item.material != lastMaterial) {
@@ -718,17 +725,27 @@ namespace chai::gfx
         }
 
         // skybox render
-        const GpuTexture* cubeTex = texCache_->resource(renderData.environment.skyboxCube);
-        if (!cubeTex)
-            return;
-        ensureSkyboxSet(frame, *cubeTex, renderData.environment.skyboxCube);
+        if (auto skyboxPipeline = pipelineReg_.get(skyboxHandle_);
+            skyboxPipeline != VK_NULL_HANDLE) {
+            const GpuTexture* cubeTex = texCache_->resource(renderData.environment.skyboxCube);
+            if (!cubeTex)
+                return;
+            ensureSkyboxSet(frame, *cubeTex, renderData.environment.skyboxCube);
 
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxPipeline_);
+            vkCmdBindPipeline(
+                cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineReg_.get(skyboxHandle_));
 
-        vkCmdBindDescriptorSets(
-            cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout_, 3, 1, &skyboxSet_, 0, nullptr);
+            vkCmdBindDescriptorSets(cmd,
+                                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                    pipelineLayout_,
+                                    3,
+                                    1,
+                                    &skyboxSet_,
+                                    0,
+                                    nullptr);
 
-        vkCmdDraw(cmd, 3, 1, 0, 0);
+            vkCmdDraw(cmd, 3, 1, 0, 0);
+        }
     }
 
     void VulkanRenderer::bloomPass(ChaiRenderGraph& renderGraph,
@@ -747,6 +764,10 @@ namespace chai::gfx
                 data.output = builder.write(bloomChain, /*mip=*/0);
             },
             [&](VkCommandBuffer cmd, const ThresholdData& data, const CRGResources& resources) {
+                VkPipeline pipeline = pipelineReg_.get(softThresholdHandle_);
+                if (pipeline == VK_NULL_HANDLE)
+                    return;
+
                 VkRenderingAttachmentInfo att{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
                 att.imageView = resources.attachmentView(data.output, 0);
                 att.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -767,7 +788,7 @@ namespace chai::gfx
                 vkCmdSetScissor(cmd, 0, 1, &sc);
 
                 setupThreshold(resources.view(data.scene));
-                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, thresholdPipeline_);
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
                 vkCmdBindDescriptorSets(cmd,
                                         VK_PIPELINE_BIND_POINT_GRAPHICS,
                                         thresholdLayout_,
@@ -802,6 +823,10 @@ namespace chai::gfx
                 [&, srcMip, mip, bloomSetIndex](VkCommandBuffer cmd,
                                                 const DownsampleData& data,
                                                 const CRGResources& resources) {
+                    VkPipeline pipeline = pipelineReg_.get(downsampleHandle_);
+                    if (pipeline == VK_NULL_HANDLE)
+                        return;
+
                     VkExtent2D srcExtent = resources.extent(data.src, srcMip);
                     VkExtent2D dstExtent = resources.extent(data.dst, mip);
 
@@ -835,7 +860,7 @@ namespace chai::gfx
                     write.pImageInfo = &img;
                     vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);
 
-                    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, downsamplePipeline_);
+                    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
                     vkCmdBindDescriptorSets(
                         cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, bloomLayout_, 0, 1, &set, 0, nullptr);
 
@@ -866,6 +891,10 @@ namespace chai::gfx
                 },
                 [&, srcMip, mip, bloomSetIndex](
                     VkCommandBuffer cmd, const UpsampleData& data, const CRGResources& resources) {
+                    VkPipeline pipeline = pipelineReg_.get(upsampleHandle_);
+                    if (pipeline == VK_NULL_HANDLE)
+                        return;
+
                     VkExtent2D srcExtent = resources.extent(data.src, srcMip);
                     VkExtent2D dstExtent = resources.extent(data.dst, uint32_t(mip));
 
@@ -900,7 +929,7 @@ namespace chai::gfx
                     write.pImageInfo = &img;
                     vkUpdateDescriptorSets(ctx_.device(), 1, &write, 0, nullptr);
 
-                    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, upsamplePipeline_);
+                    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
                     vkCmdBindDescriptorSets(
                         cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, bloomLayout_, 0, 1, &set, 0, nullptr);
 
@@ -993,6 +1022,10 @@ namespace chai::gfx
                 data.output = builder.write(combineTarget);
             },
             [&](VkCommandBuffer cmd, const CombineData& data, const CRGResources& resources) {
+                VkPipeline pipeline = pipelineReg_.get(combineHandle_);
+                if (pipeline == VK_NULL_HANDLE)
+                    return;
+
                 VkRenderingAttachmentInfo att{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
                 att.imageView = resources.attachmentView(data.output, 0);
                 att.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -1013,7 +1046,8 @@ namespace chai::gfx
                 vkCmdSetScissor(cmd, 0, 1, &sc);
 
                 setupCombine(resources.view(data.scene), resources.view(data.bloom));
-                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, combinePipeline_);
+                vkCmdBindPipeline(
+                    cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineReg_.get(combineHandle_));
                 vkCmdBindDescriptorSets(cmd,
                                         VK_PIPELINE_BIND_POINT_GRAPHICS,
                                         combineLayout_,
@@ -1165,138 +1199,376 @@ namespace chai::gfx
             VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &li, nullptr, &combineLayout_));
         }
 
-        auto attrs = vertexAttributes();
-        auto bind = vertexBinding();
+        {
+            VkPushConstantRange pcRange{};
+            pcRange.offset = 0;
+            pcRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+            pcRange.size = sizeof(PushConstants);
 
-        pipelineCache_.getOrCreate({"pbr.vert.spv",
-                                    "pbr.frag.spv",
-                                    AlphaMode::Opaque,
-                                    VK_POLYGON_MODE_FILL,
-                                    ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT)});
-        pipelineCache_.getOrCreate({"pbr.vert.spv",
-                                    "pbr.frag.spv",
-                                    AlphaMode::Blend,
-                                    VK_POLYGON_MODE_FILL,
-                                    ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT)});
-        pipelineCache_.getOrCreate({"pbr.vert.spv",
-                                    "pbr.frag.spv",
-                                    AlphaMode::Opaque,
-                                    VK_POLYGON_MODE_LINE,
-                                    ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT)}); // WIREFRAME
+            // set 0 = camera, set 1 = material, set 2 = light, set 3 = env
+            VkDescriptorSetLayout setLayouts[] = {ctx_.cameraSetLayout(),
+                                                  ctx_.materialSetLayout(),
+                                                  ctx_.lightSetLayout(),
+                                                  ctx_.environmentSetLayout()};
+            VkPipelineLayoutCreateInfo layoutInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+            layoutInfo.pushConstantRangeCount = 1;
+            layoutInfo.pPushConstantRanges = &pcRange;
+            layoutInfo.setLayoutCount = 4;
+            layoutInfo.pSetLayouts = setLayouts;
 
-        skyboxPipeline_ = loadPipelineByName(
-            ctx_, "skybox.vert.spv", "skybox.frag.spv", pipelineLayout_, [&](PipelineBuilder& b) {
-                b.setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
-                    .setDepthFormat(swapchain_.depthFormat())
-                    .enableDepthTest()
-                    .disableDepthWrite()
-                    .setDepthOp(VK_COMPARE_OP_LESS_OR_EQUAL)
-                    .disableBlending()
-                    .setSampleCount(ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT))
-                    .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
-            });
+            VK_CHECK(vkCreatePipelineLayout(ctx_.device(), &layoutInfo, nullptr, &pbrLayout_));
+        }
 
-        irradiancePipeline_ = loadPipelineByName(
-            ctx_,
-            "irradiance.vert.spv",
-            "irradiance.frag.spv",
-            irradianceLayout_,
-            [&](PipelineBuilder& b) {
-                b.setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
-                    .disableBlending()
-                    .disableDepthTest()
-                    .disableDepthWrite()
-                    .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
-            });
+        const auto attrs = vertexAttributes();
+        const auto shadowAttrs = shadowVertexAttributes();
+        const auto bind = vertexBinding();
 
-        brdfLutPipeline_ = loadPipelineByName(ctx_,
-                                              "brdf_lut.vert.spv",
-                                              "brdf_lut.frag.spv",
-                                              brdfLutLayout_,
-                                              [&](PipelineBuilder& b) {
-                                                  b.setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
-                                                      .disableBlending()
-                                                      .disableDepthTest()
-                                                      .disableDepthWrite()
-                                                      .setCullMode(VK_CULL_MODE_NONE,
-                                                                   VK_FRONT_FACE_COUNTER_CLOCKWISE);
-                                              });
+        const VertexInputDesc meshVertexInput{
+            .attributes = {attrs.begin(), attrs.end()},
+            .binding = bind,
+        };
 
-        prefilterPipeline_ = loadPipelineByName(
-            ctx_,
-            "prefilter.vert.spv",
-            "prefilter.frag.spv",
-            prefilterLayout_,
-            [&](PipelineBuilder& b) {
-                b.setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
-                    .disableBlending()
-                    .disableDepthTest()
-                    .disableDepthWrite()
-                    .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
-            });
+        const VertexInputDesc shadowVertexInput{
+            .attributes = {shadowAttrs.begin(), shadowAttrs.end()},
+            .binding = bind,
+        };
 
-        shadowPipeline_ = loadPipelineByName(
-            ctx_, "shadow.vert.spv", "shadow.frag.spv", shadowLayout_, [&](PipelineBuilder& b) {
-                b.setVertexInput({attrs.begin(), attrs.end()}, bind)
-                    .setDepthFormat(swapchain_.depthFormat())
-                    .disableBlending()
-                    .enableDepthTest()
-                    .enableDepthWrite()
-                    .enableDepthBias()
-                    .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
-            });
+        const VkFormat hdrFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+        const VkFormat depthFormat = swapchain_.depthFormat();
+        const VkSampleCountFlagBits samples = ctx_.getSampleCount(VK_SAMPLE_COUNT_4_BIT);
 
-        thresholdPipeline_ = loadPipelineByName(
-            ctx_,
-            "softThreshold.vert.spv",
-            "softThreshold.frag.spv",
-            thresholdLayout_,
-            [&](PipelineBuilder& b) {
-                b.disableBlending()
-                    .setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
-                    .disableDepthTest()
-                    .disableDepthWrite()
-                    .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
-            });
+        pbrOpaqueHandle_ = pipelineReg_.createAsync("pbr_opaque",
+                            {
+                                .layout = pbrLayout_,
+                                .desc =
+                                    {
+                                        .vertShader = "pbr.vert",
+                                        .fragShader = "pbr.frag",
+                                        .vertexInput = meshVertexInput,
+                                        .raster =
+                                            {
+                                                .polygonMode = VK_POLYGON_MODE_FILL,
+                                                .cullMode = VK_CULL_MODE_BACK_BIT,
+                                                .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+                                            },
+                                        .depth =
+                                            {
+                                                .test = true,
+                                                .write = true,
+                                                .format = depthFormat,
+                                            },
+                                        .color =
+                                            {
+                                                .format = hdrFormat,
+                                                .blending = false,
+                                            },
+                                        .samples = samples,
+                                    },
+                            });
 
-        downsamplePipeline_ = loadPipelineByName(
-            ctx_,
-            "postProcess.vert.spv",
-            "downsample.frag.spv",
-            bloomLayout_,
-            [&](PipelineBuilder& b) {
-                b.disableBlending()
-                    .setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
-                    .disableDepthTest()
-                    .disableDepthWrite()
-                    .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
-            });
+        pbrBlendHandle_ = pipelineReg_.createAsync(
+            "pbr_blend",
+                            {
+                                .layout = pbrLayout_,
+                                .desc =
+                                    {
+                                        .vertShader = "pbr.vert",
+                                        .fragShader = "pbr.frag",
+                                        .vertexInput = meshVertexInput,
+                                        .raster =
+                                            {
+                                                .polygonMode = VK_POLYGON_MODE_FILL,
+                                                .cullMode = VK_CULL_MODE_BACK_BIT,
+                                                .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+                                            },
+                                        .depth =
+                                            {
+                                                .test = true,
+                                                .write = false,
+                                                .format = depthFormat,
+                                            },
+                                        .color =
+                                            {
+                                                .format = hdrFormat,
+                                                .blending = true,
+                                            },
+                                        .samples = samples,
+                                    },
+                            });
 
-        upsamplePipeline_ = loadPipelineByName(
-            ctx_,
-            "postProcess.vert.spv",
-            "upsample.frag.spv",
-            bloomLayout_,
-            [&](PipelineBuilder& b) {
-                b.enableBlending()
-                    .setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
-                    .disableDepthTest()
-                    .disableDepthWrite()
-                    .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
-            });
+        wireframeHandle_ = pipelineReg_.createAsync(
+            "pbr_wireframe",
+                            {
+                                .layout = pbrLayout_,
+                                .desc =
+                                    {
+                                        .vertShader = "pbr.vert",
+                                        .fragShader = "pbr.frag",
+                                        .vertexInput = meshVertexInput,
+                                        .raster =
+                                            {
+                                                .polygonMode = VK_POLYGON_MODE_LINE,
+                                                .cullMode = VK_CULL_MODE_BACK_BIT,
+                                                .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+                                            },
+                                        .depth =
+                                            {
+                                                .test = true,
+                                                .write = true,
+                                                .format = depthFormat,
+                                            },
+                                        .color =
+                                            {
+                                                .format = hdrFormat,
+                                                .blending = false,
+                                            },
+                                        .samples = samples,
+                                    },
+                            });
 
-        combinePipeline_ = loadPipelineByName(ctx_,
-                                              "combinePostProcess.vert.spv",
-                                              "combinePostProcess.frag.spv",
-                                              combineLayout_,
-                                              [&](PipelineBuilder& b) {
-                                                  b.disableBlending()
-                                                      .setColorFormat(VK_FORMAT_R16G16B16A16_SFLOAT)
-                                                      .disableDepthTest()
-                                                      .disableDepthWrite()
-                                                      .setCullMode(VK_CULL_MODE_NONE,
-                                                                   VK_FRONT_FACE_COUNTER_CLOCKWISE);
-                                              });
+        skyboxHandle_ = pipelineReg_.createAsync(
+            "skybox",
+                            {
+                                .layout = pipelineLayout_,
+                                .desc =
+                                    {
+                                        .vertShader = "skybox.vert",
+                                        .fragShader = "skybox.frag",
+                                        .raster =
+                                            {
+                                                .polygonMode = VK_POLYGON_MODE_FILL,
+                                                .cullMode = VK_CULL_MODE_NONE,
+                                                .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+                                            },
+                                        .depth =
+                                            {
+                                                .test = true,
+                                                .write = false,
+                                                .compareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
+                                                .format = depthFormat,
+                                            },
+                                        .color =
+                                            {
+                                                .format = hdrFormat,
+                                                .blending = false,
+                                            },
+                                        .samples = samples,
+                                    },
+                            });
+
+        irradianceHandle_ = pipelineReg_.createAsync(
+            "irradiance",
+                            {
+                                .layout = irradianceLayout_,
+                                .desc =
+                                    {
+                                        .vertShader = "irradiance.vert",
+                                        .fragShader = "irradiance.frag",
+                                        .raster =
+                                            {
+                                                .polygonMode = VK_POLYGON_MODE_FILL,
+                                                .cullMode = VK_CULL_MODE_NONE,
+                                                .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+                                            },
+                                        .depth =
+                                            {
+                                                .test = false,
+                                                .write = false,
+                                            },
+                                        .color =
+                                            {
+                                                .format = hdrFormat,
+                                                .blending = false,
+                                            },
+                                    },
+                            });
+
+        brdfHandle_ = pipelineReg_.createAsync(
+            "brdf_lut",
+                            {
+                                .layout = brdfLutLayout_,
+                                .desc =
+                                    {
+                                        .vertShader = "brdf_lut.vert",
+                                        .fragShader = "brdf_lut.frag",
+                                        .raster =
+                                            {
+                                                .polygonMode = VK_POLYGON_MODE_FILL,
+                                                .cullMode = VK_CULL_MODE_NONE,
+                                                .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+                                            },
+                                        .depth =
+                                            {
+                                                .test = false,
+                                                .write = false,
+                                            },
+                                        .color =
+                                            {
+                                                .format = hdrFormat,
+                                                .blending = false,
+                                            },
+                                    },
+                            });
+
+        prefilterHandle_ = pipelineReg_.createAsync(
+            "prefilter",
+                            {
+                                .layout = prefilterLayout_,
+                                .desc =
+                                    {
+                                        .vertShader = "prefilter.vert",
+                                        .fragShader = "prefilter.frag",
+                                        .raster =
+                                            {
+                                                .polygonMode = VK_POLYGON_MODE_FILL,
+                                                .cullMode = VK_CULL_MODE_NONE,
+                                                .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+                                            },
+                                        .depth =
+                                            {
+                                                .test = false,
+                                                .write = false,
+                                            },
+                                        .color =
+                                            {
+                                                .format = hdrFormat,
+                                                .blending = false,
+                                            },
+                                    },
+                            });
+
+        shadowHandle_ = pipelineReg_.createAsync(
+            "shadow",
+                            {
+                                .layout = shadowLayout_,
+                                .desc =
+                                    {
+                                        .vertShader = "shadow.vert",
+                                        .fragShader = "shadow.frag",
+                                        .vertexInput = shadowVertexInput,
+                                        .raster =
+                                            {
+                                                .polygonMode = VK_POLYGON_MODE_FILL,
+                                                .cullMode = VK_CULL_MODE_NONE,
+                                                .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+                                            },
+                                        .depth =
+                                            {
+                                                .test = true,
+                                                .write = true,
+                                                .bias = true,
+                                                .format = depthFormat,
+                                            },
+                                    },
+                            });
+
+        softThresholdHandle_ = pipelineReg_.createAsync(
+            "softThreshold",
+                            {
+                                .layout = thresholdLayout_,
+                                .desc =
+                                    {
+                                        .vertShader = "softThreshold.vert",
+                                        .fragShader = "softThreshold.frag",
+                                        .raster =
+                                            {
+                                                .polygonMode = VK_POLYGON_MODE_FILL,
+                                                .cullMode = VK_CULL_MODE_NONE,
+                                                .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+                                            },
+                                        .depth =
+                                            {
+                                                .test = false,
+                                                .write = false,
+                                            },
+                                        .color =
+                                            {
+                                                .format = hdrFormat,
+                                                .blending = false,
+                                            },
+                                    },
+                            });
+
+        downsampleHandle_ = pipelineReg_.createAsync(
+            "downsample",
+                            {
+                                .layout = bloomLayout_,
+                                .desc =
+                                    {
+                                        .vertShader = "postProcess.vert",
+                                        .fragShader = "downsample.frag",
+                                        .raster =
+                                            {
+                                                .polygonMode = VK_POLYGON_MODE_FILL,
+                                                .cullMode = VK_CULL_MODE_NONE,
+                                                .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+                                            },
+                                        .depth =
+                                            {
+                                                .test = false,
+                                                .write = false,
+                                            },
+                                        .color =
+                                            {
+                                                .format = hdrFormat,
+                                                .blending = false,
+                                            },
+                                    },
+                            });
+
+        upsampleHandle_ = pipelineReg_.createAsync(
+            "upsample",
+                            {
+                                .layout = bloomLayout_,
+                                .desc =
+                                    {
+                                        .vertShader = "postProcess.vert",
+                                        .fragShader = "upsample.frag",
+                                        .raster =
+                                            {
+                                                .polygonMode = VK_POLYGON_MODE_FILL,
+                                                .cullMode = VK_CULL_MODE_NONE,
+                                                .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+                                            },
+                                        .depth =
+                                            {
+                                                .test = false,
+                                                .write = false,
+                                            },
+                                        .color =
+                                            {
+                                                .format = hdrFormat,
+                                                .blending = true,
+                                            },
+                                    },
+                            });
+
+        combineHandle_ = pipelineReg_.createAsync(
+            "combinePostProcess",
+                            {
+                                .layout = combineLayout_,
+                                .desc =
+                                    {
+                                        .vertShader = "combinePostProcess.vert",
+                                        .fragShader = "combinePostProcess.frag",
+                                        .raster =
+                                            {
+                                                .polygonMode = VK_POLYGON_MODE_FILL,
+                                                .cullMode = VK_CULL_MODE_NONE,
+                                                .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+                                            },
+                                        .depth =
+                                            {
+                                                .test = false,
+                                                .write = false,
+                                            },
+                                        .color =
+                                            {
+                                                .format = hdrFormat,
+                                                .blending = false,
+                                            },
+                                    },
+                            });
     }
 
     void VulkanRenderer::ensureSkyboxSet(FrameData& frame,
@@ -1378,7 +1650,7 @@ namespace chai::gfx
                 VkRect2D sc{{0, 0}, {kIrradianceSize, kIrradianceSize}};
                 vkCmdSetScissor(cmd, 0, 1, &sc);
 
-                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, irradiancePipeline_);
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineReg_.get(irradianceHandle_));
                 vkCmdBindDescriptorSets(cmd,
                                         VK_PIPELINE_BIND_POINT_GRAPHICS,
                                         irradianceLayout_,
@@ -1445,7 +1717,8 @@ namespace chai::gfx
             VkRect2D sc{{0, 0}, {kBRDFLUT, kBRDFLUT}};
             vkCmdSetScissor(cmd, 0, 1, &sc);
 
-            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, brdfLutPipeline_);
+            vkCmdBindPipeline(
+                cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineReg_.get(brdfHandle_));
 
             vkCmdDraw(cmd, 3, 1, 0, 0);
             vkCmdEndRendering(cmd);
@@ -1562,7 +1835,8 @@ namespace chai::gfx
                     VkRect2D sc{{0, 0}, {mipSize, mipSize}};
                     vkCmdSetScissor(cmd, 0, 1, &sc);
 
-                    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, prefilterPipeline_);
+                    vkCmdBindPipeline(
+                        cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineReg_.get(prefilterHandle_));
                     vkCmdBindDescriptorSets(cmd,
                                             VK_PIPELINE_BIND_POINT_GRAPHICS,
                                             prefilterLayout_,
@@ -1618,8 +1892,10 @@ namespace chai::gfx
                 data.output = builder.write(shadowHandle);
             },
             [&, order](VkCommandBuffer cmd, const ShadowData& data, const CRGResources& resources) {
-                // body is your existing shadowMapping() code, minus its own imageBarrier call —
-                // the graph now issues that barrier automatically before this lambda runs
+                VkPipeline shadowPipeline = pipelineReg_.get(shadowHandle_);
+                if (shadowPipeline == VK_NULL_HANDLE)
+                    return;
+
                 VkRenderingAttachmentInfo depth{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
                 depth.imageView = resources.attachmentView(data.output, 0);
                 depth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
@@ -1641,7 +1917,7 @@ namespace chai::gfx
 
                 vkCmdSetDepthBias(cmd, 1.25f, 0.f, 2.f);
 
-                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipeline_);
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipeline);
 
                 for (auto& idx : order) {
                     const RenderItem& item = items[idx];
@@ -1843,5 +2119,10 @@ namespace chai::gfx
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
         vkCmdEndRendering(cmd);
         profiler_.endRegion(cmd, "UI Rendering");
+    }
+
+    void VulkanRenderer::recompileShaders() 
+    {
+        pipelineReg_.reloadAllAsync();
     }
 } // namespace chai::gfx

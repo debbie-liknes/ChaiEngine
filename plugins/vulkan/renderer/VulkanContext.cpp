@@ -156,6 +156,7 @@ namespace chai::gfx
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES};
         features.dynamicRendering = true;
         features.synchronization2 = true;
+        features.shaderDemoteToHelperInvocation = VK_TRUE;
 
         // vulkan 1.2 features
         VkPhysicalDeviceVulkan12Features features12{
@@ -163,6 +164,7 @@ namespace chai::gfx
         features12.bufferDeviceAddress = true;
         features12.descriptorIndexing = true;
         features12.timelineSemaphore = true;
+
         VkPhysicalDeviceFeatures required{};
         required.samplerAnisotropy = VK_TRUE;
         required.fillModeNonSolid = VK_TRUE;

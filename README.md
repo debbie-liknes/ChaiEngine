@@ -58,7 +58,6 @@ The engine is organized into layers, so the renderer can evolve without the rest
 - **Platform:** Windows / Linux
 
 ## Building
-
 ### Required Linux dependencies
 
 ```bash

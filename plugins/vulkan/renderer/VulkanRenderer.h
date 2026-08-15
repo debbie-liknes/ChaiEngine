@@ -3,7 +3,7 @@
  */
 #pragma once
 #include "../VulkanCommon.h"
-#include "../pipeline/PipelineCache.h"
+#include "../pipeline/PipelineRegistry.h"
 #include "../registries/ViewportRegistry.h"
 #include "../renderGraph/ChaiRenderGraph.h"
 #include "../resources/GpuResources.h"
@@ -74,6 +74,7 @@ namespace chai::gfx
         void endFrame() override;
 
         VulkanStats& getStats() { return stats_; }
+        void recompileShaders();
 
     private:
         /**
@@ -131,6 +132,7 @@ namespace chai::gfx
                                    VkImage combineImage,
                                    VkExtent2D combineExtent,
             bool everRendered);
+        void tryBakeIBL();
         void ensureSkyboxSet(FrameData& frame, const GpuTexture& cube, Handle<Texture> handle);
         void bakeIrradiance(const GpuTexture& envCube);
         void bakeBrdfLut();
@@ -165,44 +167,48 @@ namespace chai::gfx
         std::shared_ptr<AssetCache<Material>> materialCache_;
         std::shared_ptr<ModelRegistry> modelReg_;
 
-        PipelineCache pipelineCache_;
+        PipelineRegistry pipelineReg_;
         ChaiRenderGraph renderGraph_;
 
         // pipelines and layouts
         VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
-        VkPipeline skyboxPipeline_ = VK_NULL_HANDLE;
 
         // IBL
-        VkPipeline irradiancePipeline_ = VK_NULL_HANDLE;
         RenderTarget irradianceTarget_{};
         VkPipelineLayout irradianceLayout_ = VK_NULL_HANDLE;
         VkDescriptorSet environmentSet_ = VK_NULL_HANDLE;
 
-        VkPipeline brdfLutPipeline_ = VK_NULL_HANDLE;
         RenderTarget brdfLut_{};
         VkPipelineLayout brdfLutLayout_ = VK_NULL_HANDLE;
-        bool brdfBaked_ = false;
 
         RenderTarget prefilterTarget_{};
-        VkPipeline prefilterPipeline_ = VK_NULL_HANDLE;
         VkPipelineLayout prefilterLayout_ = VK_NULL_HANDLE;
         VkDescriptorSet prefilterSet_ = VK_NULL_HANDLE;
         bool iblBaked_ = false;
 
         // shadows
-        VkPipeline shadowPipeline_ = VK_NULL_HANDLE;
         VkPipelineLayout shadowLayout_ = VK_NULL_HANDLE;
 
         VkDescriptorSet skyboxSet_ = VK_NULL_HANDLE;
         Handle<Texture> skyboxCube_;
 
         // post processing
-        VkPipeline thresholdPipeline_ = VK_NULL_HANDLE;
-        VkPipeline downsamplePipeline_ = VK_NULL_HANDLE;
-        VkPipeline upsamplePipeline_ = VK_NULL_HANDLE;
-        VkPipeline combinePipeline_ = VK_NULL_HANDLE;
         VkPipelineLayout thresholdLayout_ = VK_NULL_HANDLE;
         VkPipelineLayout combineLayout_ = VK_NULL_HANDLE;
         VkPipelineLayout bloomLayout_ = VK_NULL_HANDLE;
+        VkPipelineLayout pbrLayout_ = VK_NULL_HANDLE;
+
+        PipelineHandle pbrOpaqueHandle_;
+        PipelineHandle pbrBlendHandle_;
+        PipelineHandle wireframeHandle_;
+        PipelineHandle skyboxHandle_;
+        PipelineHandle irradianceHandle_;
+        PipelineHandle brdfHandle_;
+        PipelineHandle prefilterHandle_;
+        PipelineHandle shadowHandle_;
+        PipelineHandle softThresholdHandle_;
+        PipelineHandle downsampleHandle_;
+        PipelineHandle upsampleHandle_;
+        PipelineHandle combineHandle_;
     };
 } // namespace chai::gfx
