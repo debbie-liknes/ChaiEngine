@@ -30,11 +30,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # set up vcpkg to work with find_package calls
-if("$ENV{VCPKG_ROOT}" STREQUAL "")
-    message(FATAL_ERROR "VCPKG_ROOT must be defined in your environment to configure.")
-endif()
 set(VCPKG_INSTALL_OPTIONS "--no-print-usage")
-set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake")
 
 project(Chai)
 
