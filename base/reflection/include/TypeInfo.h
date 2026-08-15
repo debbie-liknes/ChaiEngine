@@ -124,6 +124,29 @@ namespace chai
             properties[propName] = std::move(info);
         }
 
+        template <typename T, typename R, typename S>
+        void
+        addProperty(const std::string& propName, R (T::*getter)() const, void (T::*setter)(S))
+        {
+            using PropType = std::decay_t<R>;
+            static_assert(std::is_same_v<PropType, std::decay_t<S>>,
+                          "getter and setter must agree on the property type");
+
+            PropertyInfo info;
+            info.name = propName;
+            info.type = std::type_index(typeid(PropType));
+
+            info.getter = [getter](void* obj) -> std::any {
+                return std::any{(static_cast<const T*>(obj)->*getter)()};
+            };
+
+            info.setter = [setter](void* obj, const std::any& value) {
+                (static_cast<T*>(obj)->*setter)(std::any_cast<PropType>(value));
+            };
+
+            auto [it, inserted] = properties.insert_or_assign(propName, std::move(info));
+        }
+
         /**
          * @brief Adds a meta data to the type information
          * via reflection.

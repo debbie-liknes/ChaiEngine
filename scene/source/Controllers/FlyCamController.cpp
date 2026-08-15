@@ -14,7 +14,6 @@ namespace chai::scene
     {
         IInput& in = ctx.input;
 
-        CHAI_LOG_INFO("Active camera: {}, Fly Camera: {}", in.getActiveCamera(), gameObject_->id());
         if (in.getActiveCamera() != gameObject_->id()) {
             return;
         }

@@ -11,6 +11,8 @@ namespace chai::scene
     class SCENE_EXPORT MeshComponent : public Component, public IUpdatable
     {
     public:
+        CHAI_OBJECT(MeshComponent)
+
         MeshComponent(GameObject* owner = nullptr);
         ~MeshComponent() override;
 

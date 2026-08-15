@@ -25,6 +25,8 @@
 #include <Rendering/IRenderer.h>
 #include <Scene/GameObject.h>
 #include <Scene/Scene.h>
+#include <Scene/ObjectTable.h>
+#include <Scene/Object.h>
 #include <Scene/SpawnPrefab.h>
 #include <Window/Window.h>
 #include <EditorUI/CommandPalette.h>
@@ -53,8 +55,11 @@ namespace chai
         panelRegistry.registerPanel({
             .id = hierarchy,
             .displayName = hierarchy,
-            .draw = [&scene] {
-                ui::drawSceneHierarchy(scene);
+            .draw = [&scene, &selector = editorSelection_] {
+                 auto selectedCallback = [&](const scene::ObjectId id) {
+                    selector.select({id});
+                 };
+                 ui::drawSceneHierarchy(scene, selectedCallback);
             }});
 
          ui::PanelDesc propertiesPanel;
@@ -62,12 +67,13 @@ namespace chai
          propertiesPanel.id = "Properties";
          propertiesPanel.draw = [&]() {
              const auto selectedItem = editorSelection_.getSelected();
-             //scene.
-             //ui::drawPropertiesPane(editorSelection_.getSelected();
+             //TODO: multi select
+             Object* selected = ObjectTable::instance().resolve(selectedItem.id);
+             ui::drawPropertiesPane(selected);
                  };
-         propertiesPanel.visible = false;
+         //propertiesPanel.visible = false;
          panelRegistry_->registerPanel(propertiesPanel);
-         actionManager_->registerPanel("file.preferences.settings", propertiesPanel.id);
+         actionManager_->registerPanel("window.properties", propertiesPanel.id);
 
         ui::DockSplit hierarchySplit;
         hierarchySplit.ratio = 0.25f;
@@ -77,7 +83,7 @@ namespace chai
         ui::DockSplit propertiesSplit;
         propertiesSplit.ratio = 0.25f;
         propertiesSplit.side = ui::DockSplit::Side::Right;
-        propertiesSplit.windowId = "properties";
+        propertiesSplit.windowId = "Properties";
 
         ui::DockSplit split;
         split.side = ui::DockSplit::Side::Bottom;

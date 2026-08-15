@@ -17,9 +17,14 @@ namespace chai::scene
         EXPECT_EQ(genOut, generation);
     }
 
+    class TestObj : public Object
+    {
+        CHAI_OBJECT(TestObj);
+    };
+
     TEST(ObjectTable, AddRemoveIds)
     {
-        Object obj;
+        TestObj obj;
         ObjectId id = ObjectTable::instance().add(&obj);
         EXPECT_EQ(ObjectTable::instance().resolve(id), &obj);
         ObjectTable::instance().remove(id);
@@ -28,12 +33,12 @@ namespace chai::scene
 
     TEST(ObjectTable, ReuseSlots)
     {
-        Object obj;
+        TestObj obj;
         ObjectId id = ObjectTable::instance().add(&obj);
         const auto [idOut1, genOut1] = unpack(id);
         ObjectTable::instance().remove(id);
 
-        Object obj2;
+        TestObj obj2;
         ObjectId id2 = ObjectTable::instance().add(&obj2);
         const auto [idOut2, genOut2] = unpack(id2);
 

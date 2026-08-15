@@ -18,10 +18,9 @@ namespace chai::ui
         return id != NULL ? id : invalidIcon();
     }
 
-    void drawSceneNode(scene::GameObject* obj, int& id)
+    void drawSceneNode(scene::GameObject* obj, int& id, std::function<void(scene::ObjectId)> selectedCallback)
     {
-        auto objType = std::type_index(typeid(*obj));
-        auto objInfo = TypeRegistry::instance().getType(objType);
+        auto objInfo = TypeRegistry::instance().getType<scene::GameObject>();
         if (!objInfo)
             return;
 
@@ -29,6 +28,10 @@ namespace chai::ui
                          std::to_string(obj->id()),
                             getIcon(objInfo->icon),
                             TreeNodeFlags::SpanFullWidth | TreeNodeFlags::DefaultOpen);
+        if (objNode.clicked()) {
+            selectedCallback(obj->id());
+        }
+
         if (!objNode)
             return;
 
@@ -47,23 +50,27 @@ namespace chai::ui
                                   getIcon(typeInfo->icon),
                                   TreeNodeFlags::SpanFullWidth | TreeNodeFlags::Leaf |
                                       TreeNodeFlags::DrawGuideLine);
+                if (compNode.clicked()) {
+                    selectedCallback(component->id());
+                }
             }
             id++;
         });
         for (auto& child : obj->getChildren()) {
-            drawSceneNode(child, id);
+            drawSceneNode(child, id, selectedCallback);
         }
         Unindent();
         Unindent();
     }
 
-    void drawSceneHierarchy(scene::Scene& scene)
+    void drawSceneHierarchy(scene::Scene& scene,
+                            std::function<void(const scene::ObjectId)> selectedCallback)
     {
         int id = 0;
         for (auto& obj : scene.getObjects()) {
             //ScopedFont objFont(FontWeight::Black);
             if (!obj->getParent())
-                drawSceneNode(obj.get(), id);
+                drawSceneNode(obj.get(), id, selectedCallback);
         }
     }
 }

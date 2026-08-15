@@ -16,6 +16,8 @@ namespace chai::scene
     class ControllerComponent : public Component, public IUpdatable
     {
     public:
+        CHAI_OBJECT(ControllerComponent)
+
         ControllerComponent() = default;
         explicit ControllerComponent(chai::scene::GameObject* owner);
 

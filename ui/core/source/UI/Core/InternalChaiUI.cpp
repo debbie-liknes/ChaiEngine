@@ -45,6 +45,11 @@ namespace chai::ui
         return ImGui::Checkbox(label.c_str(), &value);
     }
 
+    bool DragFloatVec3(const std::string& label, math::Vec3& vec)
+    {
+        return ImGui::DragFloat3(label.c_str(), vec.data);
+    }
+
     bool BeginChildRegion(const std::string& name,
         const math::Vec2& size,
         bool border)

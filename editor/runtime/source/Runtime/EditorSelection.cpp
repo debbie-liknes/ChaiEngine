@@ -4,11 +4,11 @@ namespace chai
 {
     void EditorSelection::select(EditorSelectionItem item)
     {
-        selected_.push_back(item);
+        selected_ = item;
     }
 
     const EditorSelectionItem EditorSelection::getSelected() const
     {
-        return selected_.front();
+        return selected_;
     }
 }

@@ -10,26 +10,30 @@ namespace chai::scene
     class TransformComponent : public Component
     {
     public:
+        CHAI_OBJECT(TransformComponent)
+
         explicit TransformComponent(GameObject* owner = nullptr);
         ~TransformComponent() override = default;
-        math::Mat4 getLocalMatrix() const;
-        math::Mat4 getWorldMatrix() const;
 
         void setPosition(math::Vec3 newPos);
-        void setRotation(const math::Quat& rot)
-        { 
-            rotation_ = rot;
-        }
+        void setRotation(const math::Quat& rot);
+        void setRotationEuler(const math::Vec3& degrees);
         void setScale(math::Vec3 newScale);
 
         math::Vec3 up() const;
         math::Vec3 forward() const;
         math::Vec3 right() const;
 
+        //world
         math::Vec3 getWorldPosition() const;
-
         math::Quat getWorldRotation() const;
+        math::Mat4 getWorldMatrix() const;
+
+        //local
+        math::Vec3 getLocalPosition() const;
         math::Quat getLocalRotation() const;
+        math::Vec3 getLocalRotationEuler() const;
+        math::Mat4 getLocalMatrix() const;
 
         void lookAt(const math::Vec3& target, const math::Vec3& worldUp);
 
@@ -42,5 +46,7 @@ namespace chai::scene
     CHAI_REFLECT(TransformComponent, "TransformComponent") 
     {
         CHAI_ICON(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT);
+        CHAI_PROPERTY("Position", getLocalPosition, setPosition);
+        CHAI_PROPERTY("Rotation", getLocalRotationEuler, setRotationEuler);
     }
 }

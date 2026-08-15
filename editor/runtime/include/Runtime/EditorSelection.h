@@ -6,8 +6,8 @@ namespace chai
 {
     struct EditorSelectionItem 
     {
-        std::type_index type;
         uint64_t id;
+        // other stuff? idk
         bool operator==(const EditorSelectionItem&) const = default;
     };
 
@@ -19,6 +19,7 @@ namespace chai
         const EditorSelectionItem getSelected() const;
 
     private:
-        std::vector<EditorSelectionItem> selected_;
+        //std::vector<EditorSelectionItem> selected_;
+        EditorSelectionItem selected_;
 	};
 }

@@ -55,4 +55,6 @@ namespace chai::ui
     float GetScrollY();
     float GetScrollMaxY();
     void SetScrollHereY(float y);
+
+    bool DragFloatVec3(const std::string& label, math::Vec3& vec);
 }

@@ -57,6 +57,11 @@ namespace chai::scene
         return Vec3(w[3][0], w[3][1], w[3][2]);
     }
 
+    Vec3 TransformComponent::getLocalPosition() const
+    {
+        return position_;
+    }
+
     Quat TransformComponent::getWorldRotation() const
     {
         if (auto parent = getGameObject()->getParent(); parent) {
@@ -64,6 +69,23 @@ namespace chai::scene
         } else {
             return rotation_;
         }
+    }
+
+    math::Vec3 TransformComponent::getLocalRotationEuler() const
+    {
+        Vec3 euler = rotation_.toEuler();
+        return Vec3{math::degrees(euler.x), math::degrees(euler.y), math::degrees(euler.z)};
+    }
+
+    void TransformComponent::setRotation(const math::Quat& rot)
+    {
+        rotation_ = rot;
+    }
+
+    void TransformComponent::setRotationEuler(const math::Vec3& degrees)
+    {
+        setRotation(math::Quat::fromEuler(
+            math::radians(degrees.z), math::radians(degrees.x), math::radians(degrees.y)));
     }
 
     math::Quat TransformComponent::getLocalRotation() const

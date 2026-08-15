@@ -16,6 +16,8 @@ namespace chai::scene
     class GameObject : public Object, IUpdatable
     {
     public:
+        CHAI_OBJECT(GameObject)
+
         GameObject();
         GameObject(const std::string& name);
         ~GameObject() = default;

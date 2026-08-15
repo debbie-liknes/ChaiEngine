@@ -17,6 +17,8 @@ namespace chai::scene
     class LightComponent : public Component, public IUpdatable
     {
     public:
+        CHAI_OBJECT(LightComponent)
+
         explicit LightComponent(GameObject* owner = nullptr);
 
         LightType getType() const { return type_; }

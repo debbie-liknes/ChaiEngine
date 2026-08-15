@@ -1,14 +1,11 @@
 #pragma once
+#include <EditorUIExport.h>
 #include <string>
 #include <vector>
 #include <TypeInfo.h>
-
-namespace chai::scene
-{
-    class Scene;
-}
+#include <Scene/Object.h>
 
 namespace chai::ui
 {
-    void drawPropertiesPane(void* obj, const TypeInfo& info);
+    void drawPropertiesPane(scene::Object* obj);
 } // namespace chai::ui
