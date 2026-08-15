@@ -9,6 +9,11 @@ jobs:
     name: Windows (VS2026)
     # See https://github.com/actions/runner-images/tree/main#available-images
     runs-on: windows-2025-vs2026
+    env:
+      # Map VCPKG_ROOT directly to GitHub's pre-installed vcpkg location
+      VCPKG_ROOT: ${{ env.VCPKG_INSTALLATION_ROOT }}
+      # Tells vcpkg to use GitHub Actions' internal caching mechanism automatically
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,6 +30,14 @@ jobs:
       - name: Set up CMake
         uses: jwlawson/actions-setup-cmake@v1
 
+      # Setup vcpkg and enable native GitHub Actions Caching
+      - name: Export GitHub Actions Cache URL for vcpkg
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
       - name: Configure CMake
         run: cmake -S . -B build -G "Visual Studio 18 2026" -A x64
 
@@ -38,6 +51,11 @@ jobs:
     name: Ubuntu (gcc15)
     # See https://github.com/actions/runner-images/tree/main#available-images
     runs-on: ubuntu-26.04
+    env:
+      # Map VCPKG_ROOT directly to GitHub's pre-installed vcpkg location
+      VCPKG_ROOT: ${{ env.VCPKG_INSTALLATION_ROOT }}
+      # Tells vcpkg to use GitHub Actions' internal caching mechanism automatically
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -58,6 +76,14 @@ jobs:
           vulkan_version: latest
           install_runtime: true
           cache: true
+
+      # Setup vcpkg and enable native GitHub Actions Caching
+      - name: Export GitHub Actions Cache URL for vcpkg
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: Configure CMake
         run: cmake -S . -B build
