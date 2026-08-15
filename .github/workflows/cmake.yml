@@ -31,6 +31,8 @@ jobs:
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: '${{ github.workspace }}/external/vcpkg'
+          runVcpkgInstall: true
+          vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Configure CMake
         run: cmake -S . -B build -G "Visual Studio 18 2026" -A x64
@@ -70,6 +72,8 @@ jobs:
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: '${{ github.workspace }}/external/vcpkg'
+          runVcpkgInstall: true
+          vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Configure CMake
         run: cmake -S . -B build
