@@ -17,4 +17,4 @@ add_library(${PROJECT_NAME} SHARED
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
-ChaiLibDefaults(${PROJECT_NAME} "OS")
+ChaiLibDefaults(${PROJECT_NAME} "Base")

@@ -38,6 +38,7 @@ target_link_libraries(${PROJECT_NAME}
     UICore
     DiagnosticsUI
     OS
+    Windows
 )
 
 #TODO: Re-enable when CI is fixed for this

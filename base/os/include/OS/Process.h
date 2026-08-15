@@ -15,8 +15,6 @@ namespace chai
             std::vector<std::string> env;
         };
 
-        explicit Process(const Info& info) : info_(info) {}
-
         virtual ~Process() = default;
 
         /**
@@ -26,7 +24,9 @@ namespace chai
         virtual int execute() = 0;
 
     protected:
-        Info info_;
+        // Explicitly disallow construction of the base class
+        // May be constructed via platform libraries
+        Process() = default;
     };
 } // namespace chai
 

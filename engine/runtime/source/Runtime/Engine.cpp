@@ -7,7 +7,7 @@
 #include <Visitors/AudioSceneVisitor.h>
 #include <Visitors/FrameRenderVisitor.h>
 #include <tracy/Tracy.hpp>
-#include <OS/Process.h>
+#include <Platform/Windows/ProcessWindows.h>
 
 namespace chai
 {
@@ -26,7 +26,9 @@ namespace chai
         //Create scene
         scene_ = std::make_unique<scene::Scene>();
 
-        auto process = Process([]() {});
+        Process::Info info;
+        auto process = windows::ProcessWindows(info);
+        process.execute();
 
         return true;
     }

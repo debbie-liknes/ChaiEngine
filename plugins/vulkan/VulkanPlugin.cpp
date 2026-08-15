@@ -100,19 +100,19 @@ namespace chai::gfx
             panelInfo.draw = [&]() { ui::drawVulkanStatsPanel(renderer_->getStats()); };
             panelInfo.visible = false;
 
-            auto& panelReg = ctx.services.resolve<ui::PanelRegistry>();
-            panelReg.registerPanel(panelInfo);
-            auto& actionManager = ctx.services.resolve<ui::ActionManager>();
-            actionManager.registerPanel("window.plugins.vulkan_stats", panelInfo.id, true);
+            // auto& panelReg = ctx.services.resolve<ui::PanelRegistry>();
+            // panelReg.registerPanel(panelInfo);
+            // auto& actionManager = ctx.services.resolve<ui::ActionManager>();
+            // actionManager.registerPanel("window.plugins.vulkan_stats", panelInfo.id, true);
 
-            ui::PanelDesc debugPanelInfo;
-            debugPanelInfo.displayName = "Render Debug";
-            debugPanelInfo.id = "RenderDebug";
-            debugPanelInfo.draw = [&]() { ui::drawRenderDebugTools(*renderer_); };
-            debugPanelInfo.visible = false;
+            // ui::PanelDesc debugPanelInfo;
+            // debugPanelInfo.displayName = "Render Debug";
+            // debugPanelInfo.id = "RenderDebug";
+            // debugPanelInfo.draw = [&]() { ui::drawRenderDebugTools(*renderer_); };
+            // debugPanelInfo.visible = false;
 
-            panelReg.registerPanel(debugPanelInfo);
-            actionManager.registerPanel("window.plugins.vulkan_debug", debugPanelInfo.id, true);
+            // panelReg.registerPanel(debugPanelInfo);
+            // actionManager.registerPanel("window.plugins.vulkan_debug", debugPanelInfo.id, true);
 
             CHAI_LOG_INFO("Renderer service provided");
 
@@ -124,8 +124,8 @@ namespace chai::gfx
             if (renderer_)
                 renderer_->waitIdle(); // probably unnecessary here
 
-            auto& panelReg = ctx.services.resolve<ui::PanelRegistry>();
-            panelReg.unregisterPanel("Vulkan Stats");
+            //auto& panelReg = ctx.services.resolve<ui::PanelRegistry>();
+            //panelReg.unregisterPanel("Vulkan Stats");
 
             viewportRegistry_->shutdown();
             renderer_->shutdownUI();

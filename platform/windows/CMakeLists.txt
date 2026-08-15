@@ -1,11 +1,11 @@
 project(Windows)
 
 set(${PROJECT_NAME}_headers
-    include/Platform/Windows/Process.h
+    include/Platform/Windows/ProcessWindows.h
 )
 
 set(${PROJECT_NAME}_source
-    source/Platform/Windows/Process.cpp
+    source/Platform/Windows/ProcessWindows.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED
