@@ -27,6 +27,6 @@ namespace chai::scene
 
     CHAI_REFLECT(MeshComponent, "MeshComponent")
     {
-
+        CHAI_ICON(ICON_FA_CUBES);
     }
 }

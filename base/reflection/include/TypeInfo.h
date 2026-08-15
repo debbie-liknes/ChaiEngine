@@ -9,6 +9,7 @@
 #include <any>
 #include <typeindex>
 #include <memory>
+#include <variant>
 
 namespace chai
 {
@@ -18,6 +19,8 @@ namespace chai
     class TypeInfo
     {
     public:
+        using IconId = const char*;
+        IconId icon;
         std::string name;
         std::type_index typeIndex{typeid(void)};
         size_t size = 0;
@@ -50,6 +53,9 @@ namespace chai
         };
 
         std::unordered_map<std::string, PropertyInfo> properties;
+
+        using MetaValue = std::variant<bool, int64_t, double, std::string>;
+        std::unordered_map<std::string, MetaValue> metaData;
 
         /**
          * @brief Adds a method to the type information, allowing it to be invoked via reflection.
@@ -116,6 +122,14 @@ namespace chai
             };
 
             properties[propName] = std::move(info);
+        }
+
+        /**
+         * @brief Adds a meta data to the type information
+         * via reflection.
+         */
+        void addMeta(const std::string& key, MetaValue value) { 
+            metaData[key] = std::move(value);
         }
 
     private:

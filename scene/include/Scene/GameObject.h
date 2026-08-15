@@ -27,7 +27,7 @@ namespace chai::scene
 
         void setParent(GameObject* parent);
         GameObject* getParent() const;
-        void addChild(std::unique_ptr<GameObject> child);
+        //void addChild(std::unique_ptr<GameObject> child);
         std::vector<GameObject*>& getChildren() { return children_; }
         void visitComponents(std::function<void(Component*)>);
 
@@ -121,4 +121,9 @@ namespace chai::scene
 
         int32_t objectId_ = -1;
     };
+
+    CHAI_REFLECT(GameObject, "GameObject")
+    {
+        CHAI_ICON(ICON_FA_CUBES);
+    }
 }

@@ -33,7 +33,11 @@ namespace chai::scene
 
     void GameObject::setParent(GameObject* parent)
     {
+        if (parent_)
+            std::erase(parent_->children_, this);
         parent_ = parent;
+        if (parent_)
+            parent_->children_.push_back(this);
     }
 
     GameObject* GameObject::getParent() const

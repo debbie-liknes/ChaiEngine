@@ -190,7 +190,7 @@ namespace chai::gfx
         cmdAllocInfo.commandPool = cmdPool_;
         cmdAllocInfo.commandBufferCount = 1;
         cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        vkAllocateCommandBuffers(ctx_.device(), &cmdAllocInfo, &profileCmdBuff);
+        VK_CHECK(vkAllocateCommandBuffers(ctx_.device(), &cmdAllocInfo, &profileCmdBuff));
         profiler_.initialize(ctx_.device(), ctx_.physicalDevice(), ctx_.graphicsQueue(), profileCmdBuff, kFramesInFlight);
 
         // only need this one, because its environment
@@ -365,6 +365,7 @@ namespace chai::gfx
         uint32_t imageIndex = 0;
         if (!swapchain_.acquireNext(frame.imageAvailable, view, imageIndex)) {
             recreateSwapchain();
+            ImGui::EndFrame();
             return;
         }
 

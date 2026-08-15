@@ -30,3 +30,5 @@
 
 #define CHAI_FIELD(member) type.addProperty(#member, &Self::member)
 #define CHAI_METHOD(method) type.addMethod(#method, &Self::method)
+#define CHAI_META(key, value) type.addMeta(key, value)
+#define CHAI_ICON(value) type.icon = value

@@ -38,6 +38,9 @@ namespace chai::scene
         math::Quat rotation_;
         math::Vec3 scale_{1.0f, 1.0f, 1.0f};
     };
-    CHAI_REFLECT(TransformComponent, "TransformComponent") {}
 
+    CHAI_REFLECT(TransformComponent, "TransformComponent") 
+    {
+        CHAI_ICON(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT);
+    }
 }

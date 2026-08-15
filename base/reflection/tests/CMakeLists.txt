@@ -12,5 +12,5 @@ target_link_libraries(${PROJECT_NAME}_tests
         ${PROJECT_NAME}
 )
 
-set_target_properties(${PROJECT_NAME}_tests PROPERTIES FOLDER "Engine")
+set_target_properties(${PROJECT_NAME}_tests PROPERTIES FOLDER "Base")
 add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME}_tests)

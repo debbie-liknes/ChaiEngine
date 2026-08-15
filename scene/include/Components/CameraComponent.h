@@ -31,6 +31,6 @@ namespace chai::scene
 
     CHAI_REFLECT(CameraComponent, "CameraComponent")
     {
-
+        CHAI_ICON(ICON_FA_VIDEO);
     }
 }

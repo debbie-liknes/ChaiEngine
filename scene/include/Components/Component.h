@@ -3,6 +3,7 @@
 #include <ChaiReflect.h>
 #include <TypeRegistry.h>
 #include <TypeInfo.h>
+#include <IconsFontAwesome7.h>
 
 namespace chai::scene
 {
