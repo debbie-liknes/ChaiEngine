@@ -47,14 +47,14 @@ CheckOptions:
   # Private members: m_camelCase
   - key: readability-identifier-naming.PrivateMemberCase
     value: camelBack
-  - key: readability-identifier-naming.PrivateMemberPrefix
-    value: m_
+  - key: readability-identifier-naming.PrivateMemberSuffix
+    value: _
 
   # Protected members: m_camelCase too (or change if you want)
   - key: readability-identifier-naming.ProtectedMemberCase
     value: camelBack
-  - key: readability-identifier-naming.ProtectedMemberPrefix
-    value: m_
+  - key: readability-identifier-naming.ProtectedMemberSuffix
+    value: _
 
   # Public members: plain camelCase, no prefix
   - key: readability-identifier-naming.PublicMemberCase

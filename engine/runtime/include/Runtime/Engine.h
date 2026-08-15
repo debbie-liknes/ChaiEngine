@@ -7,7 +7,6 @@
 #include <Plugin/PluginContext.h>
 #include <Plugin/PluginBase.h>
 #include <TypeRegistry.h>
-#include <string>
 #include <vector>
 #include <OS/Clock.h>
 #include <span>
