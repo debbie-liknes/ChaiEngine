@@ -5,17 +5,12 @@
 
 namespace chai::scene
 {
-    GameObject::GameObject()
+    GameObject::GameObject() : Object()
     {
         addComponent<TransformComponent>();
     }
 
     GameObject::GameObject(const std::string& name) : name_(name)
-    {
-        addComponent<TransformComponent>();
-    }
-
-    GameObject::GameObject(const std::string& name, GameObjectId id) : name_(name), objectId_(id)
     {
         addComponent<TransformComponent>();
     }

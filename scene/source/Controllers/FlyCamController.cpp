@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <Components/TransformComponent.h>
 #include <ChaiMath.h>
+#include <Log.h>
 
 namespace chai::scene
 {
@@ -13,7 +14,8 @@ namespace chai::scene
     {
         IInput& in = ctx.input;
 
-        if (in.getActiveCamera() != gameObject_->getObjectId()) {
+        CHAI_LOG_INFO("Active camera: {}, Fly Camera: {}", in.getActiveCamera(), gameObject_->id());
+        if (in.getActiveCamera() != gameObject_->id()) {
             return;
         }
 

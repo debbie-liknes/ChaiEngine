@@ -74,7 +74,7 @@ namespace chai::gfx
 
             ui::PanelDesc panelInfo;
             panelInfo.displayName = "Vulkan Stats";
-            panelInfo.id = "VulkanStats";
+            panelInfo.id = "Vulkan Stats";
             panelInfo.draw = [&]() { ui::drawVulkanStatsPanel(renderer_->getStats()); };
             panelInfo.visible = false;
 
@@ -85,7 +85,7 @@ namespace chai::gfx
 
             ui::PanelDesc debugPanelInfo;
             debugPanelInfo.displayName = "Render Debug";
-            debugPanelInfo.id = "RenderDebug";
+            debugPanelInfo.id = "Render Debug";
             debugPanelInfo.draw = [&]() { ui::drawRenderDebugTools(*renderer_); };
             debugPanelInfo.visible = false;
 

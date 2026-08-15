@@ -21,7 +21,7 @@ namespace chai::gfx
         float fovYRadians;
         float nearPlane;
         float farPlane;
-        uint32_t cameraId;
+        uint64_t cameraId;
     };
 
     /**

@@ -27,7 +27,7 @@ namespace chai::scene
                                            camera.getFovY(),
                                            camera.getNearPlane(),
                                            camera.getFarPlane(),
-                                           c->getGameObject()->getObjectId());
+                                           c->getGameObject()->id());
         } else if (auto c = dynamic_cast<LightComponent*>(node)) {
             // TODO: this is temporary until i get AABBs sorted
             math::Vec3 center{0.f, 0.f, 0.f};

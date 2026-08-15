@@ -26,7 +26,7 @@ namespace chai::ui
             return;
 
         TreeNode objNode(obj->getObjectName(),
-                         std::to_string(obj->getObjectId()),
+                         std::to_string(obj->id()),
                             getIcon(objInfo->icon),
                             TreeNodeFlags::SpanFullWidth | TreeNodeFlags::DefaultOpen);
         if (!objNode)
@@ -40,7 +40,7 @@ namespace chai::ui
             auto typeInfo = TypeRegistry::instance().getType(type);
             if (typeInfo) {
                 std::string componentId =
-                    std::to_string(obj->getObjectId()) + "_" + std::to_string(id);
+                    std::to_string(obj->id()) + "_" + std::to_string(id);
                 auto icon = typeInfo->icon != "";
                 TreeNode compNode(typeInfo->name,
                                   componentId,

@@ -190,8 +190,7 @@ namespace chai::gfx
         vkUpdateDescriptorSets(ctx_->device(), 1, &write, 0, nullptr);
     }
 
-    Viewport ViewportRegistry::createViewport(const std::string& id,
-                                              uint32_t cameraViewId)
+    Viewport ViewportRegistry::createViewport(const std::string& id, uint64_t cameraViewId)
     {
         Viewport vp;
         vp.id = id;
@@ -224,7 +223,7 @@ namespace chai::gfx
     }
 
     ViewportHandle ViewportRegistry::addViewport(const std::string& id,
-                                                 uint32_t cameraViewId)
+                                                 uint64_t cameraViewId)
     {
         uint32_t index;
         if (!freeViewportSlots_.empty()) {

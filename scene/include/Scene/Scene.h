@@ -29,7 +29,7 @@ namespace chai::scene
 
         GameObject* createObject(const std::string& name);
         void setCamera(GameObject* cam);
-        uint32_t getCameraId() const { return camera_->getObjectId(); }
+        ObjectId getCameraId() const { return camera_->id(); }
         void setLight(GameObject* sun);
 
         template <typename T>
@@ -48,17 +48,6 @@ namespace chai::scene
 
 
     private:
-        class ObjIdAllocator
-        {
-        public:
-            GameObjectId allocate() { return next_++; }
-
-        private:
-            GameObjectId next_ = 0;
-        };
-
-        ObjIdAllocator gameObjAllocator_;
-
         std::vector<std::shared_ptr<GameObject>> m_objects;
 
         //special objects - but i dont really like that they are special
