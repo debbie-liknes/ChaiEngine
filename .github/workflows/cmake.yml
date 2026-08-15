@@ -35,6 +35,10 @@ jobs:
 
       - name: Configure CMake
         run: cmake -S . -B build -G "Visual Studio 18 2026" -A x64
+        env:
+          # Tells vcpkg to read/write compiled binaries from GitHub Actions native cache
+          VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+
 
       - name: Build
         run: cmake --build build --config Debug
@@ -77,6 +81,9 @@ jobs:
 
       - name: Configure CMake
         run: cmake -S . -B build
+        env:
+          # Tells vcpkg to read/write compiled binaries from GitHub Actions native cache
+          VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
 
       - name: Build
         run: cmake --build build --config Debug
