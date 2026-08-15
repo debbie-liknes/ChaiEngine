@@ -7,15 +7,3 @@
 [submodule "external/tracy"]
 	path = external/tracy
 	url = https://github.com/wolfpld/tracy.git
-[submodule "external/shaderc"]
-	path = external/shaderc
-	url = https://github.com/google/shaderc.git
-[submodule "external/spirv-tools"]
-	path = external/spirv-tools
-	url = https://github.com/KhronosGroup/SPIRV-Tools.git
-[submodule "external/spirv-headers"]
-	path = external/spirv-headers
-	url = https://github.com/KhronosGroup/SPIRV-Headers.git
-[submodule "external/glslang"]
-	path = external/glslang
-	url = https://github.com/KhronosGroup/glslang.git

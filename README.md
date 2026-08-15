@@ -59,6 +59,8 @@ The engine is organized into layers, so the renderer can evolve without the rest
 
 ## Building
 
+VCPKG must be available at the `VCPKG_ROOT` environment variable to build.
+
 ### Required Linux dependencies
 
 ```bash
