@@ -54,6 +54,10 @@ namespace chai::gfx
         /**
          * @brief GPU time between being and end frame
          */
+
+        /**
+         * @brief GPU time between begin and end frame
+         */
         float getTotalFrameTimeMs() const;
 
         TracyVkCtx& getTracyCtx();
@@ -82,7 +86,7 @@ namespace chai::gfx
         uint32_t maxRegionsPerFrame_ = 32;
         uint32_t framesInFlight_ = 0;
 
-        // Two queries for frame timing, plus two per region.
+        // Two queries for frame timing
         uint32_t queriesPerFrame_ = 0;
         uint32_t queryCount_ = 0;
 
@@ -91,7 +95,7 @@ namespace chai::gfx
 
         std::vector<FrameQueries> frames_;
 
-        // Results from the most recently collected frame.
+        // Results from the most recently collected frame
         std::unordered_map<std::string, float> lastResultsMs_;
         float lastFrameTimeMs_ = 0.0f;
 
@@ -117,10 +121,10 @@ namespace chai::gfx
     };
 } // namespace chai::gfx
 
-#define CHAI_GPU_ZONE(profiler, tracyCtx, cmd, name)                                    \
-    TracyVkZone(tracyCtx, cmd, name);        \
+#define CHAI_GPU_ZONE(profiler, tracyCtx, cmd, name)                                        \
+    TracyVkZone(tracyCtx, cmd, name);                                                       \
     ::chai::gfx::ScopedGpuRegion chaiGpuRegion_##__LINE__(profiler, cmd, name)
 
-#define CHAI_GPU_ZONE_DYNAMIC(profiler, tracyCtx, cmd, namevar)                                               \
-    TracyVkZoneTransient(tracyCtx, chaiTracyZone_##__LINE__, cmd, (namevar).c_str(), true);                   \
+#define CHAI_GPU_ZONE_DYNAMIC(profiler, tracyCtx, cmd, namevar)                             \
+    TracyVkZoneTransient(tracyCtx, chaiTracyZone_##__LINE__, cmd, (namevar).c_str(), true); \
     ::chai::gfx::ScopedGpuRegion chaiGpuRegion_##__LINE__(profiler, cmd, namevar)

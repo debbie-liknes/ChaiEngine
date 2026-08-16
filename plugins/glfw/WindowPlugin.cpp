@@ -27,13 +27,16 @@ namespace chai
     {
     public:
         const char* name() const override { return "Window(GLFW)"; }
+        
+        ServiceList requiredServices() const override { return {}; }
+        ServiceList providedServices() const override { return { typeid(IWindow), typeid(IInput) }; }
 
-        void onLoad(PluginContext& ctx) override
+        bool onLoad(PluginContext& ctx) override
         {
             glfwSetErrorCallback(&onGlfwError);
             if (!glfwInit()) {
                 CHAI_LOG_CRITICAL("glfwInit failed; no window service available");
-                return;
+                return false;
             }
 
             WindowDesc desc;
@@ -42,6 +45,8 @@ namespace chai
             ctx.services.provide<IWindow>(window_);
             ctx.services.provide<IInput>(input_);
             CHAI_LOG_INFO("Window service provided");
+
+            return true;
         }
 
         void onUnload(PluginContext& ctx) override

@@ -186,7 +186,16 @@ namespace chai
         skyboxComp->setTexture(skyBoxTex);
     }
 
-    void Editor::startup()
+    IPlugin::ServiceList Editor::providedServices() const
+    {
+        return {typeid(ui::PanelRegistry),
+                typeid(ui::ActionManager),
+                typeid(ui::PanelHost),
+                typeid(ui::DockspaceService),
+                typeid(ui::EditorViewportManager)};
+    }
+
+    bool Editor::startup()
     {
         using namespace scene;
 
@@ -213,10 +222,17 @@ namespace chai
         auto exeDir = executableDir();
         if (exeDir.empty())
             exeDir = std::filesystem::current_path();
-        loader_->loadDirectory(exeDir / "plugins");
-        engine_->setPlugins(loader_->plugins());
+        if (!loader_->loadDirectory(exeDir / "plugins")) {
+            CHAI_LOG_CRITICAL("Editor: Failed to load plugins. Exiting prematurely.");
+            return false;
+        }
 
-        engine_->startup();
+        engine_->setPlugins(loader_->plugins());
+        if (!engine_->startup())
+        {
+            CHAI_LOG_CRITICAL("Engine failed to start. Exiting prematurely.");
+            return false;
+        }
 
         ui::loadFonts(executableDir().string() + "/assets/editor/fonts");
 
@@ -240,13 +256,13 @@ namespace chai
         auto settings = engine_->services().tryResolve<settings::SettingsRegistry>();
         if (!meshes || !textures || !models || !settings) {
             CHAI_LOG_CRITICAL("Required registries missing.");
-            return;
+            return false;
         }
 
         auto input = engine_->services().tryResolve<IInput>();
         if (!input) {
             CHAI_LOG_CRITICAL("Could not get input services.");
-            return;
+            return false;
         }
 
         registerActions();
@@ -256,6 +272,8 @@ namespace chai
         setupDefaultScene(scene, *models, *textures);
 
         setupDockspace(engine_->services(), scene);
+
+        return true;
     }
 
     void Editor::shutdown()

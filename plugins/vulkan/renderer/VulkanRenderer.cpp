@@ -406,7 +406,10 @@ namespace chai::gfx
                                        TextureType::Depth);
         shadowMapping(cmd, order, renderData, shadowHandle);
 
-        renderGraph_.compile();
+        if (!renderGraph_.compile()) {
+            CHAI_LOG_CRITICAL("VulkanRenderer: render graph failed to compile. Exiting prematurely");
+            return;
+        }
         renderGraph_.execute(cmd);
 
         viewportReg_.forEachViewport([&](Viewport& viewport) {
@@ -563,7 +566,11 @@ namespace chai::gfx
                 stats->drawCalls = 3;
             }
 
-            renderGraph_.compile();
+            if (!renderGraph_.compile()) {
+                CHAI_LOG_CRITICAL(
+                    "VulkanRenderer: render graph failed to compile. Exiting prematurely");
+                return;
+            }
             renderGraph_.execute(cmd);
 
             blitCombineToViewport(cmd,
