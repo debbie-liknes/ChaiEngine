@@ -183,7 +183,15 @@ namespace chai::gfx
             }
         }
 
-        profiler_.initialize(ctx_.device(), ctx_.physicalDevice(), kFramesInFlight);
+        VkCommandBuffer profileCmdBuff;
+        VkCommandBufferAllocateInfo cmdAllocInfo = {};
+        cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        cmdAllocInfo.pNext = nullptr;
+        cmdAllocInfo.commandPool = cmdPool_;
+        cmdAllocInfo.commandBufferCount = 1;
+        cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        vkAllocateCommandBuffers(ctx_.device(), &cmdAllocInfo, &profileCmdBuff);
+        profiler_.initialize(ctx_.device(), ctx_.physicalDevice(), ctx_.graphicsQueue(), profileCmdBuff, kFramesInFlight);
 
         // only need this one, because its environment
         irradianceTarget_ = createCube(ctx_, kIrradianceSize, VK_FORMAT_R16G16B16A16_SFLOAT, 1);
@@ -223,6 +231,8 @@ namespace chai::gfx
             return;
         if (pipelineReg_.get(skyboxHandle_) == VK_NULL_HANDLE)
             return;
+        if (pipelineReg_.get(brdfHandle_) == VK_NULL_HANDLE)
+            return;
 
         if (!texCache_->isReady(skyboxCube_))
             return;
@@ -244,6 +254,7 @@ namespace chai::gfx
 
         // Wait until this frame slots previous work is done.
         VK_CHECK(vkWaitForFences(ctx_.device(), 1, &frame.inFlight, VK_TRUE, UINT64_MAX));
+        profiler_.collect(currentFrame_, ctx_.device());
         pipelineReg_.collectGarbage(currentFrame_);
         pipelineReg_.processPendingBuilds(currentFrame_);
 
@@ -330,6 +341,11 @@ namespace chai::gfx
         modelReg_->tick();
 
         stats_.clear();
+        stats_.gpuTimeMs = profiler_.getTotalFrameTimeMs();
+        auto allRegions = profiler_.getAllRegionTimes();
+        for (auto [name, frameTime] : allRegions) {
+            stats_.allPasses.push_back({name, frameTime});
+        }
 
         if (!iblBaked_ || (renderData.environment.skyboxCube != skyboxCube_)) {
             skyboxCube_ = renderData.environment.skyboxCube;
@@ -499,17 +515,26 @@ namespace chai::gfx
                     sceneView.extent = extent;
                     sceneView.colorFormat = kBloomFormat;
 
-                    profiler_.beginRegion(cmd, "Main Pass: " + viewport.id);
-                    vkCmdBeginRendering(cmd, &ri);
-                    renderScene(cmd,
-                                sceneView,
-                                renderData,
-                                order,
-                                viewport.cameraSet[currentFrame_],
-                                viewport.shadingMode,
-                                viewport.wireframe);
-                    vkCmdEndRendering(cmd);
-                    profiler_.endRegion(cmd, "Main Pass: " + viewport.id);
+                    std::string passId = "Main Pass: " + viewport.id;
+
+                    PassStats* stats = stats_.getByName(passId);
+                    if (stats) {
+                        stats->drawCalls = order.size();
+                    }
+
+                    {
+                        CHAI_GPU_ZONE_DYNAMIC(
+                            profiler_, profiler_.getTracyCtx(), cmd, passId);
+                        vkCmdBeginRendering(cmd, &ri);
+                        renderScene(cmd,
+                                    sceneView,
+                                    renderData,
+                                    order,
+                                    viewport.cameraSet[currentFrame_],
+                                    viewport.shadingMode,
+                                    viewport.wireframe);
+                        vkCmdEndRendering(cmd);
+                    }
                 });
 
             bool everBlitted = viewport.everRendered[currentFrame_];
@@ -523,13 +548,20 @@ namespace chai::gfx
                 "CombineTarget",
                 {target.view.extent.width, target.view.extent.height, kBloomFormat, 1});
 
-            profiler_.beginRegion(cmd, "Post Process Pass: " + viewport.id);
-            bloomPass(renderGraph_,
-                      target.view,
-                      sceneHDR,
-                      bloomChain); // sceneHDR directly, no import needed
-            combinePass(renderGraph_, target.view, sceneHDR, bloomChain, combineTarget);
-            profiler_.endRegion(cmd, "Post Process Pass: " + viewport.id);
+            std::string passId = "Post Process Pass: " + viewport.id;
+            {
+                CHAI_GPU_ZONE_DYNAMIC(profiler_, profiler_.getTracyCtx(), cmd, passId);
+                bloomPass(renderGraph_,
+                          target.view,
+                          sceneHDR,
+                          bloomChain); // sceneHDR directly, no import needed
+                combinePass(renderGraph_, target.view, sceneHDR, bloomChain, combineTarget);
+            }
+
+            PassStats* stats = stats_.getByName(passId);
+            if (stats) {
+                stats->drawCalls = 3;
+            }
 
             if (!renderGraph_.compile()) {
                 CHAI_LOG_CRITICAL(
@@ -552,6 +584,7 @@ namespace chai::gfx
 
         transitionImage(cmd, view.image, ImageState::ColorAttachment, ImageState::Present);
 
+        profiler_.endFrame(cmd);
         VK_CHECK(vkEndCommandBuffer(cmd));
 
         VkCommandBufferSubmitInfo cmdInfo{VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO};
@@ -577,16 +610,6 @@ namespace chai::gfx
 
         if (!swapchain_.present(imageIndex))
             needsResize_ = true;
-
-        profiler_.endFrame(currentFrame_, ctx_.device());
-        stats_.gpuTimeMs = profiler_.getTotalFrameTimeMs();
-        auto allRegions = profiler_.getAllRegionTimes();
-        for (auto region : allRegions) {
-            if (region.first == "Main Pass")
-                stats_.mainPass.gpuTimeMs = region.second;
-            else if (region.first == "Shadow Pass")
-                stats_.shadowPass.gpuTimeMs = region.second;
-        }
 
         currentFrame_ = (currentFrame_ + 1) % kFramesInFlight;
     }
@@ -721,7 +744,6 @@ namespace chai::gfx
             vkCmdBindVertexBuffers(cmd, 0, 1, &vb, &offset);
             vkCmdBindIndexBuffer(cmd, mesh->indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
             vkCmdDrawIndexed(cmd, mesh->indexCount, 1, 0, 0, 0);
-            stats_.mainPass.drawCalls++;
         }
 
         // skybox render
@@ -1908,41 +1930,46 @@ namespace chai::gfx
                 ri.layerCount = 1;
                 ri.pDepthAttachment = &depth;
 
-                profiler_.beginRegion(cmd, "Shadow Pass");
-                vkCmdBeginRendering(cmd, &ri);
-                VkViewport vp{0, 0, float(kShadowMapSize), float(kShadowMapSize), 0.f, 1.f};
-                vkCmdSetViewport(cmd, 0, 1, &vp);
-                VkRect2D sc{{0, 0}, {kShadowMapSize, kShadowMapSize}};
-                vkCmdSetScissor(cmd, 0, 1, &sc);
+                {
+                    CHAI_GPU_ZONE(profiler_, profiler_.getTracyCtx(), cmd, "Shadow Pass");
+                    vkCmdBeginRendering(cmd, &ri);
+                    VkViewport vp{0, 0, float(kShadowMapSize), float(kShadowMapSize), 0.f, 1.f};
+                    vkCmdSetViewport(cmd, 0, 1, &vp);
+                    VkRect2D sc{{0, 0}, {kShadowMapSize, kShadowMapSize}};
+                    vkCmdSetScissor(cmd, 0, 1, &sc);
 
-                vkCmdSetDepthBias(cmd, 1.25f, 0.f, 2.f);
+                    vkCmdSetDepthBias(cmd, 1.25f, 0.f, 2.f);
 
-                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipeline);
+                    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipeline);
 
-                for (auto& idx : order) {
-                    const RenderItem& item = items[idx];
+                    for (auto& idx : order) {
+                        const RenderItem& item = items[idx];
 
-                    const GpuMesh* mesh = meshCache_->resource(item.mesh);
-                    if (!mesh)
-                        continue;
+                        const GpuMesh* mesh = meshCache_->resource(item.mesh);
+                        if (!mesh)
+                            continue;
 
-                    struct {
-                        math::Mat4 proj;
-                        math::Mat4 view;
-                        math::Mat4 model;
-                    } push{renderData.sun.proj, renderData.sun.view, item.model};
-                    vkCmdPushConstants(
-                        cmd, shadowLayout_, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(push), &push);
-                    VkBuffer vb = mesh->vertexBuffer.handle;
-                    VkDeviceSize offset = 0;
-                    vkCmdBindVertexBuffers(cmd, 0, 1, &vb, &offset);
-                    vkCmdBindIndexBuffer(cmd, mesh->indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
-                    vkCmdDrawIndexed(cmd, mesh->indexCount, 1, 0, 0, 0);
-                    stats_.shadowPass.drawCalls++;
+                        struct {
+                            math::Mat4 proj;
+                            math::Mat4 view;
+                            math::Mat4 model;
+                        } push{renderData.sun.proj, renderData.sun.view, item.model};
+                        vkCmdPushConstants(
+                            cmd, shadowLayout_, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(push), &push);
+                        VkBuffer vb = mesh->vertexBuffer.handle;
+                        VkDeviceSize offset = 0;
+                        vkCmdBindVertexBuffers(cmd, 0, 1, &vb, &offset);
+                        vkCmdBindIndexBuffer(
+                            cmd, mesh->indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
+                        vkCmdDrawIndexed(cmd, mesh->indexCount, 1, 0, 0, 0);
+                    }
+                    PassStats* stats = stats_.getByName("Shadow Pass");
+                    if (stats) {
+                        stats->drawCalls = order.size();
+                    }
+
+                    vkCmdEndRendering(cmd);
                 }
-
-                vkCmdEndRendering(cmd);
-                profiler_.endRegion(cmd, "Shadow Pass");
             });
     }
 
@@ -2114,11 +2141,18 @@ namespace chai::gfx
         uiRenderingInfo.colorAttachmentCount = 1;
         uiRenderingInfo.pColorAttachments = &uiColorAttachment;
 
-        profiler_.beginRegion(cmd, "UI Rendering");
-        vkCmdBeginRendering(cmd, &uiRenderingInfo);
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
-        vkCmdEndRendering(cmd);
-        profiler_.endRegion(cmd, "UI Rendering");
+        auto* ImDrawData = ImGui::GetDrawData();
+        {
+            CHAI_GPU_ZONE(profiler_, profiler_.getTracyCtx(), cmd, "UI Rendering");
+            vkCmdBeginRendering(cmd, &uiRenderingInfo);
+            ImGui_ImplVulkan_RenderDrawData(ImDrawData, cmd);
+            vkCmdEndRendering(cmd);
+        }
+
+        PassStats* stats = stats_.getByName("UI Rendering");
+        if (stats) {
+            stats->drawCalls = ImDrawData->CmdLists.Size;
+        }
     }
 
     void VulkanRenderer::recompileShaders() 
