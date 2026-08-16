@@ -24,6 +24,8 @@ namespace chai::scene
         math::Vec3 forward() const;
         math::Vec3 right() const;
 
+        math::Vec3 getScale() const;
+
         //world
         math::Vec3 getWorldPosition() const;
         math::Quat getWorldRotation() const;
@@ -48,5 +50,6 @@ namespace chai::scene
         CHAI_ICON(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT);
         CHAI_PROPERTY("Position", getLocalPosition, setPosition);
         CHAI_PROPERTY("Rotation", getLocalRotationEuler, setRotationEuler);
+        CHAI_PROPERTY("Scale", getScale, setScale);
     }
 }

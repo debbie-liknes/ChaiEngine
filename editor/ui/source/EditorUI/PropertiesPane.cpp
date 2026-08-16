@@ -8,13 +8,12 @@ namespace chai::ui
     void drawPropertiesPane(scene::Object* obj)
     {
         if (!obj) {
-            Text("Select something u bitch");
+            Text("Select Something");
             return;
         }
 
         auto typeInfo = obj->typeInfo();
         if (!typeInfo) {
-            Text("Select something different u bitch");
             return;
         }
 

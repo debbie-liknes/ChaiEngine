@@ -62,6 +62,12 @@ namespace chai::scene
         return position_;
     }
 
+    Vec3 TransformComponent::getScale() const
+    {
+        return scale_;
+    }
+
+
     Quat TransformComponent::getWorldRotation() const
     {
         if (auto parent = getGameObject()->getParent(); parent) {

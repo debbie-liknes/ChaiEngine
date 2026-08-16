@@ -1,15 +1,19 @@
 project(UICore)
 
 set(${PROJECT_NAME}_headers
+    include/UI/Core/Buttons.h
     include/UI/Core/InternalChaiUI.h
     include/UI/Core/FontManager.h
+    include/UI/Core/Layout.h
     include/UI/Core/TreeNode.h
     include/UI/Core/TypeWidgets.h
 )
 
 set(${PROJECT_NAME}_source
+	source/UI/Core/Buttons.cpp
 	source/UI/Core/InternalChaiUI.cpp
 	source/UI/Core/FontManager.cpp
+	source/UI/Core/Layout.cpp
 	source/UI/Core/TreeNode.cpp
 	source/UI/Core/TypeWidgets.cpp
 )
