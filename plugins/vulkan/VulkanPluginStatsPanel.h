@@ -1,6 +1,6 @@
 #pragma once
-#include <UI/Editor/InternalChaiUI.h>
-#include <UI/Editor/TreeNode.h>
+#include <UI/Core/InternalChaiUI.h>
+#include <UI/Core/TreeNode.h>
 #include "renderer/VulkanRenderer.h"
 
 // I know this plugin has ImGui right now because it has the vulkan impl, but DO NOT
@@ -27,4 +27,11 @@ namespace chai::ui
             }
         }
 	}
+
+    void drawRenderDebugTools(gfx::VulkanRenderer& renderer) 
+    {
+        if (Button("Reload Shaders")) {
+            renderer.recompileShaders();
+        }
+    }
 } // namespace chai::ui

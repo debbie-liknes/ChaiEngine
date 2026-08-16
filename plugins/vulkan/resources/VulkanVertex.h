@@ -19,4 +19,11 @@ namespace chai::gfx
             {3, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, tangent)},
         }};
     }
+
+    inline std::array<VkVertexInputAttributeDescription, 1> shadowVertexAttributes()
+    {
+        return {{
+            {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, position)}
+        }};
+    }
 }

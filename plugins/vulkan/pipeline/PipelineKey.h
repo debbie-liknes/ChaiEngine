@@ -1,29 +1,76 @@
+/**
+ * @file PipelineKey.h
+ */
 #pragma once
 #include "../VulkanCommon.h"
+
 #include <Common/GraphicsEnums.h>
 #include <string>
 
 namespace chai::gfx
 {
-    struct PipelineKey
-    {
+    struct VertexInputDesc {
+        std::vector<VkVertexInputAttributeDescription> attributes;
+        VkVertexInputBindingDescription binding{};
+
+        bool operator==(const VertexInputDesc&) const = default;
+    };
+
+    struct RasterState {
+        VkPolygonMode polygonMode = VK_POLYGON_MODE_FILL;
+        VkCullModeFlags cullMode = VK_CULL_MODE_BACK_BIT;
+        VkFrontFace frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+
+        bool operator==(const RasterState&) const = default;
+    };
+
+    struct DepthState {
+        bool test = false;
+        bool write = false;
+        bool bias = false;
+        VkCompareOp compareOp = VK_COMPARE_OP_LESS;
+        VkFormat format = VK_FORMAT_UNDEFINED;
+
+        bool operator==(const DepthState&) const = default;
+    };
+
+    struct ColorState {
+        VkFormat format = VK_FORMAT_UNDEFINED;
+        bool blending = false;
+
+        bool operator==(const ColorState&) const = default;
+    };
+
+    struct PipelineDesc {
         std::string vertShader;
         std::string fragShader;
-        AlphaMode alpha = AlphaMode::Opaque;
-        VkPolygonMode polygon = VK_POLYGON_MODE_FILL;
-        VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;
+
+        VertexInputDesc vertexInput;
+        RasterState raster;
+        DepthState depth;
+        ColorState color;
+        VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
+
+        bool operator==(const PipelineDesc&) const = default;
+    };
+
+    /**
+     * @brief Allows the pipeline registry to uniquely identify a pipeline
+     */
+    struct PipelineKey {
+        VkPipelineLayout layout;
+        PipelineDesc desc;
 
         bool operator==(const PipelineKey&) const = default;
     };
 
-    struct PipelineKeyHash {
-        size_t operator()(const PipelineKey& k) const
-        {
-            size_t h = std::hash<std::string>{}(k.vertShader);
-            h ^= std::hash<std::string>{}(k.fragShader) + 0x9e3779b9 + (h << 6) + (h >> 2);
-            h ^= std::hash<int>{}(static_cast<int>(k.alpha)) + 0x9e3779b9 + (h << 6) + (h >> 2);
-            h ^= std::hash<int>{}(static_cast<int>(k.polygon)) + 0x9e3779b9 + (h << 6) + (h >> 2);
-            return h;
-        }
+    /**
+     * @brief Provide handles to the entries in the Pipeline Registry
+     */
+    struct PipelineHandle {
+        uint32_t index = UINT32_MAX;
+
+        bool valid() const { return index != UINT32_MAX; }
     };
+
 } // namespace chai::gfx

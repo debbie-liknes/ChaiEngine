@@ -15,6 +15,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # When exporting STL types, MSVC will generate a warning saying that STL types
 # are not accessible by clients. This disables that warning.
@@ -28,7 +29,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-project("Chai")
+# set up vcpkg to work with find_package calls
+set(VCPKG_INSTALL_OPTIONS "--no-print-usage")
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake")
+
+project(Chai)
 
 # Enable testing via CTest
 enable_testing()
@@ -39,9 +44,12 @@ add_subdirectory(external)
 # Add include-only headers
 include_directories(external/include)
 
+find_package(unofficial-shaderc CONFIG REQUIRED)
+
 # Include sub-projects.
 add_subdirectory(base)
 add_subdirectory(editor)
 add_subdirectory(engine)
-add_subdirectory(scene)
 add_subdirectory(plugins)
+add_subdirectory(scene)
+add_subdirectory(ui)

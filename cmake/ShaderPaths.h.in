@@ -1,0 +1,2 @@
+#pragma once
+inline constexpr const char* CHAI_SHADER_SOURCE_DIR = "@CHAI_SHADER_SOURCE_DIR@";

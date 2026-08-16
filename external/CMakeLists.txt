@@ -28,3 +28,4 @@ set_target_properties(gmock_main PROPERTIES FOLDER "external/GoogleTest")
 set_target_properties(gtest PROPERTIES FOLDER "external/GoogleTest")
 set_target_properties(gtest_main PROPERTIES FOLDER "external/GoogleTest")
 set_target_properties(TracyClient PROPERTIES FOLDER "external/tracy")
+

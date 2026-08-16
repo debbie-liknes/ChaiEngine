@@ -16,5 +16,14 @@ namespace chai::gfx
         Mask,
         Blend
     };
-    CHAI_FLAG_OPS(AlphaMode)
+    CHAI_FLAG_OPS(AlphaMode);
+
+    /**
+     * @brief Graphics api agnostic representation of a shader stage
+     */
+    enum class ShaderStage 
+    {
+        Vertex,
+        Fragment
+    };
 }
