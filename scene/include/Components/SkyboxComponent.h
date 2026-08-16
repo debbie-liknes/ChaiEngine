@@ -26,5 +26,6 @@ namespace chai::scene
     CHAI_REFLECT(SkyboxComponent, "SkyboxComponent") 
     {
         CHAI_ICON(ICON_FA_CLOUD);
+        CHAI_PROPERTY("Skybox", getTexture, setTexture);
     }
 }

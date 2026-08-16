@@ -51,29 +51,33 @@ namespace chai
 
         std::string mainPanelId = vpManager.addViewport("Main Scene", scene.getCameraId());
 
+        ui::PanelDesc propertiesPanel;
+        propertiesPanel.displayName = "Properties";
+        propertiesPanel.id = "Properties";
+        propertiesPanel.draw = [&]() {
+            const auto selectedItem = editorSelection_.getSelected();
+            // TODO: multi select
+            Object* selected = ObjectTable::instance().resolve(selectedItem.id);
+            ui::drawPropertiesPane(selected);
+        };
+        propertiesPanel.visible = false;
+        panelRegistry_->registerPanel(propertiesPanel);
+        actionManager_->registerPanel("window.properties", propertiesPanel.id, true);
+
         std::string hierarchy = "Hierarchy";
         panelRegistry.registerPanel({
             .id = hierarchy,
             .displayName = hierarchy,
-            .draw = [&scene, &selector = editorSelection_] {
+            .draw = [&scene, &selector = editorSelection_, &panelRegistry = panelRegistry_] {
                  auto selectedCallback = [&](const scene::ObjectId id) {
                     selector.select({id});
+                    const auto& panel = panelRegistry->getPanel("Properties");
+                    if (!panel->visible) {
+                        panel->visible = true;
+                     }
                  };
                  ui::drawSceneHierarchy(scene, selectedCallback);
             }});
-
-         ui::PanelDesc propertiesPanel;
-         propertiesPanel.displayName = "Properties";
-         propertiesPanel.id = "Properties";
-         propertiesPanel.draw = [&]() {
-             const auto selectedItem = editorSelection_.getSelected();
-             //TODO: multi select
-             Object* selected = ObjectTable::instance().resolve(selectedItem.id);
-             ui::drawPropertiesPane(selected);
-                 };
-         //propertiesPanel.visible = false;
-         panelRegistry_->registerPanel(propertiesPanel);
-         actionManager_->registerPanel("window.properties", propertiesPanel.id);
 
         ui::DockSplit hierarchySplit;
         hierarchySplit.ratio = 0.25f;

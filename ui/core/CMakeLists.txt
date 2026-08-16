@@ -24,6 +24,6 @@ add_library(${PROJECT_NAME} SHARED
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
-target_link_libraries(${PROJECT_NAME} PUBLIC ChaiMath TypeReflection PRIVATE ImGui Logger)
+target_link_libraries(${PROJECT_NAME} PUBLIC ChaiMath TypeReflection PRIVATE ImGui Logger Asset Graphics)
 
 ChaiLibDefaults(${PROJECT_NAME} "Engine")

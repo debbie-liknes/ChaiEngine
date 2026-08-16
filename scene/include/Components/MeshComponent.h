@@ -30,5 +30,7 @@ namespace chai::scene
     CHAI_REFLECT(MeshComponent, "MeshComponent")
     {
         CHAI_ICON(ICON_FA_CUBES);
+        CHAI_PROPERTY("Mesh", getMesh, setMesh);
+        CHAI_PROPERTY("Material", getMaterial, setMaterial);
     }
 }

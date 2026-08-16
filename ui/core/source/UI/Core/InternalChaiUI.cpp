@@ -35,6 +35,11 @@ namespace chai::ui
         ImGui::Unindent();
     }
 
+    bool DragFloat(const std::string& label, float* val)
+    {
+        return ImGui::DragFloat(label.c_str(), val);
+    }
+
     bool DragFloatVec3(const std::string& label, math::Vec3& vec)
     {
         return ImGui::DragFloat3(label.c_str(), vec.data);
