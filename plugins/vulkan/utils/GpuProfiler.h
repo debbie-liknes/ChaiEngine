@@ -52,10 +52,6 @@ namespace chai::gfx
         std::vector<std::pair<std::string, float>> getAllRegionTimes() const;
 
         /**
-         * @brief GPU time between being and end frame
-         */
-
-        /**
          * @brief GPU time between begin and end frame
          */
         float getTotalFrameTimeMs() const;
