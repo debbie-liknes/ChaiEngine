@@ -6,6 +6,7 @@
 #include <Audio/IAudioEngine.h>
 #include <Visitors/AudioSceneVisitor.h>
 #include <Visitors/FrameRenderVisitor.h>
+#include <Visitors/SceneSaveVisitor.h>
 #include <tracy/Tracy.hpp>
 
 namespace chai
@@ -94,7 +95,7 @@ namespace chai
 
             scene_->accept(&audioVisitor);
             scene_->accept(&frameVisitor);
-            
+
             if (audio) {
                 audio->set3dListenersAndOrientations(audioVisitor.getData());
                 audio->update();
@@ -110,5 +111,10 @@ namespace chai
 
             FrameMarkEnd("Engine");
         }
+
+        scene::SceneSaveVisitor ssv{};
+        if (scene_)
+            scene_->accept(&ssv);
+
     }
 }
