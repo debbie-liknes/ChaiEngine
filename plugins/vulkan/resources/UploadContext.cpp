@@ -48,7 +48,7 @@ namespace chai::gfx
             cmdInfo.commandPool = asyncPool_;
             cmdInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
             cmdInfo.commandBufferCount = 1;
-            vkAllocateCommandBuffers(device_, &cmdInfo, &buff);
+            VK_CHECK(vkAllocateCommandBuffers(device_, &cmdInfo, &buff));
         }
 
         return inFlight_.emplace_back(InFlight{buff, ++nextUploadId_});
@@ -63,7 +63,7 @@ namespace chai::gfx
         poolInfo.flags =
             VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
         poolInfo.queueFamilyIndex = queueFamilyIndex;
-        vkCreateCommandPool(device_, &poolInfo, nullptr, &asyncPool_);
+        VK_CHECK(vkCreateCommandPool(device_, &poolInfo, nullptr, &asyncPool_));
 
         VkSemaphoreTypeCreateInfo type{VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO};
         type.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE;

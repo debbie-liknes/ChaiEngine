@@ -15,7 +15,7 @@ namespace chai::gfx
         VkExtent2D pendingExtent{};
         bool needsResize = false;
         bool hovered = false;
-        uint32_t cameraViewId = 0;
+        uint64_t cameraViewId = 0;
         bool wireframe = false;
         ViewportShadingMode shadingMode = ViewportShadingMode::Lit;
     };

@@ -2,10 +2,12 @@ project(Editor)
 
 set(${PROJECT_NAME}_headers
     include/Runtime/Editor.h
+    include/Runtime/EditorSelection.h
 )
 
 set(${PROJECT_NAME}_source
     source/Runtime/Editor.cpp
+    source/Runtime/EditorSelection.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED

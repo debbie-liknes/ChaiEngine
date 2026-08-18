@@ -43,11 +43,9 @@ namespace chai::ui
 
     void Text(const std::string& label);
     void TextColored(const math::Vec4& color, const std::string& label);
-    bool Button(const std::string& label);
     void SameLine();
     void Indent();
     void Unindent();
-    bool Checkbox(const std::string& label, bool& value);
     bool BeginChildRegion(const std::string& name,
                           const math::Vec2& size = math::Vec2(0, 0),
                           bool border = false);
@@ -55,4 +53,7 @@ namespace chai::ui
     float GetScrollY();
     float GetScrollMaxY();
     void SetScrollHereY(float y);
+
+    bool DragFloat(const std::string& label, float* val);
+    bool DragFloatVec3(const std::string& label, math::Vec3& vec);
 }

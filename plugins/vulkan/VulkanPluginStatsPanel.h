@@ -1,5 +1,5 @@
 #pragma once
-#include <UI/Core/InternalChaiUI.h>
+#include <UI/Core/Buttons.h>
 #include <UI/Core/TreeNode.h>
 #include "renderer/VulkanRenderer.h"
 
@@ -24,7 +24,7 @@ namespace chai::ui
 
     void drawRenderDebugTools(gfx::VulkanRenderer& renderer) 
     {
-        if (Button("Reload Shaders")) {
+        if (button("Reload Shaders")) {
             renderer.recompileShaders();
         }
     }

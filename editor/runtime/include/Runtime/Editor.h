@@ -2,6 +2,7 @@
 
 #include <Plugin/PluginLoader.h>
 #include <Runtime/Engine.h>
+#include <Runtime/EditorSelection.h>
 #include <DiagnosticsUI/LogPanel.h>
 #include <SpdLogSink.h>
 #include <EditorUI/ActionManager.h>
@@ -10,6 +11,7 @@
 #include <EditorUI/EditorViewportManager.h>
 #include <EditorUI/DockspaceService.h>
 #include <EditorUI/SceneHierarchy.h>
+#include <EditorUI/PropertiesPane.h>
 #include <Registry/SettingsRegistry.h>
 
 #include <memory>
@@ -29,6 +31,7 @@ namespace chai
 
     private:
         void registerActions() const;
+        void setupDockspace(const ServiceLocator& locator, scene::Scene& scene);
 
         std::unique_ptr<PluginLoader> loader_ = std::make_unique<PluginLoader>(providedServices());
         std::unique_ptr<Engine> engine_ = std::make_unique<Engine>();
@@ -43,5 +46,6 @@ namespace chai
         std::shared_ptr<ui::DockspaceService> dockspace_;
         std::shared_ptr<ui::EditorViewportManager> vpManager_;
         std::shared_ptr<settings::SettingsRegistry> settingsRegistry_;
+        EditorSelection editorSelection_;
     };
 } // namespace chai

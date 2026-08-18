@@ -20,11 +20,6 @@ namespace chai::ui
         ImGui::TextColored(ImVec4(color.x, color.y, color.z, color.w), "%s", label.c_str());
     }
 
-    bool Button(const std::string& label)
-    {
-        return ImGui::Button(label.c_str());
-    }
-
     void SameLine()
     {
         ImGui::SameLine();
@@ -40,9 +35,14 @@ namespace chai::ui
         ImGui::Unindent();
     }
 
-    bool Checkbox(const std::string& label, bool& value)
+    bool DragFloat(const std::string& label, float* val)
     {
-        return ImGui::Checkbox(label.c_str(), &value);
+        return ImGui::DragFloat(label.c_str(), val);
+    }
+
+    bool DragFloatVec3(const std::string& label, math::Vec3& vec)
+    {
+        return ImGui::DragFloat3(label.c_str(), vec.data);
     }
 
     bool BeginChildRegion(const std::string& name,

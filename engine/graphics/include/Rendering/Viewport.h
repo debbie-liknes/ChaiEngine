@@ -17,7 +17,7 @@ namespace chai::gfx
     {
     public:
         // Viewport management
-        virtual ViewportHandle addViewport(const std::string& id, uint32_t cameraViewIndex) = 0;
+        virtual ViewportHandle addViewport(const std::string& id, uint64_t cameraViewIndex) = 0;
         virtual void removeViewport(ViewportHandle handle) = 0;
         virtual void
         requestViewportResize(ViewportHandle handle, uint32_t width, uint32_t height) = 0;
