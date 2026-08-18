@@ -45,6 +45,12 @@ namespace chai::scene
         return objectSlots_[idx].objPointer;
     }
 
+    void ObjectTable::clear()
+    {
+        freeSlots_.clear();
+        objectSlots_.clear();
+    }
+
     std::pair<uint32_t, uint32_t> unpack(uint64_t idToUnpack)
     {
         return {static_cast<uint32_t>(idToUnpack >> 32), static_cast<uint32_t>(idToUnpack)};

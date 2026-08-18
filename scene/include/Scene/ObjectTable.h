@@ -1,6 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include <cstdint>
+#include <vector>
 
 namespace chai::scene
 {
@@ -15,6 +16,7 @@ namespace chai::scene
 		uint64_t add(Object*);
         void remove(uint64_t id);
         Object* resolve(uint64_t id);
+        void clear();
 
 	private:
         ObjectTable() = default;
