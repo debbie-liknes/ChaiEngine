@@ -2,6 +2,7 @@ project(Containers)
 
 set(${PROJECT_NAME}_headers
     include/Containers/Dictionary.h
+    include/Containers/RingBuffer.h
 )
 
 add_library(${PROJECT_NAME} INTERFACE

@@ -7,7 +7,7 @@
 #include <Visitors/AudioSceneVisitor.h>
 #include <Visitors/FrameRenderVisitor.h>
 #include <tracy/Tracy.hpp>
-#include <Platform/Windows/ProcessWindows.h>
+#include <Platform/Windows/IPCMessageQueueWindows.h>
 
 namespace chai
 {
@@ -26,9 +26,9 @@ namespace chai
         //Create scene
         scene_ = std::make_unique<scene::Scene>();
 
-        Process::Info info;
-        auto process = windows::ProcessWindows(info);
-        process.execute();
+#ifdef _WIN32
+        ipcMessageQueue_ = std::make_unique<windows::IPCMessageQueueWindows>();
+#endif
 
         return true;
     }
@@ -112,6 +112,13 @@ namespace chai
 
             audioVisitor.reset();
             frameVisitor.reset();
+
+            // Handle IPC messages if we're the client
+#ifdef _WIN32
+            // Test code
+            //ipcMessageQueue_->sendIPCMessage({.type = IPCMessageType::PLAY});
+            ipcMessageQueue_->processPendingMessages();
+#endif
 
             FrameMarkEnd("Engine");
         }

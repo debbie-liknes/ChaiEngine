@@ -4,6 +4,7 @@ set(${PROJECT_NAME}_headers
     include/OS/Clock.h
     include/OS/DynamicLibrary.h
     include/OS/FileIO.h
+    include/OS/IPCMessageQueue.h
     include/OS/Process.h
     include/OS/SystemPaths.h
 )

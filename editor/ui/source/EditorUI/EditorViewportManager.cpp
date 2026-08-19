@@ -1,6 +1,7 @@
 #include <EditorUI/EditorViewportManager.h>
 #include <EditorUI/PanelRegistry.h>
 #include <imgui.h>
+#include <Platform/Windows/ProcessWindows.h>
 
 namespace chai::ui
 {
@@ -19,7 +20,7 @@ namespace chai::ui
 
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0, 0, 0, 0.55f));
         ImGui::BeginChild("##ViewportToolbar",
-                          ImVec2(250.f, ImGui::GetFontSize() * 3),
+                          ImVec2(350.f, ImGui::GetFontSize() * 3),
                           true,
                           ImGuiWindowFlags_NoScrollbar);
 
@@ -35,6 +36,14 @@ namespace chai::ui
         bool wireframe = registry.isViewportWireframe(handle);
         if (ImGui::Checkbox("Wireframe", &wireframe))
             registry.setViewportWireframe(handle, wireframe);
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Play")) {
+            Process::Info info;
+            auto process = windows::ProcessWindows(info);
+            process.execute();
+        }
 
         ImGui::EndChild();
         ImGui::PopStyleColor();

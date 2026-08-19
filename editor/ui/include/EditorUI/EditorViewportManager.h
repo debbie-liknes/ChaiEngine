@@ -3,7 +3,6 @@
 #include <Rendering/Viewport.h>
 #include <EditorUI/PanelRegistry.h>
 #include <string>
-#include <Rendering/Viewport.h>
 
 namespace chai::ui
 {

@@ -12,6 +12,7 @@
 #include <span>
 #include <Scene/Scene.h>
 #include <Rendering/IRenderer.h>
+#include <OS/IPCMessageQueue.h>
 
 namespace chai
 {
@@ -41,6 +42,6 @@ namespace chai
         bool                    running_ = true;
         Clock                   clock_;
         std::unique_ptr<scene::Scene> scene_;
-
+        std::unique_ptr<IPCMessageQueue> ipcMessageQueue_;
     };
 }
