@@ -3,6 +3,7 @@
  * @brief Plugin setup and registration of services
  */
 #include "VulkanPluginStatsPanel.h"
+#include "registries/ViewportRegistry.h"
 #include "renderer/VulkanRenderer.h"
 #include "resources/MaterialFactory.h"
 #include "resources/MaterialRegistry.h"
@@ -12,15 +13,14 @@
 #include "resources/ModelRegistry.h"
 #include "resources/TextureFactory.h"
 #include "resources/TextureRegistry.h"
-#include "registries/ViewportRegistry.h"
 
 #include <Assets/IMeshRegistry.h>
+#include <EditorUI/ActionManager.h>
+#include <EditorUI/PanelRegistry.h>
 #include <Log.h>
 #include <Plugin/PluginBase.h>
 #include <Plugin/PluginMacros.h>
 #include <Plugin/ServiceLocator.h>
-#include <EditorUI/PanelRegistry.h>
-#include <EditorUI/ActionManager.h>
 #include <Window/Window.h>
 #include <memory>
 
@@ -30,10 +30,13 @@ namespace chai::gfx
     {
     public:
         const char* name() const override { return "Renderer(Vulkan)"; }
-        
+
         ServiceList requiredServices() const override
         {
-            return { typeid(IWindow), typeid(ITextureLoader), typeid(ui::PanelRegistry), typeid(ui::ActionManager) };
+            return {typeid(IWindow),
+                    typeid(ITextureLoader),
+                    typeid(ui::PanelRegistry),
+                    typeid(ui::ActionManager)};
         }
         ServiceList providedServices() const override
         {
@@ -57,7 +60,8 @@ namespace chai::gfx
 
             auto textureLoader = ctx.services.tryResolve<ITextureLoader>();
             if (!textureLoader) {
-                CHAI_LOG_CRITICAL("Renderer requires ITextureLoader; load the texture loader plugin first");
+                CHAI_LOG_CRITICAL(
+                    "Renderer requires ITextureLoader; load the texture loader plugin first");
                 return false;
             }
 
@@ -94,25 +98,20 @@ namespace chai::gfx
             ctx.services.provide<IModelRegistry>(modelRegistry_);
             ctx.services.provide<IViewportRegistry>(viewportRegistry_);
 
-            ui::PanelDesc panelInfo;
-            panelInfo.displayName = "Vulkan Stats";
-            panelInfo.id = "Vulkan Stats";
-            panelInfo.draw = [&]() { ui::drawVulkanStatsPanel(renderer_->getStats()); };
-            panelInfo.visible = false;
-
             auto& panelReg = ctx.services.resolve<ui::PanelRegistry>();
-            panelReg.registerPanel(panelInfo);
             auto& actionManager = ctx.services.resolve<ui::ActionManager>();
-            actionManager.registerPanel("window.plugins.vulkan_stats", panelInfo.id, true);
 
-            ui::PanelDesc debugPanelInfo;
-            debugPanelInfo.displayName = "Render Debug";
-            debugPanelInfo.id = "Render Debug";
-            debugPanelInfo.draw = [&]() { ui::drawRenderDebugTools(*renderer_); };
-            debugPanelInfo.visible = false;
+            //Stats
+            panelReg.registerPanel([&renderer = renderer_]() {
+                return ui::createVulkanStatsPanel(renderer->getStats());
+            });
+            //actionManager.registerPanel("window.plugins.vulkan_stats", panelInfo.id, true);
 
-            panelReg.registerPanel(debugPanelInfo);
-            actionManager.registerPanel("window.plugins.vulkan_debug", debugPanelInfo.id, true);
+            //Debug tools
+            const ui::Panel& debugPanel = panelReg.registerPanel(
+                [&renderer = renderer_]() { return ui::createRenderDebugPanel(*renderer); });
+            actionManager.registerPanel(
+                "window.plugins.vulkan_debug", debugPanel.displayName(), true);
 
             CHAI_LOG_INFO("Renderer service provided");
 

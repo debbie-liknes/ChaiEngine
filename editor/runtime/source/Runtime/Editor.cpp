@@ -99,6 +99,10 @@ namespace chai
 
     void Editor::registerActions() const
     {
+        //panelReg.onPanelRegistered([&actionManager = actionManager_](const ui::Panel& p) {
+        //    actionManager.registerPanel(p);
+        //});
+
         actionManager_->registerAction("file.exit", []() { exit(0); });
 
         ui::PanelDesc pluginPanel;

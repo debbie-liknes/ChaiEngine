@@ -24,5 +24,10 @@ namespace chai::ui
                 panel.draw();
             ImGui::End();
         }
+
+        UIContext uiUpdateCtx;
+        for (auto&& panel : registry.panelsNew()) {
+            panel->draw(uiUpdateCtx);
+        }
     }
 }

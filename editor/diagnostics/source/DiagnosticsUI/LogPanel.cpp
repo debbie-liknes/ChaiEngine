@@ -3,6 +3,7 @@
 #include <UI/Core/InternalChaiUI.h>
 #include <UI/Core/FontManager.h>
 #include <UI/Core/Buttons.h>
+#include <UI/Core/Containers/Panel.h>
 
 namespace chai::diagnostics
 {
@@ -45,8 +46,13 @@ namespace chai::diagnostics
         static bool autoScroll = true;
         static ImGuiTextFilter filter;
 
-        if (chai::ui::button("Clear"))
-            sink.clear();
+        ui::Panel panel{};
+
+        auto& clear = panel.add<ui::Button>("Clear");
+        clear.onClick = [&] { sink.clear(); };
+
+        //button.draw();
+
         chai::ui::SameLine();
         chai::ui::checkbox("Auto-scroll", &autoScroll);
         chai::ui::SameLine();

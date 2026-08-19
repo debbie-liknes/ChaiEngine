@@ -156,8 +156,10 @@ namespace chai::ui
 
         generateAncestors(registeredAction);
 
-        if (setActionLabel)
+        if (setActionLabel && panelRegistry_->getPanel(panelId) != nullptr)
             registeredAction->setLabel(panelRegistry_->getPanel(panelId)->displayName);
+        else if (setActionLabel && panelRegistry_->getPanelNew(panelId) != nullptr)
+            registeredAction->setLabel(panelRegistry_->getPanelNew(panelId)->displayName());
 
         actionId2PanelId_.insert_or_assign(actionId, panelId);
     }

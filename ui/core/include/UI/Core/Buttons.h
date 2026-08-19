@@ -1,15 +1,25 @@
 #pragma once
 #include <UICoreExport.h>
 #include <string>
+#include <UI/Core/Widget.h>
+#include <functional>
 
 namespace chai::ui
 {
-    struct UICORE_EXPORT ButtonDesc {
-        std::string label;
-        std::string id;
+    struct ButtonStyle {
     };
 
-    bool UICORE_EXPORT button(const std::string& label);    //simple wrapper
-    bool UICORE_EXPORT button(const ButtonDesc& desc);
-    bool UICORE_EXPORT checkbox(const std::string& label, bool* val);
+	class Button : public Widget
+	{
+    public:
+        explicit Button(const std::string& label);
+        void draw(UIContext& context) override;
+
+        std::function<void()> onClick;
+
+    private:
+        std::string label_;
+	};
+
+    bool checkbox(const std::string& label, bool* val);
 } // namespace chai::ui
