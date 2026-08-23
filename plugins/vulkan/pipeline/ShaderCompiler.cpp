@@ -36,10 +36,6 @@ namespace chai::gfx
 
         shaderc_shader_kind kind = toShadercKind(stage);
 
-        //auto result1 =
-        //    compiler.PreprocessGlsl(source, shaderc_glsl_fragment_shader, "pbr.frag", options);
-        //std::string expanded(result1.cbegin(), result1.cend());
-
         shaderc::SpvCompilationResult result =
             compiler.CompileGlslToSpv(source, kind, shaderPath.string().c_str(), options);
 

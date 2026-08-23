@@ -1,11 +1,11 @@
 #version 450
+
+#include <camera/camera.glsl>
+
 layout(location = 0) out vec3 vViewDir;
 
 layout(set = 0, binding = 0) uniform Camera {
-    mat4 view;
-    mat4 proj;
-    mat4 viewProj;
-    vec3 position;
+    CameraData data;
 } cam;
 
 void main() {
@@ -14,9 +14,9 @@ void main() {
     vec2 ndc = uv * 2.0 - 1.0;
 
     vec4 clip = vec4(ndc, 1.0, 1.0);
-    vec4 viewPos = inverse(cam.proj) * clip;
+    vec4 viewPos = inverse(cam.data.proj) * clip;
     vec3 viewDir = normalize(viewPos.xyz / viewPos.w);
-    vViewDir = normalize(mat3(inverse(cam.view)) * viewDir);
+    vViewDir = normalize(mat3(inverse(cam.data.view)) * viewDir);
 
     gl_Position = clip;
 }
