@@ -1,10 +1,11 @@
 #version 450
 
-#include "common/lighting/pbr.glsl"
-#include "common/lighting/lights.glsl"
-#include "common/lighting/lighting_ops.glsl"
-#include "common/bindings/camera_ubo.glsl"
-#include "common/bindings/material_ubo.glsl"
+#include <lighting/types/lights.glsl>
+#include <lighting/types/material_pbr.glsl>
+#include <lighting/pbr.glsl>
+#include <lighting/lighting_ops.glsl>
+#include <lighting/ibl.glsl>
+#include <camera/camera.glsl>
 
 // input from vert shader
 layout(location = 0) in vec3 vWorldPos;
@@ -41,20 +42,6 @@ int prefilterMipCount = 5;
 layout(location = 0) out vec4 outColor;
 
 // ---------------------------------------------------------------------
-// Struct bundling the surface properties every lighting term reads.
-// Keeping this as one struct (rather than passing 5+ loose params)
-// keeps the function signatures below stable as more terms are added.
-// ---------------------------------------------------------------------
-struct SurfaceData {
-    vec3  albedo;
-    float metallic;
-    float roughness;
-    float ao;
-    vec3  N;
-    vec3  V;
-};
-
-// ---------------------------------------------------------------------
 // Sample all material textures + apply material UBO factors.
 // Returns via out-params so callers can early-discard on alpha.
 // ---------------------------------------------------------------------
@@ -85,56 +72,6 @@ vec3 GetNormal(vec2 uv, vec3 vertexNormal, vec4 tangent)
     vec3 T = normalize(tangent.xyz);
     vec3 B = cross(N, T) * tangent.w;
     return normalize(mat3(T, B, N) * n);
-}
-
-// ---------------------------------------------------------------------
-// Direct (analytic) light contribution: Cook-Torrance specular +
-// Lambertian diffuse, attenuated by shadow. No IBL/ambient here.
-// ---------------------------------------------------------------------
-vec3 CalculateDirectLighting(SurfaceData s, vec3 L, vec3 radiance, float shadow)
-{
-    vec3 H = normalize(s.V + L);
-
-    float NoV = max(dot(s.N, s.V), 0.02);
-    float NoL = max(dot(s.N, L), 0.0);
-    float NoH = max(dot(s.N, H), 0.0);
-    float VoH = max(dot(s.V, H), 0.0);
-
-    vec3  f0 = mix(vec3(0.04), s.albedo, s.metallic);
-    float a  = s.roughness * s.roughness;
-
-    float D  = D_GGX(NoH, a);
-    float G  = G_Smith(NoV, NoL, s.roughness);
-    vec3  F  = F_Schlick(VoH, f0);
-    vec3  spec = (D * G * F) / max(4.0 * NoV * NoL, 1e-4);
-
-    vec3  kd = (vec3(1.0) - F) * (1.0 - s.metallic);
-    vec3  diffuse = kd * s.albedo / PI;
-
-    return (diffuse + spec) * radiance * NoL * (1.0 - shadow);
-}
-
-// ---------------------------------------------------------------------
-// Image-based (ambient) lighting: diffuse irradiance + prefiltered
-// specular reflection combined via the split-sum BRDF LUT.
-// ---------------------------------------------------------------------
-vec3 CalculateIBL(SurfaceData s, vec3 R, samplerCube irradianceTex,
-                   samplerCube prefilterTex_, sampler2D brdfLutTex, int mipCount)
-{
-    float NoV = max(dot(s.N, s.V), 0.02);
-    vec3  f0  = mix(vec3(0.04), s.albedo, s.metallic);
-
-    vec3 F  = fresnelSchlickRoughness(NoV, f0, s.roughness);
-    vec3 kD = (vec3(1.0) - F) * (1.0 - s.metallic);
-
-    vec3 irradiance = texture(irradianceTex, s.N).rgb;
-    vec3 diffuseIBL = irradiance * s.albedo;
-
-    vec3 prefiltered = textureLod(prefilterTex_, R, s.roughness * float(mipCount - 1)).rgb;
-    vec2 brdf        = texture(brdfLutTex, vec2(NoV, s.roughness)).rg;
-    vec3 specularIBL = prefiltered * (F * brdf.x + brdf.y);
-
-    return (kD * diffuseIBL + specularIBL) * s.ao;
 }
 
 // Debug/shading-mode override view, kept separate from the lit result.

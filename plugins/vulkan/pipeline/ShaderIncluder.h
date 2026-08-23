@@ -1,5 +1,7 @@
 #pragma once
 #include <shaderc/shaderc.hpp>
+#include <unordered_set>
+#include <string>
 
 namespace chai::gfx
 {
@@ -18,5 +20,6 @@ namespace chai::gfx
         struct IncludeData {
             std::string path, content;
         };
+        std::unordered_set<std::string> includedPaths_;
     };
 }

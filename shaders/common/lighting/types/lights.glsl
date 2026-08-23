@@ -1,5 +1,4 @@
-// lighting.glsl
-#pragma once
+// lights.glsl
 
 struct LightData {
     vec4 direction; // .xyz = direction

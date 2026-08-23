@@ -1,7 +1,5 @@
 // pbr.glsl
-#pragma once
-
-#include "../math/constants.glsl"
+#include <math/constants.glsl>
 
 // Smith with Schlick GGX
 float G_Smith(float NoV, float NoL, float roughness)

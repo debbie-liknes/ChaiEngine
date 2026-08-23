@@ -1,5 +1,4 @@
-// material_ubo.glsl
-#pragma once
+// material_pbr.glsl
 
 struct MaterialData {
     vec4 baseColor;

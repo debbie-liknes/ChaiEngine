@@ -16,14 +16,31 @@ namespace chai::gfx
 
         fs::path requestingPath(requesting_source);
         fs::path requestedPath(requested_source);
-
         fs::path resolvedPath = requestingPath.parent_path() / requestedPath;
 
-        resolvedPath = fs::weakly_canonical(resolvedPath);
+        if (type == shaderc_include_type_standard) {
+            resolvedPath = fs::weakly_canonical(shaderDir() / "common" / requestedPath);
+        } else {
+            resolvedPath = fs::weakly_canonical(resolvedPath);
+        }
+        std::string pathStr = resolvedPath.generic_string();
 
-        std::string contents = ShaderCompiler::readFile(resolvedPath);
+        auto* data = new IncludeData{pathStr, {}};
 
-        auto* data = new IncludeData{resolvedPath.string(), std::move(contents)};
+        if (!includedPaths_.insert(pathStr).second) {
+            data->content = "\n"; // was "" — needs a newline to separate from what follows
+            auto* result = new shaderc_include_result{data->path.c_str(),
+                                                      data->path.size(),
+                                                      data->content.c_str(),
+                                                      data->content.size(),
+                                                      data};
+            return result;
+        }
+
+        data->content = ShaderCompiler::readFile(resolvedPath);
+        if (data->content.empty() || data->content.back() != '\n')
+            data->content += '\n'; // guard against files saved without a trailing newline
+
         auto* result = new shaderc_include_result{data->path.c_str(),
                                                   data->path.size(),
                                                   data->content.c_str(),

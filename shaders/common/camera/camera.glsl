@@ -1,5 +1,4 @@
-// camera_ubo.glsl
-#pragma once
+// camera.glsl
 
 struct CameraData {
     mat4 view;

@@ -30,9 +30,15 @@ namespace chai::gfx
         shaderc::CompileOptions options;
         options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
         options.SetOptimizationLevel(shaderc_optimization_level_performance);
+
+        //NOTE: Having this created for every compile allows us to not have to reset includer caching
         options.SetIncluder(std::make_unique<ShaderIncluder>());
 
         shaderc_shader_kind kind = toShadercKind(stage);
+
+        //auto result1 =
+        //    compiler.PreprocessGlsl(source, shaderc_glsl_fragment_shader, "pbr.frag", options);
+        //std::string expanded(result1.cbegin(), result1.cend());
 
         shaderc::SpvCompilationResult result =
             compiler.CompileGlslToSpv(source, kind, shaderPath.string().c_str(), options);
