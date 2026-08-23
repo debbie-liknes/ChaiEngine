@@ -154,7 +154,6 @@ namespace chai::gfx
         //these are pbr materials, convert to our material types
         model.materials.reserve(data.materials_count);
         for (cgltf_size i = 0; i < data.materials_count; i++) {
-            static int hack = 0;
             const cgltf_material& m = data.materials[i];
             ModelAsset::MaterialDesc d;
 

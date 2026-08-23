@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <functional>
+#include <Scene/Object.h>
 
 namespace chai::scene
 {
@@ -14,5 +16,6 @@ namespace chai::ui
         std::vector<SceneHierarchyNode> children;
     };
 
-    void drawSceneHierarchy(scene::Scene& scene);
+    void drawSceneHierarchy(scene::Scene& scene,
+                            std::function<void(scene::ObjectId)> selectedCallback);
 }

@@ -177,6 +177,36 @@ namespace chai::math
                               cy * cx * cz + sy * sx * sz);
         }
 
+        Vec3T<T> toEuler() const noexcept
+        {
+            const T one = static_cast<T>(1);
+            const T two = static_cast<T>(2);
+
+            const T xx = x * x, yy = y * y, zz = z * z;
+
+            // sin(pitch) = -R[1][2]
+            const T sinPitch = two * (w * x - y * z);
+
+            Vec3T<T> out{};
+
+            if (std::abs(static_cast<double>(sinPitch)) < 0.9999995) {
+                out.x = static_cast<T>(std::asin(static_cast<double>(sinPitch)));
+                out.y = static_cast<T>(std::atan2(static_cast<double>(two * (x * z + w * y)),
+                                                  static_cast<double>(one - two * (xx + yy))));
+                out.z = static_cast<T>(std::atan2(static_cast<double>(two * (x * y + w * z)),
+                                                  static_cast<double>(one - two * (xx + zz))));
+            } else {
+                // Gimbal lock
+                out.x = sinPitch > T{} ? static_cast<T>(1.5707963267948966)
+                                       : static_cast<T>(-1.5707963267948966);
+                out.y = static_cast<T>(std::atan2(static_cast<double>(two * (w * y - x * z)),
+                                                  static_cast<double>(one - two * (yy + zz))));
+                out.z = T{};
+            }
+
+            return out;
+        }
+
         /**
          * @brief Construct the shortest arc rotation that maps vector a onto vector b.
          * For non-opposite vectors:

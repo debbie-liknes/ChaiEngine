@@ -1,5 +1,5 @@
 #pragma once
-#include <UI/Core/InternalChaiUI.h>
+#include <UI/Core/Buttons.h>
 #include <UI/Core/TreeNode.h>
 #include "renderer/VulkanRenderer.h"
 
@@ -11,26 +11,20 @@ namespace chai::ui
 	{
         Text("Total GPU Frame Time: " + std::to_string(stats.gpuTimeMs) + " ms");
 
-        {
-            TreeNode main("Main Pass", "mainPassNode");
-            if (main) {
-                Text("Draw Calls: " + std::to_string(stats.mainPass.drawCalls));
-                Text("GPU Time: " + std::to_string(stats.mainPass.gpuTimeMs) + " ms");
-            }
-        }
-
-        {
-            TreeNode shadow("Shadow Pass", "shadowPassNode");
-            if (shadow) {
-                Text("Draw Calls: " + std::to_string(stats.shadowPass.drawCalls));
-                Text("GPU Time: " + std::to_string(stats.shadowPass.gpuTimeMs) + " ms");
+        for (auto& pass : stats.allPasses) {
+            TreeNode passNode(pass.name.c_str(), pass.name.c_str());
+            if (passNode) {
+                Indent();
+                Text("Draw Calls: " + std::to_string(pass.drawCalls));
+                Text("GPU Time: " + std::to_string(pass.gpuTimeMs) + " ms");
+                Unindent();
             }
         }
 	}
 
     void drawRenderDebugTools(gfx::VulkanRenderer& renderer) 
     {
-        if (Button("Reload Shaders")) {
+        if (button("Reload Shaders")) {
             renderer.recompileShaders();
         }
     }

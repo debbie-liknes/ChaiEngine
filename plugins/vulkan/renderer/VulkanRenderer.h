@@ -31,19 +31,23 @@ namespace chai
 namespace chai::gfx
 {
     struct PassStats {
-        uint32_t drawCalls;
+        std::string name;
         float gpuTimeMs;
+        uint32_t drawCalls;
     };
 
     struct VulkanStats {
         float gpuTimeMs;
-        PassStats mainPass;
-        PassStats shadowPass;
+        std::vector<PassStats> allPasses;
 
-        void clear()
+        void clear() { allPasses.clear(); }
+        PassStats* getByName(const std::string name)
         {
-            mainPass.drawCalls = 0;
-            shadowPass.drawCalls = 0;
+            auto passItr = std::find_if(allPasses.begin(), allPasses.end(), [name](const PassStats& item){
+                return name == item.name;
+            });
+
+            return passItr != allPasses.end() ? &*passItr : nullptr;
         }
     };
 

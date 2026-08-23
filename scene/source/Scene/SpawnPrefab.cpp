@@ -9,8 +9,9 @@ namespace chai::scene
         std::vector<GameObject*> created(prefab.nodes.size(), nullptr);
         PrefabInstance instance;
 
+        //TODO: Might be problematic to just blindly use the names if we want these to be unique
         GameObject* prefabRoot =
-            scene.createObject("Prefab");
+            scene.createObject(params.name);
         if (params.parent)
             prefabRoot->setParent(params.parent);
         instance.root = prefabRoot;

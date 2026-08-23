@@ -8,6 +8,7 @@ set(${PROJECT_NAME}_headers
     include/EditorUI/PanelHost.h
     include/EditorUI/PanelRegistry.h
     include/EditorUI/PluginManager.h
+    include/EditorUI/PropertiesPane.h
     include/EditorUI/EditorMenu.h
     include/EditorUI/EditorViewportManager.h
     include/EditorUI/ActionConfigLoader.h
@@ -21,6 +22,7 @@ set(${PROJECT_NAME}_source
 	source/EditorUI/PanelHost.cpp
 	source/EditorUI/PanelRegistry.cpp
 	source/EditorUI/PluginManager.cpp
+	source/EditorUI/PropertiesPane.cpp
 	source/EditorUI/EditorMenu.cpp
 	source/EditorUI/EditorViewportManager.cpp
 	source/EditorUI/ActionConfigLoader.cpp

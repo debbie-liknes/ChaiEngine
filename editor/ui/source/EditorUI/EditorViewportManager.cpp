@@ -61,15 +61,16 @@ namespace chai::ui
         drawViewportOverlay(registry, handle, imageOrigin, avail);
     }
 
-    std::string EditorViewportManager::addViewport(const std::string& name, uint32_t cameraViewId)
+    std::string EditorViewportManager::addViewport(const std::string& name, scene::ObjectId cameraViewId)
     {
         //create the handle
-        auto handle = registry_.addViewport(name, cameraViewId);
+        std::string id = name + "##Viewport_" + std::to_string(cameraViewId);
+        auto handle = registry_.addViewport(id, cameraViewId);
 
         //tell the system about the panel
         ui::PanelDesc panelInfo;
         panelInfo.displayName = name;
-        panelInfo.id = name + "##Viewport_" + std::to_string(registry_.getViewportTextureId(handle));
+        panelInfo.id = id;
         panelInfo.draw = [this, handle] { drawViewportPanel(registry_, handle); };
         panelInfo.visible = true;
         panelRegistry_.registerPanel(panelInfo);

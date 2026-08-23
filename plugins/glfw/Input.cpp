@@ -45,12 +45,12 @@ namespace chai
         bool dragButtonDown =
             mouseDown(MouseButton::Right);
 
-        if (dragButtonDown && !wasDragButtonDown_ && hoveredCamera_ != -1) {
+        if (dragButtonDown && !wasDragButtonDown_ && hoveredCamera_ != 0) {
             capturedCamera_ =
                 hoveredCamera_;
         }
         if (!dragButtonDown) {
-            capturedCamera_ = -1;
+            capturedCamera_ = 0;
         }
         wasDragButtonDown_ = dragButtonDown;
     }
@@ -84,19 +84,19 @@ namespace chai
         mouseY = mouse.y;
     }
 
-    void InputHandler::setHoveredCamera(int32_t cameraId) 
+    void InputHandler::setHoveredCamera(uint64_t cameraId) 
     {
         hoveredCamera_ = cameraId;
     }
 
-    int32_t InputHandler::getHoveredCamera() const
+    uint64_t InputHandler::getHoveredCamera() const
     {
         return hoveredCamera_;
     }
 
-    int InputHandler::getActiveCamera() const
+    uint64_t InputHandler::getActiveCamera() const
     {
-        return capturedCamera_ != -1 ? capturedCamera_ : hoveredCamera_;
+        return capturedCamera_ != 0 ? capturedCamera_ : hoveredCamera_;
     }
 
     const std::vector<unsigned int>& InputHandler::getTypedCharactersThisFrame() const

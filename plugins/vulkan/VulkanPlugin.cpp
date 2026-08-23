@@ -96,7 +96,7 @@ namespace chai::gfx
 
             ui::PanelDesc panelInfo;
             panelInfo.displayName = "Vulkan Stats";
-            panelInfo.id = "VulkanStats";
+            panelInfo.id = "Vulkan Stats";
             panelInfo.draw = [&]() { ui::drawVulkanStatsPanel(renderer_->getStats()); };
             panelInfo.visible = false;
 
@@ -105,11 +105,11 @@ namespace chai::gfx
             // auto& actionManager = ctx.services.resolve<ui::ActionManager>();
             // actionManager.registerPanel("window.plugins.vulkan_stats", panelInfo.id, true);
 
-            // ui::PanelDesc debugPanelInfo;
-            // debugPanelInfo.displayName = "Render Debug";
-            // debugPanelInfo.id = "RenderDebug";
-            // debugPanelInfo.draw = [&]() { ui::drawRenderDebugTools(*renderer_); };
-            // debugPanelInfo.visible = false;
+            ui::PanelDesc debugPanelInfo;
+            debugPanelInfo.displayName = "Render Debug";
+            debugPanelInfo.id = "RenderDebug";
+            debugPanelInfo.draw = [&]() { ui::drawRenderDebugTools(*renderer_); };
+            debugPanelInfo.visible = false;
 
             // panelReg.registerPanel(debugPanelInfo);
             // actionManager.registerPanel("window.plugins.vulkan_debug", debugPanelInfo.id, true);

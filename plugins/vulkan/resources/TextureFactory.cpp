@@ -108,7 +108,7 @@ namespace chai::gfx
         sampInfo.maxLod = static_cast<float>(mipCount - 1);
         sampInfo.anisotropyEnable = VK_TRUE;
         sampInfo.maxAnisotropy = 8.0f;
-        vkCreateSampler(device, &sampInfo, nullptr, &out.sampler);
+        VK_CHECK(vkCreateSampler(device, &sampInfo, nullptr, &out.sampler));
 
         uint64_t value = ctx_->uploadContext().submit([&](VkCommandBuffer cmd) {
             imageBarrier(cmd,
@@ -158,6 +158,8 @@ namespace chai::gfx
         });
 
         pending_.emplace_back(out, value, stagingAlloc, staging);
+
+        ctx_->uploadContext().waitFor(value);
 
         return LoadState::Uploading;
     }

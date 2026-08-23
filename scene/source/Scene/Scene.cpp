@@ -30,7 +30,7 @@ namespace chai::scene
     GameObject* Scene::createObject(const std::string& name)
     {
         return m_objects
-            .emplace_back(std::make_unique<GameObject>(name, gameObjAllocator_.allocate()))
+            .emplace_back(std::make_unique<GameObject>(name))
             .get();
     }
 

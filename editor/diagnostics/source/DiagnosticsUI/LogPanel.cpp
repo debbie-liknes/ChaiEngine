@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include <UI/Core/InternalChaiUI.h>
 #include <UI/Core/FontManager.h>
+#include <UI/Core/Buttons.h>
 
 namespace chai::diagnostics
 {
@@ -44,10 +45,10 @@ namespace chai::diagnostics
         static bool autoScroll = true;
         static ImGuiTextFilter filter;
 
-        if (chai::ui::Button("Clear"))
+        if (chai::ui::button("Clear"))
             sink.clear();
         chai::ui::SameLine();
-        chai::ui::Checkbox("Auto-scroll", autoScroll);
+        chai::ui::checkbox("Auto-scroll", &autoScroll);
         chai::ui::SameLine();
         filter.Draw("Filter", -100.0f);
 
