@@ -28,7 +28,7 @@ namespace chai::gfx
         auto* data = new IncludeData{pathStr, {}};
 
         if (!includedPaths_.insert(pathStr).second) {
-            data->content = "\n"; // was "" — needs a newline to separate from what follows
+            data->content = "\n";
             auto* result = new shaderc_include_result{data->path.c_str(),
                                                       data->path.size(),
                                                       data->content.c_str(),
@@ -39,7 +39,7 @@ namespace chai::gfx
 
         data->content = ShaderCompiler::readFile(resolvedPath);
         if (data->content.empty() || data->content.back() != '\n')
-            data->content += '\n'; // guard against files saved without a trailing newline
+            data->content += '\n';
 
         auto* result = new shaderc_include_result{data->path.c_str(),
                                                   data->path.size(),

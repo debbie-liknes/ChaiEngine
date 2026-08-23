@@ -72,7 +72,7 @@ vec3 GetNormal(vec2 uv, vec3 vertexNormal, vec4 tangent)
     return normalize(mat3(T, B, N) * n);
 }
 
-// Debug/shading-mode override view, kept separate from the lit result.
+// Debug shading override view
 vec3 ApplyShadingModeOverride(int mode, vec3 litColor, vec3 N, vec2 uv,
                                float roughness, float metallic, float ao)
 {
