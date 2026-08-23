@@ -42,8 +42,7 @@ int prefilterMipCount = 5;
 layout(location = 0) out vec4 outColor;
 
 // ---------------------------------------------------------------------
-// Sample all material textures + apply material UBO factors.
-// Returns via out-params so callers can early-discard on alpha.
+// Sample all material textures
 // ---------------------------------------------------------------------
 void SampleMaterial(vec2 uv, out vec4 baseColor, out float metallic,
                      out float roughness, out float ao, out vec3 emissive)
@@ -59,15 +58,14 @@ void SampleMaterial(vec2 uv, out vec4 baseColor, out float metallic,
 }
 
 // ---------------------------------------------------------------------
-// Tangent-space normal map -> world space, with a safe fallback
-// when the mesh has no valid tangent (tlen ~ 0).
+// Tangent-space normal map -> world space
 // ---------------------------------------------------------------------
 vec3 GetNormal(vec2 uv, vec3 vertexNormal, vec4 tangent)
 {
     vec3 n = texture(normalTex, uv).xyz * 2.0 - 1.0;
     vec3 N = normalize(vertexNormal);
     float tlen = length(tangent.xyz);
-    if (tlen < 1e-4)
+    if (tlen < EPSILON)
         return N;
     vec3 T = normalize(tangent.xyz);
     vec3 B = cross(N, T) * tangent.w;

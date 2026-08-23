@@ -40,7 +40,7 @@ vec3 CalculateDirectLighting(SurfaceData s, vec3 L, vec3 radiance, float shadow)
     float a  = s.roughness * s.roughness;
 
     float D  = D_GGX(NoH, a);
-    float G  = G_Smith(NoV, NoL, s.roughness);
+    float G  = G_Smith_Direct(NoV, NoL, s.roughness);
     vec3  F  = F_Schlick(VoH, f0);
     vec3  spec = (D * G * F) / max(4.0 * NoV * NoL, 1e-4);
 

@@ -9,7 +9,7 @@ vec3 CalculateIBL(SurfaceData s, vec3 R, samplerCube irradianceTex,
     float NoV = max(dot(s.N, s.V), 0.02);
     vec3  f0  = mix(vec3(0.04), s.albedo, s.metallic);
 
-    vec3 F  = fresnelSchlickRoughness(NoV, f0, s.roughness);
+    vec3 F  = F_SchlickRoughness(NoV, f0, s.roughness);
     vec3 kD = (vec3(1.0) - F) * (1.0 - s.metallic);
 
     vec3 irradiance = texture(irradianceTex, s.N).rgb;
