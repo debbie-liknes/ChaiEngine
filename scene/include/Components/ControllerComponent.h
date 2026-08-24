@@ -16,6 +16,8 @@ namespace chai::scene
     class ControllerComponent : public Component, public IUpdatable
     {
     public:
+        CHAI_OBJECT(ControllerComponent)
+
         ControllerComponent() = default;
         explicit ControllerComponent(chai::scene::GameObject* owner);
 
@@ -25,7 +27,8 @@ namespace chai::scene
         {
             static_assert(std::is_base_of_v<IController, T>, "T must inherit from IController");
 
-            auto controller = std::make_unique<T>(owner_, std::forward<Args>(args)...);
+            auto controller = std::make_unique<T>(getGameObject(), std::forward<Args>(args)...);
+
             T* ptr = controller.get();
 
             // Store by type
@@ -126,7 +129,6 @@ namespace chai::scene
         std::vector<std::unique_ptr<IController>> controllers_;
         std::unordered_map<std::type_index, IController*> controllersByType_;
         std::unordered_map<std::string, IController*> controllersByName_;
-        chai::scene::GameObject* owner_;
     };
 
 }

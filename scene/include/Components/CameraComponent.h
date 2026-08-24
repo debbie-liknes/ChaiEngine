@@ -15,6 +15,8 @@ namespace chai::scene
     class SCENE_EXPORT CameraComponent : public Component, public IUpdatable
     {
     public:
+        CHAI_OBJECT(CameraComponent)
+
         explicit CameraComponent(GameObject* owner = nullptr);
         ~CameraComponent() override = default;
 
@@ -30,6 +32,5 @@ namespace chai::scene
 
         Camera cam_;
     };
-
 }
 

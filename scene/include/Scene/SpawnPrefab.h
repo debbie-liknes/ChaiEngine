@@ -6,6 +6,7 @@
 namespace chai::scene
 {
     struct SpawnParams {
+        std::string name = "Prefab";
         GameObject* parent = nullptr;
     };
 

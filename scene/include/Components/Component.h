@@ -3,13 +3,15 @@
 #include <ChaiReflect.h>
 #include <TypeRegistry.h>
 #include <TypeInfo.h>
+#include <IconsFontAwesome7.h>
+#include <Scene/Object.h>
 
 namespace chai::scene
 {
     class GameObject;
     class Visitor;
 
-    class SCENE_EXPORT Component
+    class SCENE_EXPORT Component : public Object
     {
     public:
         explicit Component(GameObject* owningObject = nullptr);

@@ -11,6 +11,8 @@ namespace chai::scene
     class SkyboxComponent : public Component, public IUpdatable
     {
     public:
+        CHAI_OBJECT(SkyboxComponent)
+
         explicit SkyboxComponent(GameObject* owner = nullptr);
         ~SkyboxComponent() override;
 
@@ -22,5 +24,6 @@ namespace chai::scene
 
         Handle<gfx::Texture> skyMap_;
     };
+
 }
 

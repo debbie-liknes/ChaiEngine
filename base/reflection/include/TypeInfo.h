@@ -9,6 +9,7 @@
 #include <any>
 #include <typeindex>
 #include <memory>
+#include <variant>
 
 namespace chai
 {
@@ -18,6 +19,8 @@ namespace chai
     class TypeInfo
     {
     public:
+        using IconId = const char*;
+        IconId icon;
         std::string name;
         std::type_index typeIndex{typeid(void)};
         size_t size = 0;
@@ -50,6 +53,9 @@ namespace chai
         };
 
         std::unordered_map<std::string, PropertyInfo> properties;
+
+        using MetaValue = std::variant<bool, int64_t, double, std::string>;
+        std::unordered_map<std::string, MetaValue> metaData;
 
         /**
          * @brief Adds a method to the type information, allowing it to be invoked via reflection.
@@ -116,6 +122,37 @@ namespace chai
             };
 
             properties[propName] = std::move(info);
+        }
+
+        template <typename T, typename R, typename S>
+        void
+        addProperty(const std::string& propName, R (T::*getter)() const, void (T::*setter)(S))
+        {
+            using PropType = std::decay_t<R>;
+            static_assert(std::is_same_v<PropType, std::decay_t<S>>,
+                          "getter and setter must agree on the property type");
+
+            PropertyInfo info;
+            info.name = propName;
+            info.type = std::type_index(typeid(PropType));
+
+            info.getter = [getter](void* obj) -> std::any {
+                return std::any{(static_cast<const T*>(obj)->*getter)()};
+            };
+
+            info.setter = [setter](void* obj, const std::any& value) {
+                (static_cast<T*>(obj)->*setter)(std::any_cast<PropType>(value));
+            };
+
+            auto [it, inserted] = properties.insert_or_assign(propName, std::move(info));
+        }
+
+        /**
+         * @brief Adds a meta data to the type information
+         * via reflection.
+         */
+        void addMeta(const std::string& key, MetaValue value) { 
+            metaData[key] = std::move(value);
         }
 
     private:

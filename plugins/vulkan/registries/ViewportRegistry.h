@@ -34,7 +34,7 @@ namespace chai::gfx
          */
         void applyPendingViewportResizes();
 
-        ViewportHandle addViewport(const std::string& id, uint32_t cameraViewIndex) override;
+        ViewportHandle addViewport(const std::string& id, uint64_t cameraViewIndex) override;
         void removeViewport(ViewportHandle handle) override;
         uint64_t getViewportTextureId(ViewportHandle handle) const override;
         void setViewportHovered(ViewportHandle handle, bool hovered) override;
@@ -57,7 +57,7 @@ namespace chai::gfx
         bool isValidHandle(ViewportHandle handle) const;
         Viewport* getViewport(ViewportHandle handle) const;
 
-        Viewport createViewport(const std::string& id, uint32_t cameraViewId);
+        Viewport createViewport(const std::string& id, uint64_t cameraViewId);
         void destroyViewport(Viewport& vp);
         void createCameraUBO(VkBuffer& buffer,
                              VmaAllocation& alloc,

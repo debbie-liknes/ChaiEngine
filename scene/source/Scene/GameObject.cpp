@@ -5,17 +5,12 @@
 
 namespace chai::scene
 {
-    GameObject::GameObject()
+    GameObject::GameObject() : Object()
     {
         addComponent<TransformComponent>();
     }
 
     GameObject::GameObject(const std::string& name) : name_(name)
-    {
-        addComponent<TransformComponent>();
-    }
-
-    GameObject::GameObject(const std::string& name, GameObjectId id) : name_(name), objectId_(id)
     {
         addComponent<TransformComponent>();
     }
@@ -33,7 +28,11 @@ namespace chai::scene
 
     void GameObject::setParent(GameObject* parent)
     {
+        if (parent_)
+            std::erase(parent_->children_, this);
         parent_ = parent;
+        if (parent_)
+            parent_->children_.push_back(this);
     }
 
     GameObject* GameObject::getParent() const
@@ -63,3 +62,7 @@ namespace chai::scene
         }
     }
 } // namespace chai::cup
+
+CHAI_REFLECT(chai::scene::GameObject, "GameObject") {
+    CHAI_ICON(ICON_FA_CUBES);
+}

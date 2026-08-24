@@ -25,6 +25,8 @@
 #include <Rendering/IRenderer.h>
 #include <Scene/GameObject.h>
 #include <Scene/Scene.h>
+#include <Scene/ObjectTable.h>
+#include <Scene/Object.h>
 #include <Scene/SpawnPrefab.h>
 #include <Window/Window.h>
 #include <EditorUI/CommandPalette.h>
@@ -38,7 +40,7 @@ std::filesystem::path assetDir()
 
 namespace chai
 {
-    void setupDockspace(const ServiceLocator& locator, scene::Scene& scene)
+    void Editor::setupDockspace(const ServiceLocator& locator, scene::Scene& scene)
     {
         using namespace ui;
         using namespace scene;
@@ -49,25 +51,50 @@ namespace chai
 
         std::string mainPanelId = vpManager.addViewport("Main Scene", scene.getCameraId());
 
+        ui::PanelDesc propertiesPanel;
+        propertiesPanel.displayName = "Properties";
+        propertiesPanel.id = "Properties";
+        propertiesPanel.draw = [&]() {
+            const auto selectedItem = editorSelection_.getSelected();
+            // TODO: multi select
+            Object* selected = ObjectTable::instance().resolve(selectedItem.id);
+            ui::drawPropertiesPane(selected);
+        };
+        propertiesPanel.visible = false;
+        panelRegistry_->registerPanel(propertiesPanel);
+        actionManager_->registerPanel("window.properties", propertiesPanel.id, true);
+
         std::string hierarchy = "Hierarchy";
         panelRegistry.registerPanel({
             .id = hierarchy,
             .displayName = hierarchy,
-            .draw = [&scene] {
-                ui::drawSceneHierarchy(scene);
+            .draw = [&scene, &selector = editorSelection_, &panelRegistry = panelRegistry_] {
+                 auto selectedCallback = [&](const scene::ObjectId id) {
+                    selector.select({id});
+                    const auto& panel = panelRegistry->getPanel("Properties");
+                    if (!panel->visible) {
+                        panel->visible = true;
+                     }
+                 };
+                 ui::drawSceneHierarchy(scene, selectedCallback);
             }});
 
-        ui::DockSplit horizontalSplit;
-        horizontalSplit.ratio = 0.25f;
-        horizontalSplit.side = ui::DockSplit::Side::Left;
-        horizontalSplit.windowId = hierarchy;
+        ui::DockSplit hierarchySplit;
+        hierarchySplit.ratio = 0.25f;
+        hierarchySplit.side = ui::DockSplit::Side::Left;
+        hierarchySplit.windowId = hierarchy;
+
+        ui::DockSplit propertiesSplit;
+        propertiesSplit.ratio = 0.25f;
+        propertiesSplit.side = ui::DockSplit::Side::Right;
+        propertiesSplit.windowId = "Properties";
 
         ui::DockSplit split;
         split.side = ui::DockSplit::Side::Bottom;
         split.ratio = 0.25f;
         split.windowId = "Logger";
 
-        dockspace.setDefaultLayout({horizontalSplit, split}, mainPanelId);
+        dockspace.setDefaultLayout({hierarchySplit, propertiesSplit, split}, mainPanelId);
     }
 
     void Editor::registerActions() const
@@ -76,7 +103,7 @@ namespace chai
 
         ui::PanelDesc pluginPanel;
         pluginPanel.displayName = "Plugin Manager";
-        pluginPanel.id = "PluginManager";
+        pluginPanel.id = "Plugin Manager";
         pluginPanel.draw = [&]() { drawPluginManager(*loader_); };
         pluginPanel.visible = false;
         panelRegistry_->registerPanel(pluginPanel);
@@ -84,7 +111,7 @@ namespace chai
 
         ui::PanelDesc loggerPanel;
         loggerPanel.displayName = "Logger";
-        loggerPanel.id = "logger";
+        loggerPanel.id = "Logger";
         loggerPanel.draw = [&]() { diagnostics::drawLogPanel(*guiSink_); };
         loggerPanel.visible = true;
         panelRegistry_->registerPanel(loggerPanel);
@@ -92,7 +119,7 @@ namespace chai
 
         ui::PanelDesc commandPalette;
         commandPalette.displayName = "Command Palette";
-        commandPalette.id = "CommandPalette";
+        commandPalette.id = "Command Palette";
         commandPalette.draw = [&]() { ui::drawCommandPalette(*actionManager_); };
         commandPalette.visible = false;
         panelRegistry_->registerPanel(commandPalette);
@@ -100,7 +127,7 @@ namespace chai
 
         ui::PanelDesc settingsPanel;
         settingsPanel.displayName = "Settings";
-        settingsPanel.id = "settings";
+        settingsPanel.id = "Settings";
         settingsPanel.draw = [&]() { settings::drawSettingsPanel(); };
         settingsPanel.visible = false;
         panelRegistry_->registerPanel(settingsPanel);
@@ -116,14 +143,20 @@ namespace chai
         // auto prefab = models->load(makeAssetId("model:sponza"), assetDir() /
         //"SponzaHiRes/NewSponza_Main_glTF_003.glTF");
         auto prefab = models.load(makeAssetId("model:sponza"), assetDir() / "Sponza/glTF/Sponza.gltf");
-        //  auto prefab = models->load(makeAssetId("model:sponza"), assetDir() /
-        //  "ABeautifulGame/glTF/ABeautifulGame.gltf");
+        //auto prefab = models.load(makeAssetId("model:sponza1"), assetDir() /
+        //"Sponza/Intel/main_sponza/NewSponza_Main_glTF_003.glTF");
 
         // audio->playSound((assetDir() / "orchestral_techno.wav").string(), {0, 0, 0}, -10);
 
         if (prefab) {
-            auto prefabInstance = scene::spawn(scene, *prefab);
+            auto prefabInstance = scene::spawn(scene, *prefab, {"Sponza Root"});
         }
+
+        //auto testObj = scene.createObject("Baby sponza");
+        //testObj->getComponent<TransformComponent>()->setPosition(math::Vec3{50, 0, 0});
+        //if (prefab1) {
+        //    auto prefabInstance = scene::spawn(scene, *prefab1, {"Sponza Root1", testObj});
+        //}
 
         GameObject* cam = scene.createObject("camera");
         auto* camComp = cam->addComponent<CameraComponent>();

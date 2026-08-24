@@ -113,8 +113,10 @@ namespace chai
         }
 
         scene::SceneSaveVisitor ssv{};
-        if (scene_)
+        if (scene_) {
             scene_->accept(&ssv);
+            ssv.write("level.lvl");
+        }
 
     }
 }

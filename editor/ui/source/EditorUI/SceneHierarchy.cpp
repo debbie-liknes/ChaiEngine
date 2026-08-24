@@ -9,29 +9,29 @@
 
 namespace chai::ui
 {
-    const char* iconForComponent(const std::string& typeName)
+    const char* invalidIcon()
     {
-        if (typeName == "MeshComponent")
-            return ICON_FA_CUBE;
-        if (typeName == "TransformComponent")
-            return ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT;
-        if (typeName == "CameraComponent")
-            return ICON_FA_VIDEO;
-        if (typeName == "LightComponent")
-            return ICON_FA_LIGHTBULB;
-        if (typeName == "ControllerComponent")
-            return ICON_FA_GAMEPAD;
-        if (typeName == "SkyboxComponent")
-            return ICON_FA_CLOUD;
         return ICON_FA_QUESTION;
     }
 
-    void drawSceneNode(scene::GameObject* obj, int& id)
+    const char* getIcon(TypeInfo::IconId id) {
+        return id != NULL ? id : invalidIcon();
+    }
+
+    void drawSceneNode(scene::GameObject* obj, int& id, std::function<void(scene::ObjectId)> selectedCallback)
     {
+        auto objInfo = TypeRegistry::instance().getType<scene::GameObject>();
+        if (!objInfo)
+            return;
+
         TreeNode objNode(obj->getObjectName(),
-                         std::to_string(obj->getObjectId()),
-                            ICON_FA_CUBES,
+                         std::to_string(obj->id()),
+                            getIcon(objInfo->icon),
                             TreeNodeFlags::SpanFullWidth | TreeNodeFlags::DefaultOpen);
+        if (objNode.clicked()) {
+            selectedCallback(obj->id());
+        }
+
         if (!objNode)
             return;
 
@@ -43,29 +43,34 @@ namespace chai::ui
             auto typeInfo = TypeRegistry::instance().getType(type);
             if (typeInfo) {
                 std::string componentId =
-                    std::to_string(obj->getObjectId()) + "_" + std::to_string(id);
+                    std::to_string(obj->id()) + "_" + std::to_string(id);
+                auto icon = typeInfo->icon != "";
                 TreeNode compNode(typeInfo->name,
                                   componentId,
-                                  iconForComponent(typeInfo->name),
+                                  getIcon(typeInfo->icon),
                                   TreeNodeFlags::SpanFullWidth | TreeNodeFlags::Leaf |
                                       TreeNodeFlags::DrawGuideLine);
+                if (compNode.clicked()) {
+                    selectedCallback(component->id());
+                }
             }
             id++;
         });
         for (auto& child : obj->getChildren()) {
-            drawSceneNode(child, id);
+            drawSceneNode(child, id, selectedCallback);
         }
         Unindent();
         Unindent();
     }
 
-    void drawSceneHierarchy(scene::Scene& scene)
+    void drawSceneHierarchy(scene::Scene& scene,
+                            std::function<void(const scene::ObjectId)> selectedCallback)
     {
         int id = 0;
         for (auto& obj : scene.getObjects()) {
             //ScopedFont objFont(FontWeight::Black);
             if (!obj->getParent())
-                drawSceneNode(obj.get(), id);
+                drawSceneNode(obj.get(), id, selectedCallback);
         }
     }
 }

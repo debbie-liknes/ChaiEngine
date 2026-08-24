@@ -17,11 +17,18 @@ namespace chai::scene
     class LightComponent : public Component, public IUpdatable
     {
     public:
+        CHAI_OBJECT(LightComponent)
+
         explicit LightComponent(GameObject* owner = nullptr);
 
         LightType getType() const { return type_; }
+        void setType(LightType type);
+
         math::Vec3 getColor() const { return color_; }
+        void setColor(math::Vec3 color);
+
         float getIntensity() const { return intensity_; }
+        void setIntensity(float intensity);
 
     private:
         friend struct ChaiReflect<LightComponent>;
@@ -41,5 +48,6 @@ namespace chai::scene
         bool enabled_ = true;
         bool shadowsEnabled_ = true;
     };
+
 }
 

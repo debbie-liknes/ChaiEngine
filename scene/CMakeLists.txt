@@ -12,6 +12,8 @@ set(ChaiScene_headers
         include/Controllers/FlyCamController.h
         include/Scene/Camera.h
         include/Scene/GameObject.h
+        include/Scene/Object.h
+        include/Scene/ObjectTable.h
         include/Scene/Scene.h
         include/Scene/SpawnPrefab.h
         include/Controllers/SpinController.h
@@ -33,12 +35,16 @@ set(ChaiScene_source
         source/Controllers/FlyCamController.cpp
         source/Scene/Camera.cpp
         source/Scene/GameObject.cpp
+        source/Scene/Object.cpp
+        source/Scene/ObjectTable.cpp
         source/Scene/Scene.cpp
         source/Scene/SpawnPrefab.cpp
         source/Visitors/AudioSceneVisitor.cpp
         source/Visitors/FrameRenderVisitor.cpp
         source/Visitors/SceneSaveVisitor.cpp
 )
+
+add_subdirectory(tests)
 
 add_library(Scene SHARED ${ChaiScene_headers} ${ChaiScene_source})
 

@@ -4,7 +4,7 @@
 
 namespace chai::scene
 {
-    Component::Component(GameObject* owningObject) : owner_(owningObject)
+    Component::Component(GameObject* owningObject) : owner_(owningObject), Object()
     {
 
     }

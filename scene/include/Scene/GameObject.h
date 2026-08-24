@@ -7,27 +7,25 @@
 #include <string_view>
 #include <span>
 #include <functional>
+#include <Scene/Object.h>
 
 namespace chai::scene
 {
     class Visitor;
 
-    using GameObjectId = int32_t;
-
-    class GameObject : public IUpdatable
+    class GameObject : public Object, IUpdatable
     {
     public:
+        CHAI_OBJECT(GameObject)
+
         GameObject();
         GameObject(const std::string& name);
-        GameObject(const std::string& name, GameObjectId id);
         ~GameObject() = default;
 
-        GameObjectId getObjectId() const { return objectId_; }
         std::string_view getObjectName() const { return name_; }
 
         void setParent(GameObject* parent);
         GameObject* getParent() const;
-        void addChild(std::unique_ptr<GameObject> child);
         std::vector<GameObject*>& getChildren() { return children_; }
         void visitComponents(std::function<void(Component*)>);
 
@@ -118,7 +116,7 @@ namespace chai::scene
         //hierarchy
         GameObject* parent_ = nullptr;
         std::vector<GameObject*> children_;
-
-        int32_t objectId_ = -1;
     };
+
 }
+

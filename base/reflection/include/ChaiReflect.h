@@ -33,3 +33,7 @@ struct ChaiReflect;
 
 #define CHAI_FIELD(member) type.addProperty(#member, &Self::member)
 #define CHAI_METHOD(method) type.addMethod(#method, &Self::method)
+#define CHAI_PROPERTY(label, getter, setter) type.addProperty(label, &Self::getter, &Self::setter)
+#define CHAI_META(key, value) type.addMeta(key, value)
+#define CHAI_ICON(value) type.icon = value
+

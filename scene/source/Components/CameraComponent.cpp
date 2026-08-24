@@ -40,6 +40,7 @@ CHAI_REFLECT(chai::scene::Camera, "Camera") {
 }
 
 CHAI_REFLECT(chai::scene::CameraComponent, "CameraComponent") {
+    CHAI_ICON(ICON_FA_VIDEO);
     CHAI_FIELD(cam_);
 }
 
