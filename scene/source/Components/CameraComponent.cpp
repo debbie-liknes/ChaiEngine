@@ -30,17 +30,7 @@ namespace chai::scene
     }
 }
 
-
-CHAI_REFLECT(chai::scene::Camera, "Camera") {
-    CHAI_FIELD(aspect_);
-    CHAI_FIELD(fov_);
-    CHAI_FIELD(nearPlane_);
-    CHAI_FIELD(farPlane_);
-    CHAI_FIELD(viewMatrix_);
-}
-
 CHAI_REFLECT(chai::scene::CameraComponent, "CameraComponent") {
     CHAI_ICON(ICON_FA_VIDEO);
-    CHAI_FIELD(cam_);
 }
 

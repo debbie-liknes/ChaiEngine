@@ -137,10 +137,6 @@ namespace chai::scene
 } // namespace chai::cup
 
 CHAI_REFLECT(chai::scene::TransformComponent, "TransformComponent") {
-    CHAI_FIELD(position_);
-    CHAI_FIELD(rotation_);
-    CHAI_FIELD(scale_);
-
     CHAI_ICON(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT);
     CHAI_PROPERTY("Position", getLocalPosition, setPosition);
     CHAI_PROPERTY("Rotation", getLocalRotationEuler, setRotationEuler);

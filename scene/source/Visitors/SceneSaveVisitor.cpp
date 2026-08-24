@@ -1,5 +1,6 @@
 
 #include <fstream>
+#include <ranges>
 #include <unordered_set> // maybe should use vector and ranges::find instead?
 
 #include <Log.h>
@@ -26,52 +27,38 @@ namespace chai::scene
 
         ~p() = default;
 
-        std::unordered_set<std::string> properties_not_found_;
-
         rapidxml::xml_document<> doc_;
 
         // root "scene" node
         rapidxml::xml_node<>* root_{ nullptr };
 
-        // current "node" node (used when visiting Components)
-        rapidxml::xml_node<>* node_{ nullptr };
+        // last visited GameObject (used when visiting Components)
+        rapidxml::xml_node<>* object_{ nullptr };
 
-        void create_prop_element(rapidxml::xml_node<>& node, const std::string& name, const TypeInfo& ti) {
+        // last visited Component (used when visiting properties)
+        rapidxml::xml_node<>* component_{ nullptr };
 
-            char* allocated_string{ doc_.allocate_string(ti.name.data()) };
-            rapidxml::xml_node<>* prop{ doc_.allocate_node(rapidxml::node_element, "property") };
+        void visit(const std::any& a, const TypeInfo::PropertyInfo& info) {}
 
-            // name
-            {
-                char* allocated_string{ doc_.allocate_string(name.data()) };
+        void visit(Component* component_object, const TypeInfo::PropertyInfo& info) {
 
-                rapidxml::xml_attribute<>* name_attribute{ doc_.allocate_attribute("name", allocated_string) };
-                prop->append_attribute(name_attribute);
+            rapidxml::xml_node<>* current_node{ component_ };
+
+            char* allocated_string{ doc_.allocate_string(info.name.c_str()) };
+            rapidxml::xml_node<>* node{ doc_.allocate_node(rapidxml::node_element, allocated_string) };
+            current_node->append_node(node);
+
+            std::any prop{ info.getter(component_object) };
+
+            if (const auto pti{ TypeRegistry::instance().getType(info.type) }) {
+
+                const TypeInfo& ti{ *pti };
+
+                for (const TypeInfo::PropertyInfo& info : ti.properties | std::views::values)
+                    visit(prop, info);
             }
 
-            // type
-            {
-                char* allocated_string{ doc_.allocate_string(ti.name.data()) };
-
-                rapidxml::xml_attribute<>* type_attribute{ doc_.allocate_attribute("type", allocated_string) };
-                prop->append_attribute(type_attribute);
-            }
-
-            for (const auto& [name, property] : ti.properties) {
-
-                if (auto ti{ TypeRegistry::instance().getType(property.type)}) {
-                    create_prop_element(*prop, ti->name, *ti);
-                }
-                else {
-
-                    if (properties_not_found_.insert(name).second)
-                        CHAI_LOG_WARN("Could not find TypeInfo for {}", name);
-
-                }
-
-            }
-
-            node.append_node(prop);
+            component_ = current_node;
 
         }
 
@@ -83,65 +70,40 @@ namespace chai::scene
 
     SceneSaveVisitor::~SceneSaveVisitor() = default;
 
-    void SceneSaveVisitor::visit(GameObject* node) {
-
-        if (!node || !impl_ || !impl_->root_)
-            return;
+    void SceneSaveVisitor::visit(GameObject* obj) {
 
         rapidxml::xml_document<>& doc{ impl_->doc_ };
         rapidxml::xml_node<>& root{ *impl_->root_ };
 
-        rapidxml::xml_node<>* obj{ doc.allocate_node(rapidxml::node_element, "node") };
-
-        impl_->node_ = obj;
-
-        // name
-        {
-            std::string object_name{ node->getObjectName() };
-            char* allocated_string{ doc.allocate_string(object_name.data()) };
-
-            rapidxml::xml_attribute<>* name_attribute{ doc.allocate_attribute("name", allocated_string) };
-            obj->append_attribute(name_attribute);
-        }
-
-        // id
-        {
-            std::string object_id{ std::to_string(node->getObjectId()) };
-            char* allocated_string{ doc.allocate_string(object_id.data()) };
-
-            rapidxml::xml_attribute<>* id_attribute{ doc.allocate_attribute("id", allocated_string) };
-            obj->append_attribute(id_attribute);
-        }
-
-        // parent
-        if (GameObject* parent{ node->getParent() }) {
-
-            std::string parent_id{ std::to_string(parent->getObjectId()) };
-            char* allocated_string{ doc.allocate_string(parent_id.data()) };
-
-            rapidxml::xml_attribute<>* parent_id_attribute{ doc.allocate_attribute("parent_id", allocated_string) };
-            obj->append_attribute(parent_id_attribute);
-
-        }
-
-        root.append_node(obj);
+        std::string obj_name{ obj->getObjectName() };
+        char* allocated_string{ doc.allocate_string(obj_name.c_str()) };
+        rapidxml::xml_node<>* node{ impl_->doc_.allocate_node(rapidxml::node_element, allocated_string) };
+        root.append_node(node);
+        impl_->object_ = node;
 
     }
 
-
     void SceneSaveVisitor::visit(Component* comp) {
 
-        if (!comp || !impl_->node_)
-            return;
+        if (const auto pti{ TypeRegistry::instance().getType(std::type_index{ typeid(*comp) }) }) {
 
-        rapidxml::xml_document<>& doc{ impl_->doc_ };
-        rapidxml::xml_node<>& root{ *impl_->root_ };
-        rapidxml::xml_node<>& node{ *impl_->node_ };
+            const TypeInfo& ti{ *pti };
 
-        if (auto ti{ TypeRegistry::instance().getType(std::type_index{typeid(*comp) })}) {
-            impl_->create_prop_element(node, "component", *ti);
+            rapidxml::xml_document<>& doc{ impl_->doc_ };
+            rapidxml::xml_node<>& object{ *impl_->object_ };
+
+            char* allocated_string{ doc.allocate_string(ti.name.c_str()) };
+            rapidxml::xml_node<>* node{ impl_->doc_.allocate_node(rapidxml::node_element, allocated_string) };
+            object.append_node(node);
+            impl_->component_ = node;
+
+            for (const auto& [name, info] : ti.properties)
+                impl_->visit(comp, info);
+
         } else {
-            CHAI_LOG_ERROR("Component is not registered with the meta system and cannot be saved.");
+            // Maybe Component should have a virtual getName() method, similar to GameObject? For now I am cheating and using std::type_info :( just to
+            // give a little more helpful info
+            CHAI_LOG_WARN("{} is not registered with the meta system and cannot be saved.", typeid(*comp).name());
         }
 
     }

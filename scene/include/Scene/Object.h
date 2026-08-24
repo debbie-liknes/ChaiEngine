@@ -25,3 +25,4 @@ namespace chai::scene
     {                                                                                              \
         return ::chai::TypeRegistry::instance().getType<Type>().get();                             \
     }
+
