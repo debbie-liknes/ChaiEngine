@@ -14,6 +14,7 @@ namespace chai::gfx
      */
     class ShaderCompiler
     {
+        friend class ShaderIncluder;
     public:
         struct CompileResult {
             bool success = false;
@@ -24,6 +25,6 @@ namespace chai::gfx
         CompileResult compile(const std::filesystem::path& shaderPath, ShaderStage stage);
 
     private:
-        std::string readFile(const std::filesystem::path& shaderPath);
+        static std::string readFile(const std::filesystem::path& shaderPath);
     };
 } // namespace chai::gfx

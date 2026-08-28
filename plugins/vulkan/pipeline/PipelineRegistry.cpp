@@ -121,6 +121,14 @@ namespace chai::gfx
 
     void PipelineRegistry::destroyAll()
     {
+        running_.store(false);
+        for (auto& item : pending_) {
+            item.future.wait();
+            auto result = item.future.get();
+            vkDestroyPipeline(ctx_.device(), result, nullptr);
+        }
+        pending_.clear();
+
          for (auto& entry : entries_)
              vkDestroyPipeline(ctx_.device(), entry.pipeline, nullptr);
          entries_.clear();
@@ -208,6 +216,9 @@ namespace chai::gfx
             // Multisampling
             builder.setSampleCount(desc.samples);
         };
+
+        if (!running_.load(std::memory_order_relaxed))
+            return {};
 
         return loadPipelineByName(
             ctx_, desc.vertShader, desc.fragShader, entry.key.layout, configure);

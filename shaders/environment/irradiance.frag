@@ -1,4 +1,7 @@
 #version 450
+
+#include <math/constants.glsl>
+
 layout(location = 0) in vec2 vUV;
 
 layout(location = 0) out vec4 outColor;
@@ -6,8 +9,6 @@ layout(location = 0) out vec4 outColor;
 layout(set = 0, binding = 0) uniform samplerCube envMap;
 
 layout(push_constant) uniform Push { int faceIndex; } pc;
-
-const float PI = 3.14159265359;
 
 vec3 dirForFace(int face, vec2 uv) {
     switch (face) {
