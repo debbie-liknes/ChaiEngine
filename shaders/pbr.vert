@@ -1,5 +1,7 @@
 #version 450
 
+#include <camera/camera.glsl>
+
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;
 layout(location = 2) in vec2 inUV;
@@ -7,10 +9,7 @@ layout(location = 3) in vec4 inTangent; // xyz = tangent, w = handedness sign
 
 // set 0 = camera
 layout(set = 0, binding = 0) uniform Camera {
-    mat4 view;
-    mat4 proj;
-    mat4 viewProj;
-    vec3 position;
+    CameraData data;
 } cam;
 
 layout(push_constant) uniform Push {
@@ -33,5 +32,5 @@ void main()
     vTangent = vec4(normalize(nrmMat * inTangent.xyz), inTangent.w);
     vUV = inUV;
 
-    gl_Position = cam.viewProj * worldPos;
+    gl_Position = cam.data.viewProj * worldPos;
 }

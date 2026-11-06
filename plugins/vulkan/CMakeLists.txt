@@ -6,6 +6,7 @@ set(${PROJECT_NAME}_headers
         pipeline/PipelineKey.h
         pipeline/PipelineRegistry.h
         pipeline/ShaderCompiler.h
+        pipeline/ShaderIncluder.h
         registries/ViewportRegistry.h
         renderer/VulkanRenderer.h
         renderer/VulkanContext.h
@@ -46,6 +47,7 @@ set(${PROJECT_NAME}_source
         pipeline/PipelineBuilder.cpp
         pipeline/PipelineRegistry.cpp
         pipeline/ShaderCompiler.cpp
+        pipeline/ShaderIncluder.cpp
         registries/ViewportRegistry.cpp
 
         renderGraph/ChaiRenderGraph.cpp

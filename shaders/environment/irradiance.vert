@@ -1,13 +1,6 @@
 #version 450
+
 layout(location = 0) out vec2 vUV;
-
-layout(set = 0, binding = 0) uniform Camera {
-    mat4 view;
-    mat4 proj;
-    mat4 viewProj;
-    vec3 position;
-} cam;
-
 
 void main() {
     // Fullscreen triangle

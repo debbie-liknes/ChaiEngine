@@ -1357,8 +1357,8 @@ namespace chai::gfx
                                 .layout = pipelineLayout_,
                                 .desc =
                                     {
-                                        .vertShader = "skybox.vert",
-                                        .fragShader = "skybox.frag",
+                                        .vertShader = "environment/skybox.vert",
+                                        .fragShader = "environment/skybox.frag",
                                         .raster =
                                             {
                                                 .polygonMode = VK_POLYGON_MODE_FILL,
@@ -1387,8 +1387,8 @@ namespace chai::gfx
                                 .layout = irradianceLayout_,
                                 .desc =
                                     {
-                                        .vertShader = "irradiance.vert",
-                                        .fragShader = "irradiance.frag",
+                                        .vertShader = "environment/irradiance.vert",
+                                        .fragShader = "environment/irradiance.frag",
                                         .raster =
                                             {
                                                 .polygonMode = VK_POLYGON_MODE_FILL,
@@ -1414,8 +1414,8 @@ namespace chai::gfx
                                 .layout = brdfLutLayout_,
                                 .desc =
                                     {
-                                        .vertShader = "brdf_lut.vert",
-                                        .fragShader = "brdf_lut.frag",
+                                        .vertShader = "environment/brdf_lut.vert",
+                                        .fragShader = "environment/brdf_lut.frag",
                                         .raster =
                                             {
                                                 .polygonMode = VK_POLYGON_MODE_FILL,
@@ -1441,8 +1441,8 @@ namespace chai::gfx
                                 .layout = prefilterLayout_,
                                 .desc =
                                     {
-                                        .vertShader = "prefilter.vert",
-                                        .fragShader = "prefilter.frag",
+                                        .vertShader = "environment/prefilter.vert",
+                                        .fragShader = "environment/prefilter.frag",
                                         .raster =
                                             {
                                                 .polygonMode = VK_POLYGON_MODE_FILL,
@@ -1493,8 +1493,8 @@ namespace chai::gfx
                                 .layout = thresholdLayout_,
                                 .desc =
                                     {
-                                        .vertShader = "softThreshold.vert",
-                                        .fragShader = "softThreshold.frag",
+                                        .vertShader = "post-process/softThreshold.vert",
+                                        .fragShader = "post-process/softThreshold.frag",
                                         .raster =
                                             {
                                                 .polygonMode = VK_POLYGON_MODE_FILL,
@@ -1520,8 +1520,8 @@ namespace chai::gfx
                                 .layout = bloomLayout_,
                                 .desc =
                                     {
-                                        .vertShader = "postProcess.vert",
-                                        .fragShader = "downsample.frag",
+                                        .vertShader = "post-process/postProcess.vert",
+                                        .fragShader = "post-process/downsample.frag",
                                         .raster =
                                             {
                                                 .polygonMode = VK_POLYGON_MODE_FILL,
@@ -1547,8 +1547,8 @@ namespace chai::gfx
                                 .layout = bloomLayout_,
                                 .desc =
                                     {
-                                        .vertShader = "postProcess.vert",
-                                        .fragShader = "upsample.frag",
+                                        .vertShader = "post-process/postProcess.vert",
+                                        .fragShader = "post-process/upsample.frag",
                                         .raster =
                                             {
                                                 .polygonMode = VK_POLYGON_MODE_FILL,
@@ -1574,8 +1574,8 @@ namespace chai::gfx
                                 .layout = combineLayout_,
                                 .desc =
                                     {
-                                        .vertShader = "combinePostProcess.vert",
-                                        .fragShader = "combinePostProcess.frag",
+                                        .vertShader = "post-process/combinePostProcess.vert",
+                                        .fragShader = "post-process/combinePostProcess.frag",
                                         .raster =
                                             {
                                                 .polygonMode = VK_POLYGON_MODE_FILL,

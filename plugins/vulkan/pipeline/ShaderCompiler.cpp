@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <sstream>
+#include "ShaderIncluder.h"
 
 namespace chai::gfx
 {
@@ -29,6 +30,9 @@ namespace chai::gfx
         shaderc::CompileOptions options;
         options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
         options.SetOptimizationLevel(shaderc_optimization_level_performance);
+
+        //NOTE: Having this created for every compile allows us to not have to reset includer caching
+        options.SetIncluder(std::make_unique<ShaderIncluder>());
 
         shaderc_shader_kind kind = toShadercKind(stage);
 

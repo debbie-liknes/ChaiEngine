@@ -96,5 +96,7 @@ namespace chai::gfx
         std::vector<PipelineEntry> entries_;
         std::vector<PendingPipelineBuild> pending_;
         std::array<std::vector<VkPipeline>, kFramesInFlight> deferredDelete_;
+
+        std::atomic<bool> running_{true};
     };
 } // namespace chai::gfx
