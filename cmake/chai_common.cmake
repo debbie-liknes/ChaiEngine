@@ -54,8 +54,8 @@ function(ChaiPluginDefaults target_name optional_path)
     ChaiLibDefaults(${target_name} ${optional_path})
 
     set_target_properties(${target_name} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/plugins"
-        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/plugins"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/plugins"
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/plugins"
 
         # Custom target properties for metadata
         CHAI_TARGET_TYPE "plugin"
